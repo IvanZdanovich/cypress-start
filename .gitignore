@@ -1,0 +1,36 @@
+# compiled output
+dist
+
+# separate reports
+cypress/reports/**
+
+# asset folders
+cypress/downloads
+cypress/fixtures/assets
+
+# dependencies
+node_modules
+
+# sensitive data
+cypress/sensitive-data/**
+!cypress/sensitive-data/env-users.example.json
+
+# IDEs and editors
+.idea
+.vscode
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# temporary fixtures
+**/preconditions/temp/**
+
+# Local files
+certs/local/**
+target
+
+.env
+
+# VS
+/.vs

@@ -1,0 +1,44 @@
+# Ignore node_modules
+node_modules
+
+# Ignore npm debug log
+npm-debug.log
+
+# Ignore husky files
+.husky
+
+# Ignore local environment files
+.env
+.git
+.DS_Store
+.idea
+
+# Ignore Cypress screenshots and videos
+cypress/screenshots/**
+cypress/videos/**
+
+# Ignore Cypress reports
+cypress/reports/**
+
+# Ignore Cypress sensitive data
+cypress/sensitive-data/**
+
+# Ignore logs
+logs/**
+*.log
+
+# Ignore documentation
+docs/**
+
+# Ignore Dockerfile
+Dockerfile*
+
+# Ignore Prettier configuration files
+.prettierignore
+.prettierrc.js
+
+# Ignore ESLint configuration files
+.eslintrc.js
+eslint-plugin-custom-rules
+
+# End of file
