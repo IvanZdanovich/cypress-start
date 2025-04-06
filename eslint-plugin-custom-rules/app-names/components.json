@@ -1,0 +1,19 @@
+{
+  "LoginPage": {},
+  "InventoryPage": {
+    "Header": {},
+    "Footer": {},
+    "Card": {
+    }
+  },
+  "CartPage": {
+    "Header": {},
+    "Footer": {}
+  },
+  "Header": {},
+  "Footer": {},
+  "ProductPage": {
+    "Footer": {},
+    "Header": {}
+  }
+}

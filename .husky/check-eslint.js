@@ -5,7 +5,7 @@ const path = require('path');
 
 const gitPath = '/usr/bin/git';
 const wcPath = '/usr/bin/wc';
-const thresholdsFilePath = path.join(__dirname, '../.eslint-thresholds.json');
+const thresholdsFilePath = path.join(__dirname, 'thresholds.json');
 
 function getJsFilesFromGit() {
   try {
@@ -26,26 +26,23 @@ function countLinesOfCode(files) {
   try {
     if (files.length === 0) return 0;
 
-    const gitCommand = [gitPath, 'ls-files', '--', '*.js', '*.jsx', '*.ts', '*.tsx', ':!:node_modules/**', ':!:cypress/reports/**'];
-    const gitResult = spawnSync(gitCommand[0], gitCommand.slice(1), { encoding: 'utf8' });
-    if (gitResult.error) {
-      throw gitResult.error;
-    }
-    const fileList = gitResult.stdout
-      .trim()
-      .split('\n')
-      .filter((file) => file.length > 0);
-
-    if (fileList.length === 0) return 0;
-
-    const wcCommand = [wcPath, '-l'];
-    const wcResult = spawnSync(wcCommand[0], wcCommand.slice(1), { input: fileList.join('\n'), encoding: 'utf8' });
+    // Use the files passed to the function instead of querying git again
+    const wcCommand = [wcPath, '-l'].concat(files);
+    const wcResult = spawnSync(wcCommand[0], wcCommand.slice(1), { encoding: 'utf8' });
     if (wcResult.error) {
       throw wcResult.error;
     }
+
     const output = wcResult.stdout.trim();
-    const match = output.match(/^(\d+)\s+total$/);
-    return match ? parseInt(match[1]) : 0;
+    const lines = output.split('\n');
+    if (lines.length > 1) {
+      const lastLine = lines[lines.length - 1];
+      const match = lastLine.match(/^\s*(\d+)\s+total$/);
+      return match ? parseInt(match[1]) : 0;
+    } else {
+      const match = output.match(/^\s*(\d+)/);
+      return match ? parseInt(match[1]) : 0;
+    }
   } catch (error) {
     console.error(`Error counting lines: ${error.message}`);
     return 0;
@@ -118,17 +115,19 @@ async function checkEslintRatios(files) {
       console.log('\nLint ratios exceed thresholds:');
       if (warningRatioInPercents > warningThresholdInPercents) {
         console.log(`- Warning ratio too high: ${warningRatioInPercents}% > ${warningThresholdInPercents}%`);
-      } else {
-        updateThresholds(warningRatioInPercents, errorThresholdInPercents);
       }
       if (errorRatioInPercents > errorThresholdInPercents) {
         console.log(`- Error ratio too high: ${errorRatioInPercents}% > ${errorThresholdInPercents}%`);
-      } else {
-        updateThresholds(warningRatioInPercents, errorRatioInPercents);
       }
       process.exit(1);
     } else {
       console.log('\nLint ratios are within acceptable thresholds.');
+      if (parseFloat(warningRatioInPercents) < parseFloat(warningThresholdInPercents) || parseFloat(errorRatioInPercents) < parseFloat(errorThresholdInPercents)) {
+        const newWarningThreshold = Math.min(parseFloat(warningRatioInPercents), parseFloat(warningThresholdInPercents));
+        const newErrorThreshold = Math.min(parseFloat(errorRatioInPercents), parseFloat(errorThresholdInPercents));
+        console.log(`Updating thresholds to stricter values: warnings ${newWarningThreshold}%, errors ${newErrorThreshold}%`);
+        updateThresholds(newWarningThreshold, newErrorThreshold);
+      }
       process.exit(0);
     }
   } catch (error) {
