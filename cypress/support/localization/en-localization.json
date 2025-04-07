@@ -1,0 +1,84 @@
+{
+  "loginPage": {
+    "title": "Swag Labs",
+    "form": {
+      "login": "Login",
+      "username": "Username",
+      "password": "Password"
+    },
+    "errors": {
+      "usernameIsRequired": "Epic sadface: Username is required",
+      "passwordIsRequired": "Epic sadface: Password is required",
+      "userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
+      "accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in.",
+      "userNotFound": "Epic sadface: Username and password do not match any user in this service"
+    }
+  },
+  "header": {
+    "title": "Swag Labs",
+    "sidebar": {
+      "inventory": "All Items",
+      "about": "About",
+      "logout": "Logout",
+      "resetAppState": "Reset App State"
+    }
+  },
+  "footer": {
+    "copyRight": "© yearPlaceholder Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy"
+  },
+  "cartPage": {
+    "title": "Your Cart",
+    "continueShopping": "Continue Shopping",
+    "checkout": "Checkout",
+    "quantity": "QTY",
+    "description": "Description",
+    "remove": "Remove"
+  },
+  "inventoryPage": {
+    "title": "Products",
+    "addToCart": "Add to cart",
+    "remove": "Remove",
+    "sort": {
+      "label": "Sort",
+      "options": {
+        "nameAscending": "Name (A to Z)",
+        "nameDescending": "Name (Z to A)",
+        "priceAscending": "Price (low to high)",
+        "priceDescending": "Price (high to low)"
+      }
+    },
+    "errors": {
+      "usernameIsRequired": "Epic sadface: Username is required",
+      "passwordIsRequired": "Epic sadface: Password is required",
+      "userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
+      "accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in"
+    }
+  },
+  "checkoutPage": {
+    "title": "Checkout: Your Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "postalCode": "Postal Code",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "errors": {
+      "firstNameIsRequired": "Error: First Name is required",
+      "lastNameIsRequired": "Error: Last Name is required",
+      "postalCodeIsRequired": "Error: Postal Code is required"
+    }
+  },
+  "checkoutOverviewPage": {
+    "title": "Checkout: Overview",
+    "finish": "Finish",
+    "cancel": "Cancel",
+    "itemTotal": "Item total",
+    "tax": "Tax",
+    "total": "Total"
+  },
+  "checkoutCompletePage": {
+    "title": "Checkout: Complete!",
+    "messageTitle": "Thank you for your order!",
+    "message": "Your order has been dispatched, and will arrive just as fast as the pony can get there!",
+    "backHome": "Back Home"
+  }
+}

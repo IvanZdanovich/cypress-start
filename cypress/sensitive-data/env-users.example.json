@@ -1,0 +1,22 @@
+{
+  "StandardUser": {
+    "username": "standard_user",
+    "password": "secret_sauce"
+  },
+  "LockedUser": {
+    "username": "locked_out_user",
+    "password": "secret_sauce"
+  },
+  "ProblemUser": {
+    "username": "problem_user",
+    "password": "secret_sauce"
+  },
+  "ErrorUser": {
+    "username": "error_user",
+    "password": "secret_sauce"
+  },
+  "VisualUser": {
+    "username": "visual_user",
+    "password": "secret_sauce"
+  }
+}
