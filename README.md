@@ -87,13 +87,13 @@ For interactive debugging with Cypress UI:
 #### Windows:
 
 ```bash
-npm run pretest && npx cypress open --env LANGUAGE=en,TARGET_ENV=dev
+LANGUAGE=en,TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### Mac with caffeine (prevents system from sleeping):
 
 ```bash
-npm run pretest && caffeinate -i npx cypress open --env LANGUAGE=en,TARGET_ENV=dev
+TARGET_ENV=dev LANGUAGE=en npm run pretest && caffeinate -i npx cypress open
 ```
 
 ## Development Guidelines
