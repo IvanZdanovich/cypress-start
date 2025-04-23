@@ -1,4 +1,4 @@
-# Cypress E-Commerce Testing Framework
+# Cypress Testing Framework
 
 ## Table of Contents
 
@@ -15,16 +15,21 @@
 
 ## Overview
 
-A comprehensive testing framework for Swag Labs e-commerce application, featuring Integration and E2E tests, robust
-infrastructure for test maintenance, and detailed documentation.
+A comprehensive testing framework for Swag Labs e-commerce application, based on Cypress, written on javascript,
+featuring Integration and E2E tests, robust infrastructure for test maintenance, and detailed documentation.
 
 ## Features
 
-- **Localization Support**: Dynamic loading of localization strings from JSON files based on language code. [Documentation](docs/localization-testing.md)
-- **Color Theme Testing**: Support for different color themes with environment variables. [Documentation](docs/colour-theme-testing.md)
-- **Custom ESLint Rules**: Enforces code quality standards and test structure. [Documentation](docs/eslint-custom-rules.md)
-- **Pre-commit Quality Checks**: Automated code quality verification with thresholds. [Documentation](docs/pre-commit-check.md)
-- **Test Structure Guidelines**: Describes the proper test structure for readability and maintenance. [Documentation](docs/test-writing-guideline.md)
+- **Localization Support**: Dynamic loading of localization strings from JSON files based on language
+  code. [Documentation](docs/localization-testing.md)
+- **Color Theme Testing**: Support for different color themes with environment
+  variables. [Documentation](docs/colour-theme-testing.md)
+- **Custom ESLint Rules**: Enforces code quality standards and test
+  structure. [Documentation](docs/eslint-custom-rules.md)
+- **Pre-commit Quality Checks**: Automated code quality verification with
+  thresholds. [Documentation](docs/pre-commit-check.md)
+- **Test Structure Guidelines**: Describes the proper test structure for readability and
+  maintenance. [Documentation](docs/test-writing-guideline.md)
 - **Selector Management**: Centralized selector storage for better maintainability.
 - **Bug Tracking**: Central repository for known issues with references in tests. [Documentation](docs/bug-tracking.md)
 
@@ -43,6 +48,7 @@ infrastructure for test maintenance, and detailed documentation.
 ```bash
 git clone <repository-url>
 ```
+
 ```bash
 cd cypress-start
 ```
@@ -71,7 +77,7 @@ LANGUAGE=en TARGET_ENV=dev npm run test
 Available environment variables:
 
 - `LANGUAGE`: Specifies the language code (defaults to "en")
-- `TARGET_ENV`: Specifies the target environment (dev, qa, stage, prod)
+- `TARGET_ENV`: Specifies the target environment (local, dev)
 - `COLOUR_THEME`: Specifies the color theme to use (defaults to "default")
 
 ### Debug Mode
@@ -81,13 +87,13 @@ For interactive debugging with Cypress UI:
 #### Windows:
 
 ```bash
-npm run pretest && npx cypress open --env LANGUAGE=en,TARGET_ENV=dev
+LANGUAGE=en,TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### Mac with caffeine (prevents system from sleeping):
 
 ```bash
-npm run pretest && caffeinate -i npx cypress open --env LANGUAGE=en,TARGET_ENV=dev
+TARGET_ENV=dev LANGUAGE=en npm run pretest && caffeinate -i npx cypress open
 ```
 
 ## Development Guidelines
@@ -114,7 +120,7 @@ npm run pretest && caffeinate -i npx cypress open --env LANGUAGE=en,TARGET_ENV=d
 
 ### [Tagging Strategy](docs/tagging-strategy.md)
 
-## [Git Strategy](docs/git-strategy.md)
+### [Git Strategy](docs/git-strategy.md)
 
 ## Troubleshooting
 
