@@ -1,46 +1,60 @@
-## Cypress Test Writing Guideline
+# Test Writing Guideline
 
-### Rules:
+## Rules:
 
-1. **Naming Conventions**: Follow the Naming Conventions. Pay attention to code examples with `describe`, `context`, and
-   `it` block descriptions.
+1. **Naming Conventions**: Follow the established naming conventions.
 
-2. **Tagging Strategy**: Avoid usage of tags in the tests. But in any case follow the Tagging Strategy.
+2. **Test Independence**:
+   - Define all use cases to be covered, even if not yet implemented, to create live documentation.
+   - Structure use cases properly within files and ensure they are connected (dependent). Use cases from different files should not overlap.
+   - Test scenarios (files) should be independent of each other.
+   - To keep browser and session data, configure the `describe` block with `{ testIsolation: false }`.
+   - Include only one `describe` block per file.
 
-3. **Localization Testing**: Organise the central storage for localization values, use values used in app build.
+3. **Do Not Automate Manual Test Cases**: Avoid directly replicating manual test cases. Focus on identifying and implementing the most valuable specifications.
 
-4. **Test Independence**: The current approach aims at creating live documentation. This approach requires defining all
-   the use cases that should be covered, even if they are not implemented yet. The use cases should be
-   properly structured and ordered within the file and be connected (dependent). The use cases from different files
-   should not overlap each other. Test scenarios (files) should be independent of each other. To keep the browser and
-   session data, configure the `describe` block with the `testIsolation: false` parameter. Only one `describe` block should per file.
+4. **Test Structure**:
+   - **`it` Block**: Specifies the expected result and contains only verification steps. Use detailed descriptions to make requirements unique. Avoid generic descriptions like "Should return 401 Unauthorized error." Instead, include specific details like error messages. Use a single check per `it` block.
+   - **`context` Block**: Outlines conditions and includes steps common to `it` blocks, grouping them logically.
+   - **`describe` Block**: Defines the functionality under test and optimized scenarios for use cases.
 
-5. **Test Data Isolation**: It is important to keep test data used for tests isolated for each test file.
+5. **Provide Skipped Empty Context and `it` Blocks**: Track test coverage by providing descriptions for non-automated use cases, marking them as skipped:
+    ```javascript
+    it.skip('Should display an error when submitting invalid data', () => {
+      // Not implemented yet
+    });
+    ```
 
-6. **No Hard Coded Values in Tests**: Avoid hard coded values in tests. All parameters that characterise the app under the test (requirements, localization values, details of implementation, selectors etc.) should be
-   stored in the separate files and variables. The test should be written in a way that it is easy to read and understand.
+6. **No Hard-Coded Values in Tests**: Store all parameters that characterize the app (requirements, localization values, implementation details, selectors, etc.) in separate files and variables. Write tests that are easy to read and understand.
 
-7. **Test Structure**:
-   - **IT Block**: Specifies the expected result (use case) and contains only verification steps. To keep
-     requirements unique, provide detailed descriptions. Avoid generic descriptions like "Should return 401
-     Unauthorized error." Include specific details such as error messages. Ensure a single check per `it` block.
-   - **Context Block**: Outlines the conditions and includes condition steps common to `it` blocks and groups them.
-   - **Describe Block**: Defines the part of functionality under the test and optimised scenario for use cases.
-
-8. **Do Not Automate Manual Test Cases**: Directly replicating manual test cases in automation is impractical and
-   costly, yielding minimal benefits. Instead, focus on identifying and implementing the most valuable specifications.
-
-9. **Do Not Hide Selectors**: Do not use util commands that hide the selector itself, e.g.,
-   `cy.getTitleByKey('filter').should('have.text', 'Filter');`. Store selectors in the
-   `selectors.js` file grouped by pages and components. Storing selectors in well-named
-   variables helps keep the code clean and maintainable. For example:
+7. **Do Not Hide Selectors**: Store selectors in the `selectors.js` file, grouped by pages and components. For example:
     ```javascript
     cy.get(cartPage.continueShopping).click();
     ```
-   Navigating to the selector by its variable allows you to easily find the selector and copy it for debugging or
-   refactoring.
+   This makes it easy to find and update selectors when needed.
 
-10. **Provide Skipped Empty Context and IT Blocks**: To track test coverage, provide descriptions for non-automated use cases but
-    leave them without implementation and mark as skipped.
+8. **Use Gherkin Keywords**: Use Gherkin keywords to describe test scenarios and steps. This helps in understanding the test flow and makes it easier to communicate with non-technical stakeholders.
 
-11. **Test Data Randomization**: Use random data generation for test data. Do not use the same data for all tests.
+9. **Test Data Isolation**: Keep test data isolated for each test file.
+
+10. **Test Data Management**: Store test data in dedicated files under the `cypress/test-data/` directory, organized by feature or flow.
+
+11. **Test Data Randomization**: Generate random test data rather than using the same data across tests.
+
+12. **External Resource Handling**: When testing links to external resources:
+   - Remove the `target` attribute to keep navigation in the same window.
+   - Handle uncaught exceptions appropriately.
+   - Return to the application using `cy.go('back')`.
+
+    Example:
+    ```javascript
+    cy.get(selector).invoke('removeAttr', 'target');
+    cy.on('uncaught:exception', () => false); // Prevent test failure
+    ```
+
+13. **Track Issues**: Document issues in the GitHub issue tracker and mark affected code with comments:
+    ```javascript
+    // TODO: link to the issue description
+    ```
+
+14. **Custom Commands**: Create reusable custom commands for common operations.

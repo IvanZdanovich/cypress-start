@@ -77,7 +77,7 @@ LANGUAGE=en TARGET_ENV=dev npm run test
 Available environment variables:
 
 - `LANGUAGE`: Specifies the language code (defaults to "en")
-- `TARGET_ENV`: Specifies the target environment (dev, qa, stage, prod)
+- `TARGET_ENV`: Specifies the target environment (local, dev)
 - `COLOUR_THEME`: Specifies the color theme to use (defaults to "default")
 
 ### Debug Mode
