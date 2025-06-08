@@ -12,7 +12,7 @@ module.exports = {
     const invalidCharactersPattern = /[!@#$%^&*()+={}[\]|\\;"'<>?/]/g;
 
     function checkTitle(node) {
-      const title = node.arguments[0] && node.arguments[0].value;
+      const title = node.arguments[0] && node.arguments[0]?.value;
       if (title) {
         if (title.trim() !== title) {
           context.report({
@@ -43,10 +43,10 @@ module.exports = {
       'CallExpression[callee.name="context"]'(node) {
         checkTitle(node);
       },
-      'CallExpression[callee.name="describe.skip"]'(node) {
+      'CallExpression[callee.object.name="describe"][callee.property.name="skip"]'(node) {
         checkTitle(node);
       },
-      'CallExpression[callee.name="context.skip"]'(node) {
+      'CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
         checkTitle(node);
       },
     };

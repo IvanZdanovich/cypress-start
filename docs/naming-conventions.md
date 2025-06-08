@@ -16,7 +16,7 @@
 - Use kebab case for test file naming:
   - Integration API test file:
     - Pattern: `module-name.submodule-name.test-type.spec.js`
-    - Example: `audits.settings-audit-round.api.spec.js`
+    - Example: `settings.api.spec.js`
   - Integration UI test file:
     - Pattern: `page-name.component-name.test-type.spec.js`
     - Example: `cart-page.ui.spec.js`

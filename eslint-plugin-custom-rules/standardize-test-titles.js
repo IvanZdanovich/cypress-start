@@ -159,7 +159,7 @@ module.exports = {
       '@': '',
       '^': '',
       '~': '',
-      '_': '',
+      _: '',
     };
 
     function replaceCommonInconsistencies(title, commonInconsitencies) {

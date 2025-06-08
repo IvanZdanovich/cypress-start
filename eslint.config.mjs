@@ -6,7 +6,7 @@ import prettier from 'eslint-plugin-prettier';
 export default [
   pluginJs.configs.recommended,
   {
-    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'],
+    ignores: ['**/node_modules', '**/dist', '**/cypress/reports', '**/mochawesome-report'],
   },
   {
     plugins: {

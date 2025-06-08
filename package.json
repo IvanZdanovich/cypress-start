@@ -6,12 +6,12 @@
   "scripts": {
     "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
     "test": "npx cypress run",
-    "lint": "eslint",
+    "lint": "eslint . --format stylish",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "node check-eslint.js"
+      "node .husky/check-eslint.js"
     ]
   },
   "keywords": [],

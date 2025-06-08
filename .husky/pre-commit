@@ -1,2 +1,3 @@
 echo "Running ESLint check..."
+export PATH="$PATH:/usr/local/bin"
 node .husky/check-eslint.js
