@@ -34,3 +34,6 @@ target
 
 # VS
 /.vs
+
+# mochawesome reports
+mochawesome-report/**
