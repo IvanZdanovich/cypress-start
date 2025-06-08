@@ -20,8 +20,8 @@ supposed to do, making it easier to assess coverage and adapt to changes.
 
 ## 3. Why is using Page Object considered an anti-pattern?
 
-POM is tightly coupled with object-oriented programming (OOP): each page becomes a class, each element a field, and
-every action a method wrapping a simple operation. At first glance, this seems elegant:
+The Page Object Model (POM) is tightly coupled with object-oriented programming (OOP): each page becomes a class, each
+element a field, and every action a method wrapping a simple operation. At first glance, this seems elegant:
 
 **Test using POM (anti-pattern):**
 
@@ -78,12 +78,11 @@ context('LoginPage: When user logins with valid credentials', () => {
         dashboardPage.getTitle().should('contain', 'Dashboard');
     });
 });
-
 ```
 
 **Cons:**
 
-- Extra class and methods for trivial actions
+- Extra classes and methods for trivial actions
 - More files to maintain
 
 **Recommended approach (centralized selectors):**
@@ -130,9 +129,9 @@ context('LoginPage: When user logins with valid credentials', () => {
 - Tests are clear and focused
 
 Why not just use selectors directly? Selectors are just strings. Hiding them in classes adds unnecessary complexity.
-Modern frameworks allow centralized selector storage (e.g., a selectors.js file), making updates simple and tests
-transparent. Summary: POM creates a complex, self-serving system that distracts from writing clear, maintainable tests.
-It is an anti-pattern because it prioritizes OOP structure over test clarity and maintainability.
+Modern frameworks allow centralized selector storage (e.g., a `selectors.js` file), making updates simple and tests
+transparent. In summary, POM creates a complex, self-serving system that distracts from writing clear, maintainable
+tests. It is an anti-pattern because it prioritizes OOP structure over test clarity and maintainability.
 
 ## 4. Why is using BDD frameworks counterproductive?
 
@@ -166,9 +165,9 @@ context('LoginPage.STANDARD: When user logins with valid credentials', () => {
 ```
 
 - **Pros:**
-    - No extra files or step mapping.
-    - Test names are self-documenting and readable.
-    - No need for external reporting tools—test output is clear.
+    - No extra files or step mapping
+    - Test names are self-documenting and readable
+    - No need for external reporting tools—test output is clear
 
 ---
 
@@ -214,9 +213,9 @@ Then('the user should be navigated to the Inventory page', () => {
 
 **Cons:**
 
-- Requires maintaining both feature files and step definitions.
-- Adds an extra abstraction layer.
-- Slower feedback and more boilerplate.
+- Requires maintaining both feature files and step definitions
+- Adds an extra abstraction layer
+- Slower feedback and more boilerplate
 
 **Summary:**  
 You can achieve clear, human-readable tests using Gherkin-style language and naming conventions directly in your code,
@@ -228,66 +227,11 @@ Tests that focus on a single page or component are easier to maintain, debug, an
 quickly identify where issues occur and minimizes the impact of changes in one area on unrelated tests. It also helps
 keep the test suite organized and scalable as the application grows.
 
-## 6. Why should tests be atomic?
+## 6. Why should tests be atomic? Why is it important to keep tests small and focused?
 
 Atomic tests verify only one specific thing, making them faster, more reliable, and easier to maintain. They provide
 precise feedback when failures occur, simplifying debugging and improving the accuracy of test metrics. Small, focused
 tests are also easier to update and less likely to break when unrelated parts of the application change.
-
-## 7. Why are naming conventions crucial in test automation?
-
-Consistent naming conventions ensure that tests are well-structured, maintainable, and easy to understand. They enable
-automation of internal checks, streamline onboarding for new team members, minimize logical mistakes, and improve
-communication. Clear naming also makes it easier to track coverage, identify issues, and generate meaningful metrics.
-
-## 8. Why should all constants in tests be stored in variables?
-
-Storing constants in variables improves readability and maintainability. It makes updating values easier and reduces the
-risk of errors from hardcoded values. This approach also increases test flexibility, as changes to constants only need
-to be made in one place, rather than throughout the test code.
-
-## 9. Why is using tags in tests discouraged?
-
-Tags can create confusion and complicate test management, especially when used inconsistently. Generic tags like \@smoke
-or \@regression are often unclear and inconsistently applied, leading to confusion. They often lack clear
-definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file organization and
-meaningful test names to group and filter tests. This approach is more transparent and easier to maintain.
-
-## 10. Why is test execution speed extremely important?
-
-Fast test execution is critical for efficient development and product release cycles. Slow tests create bottlenecks in
-CI/CD pipelines, delay feedback for developers, and increase the time needed to identify and fix issues. Fast tests
-enable rapid iteration, better resource utilization, and a smoother development process. They also reduce infrastructure
-costs and allow for more frequent, comprehensive test runs.
-
-**Key arguments:**
-
-- Fast feedback: Developers receive results quickly and can address issues sooner.
-- Increased productivity: Less time is spent waiting for test results, allowing more focus on development.
-- CI/CD optimization: Faster builds and releases improve delivery timelines.
-- Cost reduction: Shorter test runs lower infrastructure expenses, especially at scale.
-- Improved scalability: Quick tests make it feasible to run the entire suite more often, ensuring thorough coverage.
-
-## 11. Why is "Do not repeat yourself" (DRY) not relevant in test automation?
-
-In test automation, readability and clarity are more important than minimizing code duplication. Explicit,
-well-described tests are easier to understand, maintain, and debug. Over-applying DRY principles can lead to overly
-abstracted code that is hard to follow and update, especially for new team members.
-
-## 12. Why is it a problem to write test cases before specifications?
-
-Writing test cases before formalizing specifications leads to imprecise coverage, confusion, and inefficiency. Without
-clear specifications, it's difficult to ensure that tests are relevant and comprehensive. Specifications should be the
-foundation for test cases, ensuring that automation efforts are aligned with actual requirements and can be easily
-maintained as the system evolves.
-
-## 13. What are the risks of relying on test management tools for automation?
-
-Integrating test management tools with automation increases complexity, maintenance costs, and tool dependency. Metrics
-and reports from such tools are often imprecise and do not accurately reflect true coverage or quality. Relying on these
-tools can also distract from focusing on requirement-based automation and clear test structure.
-
-## 14. Why is it important to keep tests small and focused?
 
 Here are two examples to illustrate the importance of small, focused tests:
 
@@ -355,7 +299,60 @@ it('CartPage.Footer.STANDARD: Then the Copyright notice with actual year should 
 Small, focused tests make failures easy to trace, improve maintainability, and ensure each requirement is clearly
 covered.
 
-## 15. Why should you describe and skip non-implemented tests?
+## 7. Why are naming conventions crucial in test automation?
+
+Consistent naming conventions ensure that tests are well-structured, maintainable, and easy to understand. They enable
+automation of internal checks, streamline onboarding for new team members, minimize logical mistakes, and improve
+communication. Clear naming also makes it easier to track coverage, identify issues, and generate meaningful metrics.
+
+## 8. Why should all constants in tests be stored in variables?
+
+Storing constants in variables improves readability and maintainability. It makes updating values easier and reduces the
+risk of errors from hardcoded values. This approach also increases test flexibility, as changes to constants only need
+to be made in one place, rather than throughout the test code.
+
+## 9. Why is using tags in tests discouraged?
+
+Tags can create confusion and complicate test management, especially when used inconsistently. Generic tags like
+`@smoke` or `@regression` are often unclear and inconsistently applied, leading to confusion. They often lack clear
+definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file organization and
+meaningful test names to group and filter tests. This approach is more transparent and easier to maintain.
+
+## 10. Why is test execution speed extremely important?
+
+Fast test execution is critical for efficient development and product release cycles. Slow tests create bottlenecks in
+CI/CD pipelines, delay feedback for developers, and increase the time needed to identify and fix issues. Fast tests
+enable rapid iteration, better resource utilization, and a smoother development process. They also reduce infrastructure
+costs and allow for more frequent, comprehensive test runs.
+
+**Key arguments:**
+
+- Fast feedback: Developers receive results quickly and can address issues sooner.
+- Increased productivity: Less time is spent waiting for test results, allowing more focus on development.
+- CI/CD optimization: Faster builds and releases improve delivery timelines.
+- Cost reduction: Shorter test runs lower infrastructure expenses, especially at scale.
+- Improved scalability: Quick tests make it feasible to run the entire suite more often, ensuring thorough coverage.
+
+## 11. Why is "Do not repeat yourself" (DRY) not relevant in test automation?
+
+In test automation, readability and clarity are more important than minimizing code duplication. Explicit,
+well-described tests are easier to understand, maintain, and debug. Over-applying DRY principles can lead to overly
+abstracted code that is hard to follow and update, especially for new team members.
+
+## 12. Why is it a problem to write test cases before specifications?
+
+Writing test cases before formalizing specifications leads to imprecise coverage, confusion, and inefficiency. Without
+clear specifications, it's difficult to ensure that tests are relevant and comprehensive. Specifications should be the
+foundation for test cases, ensuring that automation efforts are aligned with actual requirements and can be easily
+maintained as the system evolves.
+
+## 13. What are the risks of relying on test management tools for automation?
+
+Integrating test management tools with automation increases complexity, maintenance costs, and tool dependency. Metrics
+and reports from such tools are often imprecise and do not accurately reflect true coverage or quality. Relying on these
+tools can also distract from focusing on requirement-based automation and clear test structure.
+
+## 14. Why should you describe and skip non-implemented tests?
 
 Describing and skipping non-implemented tests makes your repository a living source of truth for all use cases. This not
 only provides precise metrics for automation coverage but also clearly defines the intended scope. As a result,
@@ -383,13 +380,14 @@ context('CartPage.STANDARD: When user visits the page', () => {
     });
 });
 ```
+
 and here is the output of the test run:
 
-       Spec                                              Tests  Passing  Failing  Pending  Skipped  
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔  integration/ui/cart-page.ui.spec.js      00:01       3        1        -        2        -  │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ✖  0 of 6 failed (0%)                       00:01       3        1        -        2        -  
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
 
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+✖ 0 of 6 failed (0%)                       00:01 3 1 - 2 -
 
 This makes the scope and current coverage explicit, even before all tests are implemented.
