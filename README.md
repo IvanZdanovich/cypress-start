@@ -68,6 +68,13 @@ npm install
 
 ### Standard Test Run
 
+
+To run tests with default settings:
+
+```bash
+npm run test
+```
+
 To run tests with specific language and environment:
 
 ```bash
@@ -77,7 +84,7 @@ LANGUAGE=en TARGET_ENV=dev npm run test
 Available environment variables:
 
 - `LANGUAGE`: Specifies the language code (defaults to "en")
-- `TARGET_ENV`: Specifies the target environment (local, dev)
+- `TARGET_ENV`: Specifies the target environment (defaults to "dev")
 - `COLOUR_THEME`: Specifies the color theme to use (defaults to "default")
 
 ### Debug Mode
@@ -87,13 +94,13 @@ For interactive debugging with Cypress UI:
 #### Windows:
 
 ```bash
-LANGUAGE=en,TARGET_ENV=dev npm run pretest && npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### Mac with caffeine (prevents system from sleeping):
 
 ```bash
-TARGET_ENV=dev LANGUAGE=en npm run pretest && caffeinate -i npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 ```
 
 ## Development Guidelines
@@ -111,8 +118,6 @@ TARGET_ENV=dev LANGUAGE=en npm run pretest && caffeinate -i npx cypress open
 ### [Copilot Prompts](docs/copilot-prompts.md)
 
 ## Quality Standards
-
-### Custom ESLint Rules
 
 ### [Custom ESLint rules](docs/eslint-custom-rules.md)
 

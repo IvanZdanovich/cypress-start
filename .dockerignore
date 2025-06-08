@@ -28,7 +28,7 @@ logs/**
 *.log
 
 # Ignore documentation
-docs/**
+docs
 
 # Ignore Dockerfile
 Dockerfile*
