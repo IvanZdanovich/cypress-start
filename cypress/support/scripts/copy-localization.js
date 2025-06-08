@@ -11,8 +11,8 @@ if (!languageCode) {
 console.log(`Language code: ${languageCode}`);
 
 // Add your localization copying logic here
-const sourcePath = path.join(__dirname, `../../support/localization/${languageCode}-localization.json`);
-const destinationPath = path.join(__dirname, '../../support/localization/l10n.json');
+const sourcePath = path.join(__dirname, `../localization/${languageCode}-localization.json`);
+const destinationPath = path.join(__dirname, '../localization/l10n.json');
 
 console.log(`Source path: ${sourcePath}`);
 
