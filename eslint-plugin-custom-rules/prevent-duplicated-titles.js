@@ -12,7 +12,7 @@ module.exports = {
     const globalTitles = require('./global-titles/global-titles');
 
     function checkForDuplicate(node) {
-      const title = node.arguments[0] && node.arguments[0].value && node.arguments[0].value.replace(/['`]/g, '');
+      const title = node.arguments[0] && node.arguments[0].value && node.arguments[0].value.replace(/["'`]/g, '');
       if (title && globalTitles.has(title)) {
         context.report({
           node,

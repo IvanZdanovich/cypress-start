@@ -31,18 +31,18 @@ module.exports = {
       }
       let currentLevel = structure;
 
-      for (let i = 0; i < parts.length; i++) {
-        if (currentLevel[parts[i]]) {
-          currentLevel = currentLevel[parts[i]];
+      for (const element of parts) {
+        if (currentLevel[element]) {
+          currentLevel = currentLevel[element];
         } else {
-          return `Part "${parts[i]}" does not exist in the declared JSON structure.`;
+          return `Part "${element}" does not exist in the declared JSON structure.`;
         }
       }
       return true;
     }
 
     function checkTitlePattern(node) {
-      const title = node.arguments[0] && node.arguments[0].value;
+      const title = node.arguments[0].value;
       if (title) {
         const validationResult = validateTitleAgainstStructure(title, moduleStructure);
         if (validationResult !== true) {
@@ -59,6 +59,12 @@ module.exports = {
         checkTitlePattern(node);
       },
       'CallExpression[callee.name="context"]'(node) {
+        checkTitlePattern(node);
+      },
+      'CallExpression[callee.object.name="describe"][callee.property.name="skip"]'(node) {
+        checkTitlePattern(node);
+      },
+      'CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
         checkTitlePattern(node);
       },
       'CallExpression[callee.name="it"]'(node) {

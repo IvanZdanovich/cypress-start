@@ -1,33 +1,33 @@
 {
   "name": "cypress-start",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Test automation framework based on cypress",
   "main": "index.js",
   "scripts": {
     "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
     "test": "npx cypress run",
-    "lint": "eslint",
+    "lint": "eslint . --format stylish",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "node check-eslint.js"
+      "node .husky/check-eslint.js"
     ]
   },
   "keywords": [],
   "author": "Ivan Zdanovich",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.24.0",
-    "eslint": "^9.24.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-cypress": "^4.2.0",
-    "eslint-plugin-prettier": "^5.2.6",
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-cypress": "^5.1.0",
+    "eslint-plugin-prettier": "^5.4.1",
     "husky": "^9.1.7",
     "prettier": "^3.5.3"
   },
   "dependencies": {
-    "cypress": "^14.2.1",
+    "cypress": "^14.4.1",
     "cypress-real-events": "^1.14.0",
     "mochawesome": "^7.1.3"
   }

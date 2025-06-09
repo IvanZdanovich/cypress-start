@@ -11,6 +11,7 @@ tests.
 - [Verify Test Title Pattern](#verify-test-title-pattern)
 - [Verify TODOs Have Links](#verify-todos-have-links)
 - [Verify Test Title Without Forbidden Symbols](#verify-test-title-without-forbidden-symbols)
+- [Standardize Test Titles](#standardize-test-titles)
 
 ## Do Not Allow Empty Blocks
 
@@ -134,7 +135,7 @@ it('Auth.Login.ADMIN: Then user should be redirected to dashboard', () => {
 **Rule file:** `eslint-plugin-custom-rules/verify-todos-have-links.js`
 
 Ensures that all TODO, FIXME, and similar comments include a JIRA link for tracking purposes.
-* Not applied to current project since the bug tracking implemented localy.
+\* Not applied to current project since the bug tracking implemented localy.
 
 ### Invalid Examples
 
@@ -176,6 +177,30 @@ context('Auth.Login: When credentials are valid', () => {
 });
 ```
 
----
+## Standardize Test Titles
 
-These custom rules help maintain consistent testing practices and improve code quality.
+**Rule file:** `eslint-plugin-custom-rules/standardize-test-titles.js`
+
+Ensures that test titles use consistent and standardized terminology for UI interactions, elements, assertions, and API terms. This improves clarity and uniformity across the test suite.
+
+### How It Works
+
+The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
+
+### Invalid Examples
+
+```javascript
+describe('User clicks btn to show popup', () => {
+});
+it('should render loader when data is loading', () => {
+});
+```
+
+### Valid Examples
+
+```javascript
+describe('User clicks button to display tooltip', () => {
+});
+it('should display spinner when data is loading', () => {
+});
+```
