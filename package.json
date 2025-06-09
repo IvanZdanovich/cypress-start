@@ -18,16 +18,16 @@
   "author": "Ivan Zdanovich",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
-    "eslint": "^9.26.0",
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-cypress": "^4.3.0",
-    "eslint-plugin-prettier": "^5.4.0",
+    "eslint-plugin-cypress": "^5.1.0",
+    "eslint-plugin-prettier": "^5.4.1",
     "husky": "^9.1.7",
     "prettier": "^3.5.3"
   },
   "dependencies": {
-    "cypress": "^14.3.3",
+    "cypress": "^14.4.1",
     "cypress-real-events": "^1.14.0",
     "mochawesome": "^7.1.3"
   }
