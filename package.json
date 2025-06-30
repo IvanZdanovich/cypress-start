@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Test automation framework based on cypress",
   "main": "index.js",
   "scripts": {
@@ -27,8 +27,7 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
-    "cypress": "^14.4.1",
-    "cypress-real-events": "^1.14.0",
+    "cypress": "^14.5.0",
     "mochawesome": "^7.1.3"
   }
 }
