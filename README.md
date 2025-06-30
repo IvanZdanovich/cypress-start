@@ -16,7 +16,7 @@
 
 ## Overview
 
-A comprehensive testing framework for the Swag Labs e-commerce application, based on Cypress, written in JavaScript. It features integration and E2E tests, robust infrastructure for test maintenance, and detailed documentation.
+A comprehensive testing framework for the Swag Labs e-commerce application, built with Cypress and written in JavaScript. It features integration and E2E tests, robust infrastructure for test maintenance, and detailed documentation.
 
 ---
 
@@ -26,7 +26,7 @@ This framework offers:
 
 - **Custom ESLint Rules**: Enforces strict test structure and naming conventions, preventing duplicate or invalid test titles.  
   See [Custom ESLint Rules](docs/eslint-custom-rules.md).
-- **Localization Testing**: Dynamic loading and validation of localization files, supporting multi-language test runs.  
+- **Localization Testing**: Dynamically loads and validates localization files, supporting multi-language test runs.  
   See [Localization Testing](docs/localization-testing.md).
 - **Color Theme Testing**: Easily test across multiple color themes using environment variables.  
   See [Color Theme Testing](docs/colour-theme-testing.md).
@@ -65,8 +65,7 @@ This framework offers:
 
 3. Set up sensitive data:
 
-  - Create a directory: `cypress/sensitive-data`
-  - Add necessary test user credentials following the required format
+   - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` and provide test user credentials in the new file.
 
 ---
 
@@ -74,19 +73,19 @@ This framework offers:
 
 ### Standard Test Run
 
-To run tests with default settings:
-
-  ```bash
-    npm run test
-  ```
-
-To run tests with a specific language and environment:
+To run tests with default settings in headless mode:
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run test
+npm run test
 ```
 
-Available environment variables:
+To run tests with specific language and environment parameters in headless mode:
+
+```bash
+LANGUAGE=en TARGET_ENV=dev npm run test
+```
+
+Available environment parameters:
 
 - `LANGUAGE`: Specifies the language code (defaults to `en`)
 - `TARGET_ENV`: Specifies the target environment (defaults to `dev`)
@@ -99,13 +98,13 @@ For interactive debugging with the Cypress UI:
 #### Windows:
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### macOS with caffeine (prevents system from sleeping):
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 ```
 
 ---
@@ -136,7 +135,7 @@ For interactive debugging with the Cypress UI:
 ### Common Issues
 
 - **Pretest script fails**: Ensure you have the correct language and theme files in the appropriate directories.
-- **Test isolation issues**: Check that `testIsolation: false` is set on `describe` blocks.
+- **Test isolation issues**: Check that `testIsolation: false` is set on the relevant `describe` blocks.
 - **Localization errors**: Verify that the language file contains all required keys.
 - **ESLint errors**: Run `npm run lint` to identify specific issues.
 
@@ -145,6 +144,6 @@ For interactive debugging with the Cypress UI:
 To update all dependencies to their latest versions:
 
 ```bash
-  npx npm-check-updates -u
-  npm install
+npx npm-check-updates -u
+npm install
 ```
