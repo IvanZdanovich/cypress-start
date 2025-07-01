@@ -1,4 +1,4 @@
-
+# Cypress Testing Framework
 
 <p align="center">
     <picture>
@@ -7,8 +7,6 @@
       <img alt="Cypress Logo" src="./assets/cypress-logo-light.png">
     </picture>
 </p>
-
-# Cypress Testing Framework
 
 ## Table of Contents
 
@@ -26,6 +24,8 @@
 Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
 effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
 e-commerce application.
+
+![Alt text](assets/execution-example.gif)
 
 ---
 
