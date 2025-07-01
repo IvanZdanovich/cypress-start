@@ -4,38 +4,56 @@
 
 - [Overview](#overview)
 - [What Makes This Framework Unique?](#what-makes-this-framework-unique)
-- [Project Structure](#project-structure)
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
 - [Development Guidelines](#development-guidelines)
 - [Quality Standards](#quality-standards)
-- [Branching and Merge Strategy](#branching-and-merge-strategy)
-- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 
 ## Overview
 
-A comprehensive testing framework for the Swag Labs e-commerce application, built with Cypress and written in JavaScript. It features integration and E2E tests, robust infrastructure for test maintenance, and detailed documentation.
+Unlock rapid and reliable testing with our framework, developed using Cypress and JavaScript. Designed to scale
+effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
+e-commerce application and offers:
+
+- Defined Testing Approach: Clear guidelines and examples to help you write effective tests, enhancing consistency and
+reliability.
+- Robust Infrastructure: A solid infrastructure that simplifies test maintenance and reduces overhead.
+- Detailed Documentation: Extensive documentation with step-by-step instructions and best practices to maximize the
+framework's potential.
 
 ---
 
 ## What Makes This Framework Unique?
 
-This framework offers:
+- **No Abstractions:** No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
+  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
+  and understandable for non-technical personnel.
+- **Scalability:** Easily extendable for future requirements.
+- **Maintainability:** Clear project structure, simple approach, and comprehensive documentation for easy onboarding,
+  effortless maintenance, and test writing.
+- **Robustness:** Designed with Cypress to handle complex test scenarios with ease.
+- **Easy Startup:** Quick setup with minimal configuration required.
 
-- **Custom ESLint Rules**: Enforces strict test structure and naming conventions, preventing duplicate or invalid test titles.  
+---
+
+## Features
+
+- **Custom ESLint Rules:** Enforces strict test structure and naming conventions, preventing duplicate or invalid test
+  titles.  
   See [Custom ESLint Rules](docs/eslint-custom-rules.md).
-- **Localization Testing**: Dynamically loads and validates localization files, supporting multi-language test runs.  
+- **Localization Testing:** Dynamically loads and validates localization files, supporting multi-language test runs.  
   See [Localization Testing](docs/localization-testing.md).
-- **Color Theme Testing**: Easily test across multiple color themes using environment variables.  
+- **Color Theme Testing:** Easily test across multiple color themes using environment variables.  
   See [Color Theme Testing](docs/colour-theme-testing.md).
-- **Centralized Selector Management**: All selectors are managed in a single location for maintainability and consistency.
-- **Pre-commit Quality Checks**: Automated linting and code quality checks before every commit.  
+- **Centralized Selector Management:** All selectors are managed in a single location for maintainability and
+  consistency.
+- **Pre-commit Quality Checks:** Automated linting and code quality checks before every commit.  
   See [Pre-commit Check](docs/pre-commit-check.md).
-- **Test Structure Guidelines**: Detailed documentation for writing maintainable, readable, and robust tests.  
+- **Test Structure Guidelines:** Detailed documentation for writing maintainable, readable, and robust tests.  
   See [Test Writing Guideline](docs/test-writing-guideline.md), [Naming Conventions](docs/naming-conventions.md), [Tagging Strategy](docs/tagging-strategy.md), [FAQ](docs/faq.md).
-- **Copilot Prompts**: Ready-to-use prompts for AI-assisted test writing.  
+- **Copilot Prompts:** Ready-to-use prompts for AI-assisted test writing.  
   See [Copilot Prompts](docs/copilot-prompts.md).
 
 ---
@@ -65,7 +83,8 @@ This framework offers:
 
 3. Set up sensitive data:
 
-   - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` and provide test user credentials in the new file.
+    - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
+      user credentials for the test environment.
 
 ---
 
@@ -89,7 +108,7 @@ Available environment parameters:
 
 - `LANGUAGE`: Specifies the language code (defaults to `en`)
 - `TARGET_ENV`: Specifies the target environment (defaults to `dev`)
-- `COLOUR_THEME`: Specifies the color theme to use (defaults to `default`)
+- `COLOUR_THEME`: Specifies the colour theme to use (defaults to `default`)
 
 ### Debug Mode
 
@@ -101,7 +120,7 @@ For interactive debugging with the Cypress UI:
 LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
-#### macOS with caffeine (prevents system from sleeping):
+#### macOS with caffeinate (prevents system from sleeping):
 
 ```bash
 LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
@@ -134,10 +153,10 @@ LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 
 ### Common Issues
 
-- **Pretest script fails**: Ensure you have the correct language and theme files in the appropriate directories.
-- **Test isolation issues**: Check that `testIsolation: false` is set on the relevant `describe` blocks.
-- **Localization errors**: Verify that the language file contains all required keys.
-- **ESLint errors**: Run `npm run lint` to identify specific issues.
+- **Pretest script fails:** Ensure you have the correct language and theme files in the appropriate directories.
+- **Test isolation issues:** Check that `testIsolation: false` is set on the relevant `describe` blocks.
+- **Localization errors:** Verify that the language file contains all required keys.
+- **ESLint errors:** Run `npm run lint` to identify specific issues.
 
 ### Updating Dependencies
 
