@@ -13,28 +13,26 @@
 
 ## Overview
 
-Unlock rapid and reliable testing with our framework, developed using Cypress and JavaScript. Designed to scale
+Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
 effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
-e-commerce application and offers:
-
-- Defined Testing Approach: Clear guidelines and examples to help you write effective tests, enhancing consistency and
-reliability.
-- Robust Infrastructure: A solid infrastructure that simplifies test maintenance and reduces overhead.
-- Detailed Documentation: Extensive documentation with step-by-step instructions and best practices to maximize the
-framework's potential.
+e-commerce application.
 
 ---
 
 ## What Makes This Framework Unique?
 
-- **No Abstractions:** No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
-  and understandable for non-technical personnel.
-- **Scalability:** Easily extendable for future requirements.
-- **Maintainability:** Clear project structure, simple approach, and comprehensive documentation for easy onboarding,
+- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
+  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable, and
+  understandable for non-technical personnel.
+- **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
+  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth
+  for the entire team.
+- **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
+- **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
   effortless maintenance, and test writing.
-- **Robustness:** Designed with Cypress to handle complex test scenarios with ease.
-- **Easy Startup:** Quick setup with minimal configuration required.
+- **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
+- **Lightweight and Easy Startup**: Quick setup with minimal configuration. The low number of third-party dependencies
+  helps avoid conflicts and ensures fast build times.
 
 ---
 
