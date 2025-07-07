@@ -9,7 +9,7 @@ module.exports = {
     schema: [], // no options
   },
   create(context) {
-    const globalTitles = require('./global-titles/global-titles');
+    const globalTitles = new Set();
 
     function checkForDuplicate(node) {
       const title = node.arguments[0] && node.arguments[0].value && node.arguments[0].value.replace(/["'`]/g, '');
