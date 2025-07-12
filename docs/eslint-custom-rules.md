@@ -24,30 +24,28 @@ the test or mark tests as skipped.
 
 ```javascript
 it('should do something', () => {
-    // Empty block
+  // Empty block
 });
 
 context('when action is done', () => {
-    // Empty block
+  // Empty block
 });
 
 it('should do something'); // Missing function body
-
 ```
 
 ### Valid Examples
 
 ```javascript
 it('should do something', () => {
-    expect(true).to.be.true;
+  expect(true).to.be.true;
 });
 
 context('when action is done', () => {
-    cy.get('.element').should('be.visible');
+  cy.get('.element').should('be.visible');
 });
 
 it.skip('should do something'); // Skipped test without implementation is allowed
-
 ```
 
 ## Prevent Duplicated Titles
@@ -60,12 +58,12 @@ Ensures that all test titles are unique across the test suite, preventing confus
 
 ```javascript
 describe('UserManagement', () => {
-    // ...
+  // ...
 });
 
 // Later in the same test suite or another file
 describe('UserManagement', () => {
-    // This will trigger the rule violation
+  // This will trigger the rule violation
 });
 ```
 
@@ -73,11 +71,11 @@ describe('UserManagement', () => {
 
 ```javascript
 describe('UserManagement.Create', () => {
-    // ...
+  // ...
 });
 
 describe('UserManagement.Delete', () => {
-    // ...
+  // ...
 });
 ```
 
@@ -111,23 +109,17 @@ Enforces a specific pattern for test block titles:
 ### Invalid Examples
 
 ```javascript
-describe('User login', () => {
-});
-context('clicking submit', () => {
-});
-it('works correctly', () => {
-});
+describe('User login', () => {});
+context('clicking submit', () => {});
+it('works correctly', () => {});
 ```
 
 ### Valid Examples
 
 ```javascript
-describe('Auth.Login.ADMIN: Given a user on the login page', () => {
-});
-context('Auth.Login.ADMIN: When credentials are valid', () => {
-});
-it('Auth.Login.ADMIN: Then user should be redirected to dashboard', () => {
-});
+describe('Auth.Login.ADMIN: Given a user on the login page', () => {});
+context('Auth.Login.ADMIN: When credentials are valid', () => {});
+it('Auth.Login.ADMIN: Then user should be redirected to dashboard', () => {});
 ```
 
 ## Verify TODOs Have Links
@@ -135,7 +127,8 @@ it('Auth.Login.ADMIN: Then user should be redirected to dashboard', () => {
 **Rule file:** `eslint-plugin-custom-rules/verify-todos-have-links.js`
 
 Ensures that all TODO, FIXME, and similar comments include a JIRA link for tracking purposes.
-\* Not applied to current project since the bug tracking implemented localy.
+
+- Not applied to current project since the bug tracking implemented localy.
 
 ### Invalid Examples
 
@@ -160,21 +153,16 @@ Prevents test titles from containing leading/trailing whitespace or special char
 ### Invalid Examples
 
 ```javascript
-describe('Auth.Login: Given a user on the login page ', () => {
-}); // Trailing space
-describe(' Auth.Login: Given a user on the login page', () => {
-}); // Leading space
-describe('Auth.Login: Given a user on the login page!', () => {
-}); // Special character "!"
+describe('Auth.Login: Given a user on the login page ', () => {}); // Trailing space
+describe(' Auth.Login: Given a user on the login page', () => {}); // Leading space
+describe('Auth.Login: Given a user on the login page!', () => {}); // Special character "!"
 ```
 
 ### Valid Examples
 
 ```javascript
-describe('Auth.Login: Given a user on the login page', () => {
-});
-context('Auth.Login: When credentials are valid', () => {
-});
+describe('Auth.Login: Given a user on the login page', () => {});
+context('Auth.Login: When credentials are valid', () => {});
 ```
 
 ## Standardize Test Titles

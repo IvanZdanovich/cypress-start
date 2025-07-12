@@ -18,6 +18,7 @@ Color values are stored in JSON files following the naming pattern:
 - `{theme-name}-theme-colours.json`
 
 ### Pretest Script
+
 A pretest script copies the appropriate colour theme file to a common file (`default-theme-colours.json`).
 Run the pretest script during implementation to update it.
 
@@ -26,4 +27,5 @@ npm run pretest
 ```
 
 ### Accessing Theme Colors
+
 In your tests, you can access the colour values using global variable `colours`.
