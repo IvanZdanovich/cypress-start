@@ -366,7 +366,10 @@ verification, improving transparency and planning across the team.
 // cart-page.ui.spec.js
 
 context('CartPage.STANDARD: When user visits the page', () => {
-    it('CartPage.STANDARD: Then Cart page URL should be displayed', () => {
+    before(() => {
+        cy.visit(urls.pages.cart);
+    });
+    it('CartPage.STANDARD: Then direct URL should be open', () => {
         // implemented test
         cy.url().should('eq', urls.pages.cart);
     });
@@ -386,8 +389,8 @@ and here is the output of the test run:
        Spec                                              Tests  Passing  Failing  Pending  Skipped
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
+│ ✔ integration/ui/cart-page.ui.spec.js       00:01        3       1        -        2         - │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-✖ 0 of 6 failed (0%)                       00:01 3 1 - 2 -
+  ✖ 0 of 6 failed (0%)                        00:01        3       1        -        2         -
 
 This makes the scope and current coverage explicit, even before all tests are implemented.
