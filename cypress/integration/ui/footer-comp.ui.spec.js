@@ -6,10 +6,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
     });
     cy.visit('/');
     cy.then(() => {
-      cy.loginPage_FillLoginForm(standardUser);
-    });
-    cy.then(() => {
-      cy.get(loginPage.login).click();
+      cy.loginPage_Login(standardUser);
     });
   });
 

@@ -28,10 +28,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
 
   context('LoginPage.STANDARD: When user logins with valid credentials', () => {
     before(() => {
-      cy.loginPage_FillLoginForm(standardUser);
-      cy.then(() => {
-        cy.get(loginPage.login).click();
-      });
+      cy.loginPage_Login(standardUser);
     });
     it(`LoginPage.STANDARD: Then user should be navigated to the Inventory page`, () => {
       cy.url().should('eq', urls.pages.inventory);
@@ -159,10 +156,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
 
   context('LoginPage.STANDARD: When user types valid username and invalid password', () => {
     before(() => {
-      cy.loginPage_FillLoginForm({ username: standardUser.username, password: 'invalid' });
-      cy.then(() => {
-        cy.get(loginPage.login).click();
-      });
+      cy.loginPage_Login({ username: standardUser.username, password: 'invalid' });
     });
     it('LoginPage.STANDARD: Then colored error message about credentials do not match any existing user should be shown', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.userNotFound).and('be.visible');
@@ -187,10 +181,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
 
   context('LoginPage.STANDARD: When user tries to use locked account', () => {
     before(() => {
-      cy.loginPage_FillLoginForm(lockedUser);
-      cy.then(() => {
-        cy.get(loginPage.login).click();
-      });
+      cy.loginPage_Login(lockedUser);
     });
     it('LoginPage.STANDARD: Then colored error message about locked user should be shown', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.userIsLockedOut).and('be.visible');

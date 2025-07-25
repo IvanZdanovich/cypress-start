@@ -103,6 +103,16 @@ export const urls = {
     login: '/login',
 };
 
+// login-page.ui.commands.js
+Cypress.Commands.add('loginPage_Login', (user) => {
+    const {username, password} = user;
+    cy.get(loginPage.username).type(username, {delay: 0});
+    cy.get(loginPage.password).type(password, {log: false, delay: 0});
+    cy.then(() => {
+        cy.get(loginPage.login).click();
+    });
+});
+
 // login-page.ui.spec.js
 import {loginPage} from './selectors';
 import {dashboardPage} from './selectors';
@@ -111,9 +121,9 @@ import {urls} from './urls';
 context('LoginPage: When user logins with valid credentials', () => {
     before(() => {
         cy.visit(urls.login);
-        cy.get(loginPage.usernameInput).type('user');
-        cy.get(loginPage.passwordInput).type('pass');
-        cy.get(loginPage.loginButton).click();
+        cy.then(() => {
+            cy.loginPage_Login('user', 'pass');
+        });
     });
 
     it('LoginPage: Then user should be navigated to the Dashboard', () => {
@@ -127,6 +137,7 @@ context('LoginPage: When user logins with valid credentials', () => {
 - No unnecessary abstraction layers
 - Only files with selectors and tests, no extra classes
 - Tests are clear and focused
+- Only needed commands are defined, no extra methods for trivial actions
 
 Why not just use selectors directly? Selectors are just strings. Hiding them in classes adds unnecessary complexity.
 Modern frameworks allow centralized selector storage (e.g., a `selectors.js` file), making updates simple and tests
@@ -296,8 +307,16 @@ it('CartPage.Footer.STANDARD: Then the Copyright notice with actual year should 
 ```
 
 **Summary:**  
-Small, focused tests make failures easy to trace, improve maintainability, and ensure each requirement is clearly
-covered.
+Concise, focused tests make it straightforward to trace failures, maintain the suite, and ensure every requirement is
+covered. Descriptive test names and structure act as built-in documentation, removing the need for extra logging or
+reporting. This leads to a more efficient, reliable suite with minimal redundancy and clear identification of coverage
+gaps. The method is accessible to both technical and non-technical team members, enhancing collaboration and
+communication. Tests are self-explanatory, allowing anyone to quickly grasp their intent and scope without reading the
+code. This clarity streamlines onboarding and supports a shared understanding of coverage and objectives. Test reports
+are more meaningful, accurately reflecting the application's state. Additionally, small, atomic tests—together with
+clearly described, skipped tests for unimplemented scenarios—offer transparent coverage metrics and assist in planning
+manual regression checks. The test suite becomes a single source of truth, documenting requirements and use cases, so
+everyone can easily see what is automated, what needs manual testing, and what is yet to be implemented.
 
 ## 7. Why are naming conventions crucial in test automation?
 
@@ -354,11 +373,11 @@ tools can also distract from focusing on requirement-based automation and clear 
 
 ## 14. Why should you describe and skip non-implemented tests?
 
-Describing and skipping non-implemented tests makes your repository a living source of truth for all use cases. This not
-only provides precise metrics for automation coverage but also clearly defines the intended scope. As a result,
-anyone—including manual testers—can easily understand what needs to be verified, what is already covered by automation,
-and what remains to be implemented. The test suite becomes a single reference point for both automated and manual
-verification, improving transparency and planning across the team.
+Clearly describing and skipping non-implemented tests turns your repository into a transparent source of truth for all
+use cases. This approach provides accurate automation coverage metrics and clearly outlines the intended scope. It
+enables everyone—including manual testers—to see what is automated, what requires manual checks, and what is still
+pending. The test suite serves as a unified reference for both automated and manual verification, enhancing team
+transparency and planning.
 
 **Example:**
 
@@ -389,8 +408,8 @@ and here is the output of the test run:
        Spec                                              Tests  Passing  Failing  Pending  Skipped
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔ integration/ui/cart-page.ui.spec.js       00:01        3       1        -        2         - │
+│ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ✖ 0 of 6 failed (0%)                        00:01        3       1        -        2         -
+✖ 0 of 6 failed (0%)                        00:01 3 1 - 2 -
 
 This makes the scope and current coverage explicit, even before all tests are implemented.

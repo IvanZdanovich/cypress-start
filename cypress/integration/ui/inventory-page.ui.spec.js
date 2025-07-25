@@ -8,7 +8,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
     cy.visit('/');
     cy.then(() => {
-      cy.loginPage_FillLoginForm(standardUser);
+      cy.loginPage_Login(standardUser);
     });
     cy.then(() => {
       cy.get(loginPage.login).click();
