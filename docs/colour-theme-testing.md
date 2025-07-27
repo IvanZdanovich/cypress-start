@@ -19,7 +19,7 @@ Color values are stored in JSON files following the naming pattern:
 
 ### Pretest Script
 
-A pretest script copies the appropriate colour theme file to a common file (`default-theme-colours.json`).
+A pretest script copies the appropriate colour theme file to a common file (`current-theme-colours.json`).
 Run the pretest script during implementation to update it.
 
 ```bash
