@@ -23,7 +23,8 @@
 
 Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
 effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
-e-commerce application.
+e-commerce application, comprehensive documentation for quick onboarding, and clear guidelines for writing
+maintainable, readable, and robust tests.
 
 ![Alt text](assets/execution-example.gif)
 
@@ -79,17 +80,20 @@ e-commerce application.
 ### Installation
 
 1. Clone the repository:
+
 ```bash
   git clone <repository-url>
   cd cypress-start
 ```
 
 2. Install dependencies:
+
 ```bash
   npm install
 ```
 
 3. Set up sensitive data:
+
 - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
   user credentials for the test environment.
 

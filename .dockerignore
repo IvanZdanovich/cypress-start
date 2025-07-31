@@ -30,6 +30,9 @@ logs/**
 # Ignore documentation
 docs
 
+# Ignore README assets
+assets
+
 # Ignore Dockerfile
 Dockerfile*
 
