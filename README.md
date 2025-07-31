@@ -36,13 +36,14 @@ maintainable, readable, and robust tests.
   provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
   and
   understandable for non-technical personnel.
-- **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
-  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid
-  source of truth
-  for the entire team.
+- **Detailed Use Cases**: Business use cases are described in detail, regardless of their automation status. This
+  approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth for the
+  entire team.
 - **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
-- **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
-  effortless maintenance, and test writing.
+- **Comprehensive documentation**: Detailed documentation for every aspect of the framework, including test writing
+  guidelines, naming conventions, tagging strategies, custome es-lint rules and more. This ensures that all team members can quickly
+  understand and contribute to the project.
+- **Maintainability**: Clear and simple project structure for effortless maintenance, and test writing.
 - **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
 - **Lightweight and Easy Startup**: Quick setup with minimal configuration. The low number of third-party dependencies
   helps avoid conflicts and ensures fast build times.
