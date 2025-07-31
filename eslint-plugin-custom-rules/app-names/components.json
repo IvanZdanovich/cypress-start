@@ -3,8 +3,7 @@
   "InventoryPage": {
     "Header": {},
     "Footer": {},
-    "Card": {
-    }
+    "Card": {}
   },
   "CartPage": {
     "Header": {},

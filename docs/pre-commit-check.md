@@ -12,12 +12,12 @@ thresholds. This prevents commits that would reduce overall code quality.
 1. When you attempt to commit changes, the pre-commit hook runs automatically
 2. The hook executes `.husky/check-eslint.js` to analyze JavaScript/TypeScript files
 3. The script:
-    - Counts lines of code in the staged files
-    - Runs ESLint to find warnings and errors
-    - Calculates warning and error ratios (as percentage of total lines)
-    - Compares these ratios against thresholds in `.husky/thresholds.json`
-    - Blocks commits that exceed thresholds
-    - Automatically tightens thresholds when code quality improves
+   - Counts lines of code in the staged files
+   - Runs ESLint to find warnings and errors
+   - Calculates warning and error ratios (as percentage of total lines)
+   - Compares these ratios against thresholds in `.husky/thresholds.json`
+   - Blocks commits that exceed thresholds
+   - Automatically tightens thresholds when code quality improves
 
 ## Configuration
 

@@ -2,26 +2,34 @@
 
 ## Structuring Tests to Align with Guidelines
 
-- Prompt: "Review and refactor this test file to comply with our test writing guidelines. Specifically:
-  1. Ensure proper test structure (describe → context → it) with describe containing setup, context containing conditions, and it blocks containing only verifications
-  2. Remove any hard-coded values and move them to appropriate configuration files
-  3. Extract selectors to a selectors.js file instead of hiding them in utility commands
-  4. Ensure test isolation is properly configured (testIsolation: false on describe block)
-  5. Add skipped blocks for documented use cases that aren't implemented yet
-  6. Implement proper localization using the global l10n variable
-  7. Use random test data generation instead of static values
-  8. Ensure there's only one describe block per file"
-  
-## Refactoring Titles and Descriptions of Tests
+### Prompt
+```Markdown
+# Review the test file against these guidelines:
+## Structure Requirements
+- One describe block per file
+- No test isolation within files (`testIsolation: false` at describe level)
+- Test files must be independent
+- Describe block: common setup steps
+- Context block: conditions and state-specific setup
+- It block: only state verifications
+- Use 'cy.then()' to order commands and actions dependent on previous commands e.g. `cy.click()`
 
-- Prompt: "Fix test titles in this file to conform to our naming conventions:
-  1. For describe blocks, use: '{ModuleName}.{SubModule}.{ROLE}: Given {precondition context}'
-  2. For context blocks, use: '{ModuleName}.{SubModule}.{ROLE}: When {condition}'
-  3. For it blocks, use: '{ModuleName}.{SubModule}.{ROLE}: Then {expected result}'
-  4. Ensure titles are properly formatted for the test type:
-    - API tests: include endpoint and CRUD operation
-    - UI tests: include page and component names
-    - E2E tests: include flow and subflow names
-  5. Remove any forbidden characters or whitespace from titles
-  6. Ensure all titles are unique and follow the structure defined in the appropriate JSON config file
-  7. Make descriptions specific and detailed rather than generic"
+## Data Management
+- Use `{pageName}.test-data.js` files for test data
+- Prefer random data generation over static values
+- Store localization in `l10n.json`
+- Store theme colors in `current-theme-colours.json`
+- Keep selectors in `selectors.js`, organized by page
+
+## Documentation
+- Mark unimplemented tests with `TODO` comments
+- Include bug references from `bug-log.json` where applicable
+
+# Review the test file
+1. List of guideline violations
+2. Code inconsistencies
+3. Structural issues
+4. Suggested fixes with code examples
+
+# Provide final solution
+```

@@ -22,9 +22,9 @@ Here is an example of using tags. You can mark negative test cases that check ne
 approach is clear and helps reduce test run duration.
 
 - **Tag:** \@negative
-    - **Description:** Tests that validate behavior with invalid inputs or unexpected conditions.
-    - **Usage:** Ensure error handling is properly tested.
-    - **Warning:** Be cautious when using tags in large linked scenarios with multiple steps, as it could break the
-      logic of long scenarios. To avoid confusion during test runs, you can either place negative cases at the end of
-      the script or make all actions from before and after code blocks mandatory for all cases to keep the flow
-      constant. However, this will decrease the benefit of using tags.
+  - **Description:** Tests that validate behavior with invalid inputs or unexpected conditions.
+  - **Usage:** Ensure error handling is properly tested.
+  - **Warning:** Be cautious when using tags in large linked scenarios with multiple steps, as it could break the
+    logic of long scenarios. To avoid confusion during test runs, you can either place negative cases at the end of
+    the script or make all actions from before and after code blocks mandatory for all cases to keep the flow
+    constant. However, this will decrease the benefit of using tags.

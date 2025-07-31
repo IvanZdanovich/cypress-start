@@ -8,10 +8,7 @@ describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolat
     });
     cy.visit('/');
     cy.then(() => {
-      cy.loginPage_FillLoginForm(standardUser);
-    });
-    cy.then(() => {
-      cy.get(loginPage.login).click();
+      cy.loginPage_Login(standardUser);
     });
     cy.then(() => {
       cy.headerComp_ResetAppState();

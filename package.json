@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Test automation framework based on cypress",
   "main": "index.js",
   "scripts": {
@@ -18,16 +18,16 @@
   "author": "Ivan Zdanovich",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.30.1",
-    "eslint": "^9.30.1",
-    "eslint-config-prettier": "^10.1.5",
+    "@eslint/js": "^9.32.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-cypress": "^5.1.0",
-    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-prettier": "^5.5.3",
     "husky": "^9.1.7",
     "prettier": "^3.6.2"
   },
   "dependencies": {
-    "cypress": "^14.5.1",
+    "cypress": "^14.5.3",
     "mochawesome": "^7.1.3"
   }
 }
