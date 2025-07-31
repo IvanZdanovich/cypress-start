@@ -32,10 +32,12 @@ e-commerce application.
 ## What Makes This Framework Unique?
 
 - **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable, and
+  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
+  and
   understandable for non-technical personnel.
 - **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
-  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth
+  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid
+  source of truth
   for the entire team.
 - **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
 - **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
@@ -77,22 +79,19 @@ e-commerce application.
 ### Installation
 
 1. Clone the repository:
-
-   ```bash
-   git clone <repository-url>
-   cd cypress-start
-   ```
+```bash
+  git clone <repository-url>
+  cd cypress-start
+```
 
 2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
+```bash
+  npm install
+```
 
 3. Set up sensitive data:
-
-    - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
-      user credentials for the test environment.
+- Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
+  user credentials for the test environment.
 
 ---
 
@@ -103,13 +102,13 @@ e-commerce application.
 To run tests with default settings in headless mode:
 
 ```bash
-npm run test
+  npm run test
 ```
 
 To run tests with specific language and environment parameters in headless mode:
 
 ```bash
-LANGUAGE=en TARGET_ENV=dev npm run test
+  LANGUAGE=en TARGET_ENV=dev npm run test
 ```
 
 Available environment parameters:
@@ -125,13 +124,13 @@ For interactive debugging with the Cypress UI:
 #### Windows:
 
 ```bash
-LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
+  LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### macOS with caffeinate (prevents system from sleeping):
 
 ```bash
-LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
+  LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 ```
 
 ---
@@ -171,6 +170,6 @@ LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 To update all dependencies to their latest versions:
 
 ```bash
-npx npm-check-updates -u
-npm install
+  npx npm-check-updates -u
+  npm install
 ```
