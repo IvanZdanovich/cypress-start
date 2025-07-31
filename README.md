@@ -40,7 +40,7 @@ maintainable, readable, and robust tests.
   approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth for the
   entire team.
 - **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
-- **Comprehensive documentation**: Detailed documentation for every aspect of the framework, including test writing
+- **Comprehensive Documentation**: Detailed documentation for every aspect of the framework, including test writing
   guidelines, naming conventions, tagging strategies, custome es-lint rules and more. This ensures that all team members can quickly
   understand and contribute to the project.
 - **Maintainability**: Clear and simple project structure for effortless maintenance, and test writing.
