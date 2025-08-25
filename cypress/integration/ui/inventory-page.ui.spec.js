@@ -11,9 +11,6 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.loginPage_Login(standardUser);
     });
     cy.then(() => {
-      cy.get(loginPage.login).click();
-    });
-    cy.then(() => {
       cy.headerComp_ResetAppState();
     });
   });
