@@ -4,8 +4,8 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
     cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.visit('/');
     cy.then(() => {
+      cy.visit('/');
       cy.loginPage_Login(standardUser);
     });
   });

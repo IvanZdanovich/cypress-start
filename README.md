@@ -174,3 +174,4 @@ To update all dependencies to their latest versions:
 npx npm-check-updates -u
 npm install
 ```
+ 

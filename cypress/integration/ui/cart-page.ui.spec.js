@@ -6,11 +6,9 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.visit('/');
     cy.then(() => {
+      cy.visit('/');
       cy.loginPage_Login(standardUser);
-    });
-    cy.then(() => {
       cy.headerComp_ResetAppState();
     });
   });
@@ -118,9 +116,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it('CartPage.STANDARD: Then on each item Remove button should be displayed', () => {
       cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).within(() => {
-          cy.get(cartPage.item.remove).should('have.text', l10n.cartPage.remove).and('be.visible').and('be.enabled');
-        });
+        cy.wrap($item).find(cartPage.item.remove).should('have.text', l10n.cartPage.remove).and('be.visible').and('be.enabled');
       });
     });
     it(`CartPage.STANDARD: Then on each item should have appropriate title, description and price\n${JSON.stringify(bugLog.inventoryPage_cardTitleNotValidated)}`, () => {
@@ -178,9 +174,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it('CartPage.STANDARD: Then the removed product is not displayed', () => {
       cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).within(() => {
-          cy.get(cartPage.item.title).should('not.have.text', test_data.removedProductTitle);
-        });
+        cy.wrap($item).find(cartPage.item.title).should('not.have.text', test_data.removedProductTitle);
       });
     });
   });

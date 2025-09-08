@@ -5,11 +5,7 @@ Cypress.Commands.add('headerComp_ResetAppState', () => {
   });
   cy.then(() => {
     cy.get(headerComp.sidebar.resetAppState).click();
-  });
-  cy.then(() => {
     cy.get(headerComp.sidebar.close).click();
-  });
-  cy.then(() => {
     cy.reload();
   });
 });

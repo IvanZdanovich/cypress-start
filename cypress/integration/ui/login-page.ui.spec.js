@@ -39,9 +39,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
   context('LoginPage.STANDARD: When user logouts', () => {
     before(() => {
       cy.get(headerComp.sidebar.open).click();
-      cy.then(() => {
-        cy.get(headerComp.sidebar.logout).click();
-      });
+      cy.get(headerComp.sidebar.logout).click();
     });
     it('LoginPage.STANDARD: Then user should see Title', () => {
       cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
@@ -101,9 +99,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
   context('LoginPage.STANDARD: When user types actual username without password', () => {
     before(() => {
       cy.get(loginPage.username).type(standardUser.username, { delay: 0 });
-      cy.then(() => {
-        cy.get(loginPage.login).click();
-      });
+      cy.get(loginPage.login).click();
     });
     it('LoginPage.STANDARD: Then colored error message about missing password should be shown', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.passwordIsRequired).and('be.visible');
@@ -129,9 +125,7 @@ describe('LoginPage: Given Login page opened', { testIsolation: false }, () => {
   context('LoginPage.STANDARD: When user types actual password without username', () => {
     before(() => {
       cy.get(loginPage.password).type(standardUser.password, { log: false, delay: 0 });
-      cy.then(() => {
-        cy.get(loginPage.login).click();
-      });
+      cy.get(loginPage.login).click();
     });
     it('LoginPage.STANDARD: Then colored error message about missing username should be shown', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.usernameIsRequired).and('be.visible');

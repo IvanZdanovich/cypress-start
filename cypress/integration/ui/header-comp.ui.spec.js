@@ -6,8 +6,8 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
     cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.visit('/');
     cy.then(() => {
+      cy.visit('/');
       cy.loginPage_Login(standardUser);
     });
   });
@@ -84,9 +84,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user clicks Reset App state', () => {
     before(() => {
       cy.get(headerComp.sidebar.open).click();
-      cy.then(() => {
-        cy.get(headerComp.sidebar.resetAppState).click();
-      });
+      cy.get(headerComp.sidebar.resetAppState).click();
     });
     it('Header.STANDARD: Then user should see the Cart button without Badge', () => {
       cy.get(headerComp.cartBadge).should('not.exist');
@@ -127,9 +125,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user clicks on Inventory option', () => {
     before(() => {
       cy.get(headerComp.sidebar.open).click();
-      cy.then(() => {
-        cy.get(headerComp.sidebar.openInventory).click();
-      });
+      cy.get(headerComp.sidebar.openInventory).click();
     });
     it('Header.STANDARD: Then user should be redirected to the Inventory page', () => {
       cy.url().should('eq', urls.pages.inventory);
@@ -149,9 +145,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user logs out', () => {
     before(() => {
       cy.get(headerComp.sidebar.open).click();
-      cy.then(() => {
-        cy.get(headerComp.sidebar.logout).click();
-      });
+      cy.get(headerComp.sidebar.logout).click();
     });
     it('Header.STANDARD: Then user should be redirected to the Login page', () => {
       cy.url().should('eq', `${Cypress.env('baseUrl')}/`);

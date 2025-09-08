@@ -135,9 +135,7 @@ Cypress.Commands.add('loginPage_Login', (user) => {
     const {username, password} = user;
     cy.get(loginPage.username).type(username, {delay: 0});
     cy.get(loginPage.password).type(password, {log: false, delay: 0});
-    cy.then(() => {
-        cy.get(loginPage.login).click();
-    });
+    cy.get(loginPage.login).click();
 });
 
 // login-page.ui.spec.js
@@ -148,9 +146,7 @@ import {urls} from './urls';
 context('LoginPage: When user logins with valid credentials', () => {
     before(() => {
         cy.visit(urls.login);
-        cy.then(() => {
-            cy.loginPage_Login('user', 'pass');
-        });
+        cy.loginPage_Login('user', 'pass');
     });
 
     it('LoginPage: Then user should be navigated to the Dashboard', () => {

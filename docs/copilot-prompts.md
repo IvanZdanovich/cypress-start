@@ -12,7 +12,6 @@
 - Describe block: common setup steps
 - Context block: conditions and state-specific setup
 - It block: only state verifications
-- Use 'cy.then()' to order commands and actions dependent on previous commands e.g. `cy.click()`
 
 ## Data Management
 - Use `{pageName}.test-data.js` files for test data

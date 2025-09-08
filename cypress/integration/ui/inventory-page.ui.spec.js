@@ -6,14 +6,13 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.visit('/');
     cy.then(() => {
+      cy.visit('/');
       cy.loginPage_Login(standardUser);
-    });
-    cy.then(() => {
       cy.headerComp_ResetAppState();
     });
   });
+
   after(() => {
     cy.headerComp_ResetAppState();
   });
@@ -244,15 +243,17 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
     it(`InventoryPage.Card.STANDARD: Then appropriate products are presented in the table\n${JSON.stringify(bugLog.inventoryPage_cardTitleNotValidated)}`, () => {
       cy.get(cartPage.item.title).each(($title) => {
-        cy.wrap($title)
-          .invoke('text')
-          .then((title) => {
-            // TODO: fix the bug buglog.inventoryPage_cardTitleNotValidated
-            if (title === 'Test.allTheThings() T-Shirt (Red)') {
-              return; // Skip the check for the bugged title
-            }
-            test_data.chosenProducts.find((product) => product.title === title);
-          });
+        cy.then(() => {
+          cy.wrap($title)
+            .invoke('text')
+            .then((title) => {
+              // TODO: fix the bug buglog.inventoryPage_cardTitleNotValidated
+              if (title === 'Test.allTheThings() T-Shirt (Red)') {
+                return; // Skip the check for the bugged title
+              }
+              test_data.chosenProducts.find((product) => product.title === title);
+            });
+        });
       });
     });
     it('InventoryPage.Card.STANDARD: Then the total number of products is correct', () => {
