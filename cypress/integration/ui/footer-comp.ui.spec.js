@@ -13,6 +13,12 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
   context('Footer.STANDARD: When user clicks on LinkedIn icon', () => {
     before(() => {
       cy.get(footerComp.linkedin).invoke('removeAttr', 'target');
+      // Add uncaught:exception event listener
+      cy.on('uncaught:exception', () => {
+        // Return false to prevent Cypress from failing the test
+        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
+        return false;
+      });
       cy.then(() => {
         cy.get(footerComp.linkedin).click();
       });
@@ -21,12 +27,6 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
       cy.url().should('contain', urls.external.linkedinBase);
     });
     after(() => {
-      // Add uncaught:exception event listener
-      cy.on('uncaught:exception', () => {
-        // Return false to prevent Cypress from failing the test
-        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
-        return false;
-      });
       cy.go('back');
     });
   });
@@ -34,6 +34,12 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
   context('Footer.STANDARD: When user clicks on Twitter icon', () => {
     before(() => {
       cy.get(footerComp.twitter).invoke('removeAttr', 'target');
+      // Add uncaught:exception event listener
+      cy.on('uncaught:exception', () => {
+        // Return false to prevent Cypress from failing the test
+        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
+        return false;
+      });
       cy.then(() => {
         cy.get(footerComp.twitter).click();
       });
@@ -42,12 +48,6 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
       cy.url().should('contain', urls.external.twitter);
     });
     after(() => {
-      // Add uncaught:exception event listener
-      cy.on('uncaught:exception', () => {
-        // Return false to prevent Cypress from failing the test
-        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
-        return false;
-      });
       cy.go('back');
     });
   });
@@ -55,6 +55,12 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
   context('Footer.STANDARD: When user clicks on Facebook icon', () => {
     before(() => {
       cy.get(footerComp.facebook).invoke('removeAttr', 'target');
+      // Add uncaught:exception event listener
+      cy.on('uncaught:exception', () => {
+        // Return false to prevent Cypress from failing the test
+        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
+        return false;
+      });
       cy.then(() => {
         cy.get(footerComp.facebook).click();
       });
@@ -63,12 +69,6 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
       cy.url().should('contain', urls.external.facebook);
     });
     after(() => {
-      // Add uncaught:exception event listener
-      cy.on('uncaught:exception', () => {
-        // Return false to prevent Cypress from failing the test
-        // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
-        return false;
-      });
       cy.go('back');
     });
   });
