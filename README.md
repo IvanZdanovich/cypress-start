@@ -23,8 +23,7 @@
 
 Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
 effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
-e-commerce application, comprehensive documentation for quick onboarding, and clear guidelines for writing
-maintainable, readable, and robust tests.
+e-commerce application.
 
 ![Alt text](assets/execution-example.gif)
 
@@ -33,17 +32,14 @@ maintainable, readable, and robust tests.
 ## What Makes This Framework Unique?
 
 - **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
-  and
+  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable, and
   understandable for non-technical personnel.
-- **Detailed Use Cases**: Business use cases are described in detail, regardless of their automation status. This
-  approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth for the
-  entire team.
+- **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
+  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth
+  for the entire team.
 - **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
-- **Comprehensive Documentation**: Detailed documentation for every aspect of the framework, including test writing
-  guidelines, naming conventions, tagging strategies, custome es-lint rules and more. This ensures that all team members can quickly
-  understand and contribute to the project.
-- **Maintainability**: Clear and simple project structure for effortless maintenance, and test writing.
+- **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
+  effortless maintenance, and test writing.
 - **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
 - **Lightweight and Easy Startup**: Quick setup with minimal configuration. The low number of third-party dependencies
   helps avoid conflicts and ensures fast build times.
@@ -82,21 +78,21 @@ maintainable, readable, and robust tests.
 
 1. Clone the repository:
 
-```bash
-  git clone <repository-url>
-  cd cypress-start
-```
+   ```bash
+   git clone <repository-url>
+   cd cypress-start
+   ```
 
 2. Install dependencies:
 
-```bash
-  npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. Set up sensitive data:
 
-- Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
-  user credentials for the test environment.
+    - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
+      user credentials for the test environment.
 
 ---
 
@@ -107,13 +103,13 @@ maintainable, readable, and robust tests.
 To run tests with default settings in headless mode:
 
 ```bash
-  npm run test
+npm run test
 ```
 
 To run tests with specific language and environment parameters in headless mode:
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run test
+LANGUAGE=en TARGET_ENV=dev npm run test
 ```
 
 Available environment parameters:
@@ -129,13 +125,13 @@ For interactive debugging with the Cypress UI:
 #### Windows:
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && npx cypress open
 ```
 
 #### macOS with caffeinate (prevents system from sleeping):
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
+LANGUAGE=en TARGET_ENV=dev npm run pretest && caffeinate -i npx cypress open
 ```
 
 ---
@@ -175,6 +171,7 @@ For interactive debugging with the Cypress UI:
 To update all dependencies to their latest versions:
 
 ```bash
-  npx npm-check-updates -u
-  npm install
+npx npm-check-updates -u
+npm install
 ```
+ 

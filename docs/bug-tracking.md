@@ -2,11 +2,7 @@
 
 ## Current Approach
 
-The project tracks bugs in a JSON file (`cypress/support/bugs/bug-log.json`). This method offers:
-
-- A centralized repository for known bugs
-- Bug references are usable in tests to indicate known issues
-- Structured information including ID, title, and description
+The project tracks bugs in a JSON file (`cypress/support/bugs/bug-log.json`).
 
 Example bug entry:
 

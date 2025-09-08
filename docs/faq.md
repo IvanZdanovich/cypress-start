@@ -135,9 +135,7 @@ Cypress.Commands.add('loginPage_Login', (user) => {
     const {username, password} = user;
     cy.get(loginPage.username).type(username, {delay: 0});
     cy.get(loginPage.password).type(password, {log: false, delay: 0});
-    cy.then(() => {
-        cy.get(loginPage.login).click();
-    });
+    cy.get(loginPage.login).click();
 });
 
 // login-page.ui.spec.js
@@ -148,9 +146,7 @@ import {urls} from './urls';
 context('LoginPage: When user logins with valid credentials', () => {
     before(() => {
         cy.visit(urls.login);
-        cy.then(() => {
-            cy.loginPage_Login('user', 'pass');
-        });
+        cy.loginPage_Login('user', 'pass');
     });
 
     it('LoginPage: Then user should be navigated to the Dashboard', () => {
@@ -408,19 +404,19 @@ clearly described, skipped tests for unimplemented scenarios—offer transparent
 manual regression checks. The test suite becomes a single source of truth, documenting requirements and use cases, so
 everyone can easily see what is automated, what needs manual testing, and what is yet to be implemented.
 
-## 5. Why are naming conventions crucial in test automation?
+## 6. Why are naming conventions crucial in test automation?
 
 Consistent naming conventions ensure that tests are well-structured, maintainable, and easy to understand. They enable
 automation of internal checks, streamline onboarding for new team members, minimize logical mistakes, and improve
 communication. Clear naming also makes it easier to track coverage, identify issues, and generate meaningful metrics.
 
-## 6. Why should all constants in tests be stored in variables?
+## 7. Why should all constants in tests be stored in variables?
 
 Storing constants in variables improves readability and maintainability. It makes updating values easier and reduces the
 risk of errors from hardcoded values. This approach also increases test flexibility, as changes to constants only need
 to be made in one place, rather than throughout the test code.
 
-## 7. Why is using tags in tests discouraged?
+## 9. Why is using tags in tests discouraged?
 
 Tags can create confusion and complicate test management, especially when used inconsistently. Generic tags like
 `@smoke` or `@regression` are often unclear and inconsistently defined and applied, leading to confusion. They often
@@ -428,7 +424,7 @@ lack clear
 definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file organization and
 meaningful test names to group and filter tests. This approach is more transparent and easier to maintain.
 
-## 8. Why is test execution speed extremely important?
+## 10. Why is test execution speed extremely important?
 
 Fast test execution is critical for efficient development and product release cycles. Slow tests create bottlenecks in
 CI/CD pipelines, delay feedback for developers, and increase the time needed to identify and fix issues. Fast tests
@@ -445,7 +441,7 @@ costs and allow for more frequent, comprehensive test runs.
 
 Here's a clearer and more detailed explanation of why UI tests should be tied to one page or component:
 
-## 9. Why should UI tests be tied to one page or component?
+## 5. Why should UI tests be tied to one page or component?
 
 Test file isolation is crucial in UI automation because test runs within a file share the same context. Organizing tests
 by pages or components prevents state conflicts between functional areas and makes test failures easily traceable to
@@ -507,7 +503,7 @@ context('CheckoutPage.STANDARD: When user submits valid details', () => {
 });
 ```
 
-## 10. What are the risks of relying on test management tools for automation?
+## 6. What are the risks of relying on test management tools for automation?
 
 Test management tools often create more problems than they solve. They require complex integrations, increase
 maintenance overhead, and introduce external dependencies. The metrics they provide are typically misleading - focusing
@@ -525,7 +521,7 @@ These tools tend to:
 Instead, use version control as the single source of truth, with clear test structure and descriptive names providing
 natural documentation and metrics.
 
-## 11. Why should you describe and skip non-implemented tests?
+## 7. Why should you describe and skip non-implemented tests?
 
 Clearly describing and skipping non-implemented tests turns your repository into a transparent source of truth for all
 use cases. This approach provides accurate automation coverage metrics and clearly outlines the intended scope. It
@@ -559,22 +555,11 @@ context('CartPage.STANDARD: When user visits the page', () => {
 
 and here is the output of the test run:
 
-```text
-      Spec                                              Tests  Passing  Failing  Pending  Skipped
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ ✔ integration/ui/cart-page.ui.spec.js         00:01      3       1       -         2         - │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ✖ 0 of 3 failed (0%)                          00:01      3       1       -         2         -
+  ✖ 0 of 6 failed (0%)                          00:01      3       1       -         2         -
 
-```
-
-This approach clearly shows the scope and current coverage: with 1 out of 3 tests implemented, coverage is 33.3%, even
-before all tests are completed.
-
-## 12. Why Direct Data Imports Are Preferred Over Cypress Fixtures in Test Development?
-
-Cypress fixtures are best used for dynamic data that depends on parameters, such as test users tied to environment
-variables or other sensitive, runtime-defined values. For static data and during test development, prefer direct imports
-for easier access and modification. Use direct imports for static datasets, and leverage fixtures when you need to load
-or generate data dynamically based on test context or environment.
+This makes the scope and current coverage explicit, even before all tests are implemented.

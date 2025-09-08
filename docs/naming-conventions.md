@@ -33,24 +33,21 @@
 - Provide module and submodule names.
 - Use PascalCase for module and submodule names for component tests and user flow for E2E tests.
 - Patterns:
-  - Integration tests: `ModuleName.SubmoduleName: Given 'preconditions'`
-  - PageName.ComponentName: Given 'preconditions'`
+  - Integration tests: `ModuleName.SubmoduleName: Given 'preconditions'`, `PageName.ComponentName: Given 'preconditions'`
   - E2E tests: `FlowName.SubFlowName: Given 'preconditions'`
 
 ### Context block title
 
 - Provide the condition.
 - Patterns:
-  - Integration tests: `ModuleName.SubmoduleName.Endpoint.CRUD: When 'condition'`
-  - PageName.ComponentName.USER_ROLE: When 'condition'`
+  - Integration tests: `ModuleName.SubmoduleName.Endpoint.CRUD: When 'condition'`, `PageName.ComponentName.USER_ROLE: When 'condition'`
   - E2E tests: `FlowName.SubFlowName.USER_ROLE: When 'condition'`
 
 ### It block title
 
 - Provide the expected result.
 - Patterns:
-  - Integration tests: `ModuleName.SubmoduleName.Endpoint.CRUD: Then 'expected result'`
-  - PageName.ComponentName.USER_ROLE: Then 'expected result'`
+  - Integration tests: `ModuleName.SubmoduleName.Endpoint.CRUD: Then 'expected result'`, `PageName.ComponentName.USER_ROLE: Then 'expected result'`
   - E2E tests: `FlowName.SubFlowName.USER_ROLE: Then 'expected result'`
 
 ## Cypress commands naming convention

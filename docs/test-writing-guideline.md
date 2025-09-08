@@ -57,16 +57,16 @@
 
 12. **External Resource Handling**: When testing links to external resources:
 
-- Remove the `target` attribute to keep navigation in the same window.
-- Handle uncaught exceptions appropriately.
-- Return to the application using `cy.go('back')`.
+    - Remove the `target` attribute to keep navigation in the same window.
+    - Handle uncaught exceptions appropriately.
+    - Return to the application using `cy.go('back')`.
 
-  Example:
+      Example:
 
-  ```javascript
-  cy.get(selector).invoke('removeAttr', 'target');
-  cy.on('uncaught:exception', () => false); // Prevent test failure
-  ```
+      ```javascript
+      cy.get(selector).invoke('removeAttr', 'target');
+      cy.on('uncaught:exception', () => false); // Prevent test failure
+      ```
 
 13. **Track Issues**: Document issues in the GitHub issue tracker and mark affected code with comments:
 
@@ -74,4 +74,4 @@
     // TODO: link to the issue description
     ```
 
-14. **Custom Commands**: Create reusable custom commands for common operations.
+14. **Custom Commands**: Create reusable custom commands for common complex operations.

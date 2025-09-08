@@ -1,0 +1,78 @@
+name: Weekly Cypress Tests
+
+on:
+  schedule:
+    # Runs every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t cypress-tests .
+
+      - name: Run Cypress tests in Docker
+        id: cypress
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
+            -v ${{ github.workspace }}/cypress/screenshots:/e2e/cypress/screenshots \
+            -v ${{ github.workspace }}/cypress/videos:/e2e/cypress/videos \
+            cypress-tests
+        continue-on-error: true
+
+      - name: Check test results
+        id: test-status
+        run: |
+          if [ "${{ steps.cypress.outcome }}" = "failure" ]; then
+            echo "tests_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests_failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-results-${{ github.run_number }}
+          path: |
+            cypress/reports/
+            cypress/screenshots/
+            cypress/videos/
+          retention-days: 30
+
+      - name: Create GitHub Issue on failure
+        if: steps.test-status.outputs.tests_failed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Weekly Cypress Tests Failed - ${new Date().toISOString().split('T')[0]}`,
+              body: `## 📊 Test Execution Failed
+
+              The weekly Cypress test run has failed on the \`${{ github.ref_name }}\` branch.
+
+              **📋 Details:**
+              - 🆔 Run ID: ${{ github.run_id }}
+              - 🌿 Branch: ${{ github.ref_name }}
+              - 📝 Commit: \`${{ github.sha }}\`
+              - ⏰ Time: ${new Date().toISOString()}
+
+              **🔍 Investigation:**
+              - Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for detailed logs
+              - Download test artifacts including screenshots and videos
+              - Review the Cypress reports for specific test failures
+
+              **🏷️ Labels:** \`bug\`, \`automation\`, \`weekly-tests\``,
+              labels: ['bug', 'automation', 'weekly-tests']
+            });
+            console.log(`Created issue #${issue.data.number}`);

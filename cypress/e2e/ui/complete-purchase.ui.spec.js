@@ -6,11 +6,9 @@ describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolat
     cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.visit('/');
     cy.then(() => {
+      cy.visit('/');
       cy.loginPage_Login(standardUser);
-    });
-    cy.then(() => {
       cy.headerComp_ResetAppState();
     });
   });
@@ -69,12 +67,8 @@ describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolat
   context('CompletePurchase.STANDARD: When user proceeds to checkout and completes the delivery information form', () => {
     before(() => {
       cy.get(cartPage.checkout).click();
-      cy.then(() => {
-        cy.checkoutPage_FillDeliveryInfo(test_data.user);
-      });
-      cy.then(() => {
-        cy.get(checkoutPage.continue).click();
-      });
+      cy.checkoutPage_FillDeliveryInfo(test_data.user);
+      cy.get(checkoutPage.continue).click();
     });
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
       cy.get(cartPage.items).each(($item) => {
