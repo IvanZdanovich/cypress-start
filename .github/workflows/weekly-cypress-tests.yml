@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create sensitive data from secrets
+        run: |
+          mkdir -p cypress/sensitive-data
+          echo '${{ secrets.DEV_USERS_JSON }}' > cypress/sensitive-data/dev-users.json
+
       - name: Build Docker image
         run: |
           docker build -t cypress-tests .
@@ -25,8 +30,14 @@ jobs:
             -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
             -v ${{ github.workspace }}/cypress/screenshots:/e2e/cypress/screenshots \
             -v ${{ github.workspace }}/cypress/videos:/e2e/cypress/videos \
+            -v ${{ github.workspace }}/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro \
             cypress-tests
         continue-on-error: true
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -rf cypress/sensitive-data
 
       - name: Check test results
         id: test-status
