@@ -150,19 +150,16 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
 
   context('CartPage.STANDARD: When user clicks Remove button on random item', () => {
     before(() => {
-      test_data.randomIndex = utils.getRandomNumber(0, test_data.indicesOfProducts.length - 1);
       cy.get(cartPage.items)
         .eq(test_data.randomIndex)
-        .within(() => {
-          cy.get(cartPage.item.title)
-            .invoke('text')
-            .then((title) => {
-              test_data.removedProductTitle = title;
-            });
-          cy.then(() => {
-            cy.get(cartPage.item.remove).click();
-          });
+        .find(cartPage.item.title)
+        .invoke('text')
+        .then((title) => {
+          test_data.removedProductTitle = title;
         });
+      cy.then(() => {
+        cy.get(cartPage.items).eq(test_data.randomIndex).find(cartPage.item.remove).click();
+      });
     });
     it('CartPage.STANDARD: Then the number of products is decreased', () => {
       cy.get(cartPage.items).should('have.length', test_data.indicesOfProducts.length - 1);
