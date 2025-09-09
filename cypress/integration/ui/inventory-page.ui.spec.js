@@ -246,11 +246,18 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         cy.wrap($title)
           .invoke('text')
           .then((title) => {
-            // TODO: fix the bug buglog.inventoryPage_cardTitleNotValidated
+            // Handle the known bug - skip validation for buggy title
             if (title === 'Test.allTheThings() T-Shirt (Red)') {
               return; // Skip the check for the bugged title
             }
-            const foundProduct = test_data.chosenProducts.find((product) => product.title === title);
+
+            // Find the product in chosen products array
+            const foundProduct = test_data.chosenProducts.find((product) => {
+              // Add null check to prevent undefined errors
+              return product && product.title === title;
+            });
+
+            // Assert the product exists
             expect(foundProduct, `Product with title "${title}" should exist in chosen products`).to.exist;
           });
       });

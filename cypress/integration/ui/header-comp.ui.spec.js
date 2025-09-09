@@ -83,8 +83,14 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
 
   context('Header.STANDARD: When user clicks Reset App state', () => {
     before(() => {
-      cy.get(headerComp.sidebar.open).click();
-      cy.get(headerComp.sidebar.resetAppState).click();
+      cy.get(headerComp.sidebar.open).scrollIntoView();
+      cy.then(() => {
+        cy.get(headerComp.sidebar.open).click({ animationDistanceThreshold: 20 });
+      });
+      cy.then(() => {
+        cy.get(headerComp.sidebar.resetAppState).click();
+        cy.get(headerComp.sidebar.close).click();
+      });
     });
     it('Header.STANDARD: Then user should see the Cart button without Badge', () => {
       cy.get(headerComp.cartBadge).should('not.exist');

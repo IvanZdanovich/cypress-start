@@ -21,12 +21,15 @@ module.exports = defineConfig({
     reporterOptions: {
       reportDir: 'cypress/reports/mochawesome',
       overwrite: false,
-      html: true,
+      html: false,
       json: true,
       charts: true,
       reportPageTitle: 'Cypress Test Report',
+      reportFilename: '[status]_[datetime]-[name]-report',
+      showHooks: 'always',
       embeddedScreenshots: true,
       inlineAssets: true,
+      timestamp: 'longDate',
     },
     env: {
       grepFilterSpecs: true,
@@ -59,6 +62,7 @@ module.exports = defineConfig({
         if (browser.name === 'chrome') {
           launchOptions.args.push('--no-sandbox');
           launchOptions.args.push('--disable-gpu');
+          launchOptions.args.push('--disable-dev-shm-usage');
           launchOptions.args.push('--disable-extensions');
           launchOptions.args.push('--disable-background-timer-throttling');
           launchOptions.args.push('--disable-backgrounding-occluded-windows');

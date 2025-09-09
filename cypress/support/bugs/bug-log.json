@@ -6,7 +6,7 @@
   },
   "headerComp_ResetAppState": {
     "id": "BUG-002",
-    "title": "Header: Reset App State option should reset the state of Remove button on the added Cards",
+    "title": "Header: Reset App State option should reset the state of Remove button on the added Cards without page reload",
     "description": "Steps to reproduce: 1. Add a card to the cart; 2. Click on Reset App State option; 3. Verify that the Remove buttons are not changed back to Add buttons."
   },
   "backtraceApi_UnauthorizedError": {

@@ -65,7 +65,9 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
       cy.get(footerComp.facebook).click();
     });
     it('Footer.STANDARD: Then user should be redirected to Facebook page', () => {
-      cy.url().should('contain', urls.external.facebook);
+      cy.url().should('satisfy', (url) => {
+        return url.includes('facebook.com/saucelabs') || (url.includes('facebook.com/login/?next=') && url.includes('saucelabs'));
+      });
     });
     after(() => {
       cy.go('back');
