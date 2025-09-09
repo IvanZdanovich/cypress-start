@@ -3,6 +3,8 @@ dist
 
 # separate reports
 cypress/reports/**
+!cypress/reports/mochawesome/.gitkeep
+!cypress/reports/screenshots/.gitkeep
 
 # asset folders
 cypress/downloads
@@ -34,6 +36,3 @@ target
 
 # VS
 /.vs
-
-# mochawesome reports
-mochawesome-report/**
