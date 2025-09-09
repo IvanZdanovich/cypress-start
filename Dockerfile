@@ -15,5 +15,5 @@ RUN npm ci
 # Copy project files
 COPY . .
 
-# Run tests
+# Run pretest scripts and tests
 CMD ["npm", "run", "test"]
