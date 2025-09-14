@@ -28,8 +28,6 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
-            -v ${{ github.workspace }}/cypress/screenshots:/e2e/cypress/screenshots \
-            -v ${{ github.workspace }}/cypress/videos:/e2e/cypress/videos \
             -v ${{ github.workspace }}/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro \
             cypress-tests
         continue-on-error: true
