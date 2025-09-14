@@ -150,29 +150,35 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
 
   context('CartPage.STANDARD: When user clicks Remove button on random item', () => {
     before(() => {
-      test_data.randomIndex = utils.getRandomNumber(0, test_data.indicesOfProducts.length - 1);
       cy.get(cartPage.items)
         .eq(test_data.randomIndex)
-        .within(() => {
-          cy.get(cartPage.item.title)
-            .invoke('text')
-            .then((title) => {
-              test_data.removedProductTitle = title;
-            });
-          cy.then(() => {
-            cy.get(cartPage.item.remove).click();
-          });
+        .find(cartPage.item.title)
+        .invoke('text')
+        .then((title) => {
+          test_data.removedProductTitle = title;
         });
+
+      cy.then(() => {
+        cy.get(cartPage.items).eq(test_data.randomIndex).find(cartPage.item.remove).click();
+      });
     });
     it('CartPage.STANDARD: Then the number of products is decreased', () => {
       cy.get(cartPage.items).should('have.length', test_data.indicesOfProducts.length - 1);
     });
     it('CartPage.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
+      if (test_data.indicesOfProducts.length - 1 === 0) {
+        cy.get(headerComp.cartBadge).should('not.exist');
+        return;
+      }
       cy.get(headerComp.cartBadge)
         .should('have.text', test_data.indicesOfProducts.length - 1)
         .and('be.visible');
     });
     it('CartPage.STANDARD: Then the removed product is not displayed', () => {
+      if (test_data.indicesOfProducts.length - 1 === 0) {
+        cy.get(cartPage.items).should('not.exist');
+        return;
+      }
       cy.get(cartPage.items).each(($item) => {
         cy.wrap($item).find(cartPage.item.title).should('not.have.text', test_data.removedProductTitle);
       });

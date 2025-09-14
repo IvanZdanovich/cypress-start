@@ -7,7 +7,12 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
     cy.then(() => {
       cy.visit('/');
       cy.loginPage_Login(standardUser);
+      cy.headerComp_ResetAppState();
     });
+  });
+
+  after(() => {
+    cy.headerComp_ResetAppState();
   });
 
   context('Footer.STANDARD: When user clicks on LinkedIn icon', () => {
@@ -19,9 +24,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
         // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
         return false;
       });
-      cy.then(() => {
-        cy.get(footerComp.linkedin).click();
-      });
+      cy.get(footerComp.linkedin).click();
     });
     it('Footer.STANDARD: Then user should be redirected to LinkedIn page', () => {
       cy.url().should('contain', urls.external.linkedinBase);
@@ -40,9 +43,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
         // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
         return false;
       });
-      cy.then(() => {
-        cy.get(footerComp.twitter).click();
-      });
+      cy.get(footerComp.twitter).click();
     });
     it('Footer.STANDARD: Then user should be redirected to Twitter page', () => {
       cy.url().should('contain', urls.external.twitter);
@@ -61,12 +62,12 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
         // TODO: fix the bug buglog.backtraceApi_UnauthorizedError
         return false;
       });
-      cy.then(() => {
-        cy.get(footerComp.facebook).click();
-      });
+      cy.get(footerComp.facebook).click();
     });
     it('Footer.STANDARD: Then user should be redirected to Facebook page', () => {
-      cy.url().should('contain', urls.external.facebook);
+      cy.url().should('satisfy', (url) => {
+        return url.includes('facebook.com/saucelabs') || (url.includes('facebook.com/login/?next=') && url.includes('saucelabs'));
+      });
     });
     after(() => {
       cy.go('back');

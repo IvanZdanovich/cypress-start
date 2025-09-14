@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create sensitive data from secrets
+        run: |
+          mkdir -p cypress/sensitive-data
+          echo '${{ secrets.DEV_USERS_JSON }}' > cypress/sensitive-data/dev-users.json
+
       - name: Build Docker image
         run: |
           docker build -t cypress-tests .
@@ -23,10 +28,14 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
-            -v ${{ github.workspace }}/cypress/screenshots:/e2e/cypress/screenshots \
-            -v ${{ github.workspace }}/cypress/videos:/e2e/cypress/videos \
+            -v ${{ github.workspace }}/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro \
             cypress-tests
         continue-on-error: true
+
+      - name: Clean up sensitive files
+        if: always()
+        run: |
+          rm -rf cypress/sensitive-data
 
       - name: Check test results
         id: test-status
@@ -47,32 +56,3 @@ jobs:
             cypress/screenshots/
             cypress/videos/
           retention-days: 30
-
-      - name: Create GitHub Issue on failure
-        if: steps.test-status.outputs.tests_failed == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🚨 Weekly Cypress Tests Failed - ${new Date().toISOString().split('T')[0]}`,
-              body: `## 📊 Test Execution Failed
-
-              The weekly Cypress test run has failed on the \`${{ github.ref_name }}\` branch.
-
-              **📋 Details:**
-              - 🆔 Run ID: ${{ github.run_id }}
-              - 🌿 Branch: ${{ github.ref_name }}
-              - 📝 Commit: \`${{ github.sha }}\`
-              - ⏰ Time: ${new Date().toISOString()}
-
-              **🔍 Investigation:**
-              - Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for detailed logs
-              - Download test artifacts including screenshots and videos
-              - Review the Cypress reports for specific test failures
-
-              **🏷️ Labels:** \`bug\`, \`automation\`, \`weekly-tests\``,
-              labels: ['bug', 'automation', 'weekly-tests']
-            });
-            console.log(`Created issue #${issue.data.number}`);

@@ -19,16 +19,17 @@ module.exports = defineConfig({
     requestTimeout: 7000,
     reporter: 'mochawesome',
     reporterOptions: {
-      reporterEnabled: 'mochawesome',
-      mochawesomeReporterOptions: {
-        reportDir: 'cypress/reports',
-        overwrite: false,
-        json: true,
-        html: true,
-        showHooks: 'always',
-        reportFilename: '[name]-[status]-[datetime]-report',
-        timestamp: 'longDate',
-      },
+      reportDir: 'cypress/reports/mochawesome',
+      overwrite: true,
+      html: true,
+      json: false,
+      charts: false,
+      reportPageTitle: 'Cypress Test Report',
+      reportFilename: '[status]_[datetime]-[name]-report',
+      showHooks: 'always',
+      embeddedScreenshots: true,
+      inlineAssets: true,
+      timestamp: 'longDate',
     },
     env: {
       grepFilterSpecs: true,
@@ -57,6 +58,18 @@ module.exports = defineConfig({
       config.env.language = language;
       config.env.spec = specPattern;
 
+      on('before:browser:launch', (browser = {}, launchOptions) => {
+        if (browser.name === 'chrome') {
+          launchOptions.args.push('--no-sandbox');
+          launchOptions.args.push('--disable-gpu');
+          launchOptions.args.push('--disable-dev-shm-usage');
+          launchOptions.args.push('--disable-extensions');
+          launchOptions.args.push('--disable-background-timer-throttling');
+          launchOptions.args.push('--disable-backgrounding-occluded-windows');
+          launchOptions.args.push('--disable-renderer-backgrounding');
+        }
+        return launchOptions;
+      });
       // Return the updated config
       return config;
     },

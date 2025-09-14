@@ -109,7 +109,7 @@ describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolat
       cy.get(checkoutOverviewPage.itemsTotal)
         .invoke('text')
         .then((price) => {
-          expect(price).to.equal(`${l10n.checkoutOverviewPage.itemTotal}: $${totalPrice}`);
+          expect(price).to.equal(`${l10n.checkoutOverviewPage.itemTotal}: $${totalPriceCorrect}`);
         });
       cy.get(checkoutOverviewPage.tax)
         .invoke('text')
@@ -120,7 +120,7 @@ describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolat
               .invoke('text')
               .then((itemsTotal) => {
                 const price = parseFloat(itemsTotal.replace(`${l10n.checkoutOverviewPage.total}: $`, ''));
-                const expectedTotal = totalPrice + taxValue;
+                const expectedTotal = totalPriceCorrect + taxValue;
                 expect(price).to.equal(expectedTotal);
               });
           });
