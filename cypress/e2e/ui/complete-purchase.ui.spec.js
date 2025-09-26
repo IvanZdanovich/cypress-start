@@ -1,4 +1,4 @@
-import { test_data } from '../../test-data/complete-purchase.test-data';
+import { test_data } from '../../test-data/ui/complete-purchase.ui.test-data';
 
 describe('CompletePurchase: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;

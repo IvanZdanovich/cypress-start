@@ -1,4 +1,4 @@
-import { test_data } from '../../test-data/header-comp.test-data';
+import { test_data } from '../../test-data/ui/header-comp.ui.test-data';
 
 describe('Header: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;

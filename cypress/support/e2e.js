@@ -15,9 +15,9 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands/commands';
-import './commands/login-page.ui.commands';
-import './commands/header-comp.ui.commands';
-import './commands/checkout-page.ui.commands';
+import './commands/ui/login-page.ui.commands';
+import './commands/ui/header-comp.ui.commands';
+import './commands/ui/checkout-page.ui.commands';
 
 // Import necessary modules and resources
 import l10n from './localization/l10n.json';

@@ -1,4 +1,4 @@
-import { test_data } from '../../test-data/cart-page.test-data';
+import { test_data } from '../../test-data/ui/cart-page.ui.test-data';
 
 describe('CartPage: Given STANDARD user on Cart page and no products are added to cart', { testIsolation: false }, () => {
   let standardUser;
@@ -121,29 +121,28 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it(`CartPage.STANDARD: Then on each item should have appropriate title, description and price\n${JSON.stringify(bugLog.inventoryPage_cardTitleNotValidated)}`, () => {
       cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).within(() => {
-          cy.get(cartPage.item.title)
-            .invoke('text')
-            .then((title) => {
-              // TODO: fix the bug buglog.inventoryPage_cardTitleNotValidated
-              if (title === 'Test.allTheThings() T-Shirt (Red)') {
-                return;
-              }
-              const currentProduct = test_data.chosenProducts.find((product) => product.title === title);
-              // TODO: fix the bug buglog.inventoryPage_cardDescriptionNotValidated
-              if (
-                currentProduct.description ===
-                'Carry all your essentials with the sleek and streamlined Sauce Labs Backpack. This stylish pack offers unparalleled protection for your laptop and tablet, ensuring your devices stay safe while you stay fashionable.'
-              ) {
-                return;
-              }
-              cy.then(() => {
-                cy.get(cartPage.item.title).should('have.text', currentProduct.title).and('be.visible');
-                cy.get(cartPage.item.description).should('have.text', currentProduct.description).and('be.visible');
-                cy.get(cartPage.item.price).should('have.text', `$${currentProduct.price}`).and('be.visible');
-              });
+        cy.wrap($item)
+          .find(cartPage.item.title)
+          .invoke('text')
+          .then((title) => {
+            // TODO: fix the bug buglog.inventoryPage_cardTitleNotValidated
+            if (title === 'Test.allTheThings() T-Shirt (Red)') {
+              return;
+            }
+            const currentProduct = test_data.chosenProducts.find((product) => product.title === title);
+            // TODO: fix the bug buglog.inventoryPage_cardDescriptionNotValidated
+            if (
+              currentProduct.description ===
+              'Carry all your essentials with the sleek and streamlined Sauce Labs Backpack. This stylish pack offers unparalleled protection for your laptop and tablet, ensuring your devices stay safe while you stay fashionable.'
+            ) {
+              return;
+            }
+            cy.then(() => {
+              cy.get(cartPage.item.title).should('have.text', currentProduct.title).and('be.visible');
+              cy.get(cartPage.item.description).should('have.text', currentProduct.description).and('be.visible');
+              cy.get(cartPage.item.price).should('have.text', `$${currentProduct.price}`).and('be.visible');
             });
-        });
+          });
       });
     });
   });
