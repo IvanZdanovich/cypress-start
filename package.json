@@ -9,7 +9,7 @@
   "scripts": {
     "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
     "test": "npx cypress run",
-    "lint": "eslint . --format stylish",
+    "lint": "eslint . --format stylish --fix",
     "prepare": "husky"
   },
   "lint-staged": {
