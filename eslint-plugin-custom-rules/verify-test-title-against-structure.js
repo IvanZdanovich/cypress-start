@@ -13,11 +13,11 @@ module.exports = {
     let structureFile;
 
     if (filename.includes('e2e')) {
-      structureFile = './app-names/workflows.json';
+      structureFile = '../app-structure/workflows.json';
     } else if (filename.endsWith('.api.spec.js')) {
-      structureFile = './app-names/modules.json';
+      structureFile = '../app-structure/modules.json';
     } else if (filename.endsWith('.ui.spec.js')) {
-      structureFile = './app-names/components.json';
+      structureFile = '../app-structure/components.json';
     } else {
       return {};
     }
