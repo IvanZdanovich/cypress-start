@@ -23,6 +23,11 @@ cypress/reports/videos/**
 # Ignore Cypress reports
 cypress/reports/**
 
+# Ignore Development-data
+development-data/**
+!development-data/pages/.gitkeep
+!development-data/swagger/.gitkeep
+
 # Ignore Cypress sensitive data
 cypress/sensitive-data/**
 

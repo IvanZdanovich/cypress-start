@@ -31,7 +31,7 @@ export default [
       'custom/prevent-duplicated-titles': 'error',
       'custom/verify-test-title-pattern': 'error',
       'custom/verify-test-title-against-structure': 'error',
-      'custom/verify-test-title-witout-forbidden-symbols': 'error',
+      'custom/verify-test-title-without-forbidden-symbols': 'error',
       // 'custom/verify-todos-have-links': 'error',
     },
   },
