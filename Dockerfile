@@ -2,10 +2,6 @@ FROM cypress/base:latest
 
 WORKDIR /e2e
 
-# Set environment variables to suppress D-Bus warnings
-ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
-ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/dev/null
-
 # Accept build arguments for test configuration
 ARG LANGUAGE=en
 ARG TARGET_ENV=dev
