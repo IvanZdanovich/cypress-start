@@ -16,7 +16,7 @@ ENV COLOUR_THEME=${COLOUR_THEME}
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --omit=dev
 
 # Copy project files
 COPY . .
