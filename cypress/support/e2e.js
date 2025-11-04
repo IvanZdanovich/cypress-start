@@ -18,8 +18,7 @@ import './commands/commands';
 import './commands/ui/login-page.ui.commands';
 import './commands/ui/header-comp.ui.commands';
 import './commands/ui/checkout-page.ui.commands';
-import './commands/api/common.api.commands';
-import './commands/api/restful-broker.api.commands';
+import './commands/api/restful-booker.api.commands';
 
 // Import necessary modules and resources
 import l10n from './localization/l10n.json';
@@ -27,8 +26,8 @@ import colours from './colours/default-theme-colours.json';
 import selectors from './selectors/selectors';
 import urls from './urls/urls';
 import utils from './utils/utils';
+import errors from './requirements/error_messages';
 import userRoles from './requirements/user-roles';
-import bugLog from './bugs/bug-log.json';
 import requirements from './requirements/requirements';
 import products from './products/products';
 
@@ -37,10 +36,11 @@ global.l10n = l10n;
 global.colours = colours;
 global.urls = urls;
 global.utils = utils;
+global.errors = errors;
 global.userRoles = userRoles.userRoles;
-global.bugLog = bugLog;
 global.reqs = requirements;
 global.products = products;
+
 // Separate selectors by pages
 global.loginPage = selectors.loginPage;
 global.inventoryPage = selectors.inventoryPage;
