@@ -54,7 +54,7 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
     - All UI selectors (e.g., `loginPage`, etc.)
 
 ### Development Reference
-- Refer to `.json` Swagger documentation in `/development-data/swagger` for development and test reference purposes.
+- Refer to `.json` Swagger documentation in `development-data/swagger` for development and test reference purposes.
 
 ---
 
