@@ -1,29 +1,36 @@
 # Bug Tracking
 
-## Current Approach
+## Overview
 
-The project tracks bugs in a JSON file (`cypress/support/bugs/bug-log.json`).
+Bugs found during testing should be tracked and documented to ensure they are addressed in a timely manner. All bugs
+must be logged in the project's issue tracking system (e.g., GitHub Issues, Jira) and referenced directly in the test
+code.
 
-Example bug entry:
+## Bug Tracking Process
 
-```json
-{
-  "loginPage_credentialsFieldIcon": {
-    "id": "BUG-001",
-    "title": "LoginPage: When either the username or password field is empty, the appropriate field should be highlighted and contain an error icon",
-    "description": "Steps to reproduce: 1. Open the Login page; 2. Leave the Username or Password field empty and click on the Login button; 3. Verify that both fields are highlighted in red and have an error icon."
-  }
-}
-```
+1. **Create an Issue**: When a bug is discovered, create a detailed issue in the project's issue tracking system with:
+    - Clear title describing the bug
+    - Steps to reproduce
+    - Expected vs. actual behavior
+    - Screenshots or logs (if applicable)
+    - Environment details (browser, OS, etc.)
 
-### Current Usage Pattern
+2. **Reference in Test Code**: Add a `TODO` comment in the test code with a direct link to the issue.
 
-In test files, bugs should be referenced with a `TODO` comment containing a link. The bug description can be parsed in
-the test title. Tests can be skipped or configured to ignore the bug if it is not consistently reproducible.
+3. **Skip or Mark Test**: Use `.skip()` for tests that cannot pass due to the bug, or configure the test to handle known
+   issues.
+
+4. **Monitor and Update**: Regularly monitor the issue tracker for updates on the bug. Once fixed, update the test code
+   to remove the skip and verify the fix.
+
+### Skipped Test with Bug Reference
 
 ```javascript
-it(`CartPage.STANDARD: Then Checkout button is displayed\n${JSON.stringify(bugLog.cartPage_EmptyCartCheckout)}`, () => {
-    // TODO: fix the bug buglog.cartPage_EmptyCartCheckout
-    cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
+it.skip('CartPage.STANDARD: Then Checkout button is displayed and enabled', () => {
+    // TODO: https://github.com/org/repo/issues/123
+    cy.get(cartPage.checkout)
+        .should('have.text', l10n.cartPage.checkout)
+        .and('be.visible')
+        .and('be.enabled');
 });
 ```

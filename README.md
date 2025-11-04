@@ -61,10 +61,12 @@ e-commerce application.
   See [Pre-commit Check](docs/pre-commit-check.md).
 - **Test Structure Guidelines:** Detailed documentation for writing maintainable, readable, and robust tests.  
   See [Test Writing Guideline](docs/test-writing-guideline.md), [Naming Conventions](docs/naming-conventions.md), [Tagging Strategy](docs/tagging-strategy.md), [FAQ](docs/faq.md).
-- **Copilot Integration:** AI-assisted test writing with ready-to-use prompts and instructions.  
+- **Copilot Integration:** AI-assisted test writing with ready-to-use instructions.  
   See [Copilot Instructions](.github/copilot-instructions.md).
 - **Copilot Prompts:** Ready-to-use prompts for AI-assisted test writing.  
   See [Copilot Prompts](docs/copilot-prompts.md).
+- **Prepared Continuous Integration Sample:** Weekly regression test workflow integrated for automated test execution.
+  See [Weekly Cypress Tests Workflow](.github/workflows/weekly-cypress-tests.yml).
 
 ---
 
@@ -113,13 +115,13 @@ To run tests with specific language and environment parameters in headless mode:
 #### Windows:
 
 ```bash
-  $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="electron"; npm run test
+  $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
 ```
 
 #### macOS:
 
 ```bash
-  LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev npm run test
+  LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
 ```
 
 ---
@@ -137,13 +139,13 @@ For interactive debugging with the Cypress UI:
 #### Windows:
 
 ```bash
-  $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="electron"; npm run pretest; npx cypress open
+  $env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
 ```
 
 #### macOS with caffeinate (prevents system from sleeping):
 
 ```bash
-  LANGUAGE=en TARGET_ENV=dev COLOUR_THEME=default npm run pretest && caffeinate -i npx cypress open
+  LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
 ```
 
 ---
@@ -153,6 +155,7 @@ For interactive debugging with the Cypress UI:
 - [Test Writing Guideline](docs/test-writing-guideline.md)
 - [FAQ](docs/faq.md)
 - [Naming Conventions](docs/naming-conventions.md)
+- [Git Strategy](docs/git-strategy.md)
 - [Bug Tracking](docs/bug-tracking.md)
 - [Localization Testing](docs/localization-testing.md)
 - [Color Theme Testing](docs/colour-theme-testing.md)
@@ -169,7 +172,6 @@ For interactive debugging with the Cypress UI:
 - [Custom ESLint Rules](docs/eslint-custom-rules.md)
 - [Pre-commit Check](docs/pre-commit-check.md)
 - [Tagging Strategy](docs/tagging-strategy.md)
-- [Git Strategy](docs/git-strategy.md)
 
 ---
 
