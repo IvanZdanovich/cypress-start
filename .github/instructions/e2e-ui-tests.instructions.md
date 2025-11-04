@@ -60,7 +60,7 @@ applyTo: "cypress/e2e/ui/*.ui.spec.js"
 
 ### Development Reference
 
-- Refer to `.html` pages in `/development-data/pages` for development and test reference purposes.
+- Refer to `.html` pages in `development-data/pages` for development and test reference purposes.
 
 ---
 
