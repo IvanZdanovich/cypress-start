@@ -10,8 +10,12 @@ module.exports = {
     schema: [],
   },
   create(context) {
-    // Array of [pattern, replacement] tuples - order matters for overlapping patterns
-    const replacementRules = [
+    const filename = context.getFilename();
+    const isApiTest = filename.includes('/integration/api/');
+    const isUiTest = filename.includes('/integration/ui/') || filename.includes('/e2e/ui/');
+
+    // Common replacements for all tests
+    const commonReplacements = [
       // Common inconsistencies - apply first to clean up formatting
       [/"/g, ''],
       [/'/g, ''],
@@ -26,9 +30,9 @@ module.exports = {
       [/\(/g, ''],
       [/\)/g, ''],
       [/\{/g, ''],
-      [/\}/g, ''],
+      [/\\}/g, ''],
       [/\[/g, ''],
-      [/\]/g, ''],
+      [/\\]/g, ''],
       [/%/g, ' percent'],
       [/&/g, ' and '],
       [/ > /g, ' more than '],
@@ -47,7 +51,10 @@ module.exports = {
       [/\^/g, ''],
       [/~/g, ''],
       [/_/g, ''],
+    ];
 
+    // UI-specific replacements
+    const uiReplacements = [
       // Multi-word assertion terms (check before single words)
       [/\bis shown\b/gi, 'is displayed'],
       [/\bis visible\b/gi, 'is displayed'],
@@ -67,23 +74,8 @@ module.exports = {
       [/\bcontains class\b/gi, 'has class'],
       [/\bcontains value\b/gi, 'has value'],
       [/\bcontains text\b/gi, 'has text'],
-      [/\bhas length\b/gi, 'has count'],
-      [/\bhas size\b/gi, 'has count'],
       [/\bis ordered\b/gi, 'is sorted'],
       [/\bhas focus\b/gi, 'is focused'],
-
-      // Multi-word API terms
-      [/\brespond with\b/gi, 'return'],
-      [/\bgive back\b/gi, 'return'],
-      [/\bresponse code\b/gi, 'status code'],
-      [/\bHTTP code\b/gi, 'status code'],
-      [/\bHTTP header\b/gi, 'header'],
-      [/\bquery param\b/gi, 'query parameter'],
-      [/\bquery string\b/gi, 'query parameter'],
-      [/\bpath param\b/gi, 'path parameter'],
-      [/\bURL param\b/gi, 'path parameter'],
-      [/\bbe successful\b/gi, 'succeed'],
-      [/\bbe unsuccessful\b/gi, 'fail'],
 
       // Multi-word UI interaction terms
       [/\bmove over\b/gi, 'hover'],
@@ -95,8 +87,6 @@ module.exports = {
       [/\btick box\b/gi, 'checkbox'],
       [/\boption button\b/gi, 'radio button'],
       [/\bpage tab\b/gi, 'tab'],
-      [/\bside panel\b/gi, 'sidebar'],
-      [/\bside menu\b/gi, 'sidebar'],
       [/\bpage navigation\b/gi, 'pagination'],
       [/\bpopup message\b/gi, 'toast'],
       [/\bx icon\b/gi, 'cross icon'],
@@ -107,13 +97,11 @@ module.exports = {
       [/\bpresent\b/gi, 'display'],
       [/\bpress\b/gi, 'click'],
       [/\btap\b/gi, 'click'],
-      [/\benter\b/gi, 'input'],
       [/\bfill\b/gi, 'input'],
       [/\bchoose\b/gi, 'select'],
       [/\bpick\b/gi, 'select'],
       [/\bopen\b/gi, 'expand'],
       [/\bunfold\b/gi, 'expand'],
-      [/\bclose\b/gi, 'collapse'],
       [/\bfold\b/gi, 'collapse'],
       [/\bmouseover\b/gi, 'hover'],
       [/\bvisit\b/gi, 'navigate'],
@@ -135,26 +123,32 @@ module.exports = {
       [/\bloader\b/gi, 'spinner'],
       [/\barea\b/gi, 'panel'],
       [/\balert\b/gi, 'notification'],
-
-      // Single-word API terms
-      [/\bpayload\b/gi, 'body'],
-      [/\bcontent\b/gi, 'body'],
-      [/\bparam\b/gi, 'parameter'],
-      [/\barg\b/gi, 'parameter'],
-      [/\bcall\b/gi, 'request'],
-      [/\bresult\b/gi, 'response'],
-      [/\boutput\b/gi, 'response'],
-      [/\bauthorize\b/gi, 'authenticate'],
-      [/\blogin\b/gi, 'authenticate'],
-      [/\bverify\b/gi, 'validate'],
-      [/\badd\b/gi, 'create'],
-      [/\binsert\b/gi, 'create'],
-      [/\bfetch\b/gi, 'retrieve'],
-      [/\bmodify\b/gi, 'update'],
-      [/\bremove\b/gi, 'delete'],
-      [/\bpass\b/gi, 'succeed'],
-      [/\berror\b/gi, 'fail'],
     ];
+
+    // API-specific replacements
+    const apiReplacements = [
+      // Multi-word API terms
+      [/\brespond with\b/gi, 'return'],
+      [/\bgive back\b/gi, 'return'],
+      [/\bresponse code\b/gi, 'status code'],
+      [/\bHTTP code\b/gi, 'status code'],
+      [/\bHTTP header\b/gi, 'header'],
+      [/\bquery param\b/gi, 'query parameter'],
+      [/\bquery string\b/gi, 'query parameter'],
+      [/\bpath param\b/gi, 'path parameter'],
+      [/\bURL param\b/gi, 'path parameter'],
+      [/\bbe successful\b/gi, 'succeed'],
+      [/\bbe unsuccessful\b/gi, 'fail'],
+    ];
+
+    // Build the replacement rules based on test type
+    let replacementRules = [...commonReplacements];
+    if (isUiTest) {
+      replacementRules = [...replacementRules, ...uiReplacements];
+    }
+    if (isApiTest) {
+      replacementRules = [...replacementRules, ...apiReplacements];
+    }
 
     function applyReplacements(title) {
       let newTitle = title;

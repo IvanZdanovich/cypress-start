@@ -21,7 +21,6 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
 - Use `context.skip` and `it.skip` with clear descriptions for manual verification scenarios.
 - Do not use tags for filtering; use file names instead.
 
-
 ### Test Data Management
 - Test data instances should be reused across tests within a file (e.g., created, updated, deleted).
 - Describe the state of each test data object separately in each `context` block for clarity.

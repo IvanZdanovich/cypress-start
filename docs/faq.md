@@ -3,17 +3,14 @@
 ## 1. Why is automating manual test cases ineffective?
 
 Automating manual test cases is not recommended because manual tests are designed for human execution structured in
-straight-forward way. often containing
-
-ambiguous duplicated steps and lacking the suite structure needed for reliable automation. Attempting to automate them
-leads to unclear
-logic, superficial coverage, high maintenance costs and broken CI/CD processes due slow execution because of duplicated
-steps.
-Keeping automated tests have no benefits, since requires a lot of resources and provides no benefits, because creates
-two sources of truth. aligned with manual cases requires
-constant updates in both places, increasing the risk of inconsistencies and wasted effort. Metrics based on the number
-of automated manual cases are misleading, cause number of verified requirements is different from test to test, and
-integrating these tests with management tools adds unnecessary complexity.
+straight-forward way. often containing ambiguous duplicated steps and lacking the suite structure needed for reliable
+automation. Attempting to automate them leads to unclear logic, superficial coverage, high maintenance costs and broken
+CI/CD processes due slow execution because of duplicated steps.
+Keeping both manual and automated tests have no benefits, since requires a lot of resources and provides no benefits,
+because creates two sources of truth. Alignment with manual cases requires constant updates in both places, increasing the risk of
+inconsistencies and wasted effort. Metrics based on the number of automated manual cases are misleading, cause number of
+verified requirements is different from test to test, and integrating these tests with management tools adds unnecessary
+complexity.
 Instead, automation should focus on directly validating requirements, resulting in more stable, precise, and
 maintainable tests that truly reflect the application's intended behavior.
 
@@ -90,7 +87,7 @@ context('LoginPage: When user logins with valid credentials', () => {
 
 - Unnecessary abstraction:
     - Duplicates framework functionality
-    - Wraps simple operations in methods
+    - Wraps logic and simple operations in class methods
     - Adds complexity to basic actions
 
 - Maintenance challenges:
@@ -104,8 +101,6 @@ context('LoginPage: When user logins with valid credentials', () => {
 
 - Technical limitations:
     - Reduced test performance
-    - Complicated parallel execution
-    - Version control conflicts in shared objects
 
 - Documentation and visibility:
     - Hidden implementation details
@@ -179,8 +174,8 @@ context('LoginPage: When user logins with valid credentials', () => {
 - More verbose than POM but provides better clarity
 - Non-trivial approach requires some time to get used to, but once understood, it is more efficient
 
-Why not just use selectors directly? Selectors are just strings. Hiding them in classes adds unnecessary complexity.
-In summary, POM creates a complex, self-serving system that distracts from writing clear, maintainable
+Why not just use selectors directly? Selectors are just strings. Hiding them in classes adds unnecessary complexity. In
+summary, POM creates a complex, self-serving system that distracts from writing clear, maintainable
 tests. It is an anti-pattern because it prioritizes OOP structure over test clarity and maintainability.
 
 ## 3. Why is using BDD frameworks counterproductive?
@@ -189,7 +184,8 @@ BDD frameworks introduce an extra layer of abstraction, which can make tests har
 They are primarily aimed at automating manual test cases—a flawed approach that leads to unclear logic, superficial
 coverage, and high maintenance costs (see above for details). While BDD frameworks intend to improve collaboration by
 using human-readable language (like Gherkin), in practice, this rarely delivers real benefits. The added complexity of
-step definitions and mapping to code often outweighs any advantages. Importantly, you can use BDD keywords and natural
+step definitions and mapping to code often outweighs any advantages.
+Importantly, you can use BDD keywords and natural
 human language directly in your test descriptions and structure—without BDD frameworks or extra abstractions. This keeps
 tests readable and maintainable, while avoiding unnecessary indirection. Writing tests with clear structure, descriptive
 names, and straightforward logic is more effective for both communication and maintenance.
@@ -283,10 +279,12 @@ context('LoginPage.STANDARD: When user logins with valid credentials', () => {
 **Pros:**
 
 - Technical:
+    - Business-readable specifications
+    - Structured documentation
+    - Reusable step definitions
+    - Built-in reporting
     - Fast test execution
-    - Native IDE support
     - Simple debugging
-    - Efficient parallel execution
 
 - Development:
     - Clear file structure
@@ -443,7 +441,8 @@ Here's a clearer and more detailed explanation of why UI tests should be tied to
 
 ## 5. Why should UI tests be tied to one page or component?
 
-Test file isolation is crucial in UI automation because test runs within a file share the same context. Organizing tests
+Test file isolation is crucial in test automation because test runs within a file share the same context. Organizing
+tests
 by pages or components prevents state conflicts between functional areas and makes test failures easily traceable to
 specific functionality. When each test file focuses on one page or component, updates to one area don't affect unrelated
 tests. This creates clear boundaries for test responsibility and enables efficient parallel execution.
@@ -481,7 +480,6 @@ context('CartPage.STANDARD: When user proceeds to checkout', () => {
     before(() => {
         cy.visit(urls.cart);
     });
-
     it('CartPage.STANDARD: Then checkout button navigates to checkout page', () => {
         cy.get(cartPage.checkoutButton).click();
         cy.url().should('eq', urls.checkout);
@@ -495,7 +493,6 @@ context('CheckoutPage.STANDARD: When user submits valid details', () => {
         cy.get(checkoutPage.firstName).type('John');
         cy.get(checkoutPage.lastName).type('Doe');
     });
-
     it('CheckoutPage.STANDARD: Then user proceeds to confirmation', () => {
         cy.get(checkoutPage.continueButton).click();
         cy.url().should('eq', urls.confirmation);
@@ -558,8 +555,8 @@ and here is the output of the test run:
        Spec                                              Tests  Passing  Failing  Pending  Skipped
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔ integration/ui/cart-page.ui.spec.js         00:01      3       1       -         2         - │
+│ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ✖ 0 of 6 failed (0%)                          00:01      3       1       -         2         -
+✖ 0 of 6 failed (0%)                          00:01 3 1 - 2 -
 
 This makes the scope and current coverage explicit, even before all tests are implemented.

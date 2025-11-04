@@ -2,8 +2,7 @@
 
 ## Overview
 
-The project manages color themes in a similar way to localization, using environment variables and file copying to
-support multiple color configurations.
+The project manages color themes using environment variable and file copying to support multiple color configurations.
 
 ## Implementation Details
 
@@ -13,19 +12,20 @@ support multiple color configurations.
 
 ### JSON Theme Files
 
-Color values are stored in JSON files following the naming pattern:
-
-- `{theme-name}-theme-colours.json`
+Colour values are stored in JSON files, organized by themes.
 
 ### Pretest Script
 
-A pretest script copies the appropriate colour theme file to a common file (`current-theme-colours.json`).
-Run the pretest script during implementation to update it.
+A pretest script copies the appropriate colour theme file to a common file (`current-theme-colours.json`) before tests
+run.
+
+Run the pretest script to update the current theme:
 
 ```bash
-npm run pretest
+  COLOUR_THEME=default npm run pretest
 ```
 
 ### Accessing Theme Colors
 
 In your tests, you can access the colour values using global variable `colours`.
+

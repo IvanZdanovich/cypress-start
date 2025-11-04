@@ -25,8 +25,8 @@ high-quality and maintainable coverage.
 - `cypress/support/commands/ui/`: Custom commands for UI interactions.
 - `cypress/support/utils/`: Utility functions for tests.
 - `cypress/support/requirements/`: Project wide requirements, API error messages and configurations.
-- `cypress/fixtures/localization/`: Localization JSON files.
-- `cypress/fixtures/colours/`: Colour theme JSON files.
+- `cypress/support/localization/`: Localization JSON files.
+- `cypress/support/colours/`: Colour theme JSON files.
 - `cypress/test-data/api/`: Isolated test data for API test files.
 - `cypress/test-data/ui/`: Isolated test data for UI test files.
 - `development-data/swagger/`: Contains local Swagger documentation as `.json` files for test development purposes.

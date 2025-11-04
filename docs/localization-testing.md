@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to perform localization testing in Cypress by dynamically loading localization strings from JSON files based on the language code.
+The project manages localizations using environment variable and file copying to support multiple color configurations.
 
 ## Implementation Details
 
@@ -20,9 +20,9 @@ A pretest script copies the appropriate localization file to a common file (`l10
 Run the pretest script during implementation to update it.
 
 ```bash
-npm run pretest
+  LANGUAGE=en npm run pretest
 ```
 
 ### Accessing Localization Strings
 
-In your tests, you can access the localization strings using global vaiable `l10n`.
+In your tests, you can access the localization strings using global variable `l10n`.
