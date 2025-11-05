@@ -18,12 +18,12 @@ TARGET: [specific endpoint/functionality name]
 
 REQUIREMENTS:
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
-- `instructions/integration-api-tests.instructions.md`
-- `docs/naming-conventions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
+- `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 USE specifications FROM:
-- `development-data/swagger/[specific-swagger-file].json`
+- `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file].json`
 
 INCLUDE:
 - ALL HTTP methods (GET, POST, PUT, DELETE, PATCH)
@@ -51,14 +51,14 @@ TARGET: [specific component/page name]
 
 REQUIREMENTS:
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
-- `instructions/integration-ui-tests.instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 EXTRACT selectors FROM:
-- `development-data/pages/[specific-html-file].html`
+- `${WORKSPACE_ROOT}/development-data/pages/[specific-html-file].html`
 
 USE ONLY existing selectors FROM:
-- `cypress/support/selectors/selectors.js`
+- `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
 COVER:
 - ALL interactive elements (buttons, inputs, dropdowns, links)
@@ -82,11 +82,11 @@ TARGET: [specific user flow/scenario]
 
 REQUIREMENTS:
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
-- `instructions/e2e-ui-tests.instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 EXTRACT selectors FROM:
-- `development-data/pages/[list-specific-files].html`
+- `${WORKSPACE_ROOT}/development-data/pages/[list-specific-files].html`
 
 MAP:
 - COMPLETE user journey (start -> finish)
@@ -114,7 +114,7 @@ OUTPUT: Complete working test suite
 ```
 TASK: Analyze Integration API test coverage
 INPUT: attached test file
-COMPARE against: `development-data/swagger/[specific-swagger-file].json`
+COMPARE against: `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file].json`
 
 DELIVER list OF:
 1. MISSING endpoint methods:
@@ -139,13 +139,13 @@ THEN PROVIDE improvement points FOR current implementation:
 - IDENTIFY redundant assertions TO remove
 - IDENTIFY verbose code TO simplify
 - IDENTIFY missing helper methods TO add
-- IDENTIFY hard-coded values TO extract TO `cypress/test-data/api/`
+- IDENTIFY hard-coded values TO extract TO `${WORKSPACE_ROOT}/cypress/test-data/api/`
 - IDENTIFY assertions TO consolidate
 
 FOLLOW:
-- `.github/copilot-instructions.md`
-- `instructions/integration-api-tests.instructions.md`
-- `docs/naming-conventions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
+- `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 OUTPUT: Actionable test scenarios + specific improvements (NO vague suggestions)
 ```
@@ -155,7 +155,7 @@ OUTPUT: Actionable test scenarios + specific improvements (NO vague suggestions)
 ```
 TASK: Analyze Integration UI test coverage
 INPUT: attached test file
-COMPARE against: `development-data/pages/[specific-html-file].html`
+COMPARE against: `${WORKSPACE_ROOT}/development-data/pages/[specific-html-file].html`
 
 DELIVER list OF:
 1. MISSING interactive elements:
@@ -177,15 +177,15 @@ DELIVER list OF:
     - IDENTIFY untested: ARIA labels, roles
 
 THEN PROVIDE improvement points FOR current implementation:
-- IDENTIFY repetitive selectors TO move TO `cypress/support/selectors/selectors.js`
+- IDENTIFY repetitive selectors TO move TO `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 - IDENTIFY redundant actions TO replace WITH custom commands
 - IDENTIFY complex assertions TO simplify
-- IDENTIFY hard-coded strings TO move TO `cypress/test-data/ui/`
+- IDENTIFY hard-coded strings TO move TO `${WORKSPACE_ROOT}/cypress/test-data/ui/`
 - IDENTIFY unnecessary waits TO optimize
 
 FOLLOW:
-- `.github/copilot-instructions.md`
-- `instructions/integration-ui-tests.instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 OUTPUT: Specific elements + test cases + concrete improvements (NO generalities)
 ```
@@ -195,7 +195,7 @@ OUTPUT: Specific elements + test cases + concrete improvements (NO generalities)
 ```
 TASK: Analyze E2E UI test coverage
 INPUT: attached test file
-COMPARE against: `development-data/pages/[list-specific-files].html`
+COMPARE against: `${WORKSPACE_ROOT}/development-data/pages/[list-specific-files].html`
 
 DELIVER list OF:
 1. INCOMPLETE user flows:
@@ -224,8 +224,8 @@ THEN PROVIDE improvement points FOR current implementation:
 - IDENTIFY excessive assertions TO reduce
 
 FOLLOW:
-- `.github/copilot-instructions.md`
-- `instructions/e2e-ui-tests.instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 OUTPUT: Exact flows + scenarios + actionable improvements (NO summaries)
 ```
@@ -242,23 +242,23 @@ INPUT: attached test file
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
-    - `cypress/test-data/api/[specific-file].js`
+    - `${WORKSPACE_ROOT}/cypress/test-data/api/[specific-file].js`
 
 2. REPLACE repetitive code WITH:
-    - custom commands FROM `cypress/support/commands/api/`
+    - custom commands FROM `${WORKSPACE_ROOT}/cypress/support/commands/api/`
 
 3. CONSOLIDATE:
     - duplicate assertions
 
 4. OPTIMIZE structure PER:
-    - `instructions/integration-api-tests.instructions.md`
-    - `docs/naming-conventions.md`
+    - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
+    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 5. VALIDATE coverage AGAINST:
-    - `development-data/swagger/[specific-swagger-file].json`
+    - `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file].json`
 
 6. FIX naming violations PER:
-    - `docs/naming-conventions.md`
+    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
@@ -268,7 +268,7 @@ BEFORE code, LIST improvement points:
 - WHAT structural changes FOR clarity
 
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```
@@ -281,23 +281,23 @@ INPUT: attached test file
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
-    - `cypress/test-data/ui/[specific-file].js`
+    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[specific-file].js`
 
 2. REPLACE inline selectors WITH references FROM:
-    - `cypress/support/selectors/selectors.js`
+    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
 3. REPLACE repetitive actions WITH commands FROM:
-    - `cypress/support/commands/ui/`
+    - `${WORKSPACE_ROOT}/cypress/support/commands/ui/`
 
 4. CONSOLIDATE:
     - duplicate assertions
     - cleanup logic
 
 5. VALIDATE coverage AGAINST:
-    - `development-data/pages/[specific-html-file].html`
+    - `${WORKSPACE_ROOT}/development-data/pages/[specific-html-file].html`
 
 6. FIX naming violations PER:
-    - `docs/naming-conventions.md`
+    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 BEFORE code, LIST improvement points:
 - WHAT repetitive patterns ARE eliminated
@@ -307,7 +307,7 @@ BEFORE code, LIST improvement points:
 - WHAT structural changes FOR readability
 
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```
@@ -323,20 +323,20 @@ EXECUTE improvements:
     - focused scenarios
 
 2. EXTRACT hard-coded values TO:
-    - `cypress/test-data/ui/[specific-file].js`
+    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[specific-file].js`
 
 3. USE custom commands FROM:
-    - `cypress/support/commands/ui/`
+    - `${WORKSPACE_ROOT}/cypress/support/commands/ui/`
 
 4. ADD proper isolation:
     - test isolation BETWEEN scenarios
     - cleanup logic
 
 5. VALIDATE flow coverage AGAINST:
-    - `development-data/pages/[list-files].html`
+    - `${WORKSPACE_ROOT}/development-data/pages/[list-files].html`
 
 6. FIX naming violations PER:
-    - `docs/naming-conventions.md`
+    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
 BEFORE code, LIST improvement points:
 - HOW scenarios ARE separated FOR focus
@@ -346,7 +346,7 @@ BEFORE code, LIST improvement points:
 - WHAT organizational changes FOR maintainability
 
 FOLLOW strictly:
-- `.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```

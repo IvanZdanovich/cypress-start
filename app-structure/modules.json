@@ -1,5 +1,13 @@
 {
   "RestfulBooker": {
-    "Booking": {}
+    "Auth": {},
+    "Booking": {
+      "Create": {},
+      "Retrieve": {},
+      "Update": {},
+      "PartialUpdate": {},
+      "Delete": {}
+    }
   }
 }
+

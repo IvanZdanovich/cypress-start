@@ -1,20 +1,25 @@
 ---
-applyTo: "cypress/integration/ui/*.ui.spec.js"
+applyTo: "${WORKSPACE_ROOT}/cypress/integration/ui/*.ui.spec.js"
 ---
 
 ## Integration UI Tests Instructions
 
-### File Structure
+**Note**: When referencing files in AI prompts or AI instructions, always use **absolute paths** from the workspace root
+via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-specific path in committed docs.
 
-- Follow naming conventions in `docs/naming-conventions.md`.
-- Place files in `cypress/integration/ui` using the `page-name.component-name.ui.spec.js` pattern (kebab-case).
-- Store test data in `cypress/test-data/ui` using the `page-name.component-name.test-data.js` pattern (kebab-case).
-- Store selectors in `cypress/support/selectors/selectors.js`, grouped by page/component.
-- Store UI commands in `cypress/support/commands/ui/`, named by page/component.
-- Store API commands in `cypress/support/commands/api/`, named by module/submodule.
+### Test Structure
+
+- Place files in `${WORKSPACE_ROOT}/cypress/integration/ui` using the `page-name.component-name.ui.spec.js` pattern (
+  kebab-case).
+- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui` using the `page-name.component-name.test-data.js`
+  pattern (kebab-case).
+- Store selectors in `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`, grouped by page/component.
+- Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/`, named by page/component.
+- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/`, named by module/submodule.
 
 ### Test Organization
 
+- Follow naming conventions in `${WORKSPACE_ROOT}/docs/naming-conventions.md`.
 - Each test file must contain exactly one `describe` block with multiple `context` blocks.
 - Use `{ testIsolation: false }` for the `describe` block. Test isolation occurs between test files only.
 - Use `before` block in `describe` block for preconditions.
@@ -49,7 +54,7 @@ applyTo: "cypress/integration/ui/*.ui.spec.js"
 
 ### Global Resources
 
-- The following modules are available globally via `cypress/support/e2e.js` and do not need to be imported:
+- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be imported:
     - `utils` - Utility functions
     - `l10n` - Localization strings
     - `colours` - Theme colours
@@ -60,13 +65,16 @@ applyTo: "cypress/integration/ui/*.ui.spec.js"
 
 ### Development Reference
 
-- Refer to `.html` pages in `development-data/pages` for development and test reference purposes.
+- Refer to `.html` pages in `${WORKSPACE_ROOT}/development-data/pages` for development and test reference purposes.
+- Before creating tests for a new page/component, register it in `${WORKSPACE_ROOT}/app-structure/components.json` to avoid ESLint errors.
+    - Structure: `{ "PageName": { "ComponentName": { } } }`
+    - Components should match functional elements on the page (header, forms, modals, etc.).
 
 ---
 
 ## Test Data Organization
 
-- Store test data in `cypress/test-data/ui/page-name.component-name.test-data.js`.
+- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.test-data.js`.
 - Use kebab-case for file names.
 - Use camelCase for variable names.
 - Organize by page/component.
@@ -76,7 +84,7 @@ applyTo: "cypress/integration/ui/*.ui.spec.js"
 - Example:
 
 ```javascript
-// cypress/test-data/ui/page-name.component-name.test-data.js
+// ${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.test-data.js
 export const testData = {
     validItems: {
         initialItem: {
@@ -103,7 +111,7 @@ export const testData = {
 
 ## UI Commands
 
-- Store UI commands in `cypress/support/commands/ui/page-name.component-name.ui.commands.js`.
+- Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`.
 - Use kebab-case for file names.
 - Use camelCase for command names.
 - Example:
@@ -121,14 +129,14 @@ Cypress.Commands.add('pageName__performAction', (itemData) => {
 
 ## UI Selectors Organization
 
-- Store selectors in `cypress/support/selectors/selectors.js`.
+- Store selectors in `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`.
 - Group by page/component.
 - Use camelCase for selector names.
 - Access via global variables (e.g., `commonUI`, `auditsPage`).
 - Example:
 
 ```javascript
-// cypress/support/selectors/selectors.js
+// ${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js
 const componentNamePage = {
     titleInput: '[data-testid="component-title-input"]',
     prioritySelect: '[data-testid="component-priority-select"]',

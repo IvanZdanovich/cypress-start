@@ -1,17 +1,24 @@
 ---
-applyTo: 'cypress/integration/api/*.api.spec.js'
+applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 ---
 
 ## Integration API Tests Instructions
 
-### File Structure
-- Follow naming conventions in `docs/naming-conventions.md`.
-- Place files in `cypress/integration/api` using the `module-name.submodule-name.api.spec.js` pattern (kebab-case).
-- Store test data in `cypress/test-data/api` using the `module-name.submodule-name.test-data.js` pattern (kebab-case).
-- Store API commands in `cypress/support/commands/api/`, named by module/submodule.
-- Store URLs and endpoints in `cypress/support/urls/urls.js`.
+**Note**: When referencing files in AI prompts or AI instructions, always use **absolute paths** from the workspace root
+via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-specific path in committed docs.
+
+### Test Structure
+
+- Place files in `${WORKSPACE_ROOT}/cypress/integration/api` using the `module-name.submodule-name.api.spec.js`
+  pattern (kebab-case).
+- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/api` using the `module-name.submodule-name.test-data.js`
+  pattern (kebab-case).
+- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/`, named by module/submodule.
+- Store URLs and endpoints in `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`.
 
 ### Test Organization
+
+- Follow naming conventions in `${WORKSPACE_ROOT}/docs/naming-conventions.md`.
 - Each test file must contain exactly one `describe` block with multiple `context` blocks.
 - Use `{ testIsolation: false }` for the `describe` block. Test isolation occurs between test files only.
 - Use `before` block in `describe` block for preconditions.
@@ -20,8 +27,10 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
 - Connect related `context` and blocks to cover scenarios efficiently.
 - Use `context.skip` and `it.skip` with clear descriptions for manual verification scenarios.
 - Do not use tags for filtering; use file names instead.
+- Use `failOnStatusCode: false` only when explicitly validating error responses.
 
 ### Test Data Management
+
 - Test data instances should be reused across tests within a file (e.g., created, updated, deleted).
 - Describe the state of each test data object separately in each `context` block for clarity.
 - Define placeholders for dynamic IDs using `String` type, then populate them during test execution.
@@ -30,6 +39,7 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
 - All checked states should be extensively described in test data for readability.
 
 ### API Commands
+
 - Use API commands for test execution and setup/teardown.
 - Decompose command parameters (body, headers, auth, etc.) to enhance readability.
 - Keep item properties consistent between API and UI commands.
@@ -42,7 +52,9 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
 - Ensure test titles are unique within the file.
 
 ### Global Resources
-- The following modules are available globally via `cypress/support/e2e.js` and do not need to be imported:
+
+- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be
+  imported:
     - `utils` - Utility functions
     - `l10n` - Localization strings
     - `colours` - Theme colours
@@ -53,48 +65,57 @@ applyTo: 'cypress/integration/api/*.api.spec.js'
     - All UI selectors (e.g., `loginPage`, etc.)
 
 ### Development Reference
-- Refer to `.json` Swagger documentation in `development-data/swagger` for development and test reference purposes.
+
+- Refer to `.json` Swagger documentation or other API docs stored in `${WORKSPACE_ROOT}/development-data/swagger` for
+  development and test
+  reference purposes.
+- Before creating tests for a new module, register it in `${WORKSPACE_ROOT}/app-structure/modules.json` to avoid ESLint
+  errors.
+    - Structure: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
+    - Actions should match HTTP operations: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
 ---
 
 ## Test Data Organization
 
-- Store test data in `cypress/test-data/api/module-name.submodule-name.test-data.js`.
+- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js`.
 - Use kebab-case for file names.
 - Use camelCase for variable names.
 - Organize by module/submodule.
 - Use global utilities like `utils` for randomization (no import needed).
-- Define placeholders for dynamically obtained IDs using `String` type, then populate them in `before` hook or context blocks.
+- Define placeholders for dynamically obtained IDs using `String` type, then populate them in `before` hook or context
+  blocks.
 - Example:
 
 ```javascript
-// cypress/test-data/api/module-name.submodule-name.test-data.js
+// File: ${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js
+// Import path: '../../test-data/api/module-name.submodule-name.test-data'
 export const testData = {
-  namePattern: 'testTitle',
-  validItems: {
-    initialItem: {
-      itemId: String, // Placeholder for dynamically obtained ID
-      name: 'RandomName' + utils.extendStringWithRandomSymbols(10),
-      value: utils.getRandomNumber(0, 50)
+    namePattern: 'testTitle',
+    validItems: {
+        initialItem: {
+            itemId: String, // Placeholder for dynamically obtained ID
+            name: 'RandomName' + utils.extendStringWithRandomSymbols(10),
+            value: utils.getRandomNumber(0, 50)
+        },
+        newItem: {
+            itemId: String, // Placeholder for dynamically obtained ID
+            name: 'NewItemName' + utils.extendStringWithRandomSymbols(10),
+            value: utils.getRandomNumber(51, 100)
+        },
+        updatedItem: {
+            name: 'UpdatedName' + utils.extendStringWithRandomSymbols(10),
+            value: utils.getRandomNumber(101, 150)
+        },
     },
-    newItem: {
-      itemId: String, // Placeholder for dynamically obtained ID
-      name: 'NewItemName' + utils.extendStringWithRandomSymbols(10),
-      value: utils.getRandomNumber(51, 100)
+    invalidItems: {
+        nonExistingId: utils.generateFakeId(),
+        missingName: {value: 25},
+        exceedsMaxLength: {
+            name: 'Name' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemName),
+            value: 10
+        },
     },
-    updatedItem: {
-      name: 'UpdatedName' + utils.extendStringWithRandomSymbols(10),
-      value: utils.getRandomNumber(101, 150)
-    },
-  },
-  invalidItems: {
-    nonExistingId: utils.generateFakeId(),
-    missingName: { value: 25 },
-    exceedsMaxLength: {
-      name: 'Name' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemName),
-      value: 10
-    },
-  },
 };
 ```
 
@@ -102,21 +123,22 @@ export const testData = {
 
 ## API Commands
 
-- Store API commands in `cypress/support/commands/api/module-name.submodule-name.api.commands.js`.
+- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`.
 - Use kebab-case for file names.
 - Use camelCase for command names.
+- Commands are auto-imported via `${WORKSPACE_ROOT}/cypress/support/e2e.js`.
 - Example:
 
 ```javascript
 Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions = {}) => {
-  const { name, value } = itemData; // Decompose for clarity
-  return cy.request({
-    method: 'POST',
-    url: urls.api.moduleName.submoduleName,
-    headers: { Authorization: `Bearer ${token}` },
-    body: { name, value },
-    ...restOptions,
-  });
+    const {name, value} = itemData; // Decompose for clarity
+    return cy.request({
+        method: 'POST',
+        url: urls.api.moduleName.submoduleName,
+        headers: {Authorization: `Bearer ${token}`},
+        body: {name, value},
+        ...restOptions,
+    });
 });
 ```
 
@@ -124,21 +146,21 @@ Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions =
 
 ## API URLs Management
 
-- Store base URLs and endpoints in `cypress/support/urls/urls.js`.
+- Store base URLs and endpoints in `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`.
 - Use camelCase for variable names.
 - Access via global `urls` variable (no import needed).
 - Example:
 
 ```javascript
-// cypress/support/urls/urls.js
+// ${WORKSPACE_ROOT}/cypress/support/urls/urls.js
 const moduleName = {
-  submoduleName: `${Cypress.env('gatewayUrl')}/api/module-name/submodule-name`,
-  anotherEndpoint: `${Cypress.env('gatewayUrl')}/api/module-name/another`,
+    submoduleName: `${Cypress.env('gatewayUrl')}/api/module-name/submodule-name`,
+    anotherEndpoint: `${Cypress.env('gatewayUrl')}/api/module-name/another`,
 };
 
 export default {
-  moduleName,
-  // ... other modules
+    moduleName,
+    // ... other modules
 };
 ```
 
@@ -169,76 +191,75 @@ export default {
 ## Integration API Test Template
 
 ```javascript
-// cypress/integration/api/module-name.submodule-name.api.spec.js
-import { testData } from '../../test-data/api/module-name.submodule-name.test-data';
+// ${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js
+import {testData} from '../../test-data/api/module-name.submodule-name.test-data';
 
-describe('ModuleName.SubmoduleName: Given preconditions, created data', { testIsolation: false }, () => {
-  let tokenUser;
+describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
+    let tokenUser;
 
-  const cleanUp = () => {
-    // Cleanup function to delete test data if needed
-  };
+    const cleanUp = () => {
+        // Cleanup function to delete test data if needed
+    };
 
-  before(() => {
-    cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
-      tokenUser = access_token;
+    before(() => {
+        cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
+            tokenUser = access_token;
+        });
+        cleanUp();
+        // Setup: Create test data and save dynamically obtained IDs to testData object
+        cy.then(() => {
+            cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
+                testData.validItems.initialItem.itemId = response.body.itemId; // Save ID to test data
+            });
+        });
     });
-    cleanUp();
-    // Setup: Create test data and save dynamically obtained IDs to testData object
-    cy.then(() => {
-      cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
-        testData.validItems.initialItem.itemId = response.body.itemId; // Save ID to test data
-      });
-    });
-  });
 
-  context('ModuleName.SubmoduleName.POST: When request contains valid parameters', () => {
-    it('ModuleName.SubmoduleName.POST: Then instance is created with status 201', () => {
-      cy.moduleName__create__POST(tokenUser, testData.validItems.newItem).then((response) => {
-        expect(response.status).to.equal(201);
-        testData.validItems.newItem.itemId = response.body.itemId; // Save ID for later use
-      });
+    context('ModuleName.SubmoduleName.POST: When request contains valid parameters', () => {
+        it('ModuleName.SubmoduleName.POST: Then instance is created with status 201', () => {
+            cy.moduleName__create__POST(tokenUser, testData.validItems.newItem).then((response) => {
+                expect(response.status).to.equal(201);
+                testData.validItems.newItem.itemId = response.body.itemId; // Save ID for later use
+            });
+        });
     });
-  });
 
-  context('ModuleName.SubmoduleName.GET: When request contains existing item ID', () => {
-    it('ModuleName.SubmoduleName.GET: Then instance is retrieved with status 200', () => {
-      cy.moduleName__get__GET(tokenUser, testData.validItems.initialItem.itemId).then((response) => {
-        expect(response.status).to.equal(200);
-        expect(response.body.name).to.equal(testData.validItems.initialItem.name);
-      });
+    context('ModuleName.SubmoduleName.GET: When request contains existing item ID', () => {
+        it('ModuleName.SubmoduleName.GET: Then instance is retrieved with status 200', () => {
+            cy.moduleName__get__GET(tokenUser, testData.validItems.initialItem.itemId).then((response) => {
+                expect(response.status).to.equal(200);
+                expect(response.body.name).to.equal(testData.validItems.initialItem.name);
+            });
+        });
     });
-  });
 
-  context('ModuleName.SubmoduleName.PUT: When request updates existing item', () => {
-    it('ModuleName.SubmoduleName.PUT: Then instance is updated with status 200', () => {
-      cy.moduleName__update__PUT(tokenUser, testData.validItems.initialItem.itemId, testData.validItems.updatedItem).then((response) => {
-        expect(response.status).to.equal(200);
-        expect(response.body.name).to.equal(testData.validItems.updatedItem.name);
-      });
+    context('ModuleName.SubmoduleName.PUT: When request updates existing item', () => {
+        it('ModuleName.SubmoduleName.PUT: Then instance is updated with status 200', () => {
+            cy.moduleName__update__PUT(tokenUser, testData.validItems.initialItem.itemId, testData.validItems.updatedItem).then((response) => {
+                expect(response.status).to.equal(200);
+                expect(response.body.name).to.equal(testData.validItems.updatedItem.name);
+            });
+        });
     });
-  });
 
-  context('ModuleName.SubmoduleName.GET: When request contains non-existing item ID', () => {
-    it('ModuleName.SubmoduleName.GET: Then return 404 status and error message: Item not found', () => {
-      cy.moduleName__get__GET(tokenUser, testData.invalidItems.nonExistingId, { failOnStatusCode: false }).then((response) => {
-        expect(response.status).to.equal(404);
-        expect(response.body.message).to.equal(errors.moduleName.submoduleName.itemNotFound);
-      });
+    context('ModuleName.SubmoduleName.GET: When request contains non-existing item ID', () => {
+        it('ModuleName.SubmoduleName.GET: Then return 404 status and error message: Item not found', () => {
+            cy.moduleName__get__GET(tokenUser, testData.invalidItems.nonExistingId, {failOnStatusCode: false}).then((response) => {
+                expect(response.status).to.equal(404);
+                expect(response.body.message).to.equal(errors.moduleName.submoduleName.itemNotFound);
+            });
+        });
     });
-  });
 
-  context.skip('ModuleName.SubmoduleName.DELETE: When request contains valid parameters', () => {
-    it.skip('ModuleName.SubmoduleName.DELETE: Then instance is successfully deleted', () => {
-      // Non-automated check
+    context.skip('ModuleName.SubmoduleName.DELETE: When request contains valid parameters', () => {
+        it.skip('ModuleName.SubmoduleName.DELETE: Then instance is successfully deleted', () => {
+            // Non-automated check
+        });
     });
-  });
 
-  after(() => {
-    cleanUp();
-  });
+    after(() => {
+        cleanUp();
+    });
 });
 ```
 
 ---
- 
