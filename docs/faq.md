@@ -7,10 +7,10 @@ straight-forward way. often containing ambiguous duplicated steps and lacking th
 automation. Attempting to automate them leads to unclear logic, superficial coverage, high maintenance costs and broken
 CI/CD processes due slow execution because of duplicated steps.
 Keeping both manual and automated tests have no benefits, since requires a lot of resources and provides no benefits,
-because creates two sources of truth. Alignment with manual cases requires constant updates in both places, increasing the risk of
-inconsistencies and wasted effort. Metrics based on the number of automated manual cases are misleading, cause number of
-verified requirements is different from test to test, and integrating these tests with management tools adds unnecessary
-complexity.
+because creates two sources of truth. Alignment with manual cases requires constant updates in both places, increasing
+the risk of inconsistencies and wasted effort. Metrics based on the number of automated manual cases are misleading,
+cause number of verified requirements is different from test to test, and integrating these tests with management tools
+adds unnecessary complexity.
 Instead, automation should focus on directly validating requirements, resulting in more stable, precise, and
 maintainable tests that truly reflect the application's intended behavior.
 
@@ -174,21 +174,23 @@ context('LoginPage: When user logins with valid credentials', () => {
 - More verbose than POM but provides better clarity
 - Non-trivial approach requires some time to get used to, but once understood, it is more efficient
 
-Why not just use selectors directly? Selectors are just strings. Hiding them in classes adds unnecessary complexity. In
-summary, POM creates a complex, self-serving system that distracts from writing clear, maintainable
-tests. It is an anti-pattern because it prioritizes OOP structure over test clarity and maintainability.
+Why not just use selectors directly? Selectors are simple strings that identify elements in the UI. Wrapping them in
+classes or unnecessary abstractions adds complexity without real benefit. The Page Object Model (POM) introduces extra
+layers that duplicate framework functionality and obscure test logic. This makes tests harder to maintain and
+understand. POM is considered an anti-pattern because it prioritizes object-oriented structure over clear, maintainable,
+and focused test code. Direct use of selectors keeps tests simple, transparent, and easier to update.
 
 ## 3. Why is using BDD frameworks counterproductive?
 
 BDD frameworks introduce an extra layer of abstraction, which can make tests harder to maintain and slower to execute.
-They are primarily aimed at automating manual test cases—a flawed approach that leads to unclear logic, superficial
+They are primarily aimed at automating manual test cases - a flawed approach that leads to unclear logic, superficial
 coverage, and high maintenance costs (see above for details). While BDD frameworks intend to improve collaboration by
 using human-readable language (like Gherkin), in practice, this rarely delivers real benefits. The added complexity of
 step definitions and mapping to code often outweighs any advantages.
-Importantly, you can use BDD keywords and natural
-human language directly in your test descriptions and structure—without BDD frameworks or extra abstractions. This keeps
-tests readable and maintainable, while avoiding unnecessary indirection. Writing tests with clear structure, descriptive
-names, and straightforward logic is more effective for both communication and maintenance.
+Importantly, you can use BDD keywords and natural human language directly in your test descriptions and
+structure—without BDD frameworks or extra abstractions. This keeps tests readable and maintainable, while avoiding
+unnecessary indirection. Writing tests with clear structure, descriptive names, and straightforward logic is more
+effective for both communication and maintenance.
 
 **1. BDD framework approach: Gherkin feature file and step definitions**
 
@@ -398,7 +400,7 @@ gaps. The method is accessible to both technical and non-technical team members,
 communication. Tests are self-explanatory, allowing anyone to quickly grasp their intent and scope without reading the
 code. This clarity streamlines onboarding and supports a shared understanding of coverage and objectives. Test reports
 are more meaningful, accurately reflecting the application's state. Additionally, small, atomic tests—together with
-clearly described, skipped tests for unimplemented scenarios—offer transparent coverage metrics and assist in planning
+clearly described, skipped tests for unimplemented scenarios - offer transparent coverage metrics and assist in planning
 manual regression checks. The test suite becomes a single source of truth, documenting requirements and use cases, so
 everyone can easily see what is automated, what needs manual testing, and what is yet to be implemented.
 
@@ -418,9 +420,9 @@ to be made in one place, rather than throughout the test code.
 
 Tags can create confusion and complicate test management, especially when used inconsistently. Generic tags like
 `@smoke` or `@regression` are often unclear and inconsistently defined and applied, leading to confusion. They often
-lack clear
-definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file organization and
-meaningful test names to group and filter tests. This approach is more transparent and easier to maintain.
+lack clear definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file
+organization and meaningful test names to group and filter tests. This approach is more transparent and easier to
+maintain.
 
 ## 10. Why is test execution speed extremely important?
 
@@ -439,7 +441,7 @@ costs and allow for more frequent, comprehensive test runs.
 
 Here's a clearer and more detailed explanation of why UI tests should be tied to one page or component:
 
-## 5. Why should UI tests be tied to one page or component?
+## 11. Why should UI tests be tied to one page or component?
 
 Test file isolation is crucial in test automation because test runs within a file share the same context. Organizing
 tests
@@ -500,7 +502,7 @@ context('CheckoutPage.STANDARD: When user submits valid details', () => {
 });
 ```
 
-## 6. What are the risks of relying on test management tools for automation?
+## 12. What are the risks of relying on test management tools for automation?
 
 Test management tools often create more problems than they solve. They require complex integrations, increase
 maintenance overhead, and introduce external dependencies. The metrics they provide are typically misleading - focusing
@@ -515,10 +517,10 @@ These tools tend to:
 - Increase maintenance costs without clear benefits
 - Distract from writing robust, requirement-focused tests
 
-Instead, use version control as the single source of truth, with clear test structure and descriptive names providing
-natural documentation and metrics.
+Instead, use auto-tests under version control as the single source of truth, with clear test structure and descriptive
+names providing natural documentation and metrics.
 
-## 7. Why should you describe and skip non-implemented tests?
+## 13. Why should you describe and skip non-implemented tests?
 
 Clearly describing and skipping non-implemented tests turns your repository into a transparent source of truth for all
 use cases. This approach provides accurate automation coverage metrics and clearly outlines the intended scope. It
@@ -557,6 +559,6 @@ and here is the output of the test run:
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-✖ 0 of 6 failed (0%)                          00:01 3 1 - 2 -
+✖ 0 of 1 failed (0%)                          00:01 3 1 - 2 -
 
 This makes the scope and current coverage explicit, even before all tests are implemented.
