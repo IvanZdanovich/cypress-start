@@ -37,6 +37,17 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
     - `swagger/` - Swagger documentation as `.json` files or other documentation for test development
     - `pages/` - HTML pages for test development purposes
 
+## Out of Scope
+
+- Accessibility (a11y) testing
+- Performance, load, or stress testing
+- Security or penetration testing
+- Cross-browser or cross-device compatibility testing
+- Visual regression or screenshot comparison
+- Suggesting or using non-JavaScript/Non-Cypress tools or frameworks
+- Mobile native app testing
+- Manual test case management
+
 ## Key Principles
 
 * Follow the existing folder structure and naming conventions.

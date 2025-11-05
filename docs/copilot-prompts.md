@@ -269,6 +269,7 @@ BEFORE code, LIST improvement points:
 
 FOLLOW strictly:
 - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```
@@ -308,6 +309,7 @@ BEFORE code, LIST improvement points:
 
 FOLLOW strictly:
 - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```
@@ -347,6 +349,7 @@ BEFORE code, LIST improvement points:
 
 FOLLOW strictly:
 - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
+- `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 OUTPUT: Complete refactored code (NOT diff, NOT summary)
 ```
