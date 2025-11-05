@@ -60,7 +60,7 @@
 ### Integration UI Test Titles Example
 
 ```javascript
-    describe('InventoryPage: Given no preconditions', () => {
+    describe('InventoryPage: Given No preconditions', () => {
         context('InventoryPage.STANDARD: When user clicks Remove on all the added cards', () => {
             it('InventoryPage.STANDARD: Then the Cart button badge is not existed', () => {
                 // Test code here
@@ -72,7 +72,7 @@
 ### Integration API Test Titles Example
 
 ```javascript
-    describe('RestfulBooker.Booking: Given no preconditions', () => {
+    describe('RestfulBooker.Booking: Given No preconditions', () => {
         context('RestfulBooker.Booking.Create.POST: When valid request is sent', () => {
             it('RestfulBooker.Booking.Create.POST: Then return 201 status code and booking is created', () => {
                 // Test code here
@@ -84,7 +84,7 @@
 ### E2E UI Test Titles Example
 
 ```javascript
-    describe('CompletePurchase: Given no preconditions', () => {
+    describe('CompletePurchase: Given No preconditions', () => {
         context('CompletePurchase.STANDARD: When user proceeds to checkout and completes the delivery information form', () => {
             it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
                 // Test code here

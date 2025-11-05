@@ -20,13 +20,14 @@ npm-debug.log
 cypress/reports/screenshots/**
 cypress/reports/videos/**
 
+# Ignore Cypress app structure files
+app-structure
+
 # Ignore Cypress reports
 cypress/reports/**
 
 # Ignore Development-data
 development-data/**
-!development-data/pages/.gitkeep
-!development-data/swagger/.gitkeep
 
 # Ignore Cypress sensitive data
 cypress/sensitive-data/**
