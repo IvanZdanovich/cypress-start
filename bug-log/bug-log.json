@@ -104,6 +104,42 @@
       "combination of firstname, lastname, checkin, checkout"
     ],
     "notes": "The API's filtering functionality is unreliable. Date range searches and combined parameter searches often return empty arrays even when bookings matching the criteria were just created. Single parameter searches (firstname or lastname alone) work more reliably. This makes the search functionality nearly unusable for production use."
+  },
+  {
+    "id": "BUG-LOGIN-001",
+    "module": "LoginPage",
+    "submodule": "ValidationFeedback",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Username field incorrectly highlighted when only password is missing",
+    "expectedBehavior": "When user provides valid username without password, only the password field should be highlighted with error styling and error icon",
+    "actualBehavior": "Both username and password fields are highlighted with error styling and error icons",
+    "page": "Login Page",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "username",
+      "password"
+    ],
+    "notes": "This creates confusion for users as it incorrectly suggests the username field also has an error when it contains valid data. The error message correctly states 'Password is required' but the visual feedback is misleading."
+  },
+  {
+    "id": "BUG-LOGIN-002",
+    "module": "LoginPage",
+    "submodule": "ValidationFeedback",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Password field incorrectly highlighted when only username is missing",
+    "expectedBehavior": "When user provides valid password without username, only the username field should be highlighted with error styling and error icon",
+    "actualBehavior": "Both username and password fields are highlighted with error styling and error icons",
+    "page": "Login Page",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "username",
+      "password"
+    ],
+    "notes": "This creates confusion for users as it incorrectly suggests the password field also has an error when it contains valid data. The error message correctly states 'Username is required' but the visual feedback is misleading."
   }
 ]
 
