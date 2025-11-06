@@ -26,7 +26,7 @@ import colours from './colours/default-theme-colours.json';
 import selectors from './selectors/selectors';
 import urls from './urls/urls';
 import utils from './utils/utils';
-import errors from './requirements/error_messages';
+import errors from './requirements/error_messages.json';
 import userRoles from './requirements/user-roles';
 import requirements from './requirements/requirements';
 import products from './products/products';

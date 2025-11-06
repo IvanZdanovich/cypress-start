@@ -1,0 +1,36 @@
+{
+  "restfulBooker": {
+    "auth": {
+      "invalidCredentials": {
+        "message": "Bad credentials",
+        "statusCode": 200
+      }
+    },
+    "booking": {
+      "internalServerError": {
+        "message": "Internal Server Error",
+        "statusCode": 500
+      },
+      "notFound": {
+        "message": "Not Found",
+        "statusCode": 404
+      },
+      "forbidden": {
+        "message": "Forbidden",
+        "statusCode": 403
+      },
+      "methodNotAllowed": {
+        "message": "Method Not Allowed",
+        "statusCode": 405
+      }
+    }
+  },
+  "common": {
+    "internalServerError": "Internal Server Error",
+    "notFound": "Not Found",
+    "forbidden": "Forbidden",
+    "methodNotAllowed": "Method Not Allowed",
+    "badCredentials": "Bad credentials"
+  }
+}
+
