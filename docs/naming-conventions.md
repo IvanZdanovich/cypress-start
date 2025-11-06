@@ -124,25 +124,25 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 - Use camelCase for naming commands.
 - Clearly indicate the resource, action, and HTTP method.
 - **Pattern:** `resourceName__actionDescription__METHOD`
-- **Example:** `dformsAudits__obtainItemById__GET`
+- **Example:** `restfullBooker__updateBooking__PUT`
 
 ### Cypress UI Commands Naming Convention
 
 - Use camelCase for naming commands.
 - Clearly indicate the page and action being performed.
 - **Pattern:** `pageName__actionDescription`
-- **Example:** `actionPriorityPage__fillCreationForm`
+- **Example:** `loginPage__logIn`
 
 ---
 
 ## Test Data Naming Convention
 
-- Store test data in javascript files in `cypress/test-data`.
+- Store test data in javascript files in `cypress/test-data/api`, `cypress/test-data/ui`.
 - Test data files should be named according to the test files they support.
 - Use camelCase for naming files.
 - Use a hierarchical structure organized by module and submodule.
-- **Pattern:** `module-name.submodule-name.test-data.js`
-- **Example:** `audit.settings-audit-round.test-data.js`
+- **Pattern:** `module-name.submodule-name.api.test-data.js`, `page-name.component-name.ui.test-data.js`
+- **Example:** `restful-booker.booking.api.test-data.js`, `checkout-page.ui.test-data.js`
 
 ---
 

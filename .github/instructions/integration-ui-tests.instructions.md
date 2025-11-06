@@ -4,186 +4,83 @@ applyTo: "${WORKSPACE_ROOT}/cypress/integration/ui/*.ui.spec.js"
 
 ## Integration UI Tests Instructions
 
-**Note**: When referencing files in AI prompts or AI instructions, always use **absolute paths** from the workspace root
-via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-specific path in committed docs.
+**Note**: Always use **absolute paths** via `${WORKSPACE_ROOT}`. Never include real usernames or machine paths.
 
-### Test Structure
-
-- Place files in `${WORKSPACE_ROOT}/cypress/integration/ui` using the `page-name.component-name.ui.spec.js` pattern (
-  kebab-case).
-- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui` using the `page-name.component-name.test-data.js`
-  pattern (kebab-case).
-- Store selectors in `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`, grouped by page/component.
-- Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/`, named by page/component.
-- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/`, named by module/submodule.
+### File Structure & Naming (kebab-case)
+- Tests: `${WORKSPACE_ROOT}/cypress/integration/ui/page-name.component-name.ui.spec.js`
+- Test Data: `${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.test-data.js`
+- Selectors: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js` (grouped by page/component)
+- UI Commands: `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`
+- API Commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`
 
 ### Test Organization
+- One `describe` block per file with multiple `context` blocks
+- Use `{ testIsolation: false }` (isolation occurs between files only)
+- `before` in `describe`: preconditions | `before` in `context`: conditions/actions | `it`: expected results
+- Reuse test data instances (create → update → delete lifecycle)
+- Use `String` placeholders for dynamic IDs, populate during execution
+- Use `context.skip`/`it.skip` for manual verification scenarios
 
-- Follow naming conventions in `${WORKSPACE_ROOT}/docs/naming-conventions.md`.
-- Each test file must contain exactly one `describe` block with multiple `context` blocks.
-- Use `{ testIsolation: false }` for the `describe` block. Test isolation occurs between test files only.
-- Use `before` block in `describe` block for preconditions.
-- Use  `before` block in `context` block for conditions/actions.
-- Use `it` for expected results.
-- Connect related `context` and blocks to cover scenarios efficiently.
-- Use `context.skip` and `it.skip` with clear descriptions for manual verification scenarios.
-- Do not use tags for filtering; use file names instead.
+### Test Titles Pattern
+- Given: `PageName.ComponentName: Given 'preconditions', 'created data'`
+- When: `PageName.ComponentName.USER_ROLE: When 'condition'`
+- Then: `PageName.ComponentName.USER_ROLE: Then 'expected result'`
 
-### Test Data Management
+### Global Resources (auto-imported, no import needed)
+`utils`, `l10n`, `colours`, `urls`, `reqs`, `userRoles`, all selectors (e.g., `loginPage`)
 
-- Test data instances should be reused across tests within a file (e.g., created, updated, deleted).
-- Describe the state of each test data object separately in each `context` block for clarity.
-- Define placeholders for dynamic IDs using `String` type, then populate them during test execution.
-- Always save dynamically obtained IDs (from API responses or UI) to the test data object.
-- Prefer generated and randomized test data using `utils` functions for edge case coverage.
-- All checked states should be extensively described in test data for readability.
-
-### API and UI Commands
-
-- Use API commands for setup/teardown when needed to speed up tests.
-- Use custom UI commands for page interactions.
-- Keep item properties consistent between API and UI commands.
-- Decompose command parameters (inputs, selectors, etc.) to enhance readability.
-
-### Test Titles
-
-- Describe the preconditions: `PageName.ComponentName: Given 'preconditions', 'created data'`
-- Provide the scope and condition being tested: `PageName.ComponentName.USER_ROLE: When 'condition'`
-- Describe the expected result: `PageName.ComponentName.USER_ROLE: Then 'expected result'`
-- Ensure test titles are unique within the file.
-
-### Global Resources
-
-- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be
-  imported:
-    - `utils` - Utility functions
-    - `l10n` - Localization strings
-    - `colours` - Theme colours
-    - `urls` - URLs
-    - `reqs` - Requirements and capacity constraints
-    - `userRoles` - User role configurations
-    - All UI selectors (e.g., `loginPage`, etc.)
-
-### Development Reference
-
-- Refer to `.html` pages in `${WORKSPACE_ROOT}/development-data/pages` for development and test reference purposes.
-- Before creating tests for a new page/component, register it in `${WORKSPACE_ROOT}/app-structure/components.json` to
-  avoid ESLint errors.
-    - Structure: `{ "PageName": { "ComponentName": { } } }`
-    - Components should match functional elements on the page (header, forms, modals, etc.).
+### Setup
+- Register new pages/components in `${WORKSPACE_ROOT}/app-structure/components.json`
+- Structure: `{ "PageName": { "ComponentName": {} } }`
 
 ---
 
-## Test Data Organization
-
-- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.test-data.js`.
-- Use kebab-case for file names.
-- Use camelCase for variable names.
-- Organize by page/component.
-- Use global utilities like `utils` for randomization (no import needed).
-- Define placeholders for dynamically obtained IDs using `String` type, then populate them in `before` hook or context
-  blocks.
-- Example:
+## Test Data (kebab-case files, camelCase variables)
 
 ```javascript
 // ${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.test-data.js
 export const testData = {
     validItems: {
         initialItem: {
-            itemId: String, // Placeholder for dynamically obtained ID
+            itemId: String, // Placeholder populated during execution
             title: 'RandomTitle',
             priority: utils.getRandomNumber(1, 5)
-        },
-        updatedItem: {
-            title: 'UpdatedTitle',
-            priority: utils.getRandomNumber(6, 10)
         },
     },
     invalidItems: {
         missingTitle: {priority: 3},
-        exceedsMaxLength: {
-            title: 'Title' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemTitle),
-            priority: 5
-        },
+        exceedsMaxLength: {title: 'Title' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemTitle)},
     },
 };
 ```
 
 ---
 
-## UI Commands
+## UI Commands (Pattern: `pageName__action`)
 
-- Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`.
-- Use kebab-case for file names.
-- Use camelCase for command names.
-- Decompose parameters for clarity.
-- Align parameters with API command parameters when applicable.
-- Group commands by page/component.
-- Example:
+**CREATE for:** Complex multi-step interactions, reusable workflows, setup/teardown operations  
+**DON'T CREATE for:** Single Cypress actions (`.click()`, `.type()`, `.clear()`), simple assertions, one-time operations
 
+**Template:**
 ```javascript
-Cypress.Commands.add('pageName__performAction', (itemData) => {
-    const {title, priority} = itemData;
-    cy.get(pageName.componentName.titleInput).clear().type(title);
-    cy.get(pageName.componentName.prioritySelect).select(priority.toString());
-    cy.get(pageName.componentName.submitButton).click();
+Cypress.Commands.add('pageName__action', (data) => {
+  const { field1, field2 } = data; // Decompose parameters
+  cy.get(pageName.field1Input).type(field1, { delay: 0 });
+  cy.get(pageName.field2Select).select(field2.toString());
+  cy.get(pageName.submitButton).click();
 });
 ```
 
 ---
 
-## UI Selectors Organization
-
-- Store selectors in `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`.
-- Group by page/component.
-- Use camelCase for selector names.
-- Access via global variables (e.g., `commonUI`, `auditsPage`).
-- Example:
-
+## Bug Logging
+When discovering UI bugs, add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json` with ID `BUG-[PAGE/COMPONENT]-[NUMBER]` and reference in test:
 ```javascript
-// ${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js
-const componentNamePage = {
-    titleInput: '[data-testid="component-title-input"]',
-    prioritySelect: '[data-testid="component-priority-select"]',
-    submitButton: '[data-testid="component-submit-btn"]',
-    resultElement: '[data-testid="component-result"]',
-};
-
-export default {
-    commonUI,
-    componentNamePage,
-    // ... other page selectors
-};
+// Bug Reference: BUG-FORM-003 - Missing validation error message
+it('PageName.ComponentName: Then no error message is displayed', () => {
+  cy.get(pageName.errorMessage).should('not.exist'); // Actual behavior
+});
 ```
 
 ---
 
-## Bug Logging for UI Tests
-
-When discovering UI bugs during test development:
-
-1. **Identify UI Issues:**
-    - Elements not rendering as documented
-    - Incorrect validation behavior
-    - Missing error messages
-    - Inconsistent UI state
-    - Accessibility issues
-    - Localization problems
-
-2. **Document in Bug Log:**
-    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json`
-    - Follow bug ID convention: `BUG-[PAGE/COMPONENT]-[NUMBER]`
-    - Include all required fields per main instructions
-
-3. **Add Bug Reference Comments:**
-   ```javascript
-     context('PageName.ComponentName: When invalid input is provided', () => {
-       // Bug Reference: BUG-FORM-003 - Missing validation error message for email field
-       it('PageName.ComponentName: Then no error message is displayed', () => {
-         cy.pageName__submitForm__UI(invalidData);
-         cy.get(pageName.componentName.errorMessage).should('not.exist'); // Actual behavior
-       });
-     });
-   ```
-
----

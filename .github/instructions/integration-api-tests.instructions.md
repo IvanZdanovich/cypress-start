@@ -4,141 +4,76 @@ applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 
 ## Integration API Tests Instructions
 
-**Note**: When referencing files in AI prompts or AI instructions, always use **absolute paths** from the workspace root
-via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-specific path in committed docs.
+**Note**: Always use **absolute paths** via `${WORKSPACE_ROOT}`. Never include real usernames or machine paths.
 
-### Test Structure
-
-- Place files in `${WORKSPACE_ROOT}/cypress/integration/api` using the `module-name.submodule-name.api.spec.js`
-  pattern (kebab-case).
-- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/api` using the `module-name.submodule-name.test-data.js`
-  pattern (kebab-case).
-- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/`, named by module/submodule.
-- Store URLs and endpoints in `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`.
+### File Structure & Naming (kebab-case)
+- Tests: `${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js`
+- Test Data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js`
+- API Commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`
+- URLs: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
+- Errors: `${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`
 
 ### Test Organization
+- One `describe` block per file with multiple `context` blocks
+- Use `{ testIsolation: false }` (isolation occurs between files only)
+- `before` in `describe`: preconditions | `before` in `context`: conditions/actions | `it`: expected results
+- Reuse test data instances (create → update → delete lifecycle)
+- Use `String` placeholders for dynamic IDs, populate during execution
+- Use `failOnStatusCode: false` only when validating error responses
 
-- Follow naming conventions in `${WORKSPACE_ROOT}/docs/naming-conventions.md`.
-- Each test file must contain exactly one `describe` block with multiple `context` blocks.
-- Use `{ testIsolation: false }` for the `describe` block. Test isolation occurs between test files only.
-- Use `before` block in `describe` block for preconditions.
-- Use `before` block in `context` block for conditions/actions.
-- Use `it` for expected results.
-- Connect related `context` and blocks to cover scenarios efficiently.
-- Use `context.skip` and `it.skip` with clear descriptions for manual verification scenarios.
-- Do not use tags for filtering; use file names instead.
-- Use `failOnStatusCode: false` only when explicitly validating error responses.
+### Test Titles Pattern
+- Given: `ModuleName.SubmoduleName: Given 'preconditions', 'created data'`
+- When: `ModuleName.SubmoduleName.Action.METHOD: When 'condition'`
+- Then: `ModuleName.SubmoduleName.Action.METHOD: Then 'expected result'`
 
-### Test Data Management
+### Global Resources (auto-imported, no import needed)
+`utils`, `l10n`, `colours`, `urls`, `errors`, `reqs`, `userRoles`
 
-- Test data instances should be reused across tests within a file (e.g., created, updated, deleted).
-- Describe the state of each test data object separately in each `context` block for clarity.
-- Define placeholders for dynamic IDs using `String` type, then populate them during test execution.
-- Always save dynamically obtained IDs (from API responses) to the test data object.
-- Prefer generated and randomized test data using `utils` functions for edge case coverage.
-- All checked states should be extensively described in test data for readability.
-
-### API Commands
-
-- Use API commands for test execution and setup/teardown.
-- Decompose command parameters (body, headers, auth, etc.) to enhance readability.
-- Keep item properties consistent between API and UI commands.
-
-### Test Titles
-
-- Describe the preconditions: `ModuleName.SubmoduleName: Given 'preconditions', 'created data'`
-- Provide the scope and condition being tested: `ModuleName.SubmoduleName.Action.METHOD: When 'condition'`
-- Describe the expected result: `ModuleName.SubmoduleName.Action.METHOD: Then 'expected result'`
-- Ensure test titles are unique within the file.
-
-### Global Resources
-
-- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be
-  imported:
-    - `utils` - Utility functions
-    - `l10n` - Localization strings
-    - `colours` - Theme colours
-    - `urls` - URLs
-    - `errors` - Standardized error messages
-    - `reqs` - Requirements and capacity constraints
-    - `userRoles` - User role configurations
-    - All UI selectors (e.g., `loginPage`, etc.)
-
-### Development Reference
-
-- Refer to `.json` Swagger documentation or other API docs stored in `${WORKSPACE_ROOT}/development-data/swagger` for
-  development and test
-  reference purposes.
-- Before creating tests for a new module, register it in `${WORKSPACE_ROOT}/app-structure/modules.json` to avoid ESLint
-  errors.
-    - Structure: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
-    - Actions should match HTTP operations: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
+### Setup
+- Register new modules in `${WORKSPACE_ROOT}/app-structure/modules.json`
+- Structure: `{ "ModuleName": { "SubmoduleName": { "Create": {}, "Retrieve": {}, "Update": {}, "PartialUpdate": {}, "Delete": {} } } }`
+- Reference Swagger docs in `${WORKSPACE_ROOT}/development-data/swagger` for development
 
 ---
 
-## Test Data Organization
-
-- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js`.
-- Use kebab-case for file names.
-- Use camelCase for variable names.
-- Organize by module/submodule.
-- Use global utilities like `utils` for randomization (no import needed).
-- Define placeholders for dynamically obtained IDs using `String` type, then populate them in `before` hook or context
-  blocks.
-- Example:
+## Test Data (kebab-case files, camelCase variables)
 
 ```javascript
-// File: ${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js
-// Import path: '../../test-data/api/module-name.submodule-name.test-data'
+// Import: '../../test-data/api/module-name.submodule-name.test-data'
 export const testData = {
-    namePattern: 'testTitle',
     validItems: {
         initialItem: {
-            itemId: String, // Placeholder for dynamically obtained ID
+            itemId: String, // Placeholder populated during execution
             name: 'RandomName' + utils.extendStringWithRandomSymbols(10),
             value: utils.getRandomNumber(0, 50)
-        },
-        newItem: {
-            itemId: String, // Placeholder for dynamically obtained ID
-            name: 'NewItemName' + utils.extendStringWithRandomSymbols(10),
-            value: utils.getRandomNumber(51, 100)
-        },
-        updatedItem: {
-            name: 'UpdatedName' + utils.extendStringWithRandomSymbols(10),
-            value: utils.getRandomNumber(101, 150)
         },
     },
     invalidItems: {
         nonExistingId: utils.generateFakeId(),
         missingName: {value: 25},
-        exceedsMaxLength: {
-            name: 'Name' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemName),
-            value: 10
-        },
     },
 };
 ```
 
 ---
 
-## API Commands
+## API Commands (Pattern: `moduleName__action__METHOD`)
 
-- Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`.
-- Use kebab-case for file names.
-- Use camelCase for command names.
-- Decompose parameters for clarity.
-- Group commands by page/component.
-- Commands are auto-imported via `${WORKSPACE_ROOT}/cypress/support/e2e.js`.
-- Example:
-
+**Template for New Commands:**
 ```javascript
-Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions = {}) => {
-    const {name, value} = itemData; // Decompose for clarity
+/**
+ * @param {string} token - Auth token (if required)
+ * @param {number} resourceId - Resource ID (if required)
+ * @param {Object} body - Request body (if required)
+ * @param {Object} restOptions - Cypress request options
+ */
+Cypress.Commands.add('moduleName__action__METHOD', (token, resourceId, body, restOptions = {}) => {
+    const {field1, field2} = body;
     return cy.request({
-        method: 'POST',
-        url: urls.api.moduleName.submoduleName,
-        headers: {Authorization: `Bearer ${token}`},
-        body: {name, value},
+        method: 'METHOD',
+        url: `${urls.api.moduleName.submoduleName}/${resourceId}`,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: {field1, field2},
         ...restOptions,
     });
 });
@@ -146,42 +81,21 @@ Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions =
 
 ---
 
-## API URLs Management
+## URLs & Errors (global access)
 
-- Store base URLs and endpoints in `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`.
-- Use camelCase for variable names.
-- Access via global `urls` variable (no import needed).
-- Example:
-
+**URLs** (`${WORKSPACE_ROOT}/cypress/support/urls/urls.js`):
 ```javascript
-// ${WORKSPACE_ROOT}/cypress/support/urls/urls.js
 const moduleName = {
     submoduleName: `${Cypress.env('gatewayUrl')}/api/module-name/submodule-name`,
-    anotherEndpoint: `${Cypress.env('gatewayUrl')}/api/module-name/another`,
-};
-
-export default {
-    moduleName,
-    // ... other modules
 };
 ```
 
----
-
-## Error Message Management
-
-- Store error messages in `${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`.
-- Separate error messages by module/submodule.
-- Use simple and readable variable names.
-- Access via global `errors` variable (no import needed).
-- Example:
-
+**Errors** (`${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`):
 ```json
 {
   "moduleName": {
     "submoduleName": {
       "itemNotFound": "Item not found.",
-      "invalidItemId": "Item ID is invalid.",
       "nameRequired": "Name is required."
     }
   }
@@ -190,109 +104,53 @@ export default {
 
 ---
 
-## Integration API Test Template
+## Test Template
 
 ```javascript
-// ${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js
 import {testData} from '../../test-data/api/module-name.submodule-name.test-data';
 
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;
 
-    const cleanUp = () => {
-        // Cleanup function to delete test data if needed
-    };
-
     before(() => {
-        cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
-            tokenUser = access_token;
-        });
-        cleanUp();
-        // Setup: Create test data and save dynamically obtained IDs to testData object
-        cy.then(() => {
-            cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
-                testData.validItems.initialItem.itemId = response.body.itemId; // Save ID to test data
-            });
+        cy.getTokenByRole(userRoles.ADMIN).then((token) => { tokenUser = token; });
+        // Setup: Create test data and save IDs to testData object
+        cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((res) => {
+            testData.validItems.initialItem.itemId = res.body.itemId;
         });
     });
 
     context('ModuleName.SubmoduleName.POST: When request contains valid parameters', () => {
         it('ModuleName.SubmoduleName.POST: Then instance is created with status 201', () => {
-            cy.moduleName__create__POST(tokenUser, testData.validItems.newItem).then((response) => {
-                expect(response.status).to.equal(201);
-                testData.validItems.newItem.itemId = response.body.itemId; // Save ID for later use
+            cy.moduleName__create__POST(tokenUser, testData.validItems.newItem).then((res) => {
+                expect(res.status).to.equal(201);
+                testData.validItems.newItem.itemId = res.body.itemId;
             });
         });
     });
 
-    context('ModuleName.SubmoduleName.GET: When request contains existing item ID', () => {
-        it('ModuleName.SubmoduleName.GET: Then instance is retrieved with status 200', () => {
-            cy.moduleName__get__GET(tokenUser, testData.validItems.initialItem.itemId).then((response) => {
-                expect(response.status).to.equal(200);
-                expect(response.body.name).to.equal(testData.validItems.initialItem.name);
+    context('ModuleName.SubmoduleName.GET: When request contains non-existing ID', () => {
+        it('ModuleName.SubmoduleName.GET: Then return 404 and error message', () => {
+            cy.moduleName__get__GET(tokenUser, testData.invalidItems.nonExistingId, {failOnStatusCode: false}).then((res) => {
+                expect(res.status).to.equal(404);
+                expect(res.body.message).to.equal(errors.moduleName.submoduleName.itemNotFound);
             });
         });
-    });
-
-    context('ModuleName.SubmoduleName.PUT: When request updates existing item', () => {
-        it('ModuleName.SubmoduleName.PUT: Then instance is updated with status 200', () => {
-            cy.moduleName__update__PUT(tokenUser, testData.validItems.initialItem.itemId, testData.validItems.updatedItem).then((response) => {
-                expect(response.status).to.equal(200);
-                expect(response.body.name).to.equal(testData.validItems.updatedItem.name);
-            });
-        });
-    });
-
-    context('ModuleName.SubmoduleName.GET: When request contains non-existing item ID', () => {
-        it('ModuleName.SubmoduleName.GET: Then return 404 status and error message: Item not found', () => {
-            cy.moduleName__get__GET(tokenUser, testData.invalidItems.nonExistingId, {failOnStatusCode: false}).then((response) => {
-                expect(response.status).to.equal(404);
-                expect(response.body.message).to.equal(errors.moduleName.submoduleName.itemNotFound);
-            });
-        });
-    });
-
-    context.skip('ModuleName.SubmoduleName.DELETE: When request contains valid parameters', () => {
-        it.skip('ModuleName.SubmoduleName.DELETE: Then instance is successfully deleted', () => {
-            // Non-automated check
-        });
-    });
-
-    after(() => {
-        cleanUp();
     });
 });
 ```
 
 ---
 
-## Bug Logging for API Tests
+## Bug Logging
+When discovering API bugs, add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json` with ID `BUG-[MODULE]-[NUMBER]` and reference in test:
+```javascript
+// Bug Reference: BUG-MODULE-001 - Returns 500 instead of 400
+it('Module.Submodule.METHOD: Then return 500 status code', () => {
+  cy.module__action__METHOD(invalidData, { failOnStatusCode: false }).then((res) => {
+    expect(res.status).to.eq(500); // Actual behavior
+  });
+});
+```
 
-When discovering API bugs during test development:
-
-1. **Identify API Issues:**
-    - Incorrect HTTP status codes
-    - Missing/improper error messages
-    - Unexpected response formats
-    - Inconsistent behavior vs documentation
-    - Security/validation issues
-
-2. **Document in Bug Log:**
-    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json`
-    - Follow bug ID convention: `BUG-[MODULE]-[NUMBER]`
-    - Include all required fields per main instructions
-
-3. **Add Bug Reference Comments:**
-   ```javascript
-     context('Module.Submodule.Action.METHOD: When invalid data is provided', () => {
-       // Bug Reference: BUG-MODULE-001 - Returns 500 instead of 400 for validation errors
-       it('Module.Submodule.Action.METHOD: Then return 500 status code and Internal Server Error', () => {
-         cy.module__action__METHOD(invalidData, { failOnStatusCode: false }).then((response) => {
-           expect(response.status).to.eq(500); // Actual behavior
-           expect(response.body).to.eq(errors.common.internalServerError);
-         });
-       });
-     });
-    ```
-   
---- 
+---
