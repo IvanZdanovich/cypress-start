@@ -38,12 +38,12 @@ module.exports = defineConfig({
       local: {
         envName: 'local',
         baseUrl: 'https://www.saucedemo.com',
-        baseApiUrl: 'https://restful-booker.herokuapp.com',
+        baseAPIUrl: 'https://restful-booker.herokuapp.com',
       },
       dev: {
         envName: 'dev',
         baseUrl: 'https://www.saucedemo.com',
-        baseApiUrl: 'https://restful-booker.herokuapp.com',
+        baseAPIUrl: 'https://restful-booker.herokuapp.com',
       },
     },
     setupNodeEvents(on, config) {

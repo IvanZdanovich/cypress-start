@@ -1,0 +1,109 @@
+[
+  {
+    "id": "BUG-RESTFUL-001",
+    "module": "RestfulBooker",
+    "submodule": "Auth",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Authentication endpoint returns 200 status code for invalid credentials instead of 401 Unauthorized",
+    "expectedBehavior": "Should return 401 Unauthorized status code",
+    "actualBehavior": "Returns 200 OK with reason: 'Bad credentials'",
+    "endpoint": "POST /auth",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "This makes it difficult to distinguish between successful authentication and failed authentication based on status code alone"
+  },
+  {
+    "id": "BUG-RESTFUL-002",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "Booking creation returns 500 Internal Server Error for missing required fields instead of 400 Bad Request",
+    "expectedBehavior": "Should return 400 Bad Request with validation error details",
+    "actualBehavior": "Returns 500 Internal Server Error",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "firstname",
+      "lastname",
+      "totalprice",
+      "depositpaid",
+      "bookingdates",
+      "bookingdates.checkin",
+      "bookingdates.checkout"
+    ],
+    "notes": "500 errors indicate server issues, not client validation errors. This masks actual validation failures."
+  },
+  {
+    "id": "BUG-RESTFUL-003",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Booking operations return 405 Method Not Allowed for non-existing booking IDs instead of 404 Not Found",
+    "expectedBehavior": "Should return 404 Not Found for non-existing resources",
+    "actualBehavior": "Returns 405 Method Not Allowed",
+    "endpoints": [
+      "PUT /booking/{id}",
+      "PATCH /booking/{id}",
+      "DELETE /booking/{id}"
+    ],
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "405 typically indicates the HTTP method is not supported, not that the resource doesn't exist"
+  },
+  {
+    "id": "BUG-RESTFUL-004",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Low",
+    "status": "Open",
+    "description": "DELETE booking returns 201 Created instead of 204 No Content",
+    "expectedBehavior": "Should return 204 No Content or 200 OK for successful deletion",
+    "actualBehavior": "Returns 201 Created",
+    "endpoint": "DELETE /booking/{id}",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "201 status code is semantically incorrect for DELETE operations as nothing is being created"
+  },
+  {
+    "id": "BUG-RESTFUL-005",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "API accepts and creates bookings with empty string values for firstname and lastname fields",
+    "expectedBehavior": "Should return 400 Bad Request and reject bookings with empty strings for required name fields",
+    "actualBehavior": "Returns 200 OK and creates booking with empty firstname/lastname",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "firstname",
+      "lastname"
+    ],
+    "notes": "Empty strings should be treated as invalid input for name fields. The API distinguishes between missing fields (returns 500) and empty strings (returns 200), but should reject both as invalid."
+  },
+  {
+    "id": "BUG-RESTFUL-006",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "Booking search by date range and combined filters returns empty results even when matching bookings exist",
+    "expectedBehavior": "Should return bookings that match the specified date range and filter criteria",
+    "actualBehavior": "Returns empty array even for recently created bookings that match the criteria",
+    "endpoint": "GET /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedParameters": [
+      "checkin",
+      "checkout",
+      "combination of firstname, lastname, checkin, checkout"
+    ],
+    "notes": "The API's filtering functionality is unreliable. Date range searches and combined parameter searches often return empty arrays even when bookings matching the criteria were just created. Single parameter searches (firstname or lastname alone) work more reliably. This makes the search functionality nearly unusable for production use."
+  }
+]
+
