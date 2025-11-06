@@ -126,6 +126,8 @@ export const testData = {
 - Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`.
 - Use kebab-case for file names.
 - Use camelCase for command names.
+- Decompose parameters for clarity.
+- Group commands by page/component.
 - Commands are auto-imported via `${WORKSPACE_ROOT}/cypress/support/e2e.js`.
 - Example:
 
@@ -168,7 +170,7 @@ export default {
 
 ## Error Message Management
 
-- Store error messages in `error_messages.json`.
+- Store error messages in `${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`.
 - Separate error messages by module/submodule.
 - Use simple and readable variable names.
 - Access via global `errors` variable (no import needed).
@@ -263,3 +265,34 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
 ```
 
 ---
+
+## Bug Logging for API Tests
+
+When discovering API bugs during test development:
+
+1. **Identify API Issues:**
+    - Incorrect HTTP status codes
+    - Missing/improper error messages
+    - Unexpected response formats
+    - Inconsistent behavior vs documentation
+    - Security/validation issues
+
+2. **Document in Bug Log:**
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Follow bug ID convention: `BUG-[MODULE]-[NUMBER]`
+    - Include all required fields per main instructions
+
+3. **Add Bug Reference Comments:**
+   ```javascript
+     context('Module.Submodule.Action.METHOD: When invalid data is provided', () => {
+       // Bug Reference: BUG-MODULE-001 - Returns 500 instead of 400 for validation errors
+       it('Module.Submodule.Action.METHOD: Then return 500 status code and Internal Server Error', () => {
+         cy.module__action__METHOD(invalidData, { failOnStatusCode: false }).then((response) => {
+           expect(response.status).to.eq(500); // Actual behavior
+           expect(response.body).to.eq(errors.common.internalServerError);
+         });
+       });
+     });
+    ```
+   
+--- 

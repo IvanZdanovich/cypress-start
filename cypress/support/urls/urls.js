@@ -1,6 +1,7 @@
 const api = {
-  auth: `${Cypress.env('apiUrl')}/auth`,
-  booking: `${Cypress.env('apiUrl')}/booking`,
+  auth: `${Cypress.env('baseAPIUrl')}/auth`,
+  booking: `${Cypress.env('baseAPIUrl')}/booking`,
+  ping: `${Cypress.env('baseAPIUrl')}/ping`,
 };
 
 const pages = {

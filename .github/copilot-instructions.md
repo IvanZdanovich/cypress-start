@@ -90,3 +90,107 @@ If scripting, expand before passing to AI tooling.
 
 ---
 
+## Bug Logging Guidelines
+
+**Note**: When discovering API or UI bugs during test development, document them in
+`${WORKSPACE_ROOT}/bug-log/bug_log.json` for review and migration to the bug tracking system.
+
+### When to Log a Bug
+
+LOG bug IF:
+
+- API/UI returns incorrect HTTP status code
+- Error message differs from documentation
+- Required field validation is missing/improper
+- Response format doesn't match specification
+- Behavior is inconsistent or unreliable
+- Security vulnerability detected
+- Performance issue identified
+
+DO NOT LOG IF:
+
+- Issue is in test code (fix the test)
+- Behavior matches documentation (update understanding)
+- It's a known limitation (document in notes)
+
+### Bug Severity Classification
+
+**High Severity:**
+
+- Data corruption/loss
+- Security vulnerabilities
+- Complete feature failure
+- Incorrect validation allowing bad data
+- Reliability issues affecting core functionality
+
+**Medium Severity:**
+
+- Incorrect status codes
+- Missing/improper error messages
+- Non-critical validation issues
+- Inconsistent behavior
+
+**Low Severity:**
+
+- Minor deviations from standards
+- Cosmetic issues
+- Documentation discrepancies
+
+### Bug ID Convention
+
+FORMAT: `BUG-[MODULE]-[NUMBER]`
+
+EXAMPLES:
+
+- `BUG-AUTH-042` - 42nd bug in Auth module
+
+INCREMENT sequentially within each module.
+
+### Bug Log Structure
+
+Each bug entry in `${WORKSPACE_ROOT}/bug-log/bug_log.json` must include:
+
+```json
+{
+  "id": "BUG-[MODULE]-XXX",
+  "module": "ModuleName",
+  "submodule": "SubmoduleName",
+  "severity": "High|Medium|Low",
+  "status": "Open|Resolved|Closed",
+  "description": "Clear description of the issue",
+  "expectedBehavior": "What should happen",
+  "actualBehavior": "What actually happens",
+  "endpoint": "HTTP_METHOD /endpoint/path",
+  "reproducible": true,
+  "dateReported": "YYYY-MM-DD",
+  "affectedFields": [
+    "field1",
+    "field2"
+  ],
+  "notes": "Additional context"
+}
+```
+
+### Test Adaptation Strategy
+
+WHEN bug is logged:
+    ADD bug reference comment above affected test
+    UPDATE assertions to validate ACTUAL behavior
+    ADD failOnStatusCode: false if testing error responses
+    DOCUMENT expected vs actual in test comments
+    ENSURE test passes with current behavior
+
+### Bug Log Maintenance
+
+UPDATE ${WORKSPACE_ROOT}/bug-log/bug_log.json
+WHEN:
+    Bug is fixed => change status to "Resolved"
+    Bug is closed => change status to "Closed" with resolution notes
+    Severity changes => update severity field
+    More details discovered => add to notes field
+PRESERVE:
+    Original bug ID
+    Original date reported
+    Complete history in notes
+
+---

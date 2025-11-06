@@ -10,7 +10,8 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
 ### Test Structure
 
 - Place files in `${WORKSPACE_ROOT}/cypress/e2e/ui` using the `workflow-name.ui.spec.js` pattern (kebab-case).
-- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui` using the `workflow-name.test-data.js` pattern (kebab-case).
+- Store test data in `${WORKSPACE_ROOT}/cypress/test-data/ui` using the `workflow-name.test-data.js` pattern (
+  kebab-case).
 - Store selectors in `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`, grouped by page/component.
 - Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/`, named by page/component.
 - Store API commands in `${WORKSPACE_ROOT}/cypress/support/commands/api/`, named by module/submodule.
@@ -52,7 +53,8 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
 
 ### Global Resources
 
-- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be imported:
+- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be
+  imported:
     - `utils` - Utility functions
     - `l10n` - Localization strings
     - `colours` - Theme colours
@@ -64,7 +66,8 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
 ### Development Reference
 
 - Refer to `.html` pages in `${WORKSPACE_ROOT}/development-data/pages` for development and test reference purposes.
-- Before creating tests for a new workflow, register it in `${WORKSPACE_ROOT}/app-structure/workflows.json` to avoid ESLint errors.
+- Before creating tests for a new workflow, register it in `${WORKSPACE_ROOT}/app-structure/workflows.json` to avoid
+  ESLint errors.
     - Structure: `{ "WorkflowName": { "SubFlowName": { } } }`
     - Workflow should match business terminology.
 
@@ -115,6 +118,9 @@ export const testData = {
 - Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`.
 - Use kebab-case for file names.
 - Use camelCase for command names.
+- Decompose parameters for clarity.
+- Align parameters with API command parameters when applicable.
+- Group commands by page/component.
 - Example:
 
 ```javascript
@@ -176,4 +182,33 @@ cy.get(pageName.successMessage).should('have.text', l10n.messages.success);
 cy.get(pageName.primaryButton).should('have.css', 'background-color', colours.primary);
 ```
 
+---
+
+### Bug Logging for E2E Tests
+
+When discovering bugs during E2E workflow testing:
+
+1. **Identify Workflow Issues:**
+    - Broken user flows
+    - Integration failures between components
+    - Data inconsistency across pages
+    - Navigation problems
+    - State management issues
+
+2. **Document in Bug Log:**
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Follow bug ID convention: `BUG-[WORKFLOW]-[NUMBER]`
+    - Include workflow context and affected pages
+
+3. **Add Bug Reference Comments:**
+   ```javascript
+     context('FlowName.SubFlow: When user completes action sequence', () => {
+       // Bug Reference: BUG-CHECKOUT-005 - Cart state not persisted between pages
+       it('FlowName.SubFlow: Then cart is empty on confirmation page', () => {
+         cy.flowPage__navigateToConfirmation();
+         cy.get(flowPage.cartItems).should('have.length', 0); // Actual behavior
+       });
+     });
+   ```
+   
 ---

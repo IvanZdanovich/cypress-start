@@ -54,7 +54,8 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
 
 ### Global Resources
 
-- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be imported:
+- The following modules are available globally via `${WORKSPACE_ROOT}/cypress/support/e2e.js` and do not need to be
+  imported:
     - `utils` - Utility functions
     - `l10n` - Localization strings
     - `colours` - Theme colours
@@ -66,7 +67,8 @@ via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-s
 ### Development Reference
 
 - Refer to `.html` pages in `${WORKSPACE_ROOT}/development-data/pages` for development and test reference purposes.
-- Before creating tests for a new page/component, register it in `${WORKSPACE_ROOT}/app-structure/components.json` to avoid ESLint errors.
+- Before creating tests for a new page/component, register it in `${WORKSPACE_ROOT}/app-structure/components.json` to
+  avoid ESLint errors.
     - Structure: `{ "PageName": { "ComponentName": { } } }`
     - Components should match functional elements on the page (header, forms, modals, etc.).
 
@@ -114,11 +116,14 @@ export const testData = {
 - Store UI commands in `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`.
 - Use kebab-case for file names.
 - Use camelCase for command names.
+- Decompose parameters for clarity.
+- Align parameters with API command parameters when applicable.
+- Group commands by page/component.
 - Example:
 
 ```javascript
 Cypress.Commands.add('pageName__performAction', (itemData) => {
-    const {title, priority} = itemData; // Decompose for clarity
+    const {title, priority} = itemData;
     cy.get(pageName.componentName.titleInput).clear().type(title);
     cy.get(pageName.componentName.prioritySelect).select(priority.toString());
     cy.get(pageName.componentName.submitButton).click();
@@ -150,5 +155,35 @@ export default {
     // ... other page selectors
 };
 ```
+
+---
+
+## Bug Logging for UI Tests
+
+When discovering UI bugs during test development:
+
+1. **Identify UI Issues:**
+    - Elements not rendering as documented
+    - Incorrect validation behavior
+    - Missing error messages
+    - Inconsistent UI state
+    - Accessibility issues
+    - Localization problems
+
+2. **Document in Bug Log:**
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Follow bug ID convention: `BUG-[PAGE/COMPONENT]-[NUMBER]`
+    - Include all required fields per main instructions
+
+3. **Add Bug Reference Comments:**
+   ```javascript
+     context('PageName.ComponentName: When invalid input is provided', () => {
+       // Bug Reference: BUG-FORM-003 - Missing validation error message for email field
+       it('PageName.ComponentName: Then no error message is displayed', () => {
+         cy.pageName__submitForm__UI(invalidData);
+         cy.get(pageName.componentName.errorMessage).should('not.exist'); // Actual behavior
+       });
+     });
+   ```
 
 ---
