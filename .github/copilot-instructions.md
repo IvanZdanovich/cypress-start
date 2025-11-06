@@ -93,7 +93,7 @@ If scripting, expand before passing to AI tooling.
 ## Bug Logging Guidelines
 
 **Note**: When discovering API or UI bugs during test development, document them in
-`${WORKSPACE_ROOT}/bug-log/bug_log.json` for review and migration to the bug tracking system.
+`${WORKSPACE_ROOT}/bug-log/bug-log.json` for review and migration to the bug tracking system.
 
 ### When to Log a Bug
 
@@ -148,7 +148,7 @@ INCREMENT sequentially within each module.
 
 ### Bug Log Structure
 
-Each bug entry in `${WORKSPACE_ROOT}/bug-log/bug_log.json` must include:
+Each bug entry in `${WORKSPACE_ROOT}/bug-log/bug-log.json` must include:
 
 ```json
 {
@@ -182,7 +182,7 @@ WHEN bug is logged:
 
 ### Bug Log Maintenance
 
-UPDATE ${WORKSPACE_ROOT}/bug-log/bug_log.json
+UPDATE ${WORKSPACE_ROOT}/bug-log/bug-log.json
 WHEN:
     Bug is fixed => change status to "Resolved"
     Bug is closed => change status to "Closed" with resolution notes

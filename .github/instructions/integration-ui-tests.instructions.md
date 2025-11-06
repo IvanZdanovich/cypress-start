@@ -171,7 +171,7 @@ When discovering UI bugs during test development:
     - Localization problems
 
 2. **Document in Bug Log:**
-    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json`
     - Follow bug ID convention: `BUG-[PAGE/COMPONENT]-[NUMBER]`
     - Include all required fields per main instructions
 

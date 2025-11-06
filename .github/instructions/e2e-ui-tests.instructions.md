@@ -196,7 +196,7 @@ When discovering bugs during E2E workflow testing:
     - State management issues
 
 2. **Document in Bug Log:**
-    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json`
     - Follow bug ID convention: `BUG-[WORKFLOW]-[NUMBER]`
     - Include workflow context and affected pages
 

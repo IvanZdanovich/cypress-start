@@ -278,7 +278,7 @@ When discovering API bugs during test development:
     - Security/validation issues
 
 2. **Document in Bug Log:**
-    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug_log.json`
+    - Add entry to `${WORKSPACE_ROOT}/bug-log/bug-log.json`
     - Follow bug ID convention: `BUG-[MODULE]-[NUMBER]`
     - Include all required fields per main instructions
 
