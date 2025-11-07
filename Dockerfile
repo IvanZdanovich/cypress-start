@@ -15,11 +15,8 @@ ENV COLOUR_THEME=${COLOUR_THEME}
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (skip prepare script as husky is not needed in CI)
-RUN npm ci --omit=dev --ignore-scripts
-
-# Install Cypress binary explicitly (required because --ignore-scripts skips postinstall)
-RUN npx cypress install
+# Install dependencies (HUSKY=0 disables husky prepare script in CI)
+RUN HUSKY=0 npm ci --omit=dev
 
 # Copy project files
 COPY . .
