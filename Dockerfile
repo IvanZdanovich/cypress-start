@@ -18,6 +18,9 @@ COPY package*.json ./
 # Install dependencies (skip prepare script as husky is not needed in CI)
 RUN npm ci --omit=dev --ignore-scripts
 
+# Install Cypress binary explicitly (required because --ignore-scripts skips postinstall)
+RUN npx cypress install
+
 # Copy project files
 COPY . .
 
