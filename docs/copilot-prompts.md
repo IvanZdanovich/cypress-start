@@ -19,23 +19,20 @@ EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
 
-2. REPLACE repetitive code WITH:
-   - custom commands FROM `${WORKSPACE_ROOT}/cypress/support/commands/api/[module-name].api.commands.js`
-
-3. CONSOLIDATE:
+2. CONSOLIDATE:
    - duplicate assertions INTO reusable helpers
 
-4. OPTIMIZE structure PER:
+3. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. VALIDATE coverage AGAINST:
+4. VALIDATE coverage AGAINST:
    - `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file]`
 
-6. FIX naming violations PER:
+5. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-7. LOG bugs/issues in functionality under test:
+6. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md` (Bug Logging for API Tests section)
@@ -45,7 +42,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-8. ENSURE:
+7. ENSURE:
    - All tests pass with current API behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
@@ -88,24 +85,21 @@ EXECUTE improvements:
    - Use l10n for localized text
    - Use colours for colour values
 
-2. REPLACE repetitive code WITH:
-   - custom commands FROM `${WORKSPACE_ROOT}/cypress/support/commands/ui/[page-name].ui.commands.js`
-
-3. CONSOLIDATE:
+2. CONSOLIDATE:
    - duplicate element interactions
    - repetitive assertions
 
-4. OPTIMIZE structure PER:
+3. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. VALIDATE selectors FROM:
+4. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-6. FIX naming violations PER:
+5. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-7. LOG bugs/issues in functionality under test:
+6. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md` (Bug Logging for UI Tests section)
@@ -115,7 +109,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-8. ENSURE:
+7. ENSURE:
    - All tests pass with current UI behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
@@ -158,22 +152,19 @@ EXECUTE improvements:
    - Use l10n for localized text
    - Use colours for colour values
 
-2. REPLACE repetitive code WITH:
-   - custom commands FROM `${WORKSPACE_ROOT}/cypress/support/commands/ui/[page-name].ui.commands.js`
-
-3. CONSOLIDATE:
+2. CONSOLIDATE:
    - duplicate navigation steps
    - repetitive form interactions
    - repeated assertions across workflow
 
-4. OPTIMIZE structure PER:
+3. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. VALIDATE selectors FROM:
+4. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-6. LOG bugs/issues in functionality under test:
+5. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md` (Bug Logging for E2E Tests section)
@@ -183,7 +174,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-7. ENSURE:
+6. ENSURE:
    - All E2E flows complete successfully
    - Bug references maintain integration context
    - Test data uses randomization via utils

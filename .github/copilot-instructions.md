@@ -1,99 +1,79 @@
 # Project Overview
 
-This project automates testing for a web application using Cypress. It covers UI, API, and E2E requirements, ensuring
-high-quality and maintainable coverage.
+TASK: Automate testing for web application using Cypress
+COVERAGE: UI, API, E2E requirements
+TARGET: High-quality, maintainable test suite
 
-## Folder Structure
+## Path Convention
 
-**Note**: When referencing files in AI prompts or AI instructions, always use **absolute paths** from the workspace root
-via the `${WORKSPACE_ROOT}`. Never include your real local username or machine-specific path in committed docs.
+USE `${WORKSPACE_ROOT}` FOR all file references
+NO local usernames or machine-specific paths in committed docs
 
-- `${WORKSPACE_ROOT}/docs/` - Documentation folder
-    - `naming-conventions.md` - Naming conventions for test files and components
-    - `test-writing-guideline.md` - Guidelines for writing tests
-    - `faq.md` - Frequently Asked Questions
-    - `localization-testing.md` - Instructions for localization testing
-    - `colour-theme-testing.md` - Instructions for colour theme testing
-- `${WORKSPACE_ROOT}/.husky/` - Git hooks for pre-commit and pre-push actions
-- `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/` - Custom ESLint rules for enforcing test writing standards
-- `${WORKSPACE_ROOT}/app-structure/` - JSON files defining the application structure for test title validation
-- `${WORKSPACE_ROOT}/cypress.config.js` - Cypress configuration file
-- `${WORKSPACE_ROOT}/cypress/` - Main Cypress folder containing tests and support files
-    - `e2e/ui/` - End-to-end UI test files
-    - `integration/ui/` - Integration UI test files
-    - `integration/api/` - Integration API test files
-    - `sensitive-data/` - Sensitive data like test user credentials (not committed to version control)
-    - `support/e2e.js` - Support file for E2E tests (includes global configurations and imports)
-    - `support/selectors/` - UI selectors organized by pages and components
-    - `support/commands/api/` - Custom commands for API interactions
-    - `support/commands/ui/` - Custom commands for UI interactions
-    - `support/utils/` - Utility functions for tests
-    - `support/requirements/` - Project wide requirements, API error messages and configurations
-    - `support/localization/` - Localization JSON files
-    - `support/colours/` - Colour theme JSON files
-    - `test-data/api/` - Isolated test data for API test files
-    - `test-data/ui/` - Isolated test data for UI test files
-- `${WORKSPACE_ROOT}/development-data/` - Local development reference data
-    - `swagger/` - Swagger documentation as `.json` files or other documentation for test development
-    - `pages/` - HTML pages for test development purposes
+## Key Paths
+
+**Tests:**
+- `cypress/e2e/ui/` - E2E workflows
+- `cypress/integration/ui/` - Integration UI (pages/components)
+- `cypress/integration/api/` - Integration API (modules/submodules)
+
+**Support:**
+- `cypress/support/e2e.js` - Global imports and configs
+- `cypress/support/selectors/` - UI selectors by page/component
+- `cypress/support/commands/api/` - API commands by module
+- `cypress/support/commands/ui/` - UI commands by page/component
+- `cypress/support/utils/` - Utility functions
+- `cypress/support/requirements/` - Requirements, error messages, constraints
+- `cypress/support/localization/` - Localization JSON
+- `cypress/support/colours/` - Theme colour JSON
+
+**Data:**
+- `cypress/test-data/api/` - API test data
+- `cypress/test-data/ui/` - UI test data
+- `cypress/sensitive-data/` - User credentials (not committed)
+
+**Config:**
+- `app-structure/` - Structure definitions for test title validation
+- `bug-log/bug-log.json` - Bug documentation
+- `docs/` - Guidelines and conventions
+- `development-data/` - Local reference data (Swagger, HTML pages)
 
 ## Out of Scope
 
-- Accessibility (a11y) testing
-- Performance, load, or stress testing
-- Security or penetration testing
-- Cross-browser or cross-device compatibility testing
-- Visual regression or screenshot comparison
-- Suggesting or using non-JavaScript/Non-Cypress tools or frameworks
-- Mobile native app testing
-- Manual test case management
+NO accessibility (a11y), performance, load, stress testing
+NO security, penetration testing
+NO cross-browser, cross-device compatibility
+NO visual regression, screenshot comparison
+NO non-JavaScript/non-Cypress tools
+NO mobile native apps
+NO manual test case management
 
-## Key Principles
+## Core Principles
 
-* Follow the existing folder structure and naming conventions.
-* Do not suggest new frameworks, libraries, or tools.
-* Adhere to Cypress and JavaScript (ES6+) only.
-* Use npm for dependency management.
-* Do not expose or suggest sensitive data.
+FOLLOW existing folder structure and naming conventions
+ADHERE TO Cypress + JavaScript (ES6+) ONLY
+USE npm FOR dependency management
+NO sensitive data exposure
+CUSTOM COMMANDS: ONLY FOR complex multi-step interactions reused across multiple files
+USE direct Cypress calls FOR simple actions (`.click()`, `.type()`, `.clear()`, assertions)
 
 ## Test Writing Instructions
 
-- For editing and adding new E2E UI tests, follow the instructions in
-  `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`.
-- For editing and adding new Integration UI tests, follow the instructions in
-  `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`.
-- For editing and adding new Integration API tests, follow the instructions in
-  `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`.
-- Refer to `${WORKSPACE_ROOT}/docs/test-writing-guideline.md` for detailed test writing guidelines.
-- Refer to `${WORKSPACE_ROOT}/docs/naming-conventions.md` for naming conventions.
-- Refer to `${WORKSPACE_ROOT}/docs/localization-testing.md` for localization testing details.
-- Refer to `${WORKSPACE_ROOT}/docs/colour-theme-testing.md` for colour theme testing details.
+FOLLOW test-specific instructions PER test type:
+- E2E UI: `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
+- Integration UI: `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
+- Integration API: `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
 
----
-
-## Workaround for Path Management
-
-Define once per terminal / prompt session:
-
-```bash
-# Example: Replace with your actual workspace path
-export WORKSPACE_ROOT="/absolute/path/to/your/cypress-start"
-```
-
-Then reference:
-
-```bash
-$WORKSPACE_ROOT/cypress/integration/api/module-name.submodule.api.spec.js
-```
-
-If scripting, expand before passing to AI tooling.
+REFER TO documentation:
+- `${WORKSPACE_ROOT}/docs/test-writing-guideline.md`
+- `${WORKSPACE_ROOT}/docs/naming-conventions.md`
+- `${WORKSPACE_ROOT}/docs/localization-testing.md`
+- `${WORKSPACE_ROOT}/docs/colour-theme-testing.md`
 
 ---
 
 ## Bug Logging Guidelines
 
-**Note**: When discovering API or UI bugs during test development, document them in
-`${WORKSPACE_ROOT}/bug-log/bug-log.json` for review and migration to the bug tracking system.
+DOCUMENT bugs IN `${WORKSPACE_ROOT}/bug-log/bug-log.json` FOR review and migration TO bug tracking system
 
 ### When to Log a Bug
 
@@ -138,13 +118,12 @@ DO NOT LOG IF:
 
 ### Bug ID Convention
 
-FORMAT: `BUG-[MODULE]-[NUMBER]`
-
-EXAMPLES:
-
-- `BUG-AUTH-042` - 42nd bug in Auth module
-
-INCREMENT sequentially within each module.
+FORMAT: `BUG-[CONTEXT]-[NUMBER]`
+CONTEXT depends ON test type:
+- API tests: `BUG-[MODULE]-[NUMBER]` (e.g., `BUG-AUTH-042`)
+- E2E UI tests: `BUG-[WORKFLOW]-[NUMBER]` (e.g., `BUG-CHECKOUT-005`)
+- Integration UI tests: `BUG-[PAGE/COMPONENT]-[NUMBER]` (e.g., `BUG-FORM-003`)
+INCREMENT sequentially WITHIN each context
 
 ### Bug Log Structure
 
@@ -174,23 +153,23 @@ Each bug entry in `${WORKSPACE_ROOT}/bug-log/bug-log.json` must include:
 ### Test Adaptation Strategy
 
 WHEN bug is logged:
-    ADD bug reference comment above affected test
-    UPDATE assertions to validate ACTUAL behavior
-    ADD failOnStatusCode: false if testing error responses
-    DOCUMENT expected vs actual in test comments
-    ENSURE test passes with current behavior
+- ADD bug reference comment ABOVE affected test
+- UPDATE assertions TO validate ACTUAL behavior
+- ADD `failOnStatusCode: false` IF testing error responses
+- DOCUMENT expected vs actual IN test comments
+- ENSURE test passes WITH current behavior
 
 ### Bug Log Maintenance
 
-UPDATE ${WORKSPACE_ROOT}/bug-log/bug-log.json
-WHEN:
-    Bug is fixed => change status to "Resolved"
-    Bug is closed => change status to "Closed" with resolution notes
-    Severity changes => update severity field
-    More details discovered => add to notes field
+UPDATE `${WORKSPACE_ROOT}/bug-log/bug-log.json` WHEN:
+- Bug fixed → status: "Resolved"
+- Bug closed → status: "Closed" WITH resolution notes
+- Severity changes → UPDATE severity field
+- More details found → ADD TO notes field
+
 PRESERVE:
-    Original bug ID
-    Original date reported
-    Complete history in notes
+- Original bug ID
+- Original date reported
+- Complete history IN notes
 
 ---
