@@ -1,3 +1,9 @@
+const api = {
+  auth: `${Cypress.env('baseAPIUrl')}/auth`,
+  booking: `${Cypress.env('baseAPIUrl')}/booking`,
+  ping: `${Cypress.env('baseAPIUrl')}/ping`,
+};
+
 const pages = {
   login: `${Cypress.env('baseUrl')}/`,
   inventory: `${Cypress.env('baseUrl')}/inventory.html`,
@@ -15,6 +21,7 @@ const external = {
 };
 
 export default {
+  api,
   pages,
   external,
 };

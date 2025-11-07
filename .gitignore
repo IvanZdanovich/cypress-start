@@ -2,9 +2,9 @@
 dist
 
 # separate reports
-cypress/reports/**
 !cypress/reports/mochawesome/.gitkeep
 !cypress/reports/screenshots/.gitkeep
+cypress/reports/**
 
 # asset folders
 cypress/downloads
@@ -14,24 +14,23 @@ cypress/fixtures/assets
 node_modules
 
 # sensitive data
-cypress/sensitive-data/**
 !cypress/sensitive-data/env-users.example.json
+cypress/sensitive-data/**
 
 # IDEs and editors
 .idea
 .vscode
 
-# System Files
+# system Files
 .DS_Store
 Thumbs.db
 
 # temporary fixtures
 **/preconditions/temp/**
 
-# Local files
+# local files
 certs/local/**
 target
-
 .env
 
 # VS

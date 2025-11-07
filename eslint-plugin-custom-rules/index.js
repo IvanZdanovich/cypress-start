@@ -5,7 +5,7 @@ module.exports = {
     'verify-test-title-pattern': require('./verify-test-title-pattern.js'),
     'verify-test-title-against-structure': require('./verify-test-title-against-structure.js'),
     'verify-todos-have-links': require('./verify-todos-have-links.js'),
-    'verify-test-title-witout-forbidden-symbols': require('./verify-test-title-witout-forbidden-symbols.js'),
+    'verify-test-title-without-forbidden-symbols': require('./verify-test-title-without-forbidden-symbols.js'),
     'standardize-test-titles': require('./standardize-test-titles.js'),
   },
 };

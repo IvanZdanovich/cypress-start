@@ -1,0 +1,302 @@
+[
+  {
+    "id": "BUG-RESTFUL-001",
+    "module": "RestfulBooker",
+    "submodule": "Auth",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Authentication endpoint returns 200 status code for invalid credentials instead of 401 Unauthorized",
+    "expectedBehavior": "Should return 401 Unauthorized status code",
+    "actualBehavior": "Returns 200 OK with reason: 'Bad credentials'",
+    "endpoint": "POST /auth",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "This makes it difficult to distinguish between successful authentication and failed authentication based on status code alone"
+  },
+  {
+    "id": "BUG-RESTFUL-002",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "Booking creation returns 500 Internal Server Error for missing required fields instead of 400 Bad Request",
+    "expectedBehavior": "Should return 400 Bad Request with validation error details",
+    "actualBehavior": "Returns 500 Internal Server Error",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "firstname",
+      "lastname",
+      "totalprice",
+      "depositpaid",
+      "bookingdates",
+      "bookingdates.checkin",
+      "bookingdates.checkout"
+    ],
+    "notes": "500 errors indicate server issues, not client validation errors. This masks actual validation failures."
+  },
+  {
+    "id": "BUG-RESTFUL-003",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Booking operations return 405 Method Not Allowed for non-existing booking IDs instead of 404 Not Found",
+    "expectedBehavior": "Should return 404 Not Found for non-existing resources",
+    "actualBehavior": "Returns 405 Method Not Allowed",
+    "endpoints": [
+      "PUT /booking/{id}",
+      "PATCH /booking/{id}",
+      "DELETE /booking/{id}"
+    ],
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "405 typically indicates the HTTP method is not supported, not that the resource doesn't exist"
+  },
+  {
+    "id": "BUG-RESTFUL-004",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Low",
+    "status": "Open",
+    "description": "DELETE booking returns 201 Created instead of 204 No Content",
+    "expectedBehavior": "Should return 204 No Content or 200 OK for successful deletion",
+    "actualBehavior": "Returns 201 Created",
+    "endpoint": "DELETE /booking/{id}",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "notes": "201 status code is semantically incorrect for DELETE operations as nothing is being created"
+  },
+  {
+    "id": "BUG-RESTFUL-005",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "API accepts and creates bookings with empty string values for firstname and lastname fields",
+    "expectedBehavior": "Should return 400 Bad Request and reject bookings with empty strings for required name fields",
+    "actualBehavior": "Returns 200 OK and creates booking with empty firstname/lastname",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "firstname",
+      "lastname"
+    ],
+    "notes": "Empty strings should be treated as invalid input for name fields. The API distinguishes between missing fields (returns 500) and empty strings (returns 200), but should reject both as invalid."
+  },
+  {
+    "id": "BUG-RESTFUL-006",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "Booking search by date range and combined filters returns empty results even when matching bookings exist",
+    "expectedBehavior": "Should return bookings that match the specified date range and filter criteria",
+    "actualBehavior": "Returns empty array even for recently created bookings that match the criteria",
+    "endpoint": "GET /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedParameters": [
+      "checkin",
+      "checkout",
+      "combination of firstname, lastname, checkin, checkout"
+    ],
+    "notes": "The API's filtering functionality is unreliable. Date range searches and combined parameter searches often return empty arrays even when bookings matching the criteria were just created. Single parameter searches (firstname or lastname alone) work more reliably. This makes the search functionality nearly unusable for production use."
+  },
+  {
+    "id": "BUG-LOGIN-001",
+    "module": "LoginPage",
+    "submodule": "ValidationFeedback",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Username field incorrectly highlighted when only password is missing",
+    "expectedBehavior": "When user provides valid username without password, only the password field should be highlighted with error styling and error icon",
+    "actualBehavior": "Both username and password fields are highlighted with error styling and error icons",
+    "page": "Login Page",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "username",
+      "password"
+    ],
+    "notes": "This creates confusion for users as it incorrectly suggests the username field also has an error when it contains valid data. The error message correctly states 'Password is required' but the visual feedback is misleading."
+  },
+  {
+    "id": "BUG-LOGIN-002",
+    "module": "LoginPage",
+    "submodule": "ValidationFeedback",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Password field incorrectly highlighted when only username is missing",
+    "expectedBehavior": "When user provides valid password without username, only the username field should be highlighted with error styling and error icon",
+    "actualBehavior": "Both username and password fields are highlighted with error styling and error icons",
+    "page": "Login Page",
+    "reproducible": true,
+    "dateReported": "2025-11-06",
+    "affectedFields": [
+      "username",
+      "password"
+    ],
+    "notes": "This creates confusion for users as it incorrectly suggests the password field also has an error when it contains valid data. The error message correctly states 'Username is required' but the visual feedback is misleading."
+  },
+  {
+    "id": "BUG-FOOTER-001",
+    "module": "FooterComp",
+    "submodule": "SocialLinks",
+    "severity": "Low",
+    "status": "Open",
+    "description": "Twitter social link uses outdated twitter.com URL instead of x.com",
+    "expectedBehavior": "Twitter link should point to https://x.com/saucelabs (new Twitter/X domain)",
+    "actualBehavior": "Twitter link points to https://twitter.com/saucelabs (old domain)",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Twitter social link icon"
+    ],
+    "notes": "Twitter rebranded to X and changed domain from twitter.com to x.com. While twitter.com still redirects, the canonical URL should be updated to x.com for consistency."
+  },
+  {
+    "id": "BUG-FOOTER-002",
+    "module": "FooterComp",
+    "submodule": "LegalLinks",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Terms of Service link is missing from footer despite being mentioned in copyright text",
+    "expectedBehavior": "Footer should contain a clickable 'Terms of Service' link as referenced in the copyright notice",
+    "actualBehavior": "Copyright text mentions 'Terms of Service' but no clickable link element exists",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Terms of Service link"
+    ],
+    "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
+  },
+  {
+    "id": "BUG-FOOTER-003",
+    "module": "FooterComp",
+    "submodule": "LegalLinks",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Privacy Policy link is missing from footer despite being mentioned in copyright text",
+    "expectedBehavior": "Footer should contain a clickable 'Privacy Policy' link as referenced in the copyright notice",
+    "actualBehavior": "Copyright text mentions 'Privacy Policy' but no clickable link element exists",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Privacy Policy link"
+    ],
+    "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
+  },
+  {
+    "id": "BUG-INVENTORY-001",
+    "module": "InventoryPage",
+    "submodule": "ProductCard",
+    "severity": "High",
+    "status": "Open",
+    "description": "Product title displays incorrect value for one product card",
+    "expectedBehavior": "Product card should display 'Sauce Labs T-Shirt (Red)' as the title",
+    "actualBehavior": "Product card displays 'Test.allTheThings() T-Shirt (Red)' as the title",
+    "page": "Inventory Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedFields": [
+      "Product title"
+    ],
+    "notes": "One product card consistently shows wrong title. This appears to be a data issue where the wrong product name is mapped to the product. Affects product listing, cart, and product detail pages."
+  },
+  {
+    "id": "BUG-INVENTORY-002",
+    "module": "InventoryPage",
+    "submodule": "ProductCard",
+    "severity": "High",
+    "status": "Open",
+    "description": "Product description displays incorrect value for one product card",
+    "expectedBehavior": "Product card should display correct product description matching the product",
+    "actualBehavior": "Product card displays 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.' which doesn't match the product",
+    "page": "Inventory Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedFields": [
+      "Product description"
+    ],
+    "notes": "One product card consistently shows wrong description. This appears to be a data issue where the wrong description is mapped to the product. The description text uses unconventional naming pattern (carry.allTheThings()) suggesting test data."
+  },
+  {
+    "id": "BUG-PURCHASE-001",
+    "workflow": "CompletePurchase",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Floating-point precision error in checkout price calculation causes incorrect total display",
+    "expectedBehavior": "Price calculations should handle floating-point arithmetic correctly with proper rounding to 2 decimal places",
+    "actualBehavior": "When multiple items are added to cart, the subtotal may have floating-point precision errors (e.g., 95.97000000000001 instead of 95.97)",
+    "page": "Checkout Overview Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedFields": [
+      "Item total",
+      "Total price"
+    ],
+    "notes": "This is a common JavaScript floating-point arithmetic issue. The application should implement proper decimal handling (e.g., using toFixed(2) or a decimal library) to prevent precision errors in financial calculations. While the display may round correctly, the underlying calculation can still cause comparison failures in automated tests."
+  },
+  {
+    "id": "BUG-CART-001",
+    "module": "CartPage",
+    "submodule": "CheckoutButton",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Checkout button remains enabled when cart is empty",
+    "expectedBehavior": "Checkout button should be disabled when no items are in the cart to prevent users from proceeding to checkout with empty cart",
+    "actualBehavior": "Checkout button is enabled and clickable even when cart has no items",
+    "page": "Cart Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Checkout button"
+    ],
+    "notes": "This is a UX issue that allows users to attempt checkout with an empty cart, which may lead to errors or confusion in the checkout flow. The button should be disabled (or hidden) when cart is empty."
+  },
+  {
+    "id": "BUG-HEADER-001",
+    "module": "Header",
+    "submodule": "ResetAppState",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Reset App State functionality does not reset product Add/Remove button states on inventory page",
+    "expectedBehavior": "After clicking Reset App State, all product buttons should be reset to 'Add to cart' state, removing the cart badge and clearing cart contents",
+    "actualBehavior": "Cart badge is removed and cart is cleared, but product buttons on inventory page remain in 'Remove' state instead of changing back to 'Add to cart'",
+    "page": "Header Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Reset App State button",
+      "Product Add/Remove buttons"
+    ],
+    "notes": "This creates inconsistent state where the cart is empty (badge gone) but UI shows products as added (Remove buttons). Users cannot add products again without a page reload. This is a state management issue in the Reset App State functionality."
+  },
+  {
+    "id": "BUG-FOOTER-004",
+    "module": "Footer",
+    "submodule": "SocialLinks",
+    "severity": "Low",
+    "status": "Closed",
+    "description": "Backtrace API throws unauthorized error when navigating to social media links from footer",
+    "expectedBehavior": "Social media links should navigate to external pages without throwing JavaScript errors",
+    "actualBehavior": "Clicking footer social links (LinkedIn, Twitter, Facebook) triggers uncaught exception from Backtrace API (error reporting service) with 401 Unauthorized error",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "dateClosed": "2025-11-07",
+    "affectedElements": [
+      "LinkedIn social link",
+      "Twitter social link",
+      "Facebook social link"
+    ],
+    "notes": "The error appears to be related to the Backtrace error reporting service not having proper credentials configured. While this doesn't prevent navigation, it causes uncaught exceptions that would normally fail tests. Test refactored to validate link attributes (href, target) instead of performing actual navigation to external sites, which is more reliable and avoids external dependencies. The bug remains in the application but is no longer relevant for testing purposes."
+  }
+]
+

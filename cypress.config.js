@@ -38,24 +38,28 @@ module.exports = defineConfig({
       local: {
         envName: 'local',
         baseUrl: 'https://www.saucedemo.com',
+        baseAPIUrl: 'https://restful-booker.herokuapp.com',
       },
       dev: {
         envName: 'dev',
         baseUrl: 'https://www.saucedemo.com',
+        baseAPIUrl: 'https://restful-booker.herokuapp.com',
       },
     },
     setupNodeEvents(on, config) {
       const language = process.env.LANGUAGE || 'en';
+      const colourTheme = process.env.COLOUR_THEME || 'default';
       const targetEnv = process.env.TARGET_ENV || 'dev';
       const specPattern = process.env.SPEC || `**/*.spec.js`;
       const browser = process.env.BROWSER || 'chrome';
 
-      console.log(`Running tests with specPattern=${specPattern}, language=${language}, targetEnv=${targetEnv}, browser=${browser}`);
+      console.log(`Running tests with specPattern=${specPattern}, language=${language}, targetEnv=${targetEnv}, browser=${browser}, colourTheme=${colourTheme}`);
 
       // Update the config with the environment variables
       config.env = targetEnv ? config.env[targetEnv] : config.env.local;
       config.baseUrl = config.env.baseUrl;
       config.env.language = language;
+      config.env.colourTheme = colourTheme;
       config.env.spec = specPattern;
 
       on('before:browser:launch', (browser = {}, launchOptions) => {

@@ -81,9 +81,23 @@ async function checkEslintRatios(files) {
       return process.exit(0);
     }
 
-    console.log(`Linting ${filesToCheck.length} files...`);
+    // Filter out files that no longer exist (renamed or deleted)
+    const existingFiles = filesToCheck.filter((file) => {
+      const exists = fs.existsSync(file);
+      if (!exists) {
+        console.log(`Skipping non-existent file: ${file}`);
+      }
+      return exists;
+    });
 
-    const totalLines = countLinesOfCode(filesToCheck);
+    if (existingFiles.length === 0) {
+      console.log('No existing files to lint (all files were deleted or renamed).');
+      return process.exit(0);
+    }
+
+    console.log(`Linting ${existingFiles.length} files...`);
+
+    const totalLines = countLinesOfCode(existingFiles);
     console.log(`Total lines of code: ${totalLines}`);
 
     if (totalLines === 0) {
@@ -92,7 +106,7 @@ async function checkEslintRatios(files) {
     }
 
     const eslint = new ESLint();
-    const results = await eslint.lintFiles(filesToCheck);
+    const results = await eslint.lintFiles(existingFiles);
 
     let totalWarnings = 0;
     let totalErrors = 0;

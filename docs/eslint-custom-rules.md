@@ -20,32 +20,22 @@ tests.
 Disallows empty test blocks to ensure all tests contain assertions or actions, forcing developers either to implement
 the test or mark tests as skipped.
 
-### Invalid Examples
+### Example
 
 ```javascript
-it('should do something', () => {
-  // Empty block
+describe('ActionPriorityPage.Creation: Given the user navigates to the Creation component of Action Priority page', {testIsolation: false}, () => {
+    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
+        // Empty block - this will trigger the rule violation
+    });
+    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
+        it('ActionPriorityPage.Creation.ADMIN: Then Title is displayed', () => {
+            // Empty block - this will trigger the rule violation
+        });
+        it.skip('ActionPriorityPage.Creation.ADMIN: Then Name Input field with label and placeholder is displayed', () => {
+            // Valid - skipped test without implementation is allowed
+        });
+    });
 });
-
-context('when action is done', () => {
-  // Empty block
-});
-
-it('should do something'); // Missing function body
-```
-
-### Valid Examples
-
-```javascript
-it('should do something', () => {
-  expect(true).to.be.true;
-});
-
-context('when action is done', () => {
-  cy.get('.element').should('be.visible');
-});
-
-it.skip('should do something'); // Skipped test without implementation is allowed
 ```
 
 ## Prevent Duplicated Titles
@@ -54,28 +44,16 @@ it.skip('should do something'); // Skipped test without implementation is allowe
 
 Ensures that all test titles are unique across the test suite, preventing confusion and improving clarity.
 
-### Invalid Examples
+### Example
 
 ```javascript
 describe('UserManagement', () => {
-  // ...
+    // ...
 });
 
 // Later in the same test suite or another file
 describe('UserManagement', () => {
-  // This will trigger the rule violation
-});
-```
-
-### Valid Examples
-
-```javascript
-describe('UserManagement.Create', () => {
-  // ...
-});
-
-describe('UserManagement.Delete', () => {
-  // ...
+    // This will trigger the rule violation
 });
 ```
 
@@ -84,7 +62,8 @@ describe('UserManagement.Delete', () => {
 **Rule file:** `eslint-plugin-custom-rules/verify-test-title-against-structure.js`
 
 Verifies that test titles follow a predefined structure defined in JSON configuration files. Different structures are
-applied based on the test type (e2e, api, ui). The rule forces developers to use the correct structure and naming of app instances.
+applied based on the test type (e2e, api, ui). The rule forces developers to use the correct structure and naming of app
+instances.
 
 ### Configuration Files
 
@@ -100,35 +79,13 @@ The rule validates that each part in the dot-separated title exists in the JSON 
 
 **Rule file:** `eslint-plugin-custom-rules/verify-test-title-pattern.js`
 
-Enforces a specific pattern for test block titles:
-
-- `describe` blocks: Must follow `ModuleName.SubModule.ROLE: Given context` pattern
-- `context` blocks: Must follow `ModuleName.SubModule.ROLE: When condition` pattern
-- `it` blocks: Must follow `ModuleName.SubModule.ROLE: Then expectation` pattern
-
-### Invalid Examples
-
-```javascript
-describe('User login', () => {});
-context('clicking submit', () => {});
-it('works correctly', () => {});
-```
-
-### Valid Examples
-
-```javascript
-describe('Auth.Login.ADMIN: Given a user on the login page', () => {});
-context('Auth.Login.ADMIN: When credentials are valid', () => {});
-it('Auth.Login.ADMIN: Then user should be redirected to dashboard', () => {});
-```
+Enforces a specific pattern for test block titles, according to the naming conventions.
 
 ## Verify TODOs Have Links
 
 **Rule file:** `eslint-plugin-custom-rules/verify-todos-have-links.js`
 
-Ensures that all TODO, FIXME, and similar comments include a JIRA link for tracking purposes.
-
-- Not applied to current project since the bug tracking implemented localy.
+Ensures that all TODO, FIXME, and similar comments include a bug tracking system ticket link for tracking purposes.
 
 ### Invalid Examples
 
@@ -140,55 +97,40 @@ Ensures that all TODO, FIXME, and similar comments include a JIRA link for track
 ### Valid Examples
 
 ```javascript
-// TODO: Fix validation issues - https://company.atlassian.net/browse/PROJ-123
-// FIXME: Handle edge case - https://company.atlassian.net/browse/PROJ-456
+// TODO: Fix validation issues - https://company.org.net/browse/PROJ-123
+// FIXME: Handle edge case - https://company.org.net/browse/PROJ-456
 ```
 
 ## Verify Test Title Without Forbidden Symbols
 
-**Rule file:** `eslint-plugin-custom-rules/verify-test-title-witout-forbidden-symbols.js`
+**Rule file:** `eslint-plugin-custom-rules/verify-test-title-without-forbidden-symbols.js`
 
 Prevents test titles from containing leading/trailing whitespace or special characters that could cause issues.
 
-### Invalid Examples
+### Examples
 
 ```javascript
-describe('Auth.Login: Given a user on the login page ', () => {}); // Trailing space
-describe(' Auth.Login: Given a user on the login page', () => {}); // Leading space
-describe('Auth.Login: Given a user on the login page!', () => {}); // Special character "!"
+    context('LoginPage.STANDARD: When user logs in with valid credentials ', () => {
+        // Trailing space
+    });
+    context(' LoginPage.STANDARD: When user logs in with valid credentials', () => {
+        // Leading space
+    }); 
+    context('LoginPage.STANDARD: When user logs in with valid credentials!', () => {
+        // Special character "!"
+    }); 
 ```
 
-### Valid Examples
-
-```javascript
-describe('Auth.Login: Given a user on the login page', () => {});
-context('Auth.Login: When credentials are valid', () => {});
-```
 
 ## Standardize Test Titles
 
 **Rule file:** `eslint-plugin-custom-rules/standardize-test-titles.js`
 
-Ensures that test titles use consistent and standardized terminology for UI interactions, elements, assertions, and API terms. This improves clarity and uniformity across the test suite.
+Ensures that test titles use consistent and standardized terminology for UI interactions, elements, assertions, and API
+terms. This improves clarity and uniformity across the test suite.
 
 ### How It Works
 
-The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
+The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for
+non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
 
-### Invalid Examples
-
-```javascript
-describe('User clicks btn to show popup', () => {
-});
-it('should render loader when data is loading', () => {
-});
-```
-
-### Valid Examples
-
-```javascript
-describe('User clicks button to display tooltip', () => {
-});
-it('should display spinner when data is loading', () => {
-});
-```
