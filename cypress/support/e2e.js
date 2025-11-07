@@ -17,6 +17,8 @@
 import './commands/commands';
 import './commands/ui/login-page.ui.commands';
 import './commands/ui/header-comp.ui.commands';
+import './commands/ui/inventory-page.ui.commands';
+import './commands/ui/footer-comp.ui.commands';
 import './commands/ui/checkout-page.ui.commands';
 import './commands/api/restful-booker.api.commands';
 

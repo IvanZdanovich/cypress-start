@@ -140,6 +140,91 @@
       "password"
     ],
     "notes": "This creates confusion for users as it incorrectly suggests the password field also has an error when it contains valid data. The error message correctly states 'Username is required' but the visual feedback is misleading."
+  },
+  {
+    "id": "BUG-FOOTER-001",
+    "module": "FooterComp",
+    "submodule": "SocialLinks",
+    "severity": "Low",
+    "status": "Open",
+    "description": "Twitter social link uses outdated twitter.com URL instead of x.com",
+    "expectedBehavior": "Twitter link should point to https://x.com/saucelabs (new Twitter/X domain)",
+    "actualBehavior": "Twitter link points to https://twitter.com/saucelabs (old domain)",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Twitter social link icon"
+    ],
+    "notes": "Twitter rebranded to X and changed domain from twitter.com to x.com. While twitter.com still redirects, the canonical URL should be updated to x.com for consistency."
+  },
+  {
+    "id": "BUG-FOOTER-002",
+    "module": "FooterComp",
+    "submodule": "LegalLinks",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Terms of Service link is missing from footer despite being mentioned in copyright text",
+    "expectedBehavior": "Footer should contain a clickable 'Terms of Service' link as referenced in the copyright notice",
+    "actualBehavior": "Copyright text mentions 'Terms of Service' but no clickable link element exists",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Terms of Service link"
+    ],
+    "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
+  },
+  {
+    "id": "BUG-FOOTER-003",
+    "module": "FooterComp",
+    "submodule": "LegalLinks",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Privacy Policy link is missing from footer despite being mentioned in copyright text",
+    "expectedBehavior": "Footer should contain a clickable 'Privacy Policy' link as referenced in the copyright notice",
+    "actualBehavior": "Copyright text mentions 'Privacy Policy' but no clickable link element exists",
+    "page": "Footer Component",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedElements": [
+      "Privacy Policy link"
+    ],
+    "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
+  },
+  {
+    "id": "BUG-INVENTORY-001",
+    "module": "InventoryPage",
+    "submodule": "ProductCard",
+    "severity": "High",
+    "status": "Open",
+    "description": "Product title displays incorrect value for one product card",
+    "expectedBehavior": "Product card should display 'Sauce Labs T-Shirt (Red)' as the title",
+    "actualBehavior": "Product card displays 'Test.allTheThings() T-Shirt (Red)' as the title",
+    "page": "Inventory Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedFields": [
+      "Product title"
+    ],
+    "notes": "One product card consistently shows wrong title. This appears to be a data issue where the wrong product name is mapped to the product. Affects product listing, cart, and product detail pages."
+  },
+  {
+    "id": "BUG-INVENTORY-002",
+    "module": "InventoryPage",
+    "submodule": "ProductCard",
+    "severity": "High",
+    "status": "Open",
+    "description": "Product description displays incorrect value for one product card",
+    "expectedBehavior": "Product card should display correct product description matching the product",
+    "actualBehavior": "Product card displays 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.' which doesn't match the product",
+    "page": "Inventory Page",
+    "reproducible": true,
+    "dateReported": "2025-11-07",
+    "affectedFields": [
+      "Product description"
+    ],
+    "notes": "One product card consistently shows wrong description. This appears to be a data issue where the wrong description is mapped to the product. The description text uses unconventional naming pattern (carry.allTheThings()) suggesting test data."
   }
 ]
 

@@ -1,7 +1,12 @@
 const inventoryPage = {
   numberOfProductsOnThePage: 6,
-  defaultSortOption: 'nameAscending',
-  sortOptions: ['nameAscending', 'nameDescending', 'priceAscending', 'priceDescending'],
+  defaultSortOption: 'az',
+  sortOptions: {
+    nameAscending: 'az',
+    nameDescending: 'za',
+    priceAscending: 'lohi',
+    priceDescending: 'hilo',
+  },
 };
 
 const text = {
