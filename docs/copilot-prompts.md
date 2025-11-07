@@ -66,7 +66,6 @@ OUTPUT:
 - Updated/created test-data file(s)
 - Updated/created API commands file(s)
 - Updated bug_log.json (if bugs found)
-- Summary of improvements and bugs found
 ```
 
 ---
@@ -85,21 +84,17 @@ EXECUTE improvements:
    - Use l10n for localized text
    - Use colours for colour values
 
-2. CONSOLIDATE:
-   - duplicate element interactions
-   - repetitive assertions
-
-3. OPTIMIZE structure PER:
+2. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-4. VALIDATE selectors FROM:
+3. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-5. FIX naming violations PER:
+4. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-6. LOG bugs/issues in functionality under test:
+5. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md` (Bug Logging for UI Tests section)
@@ -109,7 +104,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-7. ENSURE:
+6. ENSURE:
    - All tests pass with current UI behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
@@ -133,7 +128,6 @@ OUTPUT:
 - Updated/created test-data file(s)
 - Updated/created UI commands file(s)
 - Updated bug_log.json (if bugs found)
-- Summary of improvements and bugs found
 ```
 
 ---
@@ -198,7 +192,6 @@ OUTPUT:
 - Updated/created test-data file(s)
 - Updated/created UI commands file(s)
 - Updated bug_log.json (if bugs found)
-- Summary of improvements and bugs found
 ```
 
 ---

@@ -100,7 +100,6 @@ module.exports = {
       [/\bfill\b/gi, 'input'],
       [/\bchoose\b/gi, 'select'],
       [/\bpick\b/gi, 'select'],
-      [/\bopen\b/gi, 'expand'],
       [/\bunfold\b/gi, 'expand'],
       [/\bfold\b/gi, 'collapse'],
       [/\bmouseover\b/gi, 'hover'],
