@@ -15,8 +15,7 @@ ENV COLOUR_THEME=${COLOUR_THEME}
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (HUSKY=0 disables husky prepare script in CI)
-RUN HUSKY=0 npm ci --omit=dev
+RUN npm ci
 
 # Copy project files
 COPY . .
