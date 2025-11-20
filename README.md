@@ -22,8 +22,10 @@
 ## Overview
 
 Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
-effortlessly, it is suitable for projects of any size. This framework includes examples of tests for the Swag Labs
-e-commerce application.
+effortlessly, it is suitable for projects of any size. 
+This framework includes examples of tests: 
+- Integration and E2E UI tests for the [Swag Labs Demo application](https://www.saucedemo.com/).
+- Integration API tests [Restful Booker API playground](https://restful-booker.herokuapp.com/apidoc/)
 
 ![Alt text](assets/execution-example.gif)
 
