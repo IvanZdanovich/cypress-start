@@ -20,13 +20,10 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         authToken = response.body.token;
       });
     });
-
-    // Clean up any leftover data from previous test runs
     cleanUp();
   });
 
   after(() => {
-    // Clean up data created in current test run
     cleanUp();
   });
 
