@@ -1,4 +1,4 @@
-FROM cypress/browsers:latest
+FROM cypress/base:latest
 
 WORKDIR /e2e
 
@@ -15,7 +15,7 @@ ENV LANGUAGE=${LANGUAGE}
 ENV TARGET_ENV=${TARGET_ENV}
 ENV COLOUR_THEME=${COLOUR_THEME}
 
-RUN npm ci --no-fund
+RUN npm ci
 
 # Copy project files
 COPY . .
