@@ -8,6 +8,8 @@ ARG TARGET_ENV=dev
 ARG COLOUR_THEME=default
 
 # Set environment variables from build args
+ENV CYPRESS_CACHE_FOLDER=/root/.cache/Cypress
+ENV CYPRESS_INSTALL_BINARY=0
 ENV LANGUAGE=${LANGUAGE}
 ENV TARGET_ENV=${TARGET_ENV}
 ENV COLOUR_THEME=${COLOUR_THEME}
@@ -15,7 +17,7 @@ ENV COLOUR_THEME=${COLOUR_THEME}
 # Copy package files
 COPY package*.json ./
 
-RUN npm ci
+RUN npm ci --omit=dev --no-fund
 
 # Copy project files
 COPY . .
