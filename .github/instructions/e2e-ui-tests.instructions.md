@@ -6,11 +6,11 @@ applyTo: "${WORKSPACE_ROOT}/cypress/e2e/ui/*.ui.spec.js"
 
 ## File Structure
 
-PLACE files: `cypress/e2e/ui/workflow-name.ui.spec.js` (kebab-case)
-STORE test data: `cypress/test-data/ui/workflow-name.test-data.js` (kebab-case)
-STORE selectors: `cypress/support/selectors/selectors.js` (grouped by page/component)
-STORE UI commands: `cypress/support/commands/ui/` (named by page/component)
-STORE API commands: `cypress/support/commands/api/` (named by module/submodule)
+PLACE files: `${WORKSPACE_ROOT}/cypress/e2e/ui/workflow-name.ui.spec.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.test-data.js` (kebab-case)
+STORE selectors: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js` (grouped by page/component)
+STORE UI commands: `${WORKSPACE_ROOT}/cypress/support/commands/ui/` (named by page/component)
+STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
 
 ## Test Organization
 
@@ -29,9 +29,22 @@ NO tags FOR filtering; USE file names
 REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
 DESCRIBE state PER `context` block FOR clarity
 DEFINE placeholders WITH `String` type, POPULATE during execution
-SAVE dynamically obtained IDs TO test data object
+SAVE dynamically obtained IDs TO test data object immediately after creation
+ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialItem.id = response.body.id`)
 PREFER generated/randomized data USING `utils` functions FOR edge cases
 DESCRIBE ALL checked states EXTENSIVELY IN test data
+
+### Test Data Cleanup Strategy
+
+**Test File Independence:**
+EACH test file MUST be independent and executable in isolation
+CLEANUP ensures consistent application state before each test execution
+USE API commands FOR efficient cleanup operations
+
+**Cleanup Implementation:**
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
 
 ## Commands Strategy
 
@@ -51,58 +64,32 @@ ENSURE uniqueness WITHIN file
 
 ## Global Resources
 
-AVAILABLE globally VIA `cypress/support/e2e.js` (NO import needed):
+AVAILABLE globally VIA `${WORKSPACE_ROOT}/support/e2e.js` (NO import needed):
 - `utils`, `l10n`, `colours`, `urls`, `reqs`, `userRoles`
 - All UI selectors (`loginPage`, etc.)
 
 ## Development Reference
 
-REFER TO `.html` pages IN `development-data/pages`
-REGISTER new workflows IN `app-structure/workflows.json` BEFORE creating tests
+REFER TO `.html` pages IN `${WORKSPACE_ROOT}/development-data/pages`
+REGISTER new workflows IN `${WORKSPACE_ROOT}/app-structure/workflows.json` BEFORE creating tests
 STRUCTURE: `{ "WorkflowName": { "SubFlowName": { } } }`
 MATCH business terminology
 
 ---
 
-## Test Data Example
+## Test Data Structure
 
-STORE: `cypress/test-data/ui/workflow-name.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.test-data.js`
 NAMING: kebab-case files, camelCase variables
 USE `String` placeholders FOR dynamic IDs
-
-```javascript
-// ${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.test-data.js
-export const testData = {
-    token: String, // Placeholder for authentication token
-    validItems: {
-        initialItem: {
-            id: String, // Placeholder for dynamically obtained ID
-            title: 'FlowTitle' + utils.extendStringWithRandomSymbols(10),
-            priority: utils.getRandomNumber(1, 5),
-            status: 'Active',
-        },
-        updatedItem: {
-            title: 'UpdatedTitle' + utils.extendStringWithRandomSymbols(10),
-            priority: utils.getRandomNumber(6, 10),
-            status: 'Completed',
-        },
-    },
-    invalidItems: {
-        missingTitle: {priority: 3},
-        exceedsMaxLength: {
-            title: 'Title' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemTitle),
-            priority: 5,
-        },
-    },
-};
-```
+FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
 ---
 
 ## UI Commands
 
 PATTERN: `pageName__action` or `componentName__action`
-STORE: `cypress/support/commands/ui/page-name.component-name.ui.commands.js`
+STORE: `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`
 NAMING: kebab-case files, `__` separator in commands
 
 ### When to CREATE Custom Commands
@@ -127,13 +114,13 @@ DECISION: Used in multiple files AND involves multiple steps?
 
 ## API Commands for Data Setup
 
-USE API commands FROM `cypress/support/commands/api` FOR test data setup and cleanup
+USE API commands FROM `${WORKSPACE_ROOT}/cypress/support/commands/api` FOR test data setup and cleanup
 
 ---
 
 ## UI Selectors
 
-STORE: `cypress/support/selectors/selectors.js`
+STORE: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 GROUP: By page/component
 ACCESS: Via global variables (`commonUI`, `flowPage`)
 

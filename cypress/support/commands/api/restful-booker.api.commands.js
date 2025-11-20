@@ -167,3 +167,47 @@ Cypress.Commands.add('restfullBooker__deleteBooking__DELETE', (token, bookingId,
     ...restOptions,
   });
 });
+
+/**
+ * Bulk delete bookings by searching for specific criteria
+ * Used for test data cleanup to ensure file independence
+ * @param {string} token - Authentication token
+ * @param {Object} testDataCollection - Test data object with bookings to delete
+ */
+Cypress.Commands.add('restfullBooker__bulkDelete__DELETE', (token, testDataCollection) => {
+  const bookingsToQuery = [];
+
+  // Helper to extract firstname/lastname from nested test data
+  const extractBookingIdentifiers = (obj) => {
+    if (obj && typeof obj === 'object') {
+      if (obj.firstname && obj.lastname) {
+        bookingsToQuery.push({ firstname: obj.firstname, lastname: obj.lastname });
+      } else {
+        Object.values(obj).forEach((value) => {
+          if (typeof value === 'object' && value !== null) {
+            extractBookingIdentifiers(value);
+          }
+        });
+      }
+    }
+  };
+
+  extractBookingIdentifiers(testDataCollection);
+
+  cy.log(`Attempting to clean up ${bookingsToQuery.length} booking(s)`);
+
+  // For each booking identifier, search and delete
+  bookingsToQuery.forEach((identifier) => {
+    cy.restfullBooker__getBookingIds__GET(identifier).then((response) => {
+      if (response.status === 200 && response.body.length > 0) {
+        response.body.forEach((booking) => {
+          cy.restfullBooker__deleteBooking__DELETE(token, booking.bookingid, { failOnStatusCode: false }).then((deleteResponse) => {
+            if (deleteResponse.status === 201) {
+              cy.log(`Successfully deleted booking ID: ${booking.bookingid}`);
+            }
+          });
+        });
+      }
+    });
+  });
+});

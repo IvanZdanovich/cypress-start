@@ -2,6 +2,9 @@ FROM cypress/base:latest
 
 WORKDIR /e2e
 
+COPY package*.json ./
+COPY .dockerignore ./
+
 # Accept build arguments for test configuration
 ARG LANGUAGE=en
 ARG TARGET_ENV=dev
@@ -11,9 +14,6 @@ ARG COLOUR_THEME=default
 ENV LANGUAGE=${LANGUAGE}
 ENV TARGET_ENV=${TARGET_ENV}
 ENV COLOUR_THEME=${COLOUR_THEME}
-
-# Copy package files
-COPY package*.json ./
 
 RUN npm ci
 

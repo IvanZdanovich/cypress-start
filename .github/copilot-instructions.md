@@ -12,30 +12,30 @@ NO local usernames or machine-specific paths in committed docs
 ## Key Paths
 
 **Tests:**
-- `cypress/e2e/ui/` - E2E workflows
-- `cypress/integration/ui/` - Integration UI (pages/components)
-- `cypress/integration/api/` - Integration API (modules/submodules)
+- `${WORKSPACE_ROOT}/cypress/e2e/ui/` - E2E workflows
+- `${WORKSPACE_ROOT}/cypress/integration/ui/` - Integration UI (pages/components)
+- `${WORKSPACE_ROOT}/cypress/integration/api/` - Integration API (modules/submodules)
 
 **Support:**
-- `cypress/support/e2e.js` - Global imports and configs
-- `cypress/support/selectors/` - UI selectors by page/component
-- `cypress/support/commands/api/` - API commands by module
-- `cypress/support/commands/ui/` - UI commands by page/component
-- `cypress/support/utils/` - Utility functions
-- `cypress/support/requirements/` - Requirements, error messages, constraints
-- `cypress/support/localization/` - Localization JSON
-- `cypress/support/colours/` - Theme colour JSON
+- `${WORKSPACE_ROOT}/cypress/support/e2e.js` - Global imports and configs
+- `${WORKSPACE_ROOT}/cypress/support/selectors/` - UI selectors by page/component
+- `${WORKSPACE_ROOT}/cypress/support/commands/api/` - API commands by module
+- `${WORKSPACE_ROOT}/cypress/support/commands/ui/` - UI commands by page/component
+- `${WORKSPACE_ROOT}/cypress/support/utils/` - Utility functions
+- `${WORKSPACE_ROOT}/cypress/support/requirements/` - Requirements, error messages, constraints
+- `${WORKSPACE_ROOT}/cypress/support/localization/` - Localization JSON
+- `${WORKSPACE_ROOT}/cypress/support/colours/` - Theme colour JSON
 
 **Data:**
-- `cypress/test-data/api/` - API test data
-- `cypress/test-data/ui/` - UI test data
-- `cypress/sensitive-data/` - User credentials (not committed)
+- `${WORKSPACE_ROOT}/cypress/test-data/api/` - API test data
+- `${WORKSPACE_ROOT}/cypress/test-data/ui/` - UI test data
+- `${WORKSPACE_ROOT}/cypress/sensitive-data/` - User credentials (not committed)
 
 **Config:**
-- `app-structure/` - Structure definitions for test title validation
-- `bug-log/bug-log.json` - Bug documentation
-- `docs/` - Guidelines and conventions
-- `development-data/` - Local reference data (Swagger, HTML pages)
+- `${WORKSPACE_ROOT}/app-structure/` - Structure definitions for test title validation
+- `${WORKSPACE_ROOT}/bug-log/bug-log.json` - Bug documentation
+- `${WORKSPACE_ROOT}/docs/` - Guidelines and conventions
+- `${WORKSPACE_ROOT}/development-data/` - Local reference data (Swagger, HTML pages)
 
 ## Out of Scope
 
@@ -68,6 +68,213 @@ REFER TO documentation:
 - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 - `${WORKSPACE_ROOT}/docs/localization-testing.md`
 - `${WORKSPACE_ROOT}/docs/colour-theme-testing.md`
+
+---
+
+## Test Data Guidelines
+
+### Test Data Naming Convention
+
+**Self-Descriptive Names:**
+- NAME instances TO describe their PURPOSE, not their values
+- USE descriptive names that explain WHY the data exists
+- AVOID generic names like `item1`, `item2`, `data1`
+
+**Examples:**
+❌ BAD - unclear purpose
+```javascript
+export const booking_testData = {
+    validItems: {
+        item1: {},
+        item2: {}
+    }
+}
+```
+✅ GOOD - clear purpose
+```javascript
+export const booking_testData = {
+    validBookings: {
+        standardCheckout: {},
+        extendedStay: {},
+        sameDayCheckout: {}
+    },
+    invalidBookings: {
+        missingRequiredField: {},
+        invalidDateFormat: {},
+        checkoutBeforeCheckin: {},
+        negativePrice: {}
+    }
+}
+```
+
+### Test Data Structure Requirements
+
+**Complete Field Documentation:**
+- DECLARE ALL fields explicitly, even if optional
+- USE randomization FOR variable data
+- GROUP related fields logically
+- USE `String` type placeholders FOR dynamic IDs populated during execution
+
+**Randomization:**
+- USE `utils` functions FOR all variable data (names, numbers, dates)
+- AVOID hard-coded dates that will become outdated
+- ENSURE test data is unique per execution TO avoid conflicts
+
+**Dynamic ID Assignment:**
+- ASSIGN dynamically obtained IDs (bookingId, itemId, etc.) TO the test data object immediately after creation
+- USE descriptive property names matching the response (e.g., `bookingId`, not `id`)
+- IMPROVES test readability by keeping all related data in one place
+- ENABLES easy access in subsequent tests within same file
+
+**Structure Example:**
+```javascript
+export const booking_testData = {
+  validBookings: {
+    standardCheckout: {
+      bookingId: String,
+      firstname: utils.generateRandomString(8),
+      lastname: utils.generateRandomString(10),
+      totalprice: utils.getRandomNumber(100, 1000),
+      depositpaid: true,
+      bookingdates: {
+        checkin: utils.getFutureDate(7),
+        checkout: utils.getFutureDate(14)
+      },
+      additionalneeds: 'Breakfast'
+    },
+    extendedStay: {
+      bookingId: String,
+      firstname: utils.generateRandomString(8),
+      lastname: utils.generateRandomString(10),
+      totalprice: utils.getRandomNumber(2000, 5000),
+      depositpaid: false,
+      bookingdates: {
+        checkin: utils.getFutureDate(30),
+        checkout: utils.getFutureDate(60)
+      },
+      additionalneeds: 'Late checkout, Airport transfer'
+    }
+  },
+  invalidBookings: {
+    missingFirstname: {
+      bookingId: String,
+      // firstname: intentionally omitted
+      lastname: utils.generateRandomString(10), 
+      totalprice: utils.getRandomNumber(100, 500),
+      depositpaid: true,
+      bookingdates: {
+        checkin: utils.getFutureDate(7),
+            checkout: utils.getFutureDate(14)
+        },
+      additionalneeds: null
+    },
+    invalidDateFormat: {
+      ddmmyyyy: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalprice: utils.getRandomNumber(100, 500),
+        depositpaid: true,
+        bookingdates: {
+          checkin: utils.getRandomInvalidDate('DD-MM-YYYY'),
+          checkout: utils.getRandomInvalidDate('DD-MM-YYYY')
+        },
+        additionalneeds: null
+      },
+      mmddyyyy: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalprice: utils.getRandomNumber(100, 500),
+        depositpaid: true,
+        bookingdates: {
+          checkin: utils.getRandomInvalidDate('MM/DD/YYYY'),
+          checkout: utils.getRandomInvalidDate('MM/DD/YYYY')
+        },
+        additionalneeds: null
+      }
+    }
+  },
+};
+
+// Usage in tests - assign ID immediately after creation
+cy.booking__create__POST(bookingData).then((response) => {
+  // Assign bookingId to test data for reuse in subsequent tests
+  booking_testData.validBookings.standardCheckout.bookingId = response.body.bookingid;
+  expect(response.status).to.eq(200);
+});
+
+// Later tests can access the ID easily
+cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingId, updatedData);
+```
+
+### Test Data Best Practices
+
+**DO:**
+- ✅ USE randomization FOR all variable data (names, numbers, dates)
+- ✅ DECLARE all fields explicitly WITH their expected types
+- ✅ GROUP test data BY business scenario or test purpose
+- ✅ NAME instances TO describe test purpose
+- ✅ ADD inline comments FOR non-obvious field purposes
+- ✅ STORE dynamically obtained IDs IN test data object immediately after creation
+- ✅ ASSIGN IDs TO the specific test data instance (e.g., `testData.validBookings.standardCheckout.bookingId = response.body.bookingid`)
+- ✅ REUSE test data instances ACROSS tests WITHIN same file
+- ✅ INCLUDE constant properties (names, emails) FOR cleanup identification
+
+**DON'T:**
+- ❌ HARD-CODE dates that will become outdated
+- ❌ USE generic names like `data1`, `test1`, `item1`
+- ❌ OMIT field declarations without documentation
+- ❌ MIX valid and invalid data in same group
+- ❌ DUPLICATE similar data structures
+- ❌ CREATE multiple instances when one can be reused
+- ❌ RELY dynamic/randomized values FOR cleanup queries
+
+### Test Data Cleanup for Independence
+
+**File Independence Requirement:**
+- EACH test file MUST run independently in isolation
+- CLEANUP prevents data pollution from current AND previous test runs
+- ENSURES consistent database state before each test execution
+
+**Cleanup Implementation:**
+- USE existing or CREATE endpoint-specific commands (e.g., `cy.booking__bulkDelete__DELETE()`)
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, static identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
+
+**Cleanup Pattern:**
+```javascript
+// In test file
+const cleanUp = () => {
+    cy.module__bulkDelete__DELETE(token, testData.validItems);
+};
+
+before(() => {
+    cleanUp(); // Remove leftover data from previous runs
+    // Setup test data...
+});
+
+after(() => {
+    cleanUp(); // Clean up data from current run
+});
+```
+
+### Edge Case Testing
+
+**Separate Edge Cases:**
+- CREATE individual test data instances FOR each edge case
+- NAME clearly TO indicate edge case type
+- TEST each edge case in separate `context` block
+- VERIFY specific edge case behavior explicitly
+
+### Invalid Data Testing
+
+**Single Status Code Per Test:**
+- ONE test should validate ONE expected state
+- NO accepting multiple states
+- IF behavior is uncertain, LOG bug and validate ACTUAL behavior
+- SEPARATE tests FOR different validation scenarios
 
 ---
 

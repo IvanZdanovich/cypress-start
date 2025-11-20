@@ -6,10 +6,10 @@ applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 
 ## File Structure
 
-PLACE files: `cypress/integration/api/module-name.submodule-name.api.spec.js` (kebab-case)
-STORE test data: `cypress/test-data/api/module-name.submodule-name.test-data.js` (kebab-case)
-STORE API commands: `cypress/support/commands/api/` (named by module/submodule)
-STORE URLs: `cypress/support/urls/urls.js`
+PLACE files: `${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js` (kebab-case)
+STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
+STORE URLs: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
 
 ## Test Organization
 
@@ -29,9 +29,25 @@ USE `failOnStatusCode: false` ONLY WHEN validating error responses
 REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
 DESCRIBE state PER `context` block FOR clarity
 DEFINE placeholders WITH `String` type, POPULATE during execution
-SAVE dynamically obtained IDs TO test data object
+SAVE dynamically obtained IDs TO test data object immediately after creation
+ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialItem.itemId = response.body.itemId`)
+IMPROVES test readability by keeping all related data in one place
 PREFER generated/randomized data USING `utils` functions FOR edge cases
 DESCRIBE ALL checked states EXTENSIVELY IN test data
+
+### Test Data Cleanup Strategy
+
+### Test Data Cleanup Strategy
+
+**Test File Independence:**
+EACH test file MUST be independent and executable in isolation
+CLEANUP ensures consistent application state before each test execution
+USE API commands FOR efficient cleanup operations
+
+**Cleanup Implementation:**
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
 
 ## API Commands Strategy
 
@@ -48,65 +64,35 @@ ENSURE uniqueness WITHIN file
 
 ## Global Resources
 
-AVAILABLE globally VIA `cypress/support/e2e.js` (NO import needed):
+AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import needed):
 - `utils`, `l10n`, `colours`, `urls`, `errors`, `reqs`, `userRoles`
 - All UI selectors (`loginPage`, etc.)
 
 ## Development Reference
 
-REFER TO Swagger docs IN `development-data/swagger`
-REGISTER new modules IN `app-structure/modules.json` BEFORE creating tests
+REFER TO Swagger docs IN `${WORKSPACE_ROOT}/development-data/swagger`
+REGISTER new modules IN `${WORKSPACE_ROOT}/app-structure/modules.json` BEFORE creating tests
 STRUCTURE: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
 ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
 ---
 
-## Test Data Example
+## Test Data Structure
 
-STORE: `cypress/test-data/api/module-name.submodule-name.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js`
 NAMING: kebab-case files, camelCase variables
 ORGANIZE: By module/submodule
 USE `String` placeholders FOR dynamic IDs
-
-```javascript
-// Import: '../../test-data/api/module-name.submodule-name.test-data'
-export const testData = {
-    namePattern: 'testTitle',
-    validItems: {
-        initialItem: {
-            itemId: String,
-            name: 'RandomName' + utils.extendStringWithRandomSymbols(10),
-            value: utils.getRandomNumber(0, 50)
-        },
-        newItem: {
-            itemId: String,
-            name: 'NewItemName' + utils.extendStringWithRandomSymbols(10),
-            value: utils.getRandomNumber(51, 100)
-        },
-        updatedItem: {
-            name: 'UpdatedName' + utils.extendStringWithRandomSymbols(10),
-            value: utils.getRandomNumber(101, 150)
-        },
-    },
-    invalidItems: {
-        nonExistingId: utils.generateFakeId(),
-        missingName: {value: 25},
-        exceedsMaxLength: {
-            name: 'Name' + utils.extendStringWithRandomSymbols(reqs.textCapacity.itemName),
-            value: 10
-        },
-    },
-};
-```
+FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
 ---
 
 ## API Commands
 
-STORE: `cypress/support/commands/api/module-name.api.commands.js`
+STORE: `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`
 NAMING: kebab-case files, camelCase command names
 PATTERN: `moduleName__Action__METHOD`
-AUTO-IMPORTED VIA `cypress/support/e2e.js`
+AUTO-IMPORTED VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js`
 
 ```javascript
 Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions = {}) => {
@@ -125,7 +111,7 @@ Cypress.Commands.add('moduleName__Create__POST', (token, itemData, restOptions =
 
 ## API URLs
 
-STORE: `cypress/support/urls/urls.js`
+STORE: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
 NAMING: camelCase
 ACCESS: Via global `urls` variable (NO import)
 
@@ -142,7 +128,7 @@ export default { moduleName };
 
 ## Error Messages
 
-STORE: `cypress/support/requirements/error_messages.json`
+STORE: `${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`
 ORGANIZE: By module/submodule
 ACCESS: Via global `errors` variable (NO import)
 
@@ -168,13 +154,24 @@ import {testData} from '../../test-data/api/module-name.submodule-name.test-data
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;
 
-    const cleanUp = () => { /* Cleanup logic */ };
+    const cleanUp = () => {
+        cy.cleanUpByEndpoint(
+            cy.module__getAll__GET,
+            cy.module__delete__DELETE,
+            [
+                { name: testData.validItems.initialItem.name },
+                { name: testData.validItems.newItem.name },
+                { email: testData.validItems.initialItem.email }
+            ],
+            { token: tokenUser, idField: 'itemId' }
+        );
+    };
 
     before(() => {
         cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
             tokenUser = access_token;
         });
-        cleanUp();
+        cleanUp(); // Remove any leftover data from previous test runs
         cy.then(() => {
             cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
                 testData.validItems.initialItem.itemId = response.body.itemId;
@@ -200,7 +197,9 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
         });
     });
 
-    after(() => { cleanUp(); });
+    after(() => { 
+        cleanUp(); // Clean up data created in current test run
+    });
 });
 ```
 
@@ -215,7 +214,7 @@ IDENTIFY API issues:
 - Inconsistent behavior vs documentation
 - Security/validation issues
 
-DOCUMENT IN `bug-log/bug-log.json`:
+DOCUMENT IN `${WORKSPACE_ROOT}/bug-log/bug-log.json`:
 - FORMAT: `BUG-[MODULE]-[NUMBER]`
 - INCLUDE: all required fields per main instructions
 

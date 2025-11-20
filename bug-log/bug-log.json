@@ -1,109 +1,170 @@
 [
   {
-    "id": "BUG-RESTFUL-001",
+    "id": "BUG-AUTH-001",
     "module": "RestfulBooker",
     "submodule": "Auth",
-    "severity": "Medium",
+    "severity": "High",
     "status": "Open",
-    "description": "Authentication endpoint returns 200 status code for invalid credentials instead of 401 Unauthorized",
-    "expectedBehavior": "Should return 401 Unauthorized status code",
-    "actualBehavior": "Returns 200 OK with reason: 'Bad credentials'",
+    "description": "API returns 200 OK instead of 401 Unauthorized for invalid credentials",
+    "expectedBehavior": "Should return 401 Unauthorized with error message when invalid credentials are provided",
+    "actualBehavior": "Returns 200 OK with { reason: 'Bad credentials' }",
     "endpoint": "POST /auth",
     "reproducible": true,
-    "dateReported": "2025-11-06",
-    "notes": "This makes it difficult to distinguish between successful authentication and failed authentication based on status code alone"
+    "dateReported": "2025-11-11",
+    "affectedFields": [],
+    "notes": "Incorrect HTTP status code violates REST standards and represents a security concern. Successful authentication and failed authentication should have different status codes."
   },
   {
-    "id": "BUG-RESTFUL-002",
+    "id": "BUG-BOOKING-002",
     "module": "RestfulBooker",
     "submodule": "Booking",
     "severity": "High",
     "status": "Open",
-    "description": "Booking creation returns 500 Internal Server Error for missing required fields instead of 400 Bad Request",
-    "expectedBehavior": "Should return 400 Bad Request with validation error details",
+    "description": "API returns 500 Internal Server Error when required fields are missing instead of 400 Bad Request",
+    "expectedBehavior": "Should return 400 Bad Request with validation error specifying which required field is missing",
     "actualBehavior": "Returns 500 Internal Server Error",
     "endpoint": "POST /booking",
     "reproducible": true,
-    "dateReported": "2025-11-06",
-    "affectedFields": [
-      "firstname",
-      "lastname",
-      "totalprice",
-      "depositpaid",
-      "bookingdates",
-      "bookingdates.checkin",
-      "bookingdates.checkout"
-    ],
-    "notes": "500 errors indicate server issues, not client validation errors. This masks actual validation failures."
+    "dateReported": "2025-11-11",
+    "affectedFields": ["firstname", "lastname", "totalPrice", "depositPaid", "bookingDates", "bookingDates.checkin", "bookingDates.checkout"],
+    "notes": "Missing validation for required fields. Poor error handling - server error instead of validation error. Affects all required booking fields."
   },
   {
-    "id": "BUG-RESTFUL-003",
-    "module": "RestfulBooker",
-    "submodule": "Booking",
-    "severity": "Medium",
-    "status": "Open",
-    "description": "Booking operations return 405 Method Not Allowed for non-existing booking IDs instead of 404 Not Found",
-    "expectedBehavior": "Should return 404 Not Found for non-existing resources",
-    "actualBehavior": "Returns 405 Method Not Allowed",
-    "endpoints": [
-      "PUT /booking/{id}",
-      "PATCH /booking/{id}",
-      "DELETE /booking/{id}"
-    ],
-    "reproducible": true,
-    "dateReported": "2025-11-06",
-    "notes": "405 typically indicates the HTTP method is not supported, not that the resource doesn't exist"
-  },
-  {
-    "id": "BUG-RESTFUL-004",
-    "module": "RestfulBooker",
-    "submodule": "Booking",
-    "severity": "Low",
-    "status": "Open",
-    "description": "DELETE booking returns 201 Created instead of 204 No Content",
-    "expectedBehavior": "Should return 204 No Content or 200 OK for successful deletion",
-    "actualBehavior": "Returns 201 Created",
-    "endpoint": "DELETE /booking/{id}",
-    "reproducible": true,
-    "dateReported": "2025-11-06",
-    "notes": "201 status code is semantically incorrect for DELETE operations as nothing is being created"
-  },
-  {
-    "id": "BUG-RESTFUL-005",
-    "module": "RestfulBooker",
-    "submodule": "Booking",
-    "severity": "Medium",
-    "status": "Open",
-    "description": "API accepts and creates bookings with empty string values for firstname and lastname fields",
-    "expectedBehavior": "Should return 400 Bad Request and reject bookings with empty strings for required name fields",
-    "actualBehavior": "Returns 200 OK and creates booking with empty firstname/lastname",
-    "endpoint": "POST /booking",
-    "reproducible": true,
-    "dateReported": "2025-11-06",
-    "affectedFields": [
-      "firstname",
-      "lastname"
-    ],
-    "notes": "Empty strings should be treated as invalid input for name fields. The API distinguishes between missing fields (returns 500) and empty strings (returns 200), but should reject both as invalid."
-  },
-  {
-    "id": "BUG-RESTFUL-006",
+    "id": "BUG-BOOKING-003",
     "module": "RestfulBooker",
     "submodule": "Booking",
     "severity": "High",
     "status": "Open",
-    "description": "Booking search by date range and combined filters returns empty results even when matching bookings exist",
-    "expectedBehavior": "Should return bookings that match the specified date range and filter criteria",
-    "actualBehavior": "Returns empty array even for recently created bookings that match the criteria",
-    "endpoint": "GET /booking",
+    "description": "Inconsistent type validation - some invalid types accepted, others cause server errors",
+    "expectedBehavior": "Should consistently return 400 Bad Request with clear type validation error for all invalid data types (e.g., 'firstname must be a string', 'totalPrice must be a number')",
+    "actualBehavior": "Inconsistent behavior: (1) totalPrice as string 'not_a_number' returns 200 OK and creates booking, (2) depositPaid as string 'yes' returns 200 OK and creates booking, (3) firstname as number 12345 returns 500 Internal Server Error, (4) lastname as boolean true returns 500 Internal Server Error",
+    "endpoint": "POST /booking",
     "reproducible": true,
-    "dateReported": "2025-11-06",
-    "affectedParameters": [
-      "checkin",
-      "checkout",
-      "combination of firstname, lastname, checkin, checkout"
-    ],
-    "notes": "The API's filtering functionality is unreliable. Date range searches and combined parameter searches often return empty arrays even when bookings matching the criteria were just created. Single parameter searches (firstname or lastname alone) work more reliably. This makes the search functionality nearly unusable for production use."
+    "dateReported": "2025-11-11",
+    "dateUpdated": "2025-11-20",
+    "affectedFields": ["totalPrice", "depositPaid", "firstname", "lastname"],
+    "notes": "Type validation is completely inconsistent. Some invalid types are silently accepted (data corruption), while others cause unhandled server errors (500). This indicates: (1) Missing validation for numeric/boolean fields allows wrong types to be stored, (2) String processing code crashes when receiving non-string types, (3) No centralized type validation or error handling. All should consistently return 400 with descriptive validation errors."
+  },
+  {
+    "id": "BUG-BOOKING-004",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "API accepts negative price values which violates business logic",
+    "expectedBehavior": "Should return 400 Bad Request - price must be positive number",
+    "actualBehavior": "Accepts negative values or returns 500 error",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-11",
+    "affectedFields": ["totalPrice"],
+    "notes": "Business logic violation - negative prices don't make sense in booking context. Represents financial integrity issue."
+  },
+  {
+    "id": "BUG-BOOKING-005",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "API may accept bookings where checkout date is before checkin date",
+    "expectedBehavior": "Should return 400 Bad Request - checkout must be after or equal to checkin",
+    "actualBehavior": "May accept illogical date combinations",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-11",
+    "affectedFields": ["bookingDates.checkin", "bookingDates.checkout"],
+    "notes": "Business logic validation missing for date relationships. Booking cannot end before it starts."
+  },
+  {
+    "id": "BUG-BOOKING-006",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "High",
+    "status": "Open",
+    "description": "API accepts empty strings for required name fields",
+    "expectedBehavior": "Should return 400 Bad Request - firstname and lastname cannot be empty",
+    "actualBehavior": "Returns 200 OK and creates booking with empty strings for required fields (firstname, lastname). Optional field (additionalNeeds) is omitted/undefined in response when empty string is sent.",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-11-11",
+    "dateUpdated": "2025-11-20",
+    "affectedFields": ["firstname", "lastname", "additionalNeeds"],
+    "notes": "Validation bypass - empty strings should not be allowed for required fields. Data quality issue. API behavior is inconsistent: required fields (firstname, lastname) return empty strings in response, while optional field (additionalNeeds) is omitted or returned as undefined when empty string is provided."
+  },
+  {
+    "id": "BUG-BOOKING-007",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "API returns 405 Method Not Allowed instead of 404 Not Found for non-existing resources",
+    "expectedBehavior": "Should return 404 Not Found when attempting to update/patch/delete a booking that doesn't exist",
+    "actualBehavior": "Returns 405 Method Not Allowed",
+    "endpoint": "PUT /booking/:id, PATCH /booking/:id, DELETE /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-11",
+    "affectedFields": [],
+    "notes": "Incorrect HTTP status code. 405 means the method is not allowed for the resource, but 404 means resource not found. Affects PUT, PATCH, and DELETE operations."
+  },
+  {
+    "id": "BUG-BOOKING-008",
+    "module": "RestfulBooker",
+    "submodule": "Booking",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "API returns 201 Created instead of 204 No Content for successful DELETE operations",
+    "expectedBehavior": "Should return 204 No Content for successful deletion (or 200 OK with confirmation message)",
+    "actualBehavior": "Returns 201 Created",
+    "endpoint": "DELETE /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-11",
+    "affectedFields": [],
+    "notes": "Incorrect HTTP status code. 201 is for resource creation, not deletion. Should be 204 No Content or 200 OK."
+  },
+  {
+    "id": "BUG-BOOKING-009",
+    "module": "Booking",
+    "submodule": "Create",
+    "severity": "High",
+    "status": "Open",
+    "description": "API accepts invalid date formats without validation",
+    "expectedBehavior": "Return 400 Bad Request with error message 'Date format must be YYYY-MM-DD'",
+    "actualBehavior": "Returns 200 OK and creates booking with invalid date format (accepts formats other than YYYY-MM-DD)",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-01-XX",
+    "affectedFields": ["bookingdates.checkin", "bookingdates.checkout"],
+    "notes": "No date format validation. API accepts various invalid formats (DD-MM-YYYY, MM/DD/YYYY, etc.) which may cause parsing issues in downstream systems or reports."
+  },
+  {
+    "id": "BUG-BOOKING-010",
+    "module": "Booking",
+    "submodule": "PartialUpdate",
+    "severity": "High",
+    "status": "Open",
+    "description": "PATCH with partial bookingDates corrupts the non-updated date field to '0NaN-aN-aN'",
+    "expectedBehavior": "PATCH /booking/:id with { bookingDates: { checkin: 'YYYY-MM-DD' } } should update checkin and leave checkout unchanged. Similarly, updating only checkout should leave checkin unchanged.",
+    "actualBehavior": "When PATCH includes bookingDates object with only one date field (checkin or checkout), the other date field is corrupted to '0NaN-aN-aN'",
+    "endpoint": "PATCH /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-20",
+    "affectedFields": ["bookingdates.checkin", "bookingdates.checkout"],
+    "notes": "Critical data corruption bug in partial updates. The API fails to preserve existing date values when only one date field is provided in a PATCH request. Workaround: Always send both checkin and checkout dates in PATCH requests, even when only updating one. This defeats the purpose of PATCH (partial updates) and forces clients to fetch current state before updating. Root cause likely improper object merging where missing fields are set to undefined/null instead of being preserved."
+  },
+  {
+    "id": "BUG-BOOKING-011",
+    "module": "Booking",
+    "submodule": "Retrieve",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Weak ID validation - API truncates float IDs to integers instead of rejecting them",
+    "expectedBehavior": "Should return 400 Bad Request with error message 'Booking ID must be a positive integer' when non-integer IDs are provided (floats, strings, negative numbers, zero, special characters)",
+    "actualBehavior": "Inconsistent behavior: (1) Float IDs (123.456) are truncated to integers (123) and processed, potentially returning 200 if booking exists or 404 if not, (2) String IDs return 404, (3) Negative IDs return 404, (4) Zero returns 404, (5) Special characters return 404",
+    "endpoint": "GET /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-20",
+    "affectedFields": ["id"],
+    "notes": "ID validation is weak and inconsistent. Float truncation is particularly problematic as 123.456 becomes 123, which may unintentionally return a different booking than requested. Should implement proper validation to: (1) Reject non-integer values with 400, (2) Reject negative/zero values with 400, (3) Return 404 only for valid integer IDs that don't exist. This affects all ID-based endpoints (GET, PUT, PATCH, DELETE)."
   },
   {
     "id": "BUG-LOGIN-001",
@@ -117,10 +178,7 @@
     "page": "Login Page",
     "reproducible": true,
     "dateReported": "2025-11-06",
-    "affectedFields": [
-      "username",
-      "password"
-    ],
+    "affectedFields": ["username", "password"],
     "notes": "This creates confusion for users as it incorrectly suggests the username field also has an error when it contains valid data. The error message correctly states 'Password is required' but the visual feedback is misleading."
   },
   {
@@ -135,10 +193,7 @@
     "page": "Login Page",
     "reproducible": true,
     "dateReported": "2025-11-06",
-    "affectedFields": [
-      "username",
-      "password"
-    ],
+    "affectedFields": ["username", "password"],
     "notes": "This creates confusion for users as it incorrectly suggests the password field also has an error when it contains valid data. The error message correctly states 'Username is required' but the visual feedback is misleading."
   },
   {
@@ -153,9 +208,7 @@
     "page": "Footer Component",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedElements": [
-      "Twitter social link icon"
-    ],
+    "affectedElements": ["Twitter social link icon"],
     "notes": "Twitter rebranded to X and changed domain from twitter.com to x.com. While twitter.com still redirects, the canonical URL should be updated to x.com for consistency."
   },
   {
@@ -170,9 +223,7 @@
     "page": "Footer Component",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedElements": [
-      "Terms of Service link"
-    ],
+    "affectedElements": ["Terms of Service link"],
     "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
   },
   {
@@ -187,9 +238,7 @@
     "page": "Footer Component",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedElements": [
-      "Privacy Policy link"
-    ],
+    "affectedElements": ["Privacy Policy link"],
     "notes": "The copyright text includes 'Terms of Service | Privacy Policy' but these are not implemented as clickable links. This creates inconsistency and prevents users from accessing important legal documentation."
   },
   {
@@ -204,9 +253,7 @@
     "page": "Inventory Page",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedFields": [
-      "Product title"
-    ],
+    "affectedFields": ["Product title"],
     "notes": "One product card consistently shows wrong title. This appears to be a data issue where the wrong product name is mapped to the product. Affects product listing, cart, and product detail pages."
   },
   {
@@ -221,9 +268,7 @@
     "page": "Inventory Page",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedFields": [
-      "Product description"
-    ],
+    "affectedFields": ["Product description"],
     "notes": "One product card consistently shows wrong description. This appears to be a data issue where the wrong description is mapped to the product. The description text uses unconventional naming pattern (carry.allTheThings()) suggesting test data."
   },
   {
@@ -237,10 +282,7 @@
     "page": "Checkout Overview Page",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedFields": [
-      "Item total",
-      "Total price"
-    ],
+    "affectedFields": ["Item total", "Total price"],
     "notes": "This is a common JavaScript floating-point arithmetic issue. The application should implement proper decimal handling (e.g., using toFixed(2) or a decimal library) to prevent precision errors in financial calculations. While the display may round correctly, the underlying calculation can still cause comparison failures in automated tests."
   },
   {
@@ -255,9 +297,7 @@
     "page": "Cart Page",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedElements": [
-      "Checkout button"
-    ],
+    "affectedElements": ["Checkout button"],
     "notes": "This is a UX issue that allows users to attempt checkout with an empty cart, which may lead to errors or confusion in the checkout flow. The button should be disabled (or hidden) when cart is empty."
   },
   {
@@ -272,10 +312,7 @@
     "page": "Header Component",
     "reproducible": true,
     "dateReported": "2025-11-07",
-    "affectedElements": [
-      "Reset App State button",
-      "Product Add/Remove buttons"
-    ],
+    "affectedElements": ["Reset App State button", "Product Add/Remove buttons"],
     "notes": "This creates inconsistent state where the cart is empty (badge gone) but UI shows products as added (Remove buttons). Users cannot add products again without a page reload. This is a state management issue in the Reset App State functionality."
   },
   {
@@ -291,12 +328,7 @@
     "reproducible": true,
     "dateReported": "2025-11-07",
     "dateClosed": "2025-11-07",
-    "affectedElements": [
-      "LinkedIn social link",
-      "Twitter social link",
-      "Facebook social link"
-    ],
+    "affectedElements": ["LinkedIn social link", "Twitter social link", "Facebook social link"],
     "notes": "The error appears to be related to the Backtrace error reporting service not having proper credentials configured. While this doesn't prevent navigation, it causes uncaught exceptions that would normally fail tests. Test refactored to validate link attributes (href, target) instead of performing actual navigation to external sites, which is more reliable and avoids external dependencies. The bug remains in the application but is no longer relevant for testing purposes."
   }
 ]
-

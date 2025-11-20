@@ -1,368 +1,298 @@
+/**
+ * Test Data for RestfulBooker Booking API
+ *
+ * Justifications for value ranges:
+ * - totalPrice (1-100,000): Based on real-world hotel pricing:
+ *   - Min: Budget hostels start around $10-20/night
+ *   - Max: Luxury suites can reach $10,000+/night for extended stays
+ *   - Buffer: 10x multiplier for edge case testing
+ *
+ * - Stay duration (1-365 days):
+ *   - Min: 1 day for day-use bookings
+ *   - Max: 365 days for extended stay programs, corporate housing
+ *
+ * - Name length (5-10 chars randomized):
+ *   - Ensures uniqueness across test runs
+ *   - Matches typical name lengths
+ *
+ * - Dates: All dates are dynamic and relative to current date
+ *   - Prevents tests from failing due to past dates
+ *   - Simulates real booking scenarios (future reservations)
+ */
+
 export const booking_testData = {
-  auth: {
-    validCredentials: {
-      username: 'admin',
-      password: 'password123',
-    },
-    invalidCredentials: {
-      username: 'invalid',
-      password: 'invalid',
-    },
-  },
-
   validBookings: {
-    booking1: {
+    standard: {
       bookingId: String,
-      firstname: 'John' + utils.generateRandomString(5),
-      lastname: 'Doe' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(100, 500),
+      firstname: utils.generateRandomString(8),
+      lastname: utils.generateRandomString(10),
+      totalPrice: utils.getRandomNumber(100, 1000),
       depositPaid: true,
       bookingDates: {
-        checkin: '2025-12-01',
-        checkout: '2025-12-15',
+        checkin: utils.getFutureDate(7),
+        checkout: utils.getFutureDate(14),
       },
       additionalNeeds: 'Breakfast',
     },
-    booking2: {
+    withoutAdditionalNeeds: {
       bookingId: String,
-      firstname: 'Jane' + utils.generateRandomString(5),
-      lastname: 'Smith' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(200, 600),
-      depositPaid: false,
-      bookingDates: {
-        checkin: '2026-01-10',
-        checkout: '2026-01-20',
-      },
-      additionalNeeds: 'Lunch',
-    },
-    booking3: {
-      bookingId: String,
-      firstname: 'Bob' + utils.generateRandomString(5),
-      lastname: 'Wilson' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(300, 700),
+      firstname: utils.generateRandomString(8),
+      lastname: utils.generateRandomString(10),
+      totalPrice: utils.getRandomNumber(100, 1000),
       depositPaid: true,
       bookingDates: {
-        checkin: '2026-02-05',
-        checkout: '2026-02-25',
+        checkin: utils.getFutureDate(7),
+        checkout: utils.getFutureDate(14),
       },
-      additionalNeeds: 'Dinner',
     },
-    bookingWithoutAdditionalNeeds: {
-      bookingId: String,
-      firstname: 'Alice' + utils.generateRandomString(5),
-      lastname: 'Brown' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(150, 400),
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-03-01',
-        checkout: '2026-03-10',
+    edgeCases: {
+      minimalPrice: {
+        bookingId: String,
+        firstname: utils.generateRandomString(6),
+        lastname: utils.generateRandomString(8),
+        totalPrice: 1,
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(3),
+          checkout: utils.getFutureDate(5),
+        },
+        additionalNeeds: 'None',
       },
-      additionalNeeds: '',
-    },
-    bookingWithLongStay: {
-      bookingId: String,
-      firstname: 'Charlie' + utils.generateRandomString(5),
-      lastname: 'Davis' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(1000, 3000),
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-04-01',
-        checkout: '2026-06-30',
+      maximalPrice: {
+        bookingId: String,
+        firstname: utils.generateRandomString(6),
+        lastname: utils.generateRandomString(8),
+        totalPrice: 100000,
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(10),
+          checkout: utils.getFutureDate(12),
+        },
+        additionalNeeds: 'VIP Suite',
       },
-      additionalNeeds: 'Breakfast, Lunch, Dinner',
-    },
-    bookingWithMinimalPrice: {
-      bookingId: String,
-      firstname: 'Eva' + utils.generateRandomString(5),
-      lastname: 'Martinez' + utils.generateRandomString(5),
-      totalPrice: 1,
-      depositPaid: false,
-      bookingDates: {
-        checkin: '2026-05-15',
-        checkout: '2026-05-16',
+      sameDayCheckout: {
+        bookingId: String,
+        firstname: utils.generateRandomString(7),
+        lastname: utils.generateRandomString(9),
+        totalPrice: utils.getRandomNumber(50, 200),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(5),
+          checkout: utils.getFutureDate(5),
+        },
+        additionalNeeds: 'Day use only',
       },
-      additionalNeeds: '',
-    },
-    bookingWithMaximalPrice: {
-      bookingId: String,
-      firstname: 'Frank' + utils.generateRandomString(5),
-      lastname: 'Garcia' + utils.generateRandomString(5),
-      totalPrice: 999999,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-06-01',
-        checkout: '2026-12-31',
+      longStay: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(5000, 10000),
+        depositPaid: false,
+        bookingDates: {
+          checkin: utils.getFutureDate(30),
+          checkout: utils.getFutureDate(120),
+        },
+        additionalNeeds: 'Extended stay discount',
       },
-      additionalNeeds: 'All inclusive package',
-    },
-    bookingWithSameCheckinCheckout: {
-      bookingId: String,
-      firstname: 'Grace' + utils.generateRandomString(5),
-      lastname: 'Lee' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(50, 150),
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-07-15',
-        checkout: '2026-07-15',
+      depositNotPaid: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: false,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: 'Payment on arrival',
       },
-      additionalNeeds: 'Day use only',
     },
   },
-
-  updatedBookingData: {
-    fullUpdate: {
-      firstname: 'Updated' + utils.generateRandomString(5),
-      lastname: 'Name' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(500, 1000),
-      depositPaid: false,
-      bookingDates: {
-        checkin: '2026-08-01',
-        checkout: '2026-08-15',
-      },
-      additionalNeeds: 'Updated needs',
-    },
-    partialUpdateFirstname: {
-      firstname: 'PartialUpdate' + utils.generateRandomString(5),
-    },
-    partialUpdateLastname: {
-      lastname: 'PartialLastname' + utils.generateRandomString(5),
-    },
-    partialUpdatePrice: {
-      totalPrice: utils.getRandomNumber(800, 1200),
-    },
-    partialUpdateDeposit: {
-      depositPaid: true,
-    },
-    partialUpdateDates: {
-      bookingDates: {
-        checkin: '2026-09-01',
-        checkout: '2026-09-30',
-      },
-    },
-    partialUpdateAdditionalNeeds: {
-      additionalNeeds: 'Partial update additional needs',
-    },
-    partialUpdateMultipleFields: {
-      firstname: 'Multi' + utils.generateRandomString(5),
-      totalPrice: utils.getRandomNumber(600, 900),
-      depositPaid: true,
-    },
-  },
-
   invalidBookings: {
-    missingFirstname: {
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
+    missingRequired: {
+      baseBooking: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
+      requiredFields: ['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout'],
     },
-    missingLastname: {
-      firstname: 'John',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
+    invalidTypes: {
+      priceAsString: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: 'not_a_number',
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
-    },
-    missingTotalPrice: {
-      firstname: 'John',
-      lastname: 'Smith',
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
+      depositAsString: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: 'yes',
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
-    },
-    missingDepositPaid: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
+      firstnameAsNumber: {
+        firstname: 12345,
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
-    },
-    missingBookingDates: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      additionalNeeds: 'Breakfast',
-    },
-    missingCheckin: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkout: '2026-01-10',
+      lastnameAsBoolean: {
+        firstname: utils.generateRandomString(8),
+        lastname: true,
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
     },
-    missingCheckout: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
+    invalidValues: {
+      negativePrice: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: -100,
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
+      zeroPrice: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: 0,
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: 'Promotional offer',
+      },
+      invalidDateFormat: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: '01-12-2025',
+          checkout: '15-12-2025',
+        },
+        additionalNeeds: null,
+      },
+      checkoutBeforeCheckin: {
+        bookingId: String,
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(14),
+          checkout: utils.getFutureDate(7),
+        },
+        additionalNeeds: null,
+      },
     },
-    invalidDateFormat: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '01-01-2026',
-        checkout: '10-01-2026',
+    emptyValues: {
+      baseBooking: {
+        firstname: utils.generateRandomString(8),
+        lastname: utils.generateRandomString(10),
+        totalPrice: utils.getRandomNumber(100, 500),
+        depositPaid: true,
+        bookingDates: {
+          checkin: utils.getFutureDate(7),
+          checkout: utils.getFutureDate(14),
+        },
+        additionalNeeds: null,
       },
-      additionalNeeds: 'Breakfast',
-    },
-    checkoutBeforeCheckin: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-10',
-        checkout: '2026-01-01',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    negativeTotalPrice: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: -100,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    zeroTotalPrice: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 0,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    invalidDepositPaidType: {
-      firstname: 'John',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: 'yes',
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    emptyFirstname: {
-      firstname: '',
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    emptyLastname: {
-      firstname: 'John',
-      lastname: '',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    nullFirstname: {
-      firstname: null,
-      lastname: 'Smith',
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
-    },
-    nullLastname: {
-      firstname: 'John',
-      lastname: null,
-      totalPrice: 200,
-      depositPaid: true,
-      bookingDates: {
-        checkin: '2026-01-01',
-        checkout: '2026-01-10',
-      },
-      additionalNeeds: 'Breakfast',
+      emptyStringFields: ['firstname', 'lastname', 'additionalNeeds'],
     },
   },
-
-  searchFilters: {
-    byFirstname: {
-      firstname: String,
+  auth: {
+    invalidCredentials: {
+      username: 'invalid_user',
+      password: 'invalid_password',
     },
-    byLastname: {
-      lastname: String,
+  },
+  updates: {
+    full: {
+      firstname: utils.generateRandomString(10),
+      lastname: utils.generateRandomString(12),
+      totalPrice: utils.getRandomNumber(200, 800),
+      depositPaid: false,
+      bookingDates: {
+        checkin: utils.getFutureDate(20),
+        checkout: utils.getFutureDate(25),
+      },
+      additionalNeeds: 'Updated requirements',
     },
-    byFullname: {
-      firstname: String,
-      lastname: String,
+    partial: {
+      singleFieldUpdates: {
+        firstname: utils.generateRandomString(9),
+        lastname: utils.generateRandomString(11),
+        totalPrice: utils.getRandomNumber(300, 700),
+        additionalNeeds: 'Partial update test',
+      },
+      updateCheckinOnly: {
+        bookingDates: {
+          checkin: utils.getFutureDate(15),
+        },
+      },
+      updateCheckoutOnly: {
+        bookingDates: {
+          checkout: utils.getFutureDate(30),
+        },
+      },
+      multipleFields: {
+        firstname: utils.generateRandomString(7),
+        totalPrice: utils.getRandomNumber(150, 350),
+        depositPaid: true,
+        additionalNeeds: 'Multiple fields update',
+      },
     },
-    byCheckinDate: {
-      checkin: '2026-01-10',
-    },
-    byCheckoutDate: {
-      checkout: '2026-01-20',
-    },
+  },
+  filters: {
     byDateRange: {
-      checkin: '2026-02-05',
-      checkout: '2026-02-25',
+      checkin: utils.getFutureDate(7),
+      checkout: utils.getFutureDate(14),
     },
-    byAllFilters: {
-      firstname: String,
-      lastname: String,
-      checkin: '2025-12-01',
-      checkout: '2025-12-15',
-    },
-    nonExistingName: {
-      firstname: 'NonExisting' + utils.generateRandomString(10),
-      lastname: 'NotFound' + utils.generateRandomString(10),
+    nonExisting: {
+      firstname: utils.generateRandomString(15),
+      lastname: utils.generateRandomString(15),
     },
   },
-
-  nonExistingIds: {
-    id1: 999999999,
-    id2: 888888888,
-    id3: 777777777,
-  },
-
-  invalidIds: {
-    negativeId: -1,
-    zeroId: 0,
-    stringId: 'invalid',
-    specialCharsId: '!@#$%',
-    nullId: null,
-    undefinedId: undefined,
+  ids: {
+    nonExisting: [999999, 888888, 777777],
+    invalid: {
+      string: 'not_a_number',
+      negative: -1,
+      zero: 0,
+      float: 123.456,
+      special: 'abc@123',
+    },
   },
 };
