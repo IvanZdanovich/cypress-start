@@ -2,14 +2,35 @@ import { booking_testData } from '../../test-data/api/restful-booker.booking.api
 
 describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false }, () => {
   let authToken;
+  let adminUser;
 
-  context('RestfulBooker.Auth.GET: When valid credentials are provided', () => {
-    let adminUser;
-    before(() => {
+  // Cleanup function to ensure test independence
+  const cleanUp = () => {
+    cy.restfullBooker__bulkDelete__DELETE(authToken, booking_testData);
+  };
+
+  before(() => {
+    cy.then(() => {
       cy.getUserDataByRole(userRoles.ADMIN_API).then((user) => {
         adminUser = user;
       });
     });
+    cy.then(() => {
+      cy.restfullBooker__getAuthToken__GET(adminUser).then((response) => {
+        authToken = response.body.token;
+      });
+    });
+
+    // Clean up any leftover data from previous test runs
+    cleanUp();
+  });
+
+  after(() => {
+    // Clean up data created in current test run
+    cleanUp();
+  });
+
+  context('RestfulBooker.Auth.GET: When valid credentials are provided', () => {
     it('RestfulBooker.Auth.GET: Then return 200 status code and authentication token is generated', () => {
       cy.restfullBooker__getAuthToken__GET(adminUser).then((response) => {
         expect(response.status).to.eq(200);
