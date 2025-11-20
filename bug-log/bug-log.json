@@ -33,16 +33,17 @@
     "id": "BUG-BOOKING-003",
     "module": "RestfulBooker",
     "submodule": "Booking",
-    "severity": "Medium",
+    "severity": "High",
     "status": "Open",
-    "description": "Weak type validation allows invalid data types or returns 500 error",
-    "expectedBehavior": "Should return 400 Bad Request with clear type validation error when invalid data types are provided",
-    "actualBehavior": "Either accepts invalid types or returns 500 Internal Server Error",
+    "description": "Inconsistent type validation - some invalid types accepted, others cause server errors",
+    "expectedBehavior": "Should consistently return 400 Bad Request with clear type validation error for all invalid data types (e.g., 'firstname must be a string', 'totalPrice must be a number')",
+    "actualBehavior": "Inconsistent behavior: (1) totalPrice as string 'not_a_number' returns 200 OK and creates booking, (2) depositPaid as string 'yes' returns 200 OK and creates booking, (3) firstname as number 12345 returns 500 Internal Server Error, (4) lastname as boolean true returns 500 Internal Server Error",
     "endpoint": "POST /booking",
     "reproducible": true,
     "dateReported": "2025-11-11",
-    "affectedFields": ["totalPrice", "depositPaid", "bookingDates", "firstname", "lastname"],
-    "notes": "Type validation is weak or missing. Should validate that totalPrice is number, depositPaid is boolean, bookingDates is object, names are strings, etc."
+    "dateUpdated": "2025-11-20",
+    "affectedFields": ["totalPrice", "depositPaid", "firstname", "lastname"],
+    "notes": "Type validation is completely inconsistent. Some invalid types are silently accepted (data corruption), while others cause unhandled server errors (500). This indicates: (1) Missing validation for numeric/boolean fields allows wrong types to be stored, (2) String processing code crashes when receiving non-string types, (3) No centralized type validation or error handling. All should consistently return 400 with descriptive validation errors."
   },
   {
     "id": "BUG-BOOKING-004",
@@ -82,12 +83,13 @@
     "status": "Open",
     "description": "API accepts empty strings for required name fields",
     "expectedBehavior": "Should return 400 Bad Request - firstname and lastname cannot be empty",
-    "actualBehavior": "Returns 200 OK and creates booking with empty strings",
+    "actualBehavior": "Returns 200 OK and creates booking with empty strings for required fields (firstname, lastname). Optional field (additionalNeeds) is omitted/undefined in response when empty string is sent.",
     "endpoint": "POST /booking",
     "reproducible": true,
     "dateReported": "2025-11-11",
-    "affectedFields": ["firstname", "lastname"],
-    "notes": "Validation bypass - empty strings should not be allowed for required fields. Data quality issue."
+    "dateUpdated": "2025-11-20",
+    "affectedFields": ["firstname", "lastname", "additionalNeeds"],
+    "notes": "Validation bypass - empty strings should not be allowed for required fields. Data quality issue. API behavior is inconsistent: required fields (firstname, lastname) return empty strings in response, while optional field (additionalNeeds) is omitted or returned as undefined when empty string is provided."
   },
   {
     "id": "BUG-BOOKING-007",
@@ -133,6 +135,36 @@
     "dateReported": "2025-01-XX",
     "affectedFields": ["bookingdates.checkin", "bookingdates.checkout"],
     "notes": "No date format validation. API accepts various invalid formats (DD-MM-YYYY, MM/DD/YYYY, etc.) which may cause parsing issues in downstream systems or reports."
+  },
+  {
+    "id": "BUG-BOOKING-010",
+    "module": "Booking",
+    "submodule": "PartialUpdate",
+    "severity": "High",
+    "status": "Open",
+    "description": "PATCH with partial bookingDates corrupts the non-updated date field to '0NaN-aN-aN'",
+    "expectedBehavior": "PATCH /booking/:id with { bookingDates: { checkin: 'YYYY-MM-DD' } } should update checkin and leave checkout unchanged. Similarly, updating only checkout should leave checkin unchanged.",
+    "actualBehavior": "When PATCH includes bookingDates object with only one date field (checkin or checkout), the other date field is corrupted to '0NaN-aN-aN'",
+    "endpoint": "PATCH /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-20",
+    "affectedFields": ["bookingdates.checkin", "bookingdates.checkout"],
+    "notes": "Critical data corruption bug in partial updates. The API fails to preserve existing date values when only one date field is provided in a PATCH request. Workaround: Always send both checkin and checkout dates in PATCH requests, even when only updating one. This defeats the purpose of PATCH (partial updates) and forces clients to fetch current state before updating. Root cause likely improper object merging where missing fields are set to undefined/null instead of being preserved."
+  },
+  {
+    "id": "BUG-BOOKING-011",
+    "module": "Booking",
+    "submodule": "Retrieve",
+    "severity": "Medium",
+    "status": "Open",
+    "description": "Weak ID validation - API truncates float IDs to integers instead of rejecting them",
+    "expectedBehavior": "Should return 400 Bad Request with error message 'Booking ID must be a positive integer' when non-integer IDs are provided (floats, strings, negative numbers, zero, special characters)",
+    "actualBehavior": "Inconsistent behavior: (1) Float IDs (123.456) are truncated to integers (123) and processed, potentially returning 200 if booking exists or 404 if not, (2) String IDs return 404, (3) Negative IDs return 404, (4) Zero returns 404, (5) Special characters return 404",
+    "endpoint": "GET /booking/:id",
+    "reproducible": true,
+    "dateReported": "2025-11-20",
+    "affectedFields": ["id"],
+    "notes": "ID validation is weak and inconsistent. Float truncation is particularly problematic as 123.456 becomes 123, which may unintentionally return a different booking than requested. Should implement proper validation to: (1) Reject non-integer values with 400, (2) Reject negative/zero values with 400, (3) Return 404 only for valid integer IDs that don't exist. This affects all ID-based endpoints (GET, PUT, PATCH, DELETE)."
   },
   {
     "id": "BUG-LOGIN-001",
