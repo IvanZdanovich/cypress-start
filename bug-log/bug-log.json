@@ -120,6 +120,21 @@
     "notes": "Incorrect HTTP status code. 201 is for resource creation, not deletion. Should be 204 No Content or 200 OK."
   },
   {
+    "id": "BUG-BOOKING-009",
+    "module": "Booking",
+    "submodule": "Create",
+    "severity": "High",
+    "status": "Open",
+    "description": "API accepts invalid date formats without validation",
+    "expectedBehavior": "Return 400 Bad Request with error message 'Date format must be YYYY-MM-DD'",
+    "actualBehavior": "Returns 200 OK and creates booking with invalid date format (accepts formats other than YYYY-MM-DD)",
+    "endpoint": "POST /booking",
+    "reproducible": true,
+    "dateReported": "2025-01-XX",
+    "affectedFields": ["bookingdates.checkin", "bookingdates.checkout"],
+    "notes": "No date format validation. API accepts various invalid formats (DD-MM-YYYY, MM/DD/YYYY, etc.) which may cause parsing issues in downstream systems or reports."
+  },
+  {
     "id": "BUG-LOGIN-001",
     "module": "LoginPage",
     "submodule": "ValidationFeedback",

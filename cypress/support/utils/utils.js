@@ -176,6 +176,101 @@ const generateRandomEmail = () => {
   return `${username}@${domain}.${tld}`;
 };
 
+const getFutureDate = (daysAhead = 1) => {
+  const today = new Date();
+  return formatDate(addDays(today, daysAhead));
+};
+
+const generateBookingDates = (minStayDays = 1, maxStayDays = 30) => {
+  const checkinDaysAhead = getRandomNumber(1, 60);
+  const stayDuration = getRandomNumber(minStayDays, maxStayDays);
+
+  const today = new Date();
+  const checkin = addDays(today, checkinDaysAhead);
+  const checkout = addDays(checkin, stayDuration);
+
+  return {
+    checkin: formatDate(checkin),
+    checkout: formatDate(checkout),
+  };
+};
+
+const generateRandomBooking = (overrides = {}) => {
+  return {
+    firstname: 'User' + generateRandomString(6, 'abcdefghijklmnopqrstuvwxyz'),
+    lastname: 'Test' + generateRandomString(6, 'abcdefghijklmnopqrstuvwxyz'),
+    totalPrice: getRandomNumber(100, 5000),
+    depositPaid: generateRandomBoolean(),
+    bookingDates: generateBookingDates(),
+    additionalNeeds: getRandomElement(['Breakfast', 'Lunch', 'Dinner', 'All-inclusive', 'Breakfast and Dinner', '']),
+    ...overrides,
+  };
+};
+
+const generateInvalidDateFormat = () => {
+  const today = new Date();
+  const checkinDaysAhead = getRandomNumber(5, 30);
+  const checkoutDaysAhead = checkinDaysAhead + getRandomNumber(5, 15);
+
+  const checkinDate = addDays(today, checkinDaysAhead);
+  const checkoutDate = addDays(today, checkoutDaysAhead);
+
+  const year = checkinDate.getFullYear();
+  const month = String(checkinDate.getMonth() + 1).padStart(2, '0');
+  const day = String(checkinDate.getDate()).padStart(2, '0');
+
+  const checkoutYear = checkoutDate.getFullYear();
+  const checkoutMonth = String(checkoutDate.getMonth() + 1).padStart(2, '0');
+  const checkoutDay = String(checkoutDate.getDate()).padStart(2, '0');
+
+  const invalidFormats = [
+    // DD-MM-YYYY
+    () => ({
+      checkin: `${day}-${month}-${year}`,
+      checkout: `${checkoutDay}-${checkoutMonth}-${checkoutYear}`,
+      formatType: 'DD-MM-YYYY',
+    }),
+    // MM/DD/YYYY
+    () => ({
+      checkin: `${month}/${day}/${year}`,
+      checkout: `${checkoutMonth}/${checkoutDay}/${checkoutYear}`,
+      formatType: 'MM/DD/YYYY',
+    }),
+    // DD.MM.YYYY
+    () => ({
+      checkin: `${day}.${month}.${year}`,
+      checkout: `${checkoutDay}.${checkoutMonth}.${checkoutYear}`,
+      formatType: 'DD.MM.YYYY',
+    }),
+    // YYYY/MM/DD
+    () => ({
+      checkin: `${year}/${month}/${day}`,
+      checkout: `${checkoutYear}/${checkoutMonth}/${checkoutDay}`,
+      formatType: 'YYYY/MM/DD',
+    }),
+    // Text format
+    () => ({
+      checkin: checkinDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      checkout: checkoutDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      formatType: 'Text (Month DD, YYYY)',
+    }),
+    // YYYYMMDD (no separators)
+    () => ({
+      checkin: `${year}${month}${day}`,
+      checkout: `${checkoutYear}${checkoutMonth}${checkoutDay}`,
+      formatType: 'YYYYMMDD',
+    }),
+    // MM-DD-YYYY
+    () => ({
+      checkin: `${month}-${day}-${year}`,
+      checkout: `${checkoutMonth}-${checkoutDay}-${checkoutYear}`,
+      formatType: 'MM-DD-YYYY',
+    }),
+  ];
+
+  return getRandomElement(invalidFormats)();
+};
+
 export default {
   getRandomIndex,
   getRandomNumber,
@@ -191,4 +286,7 @@ export default {
   getRandomElement,
   removeProperty,
   generateRandomEmail,
+  getFutureDate,
+  generateRandomBooking,
+  generateInvalidDateFormat,
 };
