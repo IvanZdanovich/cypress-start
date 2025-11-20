@@ -219,6 +219,7 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 - ✅ STORE dynamically obtained IDs IN test data object immediately after creation
 - ✅ ASSIGN IDs TO the specific test data instance (e.g., `testData.validBookings.standardCheckout.bookingId = response.body.bookingid`)
 - ✅ REUSE test data instances ACROSS tests WITHIN same file
+- ✅ INCLUDE constant properties (names, emails) FOR cleanup identification
 
 **DON'T:**
 - ❌ HARD-CODE dates that will become outdated
@@ -227,6 +228,37 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 - ❌ MIX valid and invalid data in same group
 - ❌ DUPLICATE similar data structures
 - ❌ CREATE multiple instances when one can be reused
+- ❌ RELY dynamic/randomized values FOR cleanup queries
+
+### Test Data Cleanup for Independence
+
+**File Independence Requirement:**
+- EACH test file MUST run independently in isolation
+- CLEANUP prevents data pollution from current AND previous test runs
+- ENSURES consistent database state before each test execution
+
+**Cleanup Implementation:**
+- USE existing or CREATE endpoint-specific commands (e.g., `cy.booking__bulkDelete__DELETE()`)
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, static identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
+
+**Cleanup Pattern:**
+```javascript
+// In test file
+const cleanUp = () => {
+    cy.module__bulkDelete__DELETE(token, testData.validItems);
+};
+
+before(() => {
+    cleanUp(); // Remove leftover data from previous runs
+    // Setup test data...
+});
+
+after(() => {
+    cleanUp(); // Clean up data from current run
+});
+```
 
 ### Edge Case Testing
 

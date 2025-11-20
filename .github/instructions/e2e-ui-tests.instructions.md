@@ -34,6 +34,18 @@ ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialIte
 PREFER generated/randomized data USING `utils` functions FOR edge cases
 DESCRIBE ALL checked states EXTENSIVELY IN test data
 
+### Test Data Cleanup Strategy
+
+**Test File Independence:**
+EACH test file MUST be independent and executable in isolation
+CLEANUP ensures consistent application state before each test execution
+USE API commands FOR efficient cleanup operations
+
+**Cleanup Implementation:**
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
+
 ## Commands Strategy
 
 API commands: USE FOR setup/teardown TO speed up tests

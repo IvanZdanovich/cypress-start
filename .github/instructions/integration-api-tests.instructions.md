@@ -35,6 +35,20 @@ IMPROVES test readability by keeping all related data in one place
 PREFER generated/randomized data USING `utils` functions FOR edge cases
 DESCRIBE ALL checked states EXTENSIVELY IN test data
 
+### Test Data Cleanup Strategy
+
+### Test Data Cleanup Strategy
+
+**Test File Independence:**
+EACH test file MUST be independent and executable in isolation
+CLEANUP ensures consistent application state before each test execution
+USE API commands FOR efficient cleanup operations
+
+**Cleanup Implementation:**
+- CALL cleanup IN both `before` AND `after` hooks
+- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- ENSURE removal of data from both current AND previous test runs
+
 ## API Commands Strategy
 
 USE FOR test execution and setup/teardown
@@ -140,13 +154,24 @@ import {testData} from '../../test-data/api/module-name.submodule-name.test-data
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;
 
-    const cleanUp = () => { /* Cleanup logic */ };
+    const cleanUp = () => {
+        cy.cleanUpByEndpoint(
+            cy.module__getAll__GET,
+            cy.module__delete__DELETE,
+            [
+                { name: testData.validItems.initialItem.name },
+                { name: testData.validItems.newItem.name },
+                { email: testData.validItems.initialItem.email }
+            ],
+            { token: tokenUser, idField: 'itemId' }
+        );
+    };
 
     before(() => {
         cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
             tokenUser = access_token;
         });
-        cleanUp();
+        cleanUp(); // Remove any leftover data from previous test runs
         cy.then(() => {
             cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
                 testData.validItems.initialItem.itemId = response.body.itemId;
@@ -172,7 +197,9 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
         });
     });
 
-    after(() => { cleanUp(); });
+    after(() => { 
+        cleanUp(); // Clean up data created in current test run
+    });
 });
 ```
 
