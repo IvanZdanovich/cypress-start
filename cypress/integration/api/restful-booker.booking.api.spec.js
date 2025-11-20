@@ -166,7 +166,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     const testCases = Object.keys(booking_testData.invalidBookings.invalidTypes);
     const randomTestCase = utils.getRandomElement(testCases);
     it('RestfulBooker.Booking.Create.POST: Then return error status code for invalid data type', () => {
-      cy.log(`Testing with missing field: ${randomTestCase}`);
+      cy.log(`Testing invalid type scenario: ${randomTestCase}`);
       const testData = booking_testData.invalidBookings.invalidTypes[randomTestCase];
       cy.restfullBooker__createBooking__POST(testData, { failOnStatusCode: false }).then((response) => {
         expect([400, 500]).to.include(response.status);
@@ -286,7 +286,6 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.status).to.eq(200);
         expect(response.body).to.be.an('array');
 
-        // Assert our created booking is in results
         const bookingIds = response.body.map((b) => b.bookingid);
         expect(bookingIds).to.include(booking_testData.validBookings.standard.bookingId);
       });
@@ -393,8 +392,6 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
       });
     });
   });
-
-  // ==================== UPDATE BOOKINGS - FULL UPDATE ====================
 
   context('RestfulBooker.Booking.Update.PUT: When valid full update is provided with authentication', () => {
     it('RestfulBooker.Booking.Update.PUT: Then return 200 status code and all fields are updated', () => {
@@ -593,8 +590,6 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
       });
     });
   });
-
-  // ==================== CLEANUP ====================
 
   context('RestfulBooker.Booking.Delete.DELETE: When cleaning up test data', () => {
     // Bug Reference: BUG-BOOKING-008 - API returns 201 instead of 204 for successful deletion
