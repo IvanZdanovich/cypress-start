@@ -19,7 +19,7 @@ ENV CI=true
 COPY package*.json ./
 COPY .dockerignore ./
 
-RUN npm ci --omit=dev --no-fund
+RUN npm ci --no-fund
 
 # Copy project files
 COPY . .
