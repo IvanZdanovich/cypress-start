@@ -14,7 +14,6 @@
 - [Overview](#overview)
 - [What Makes This Framework Unique?](#what-makes-this-framework-unique)
 - [Features](#features)
-- [Getting Started](#getting-started)
 - [Running Tests](#running-tests)
 - [Development Guidelines](#development-guidelines)
 - [Quality Standards](#quality-standards)
@@ -22,7 +21,12 @@
 
 ## Quick Start
 
-Create a new project from this template using one of these methods:
+Create a new project from this template in seconds! The CLI will automatically:
+- Clone the template repository
+- Initialize a fresh git repository
+- Set up credentials structure
+- Install all dependencies
+- Guide you through optional configuration
 
 ### Prerequisites
 
@@ -30,24 +34,32 @@ Create a new project from this template using one of these methods:
 - npm or yarn
 - Git
 
-### 🚀 NPM/NPX (Recommended)
+### 🚀 Create New Project (Recommended)
 
 ```bash
-# Using npm
+# Using npm create
 npm create cypress-start my-project
 
-# Using npx
-npx create cypress-start my-project
+# Using npx (alternative)
+npx cypress-start my-project
 
 # Using yarn
 yarn create cypress-start my-project
 ```
 
+The CLI will guide you through the setup process interactively.
+
 ### 📋 GitHub Template
 
 1. Click the **"Use this template"** button at the top of this repository
 2. Choose "Create a new repository"
-3. Clone your new repository and run `npm install`
+3. Clone your new repository:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/your-repo-name.git
+   cd your-repo-name
+   npm install
+   ```
+4. Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
 
 ### 🔗 Manual Clone
 
