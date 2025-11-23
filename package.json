@@ -7,7 +7,8 @@
     "url": "https://github.com/IvanZdanovich/cypress-start"
   },
   "bin": {
-    "cypress-start": "bin/cypress-start.js"
+    "cypress-start": "bin/cypress-start.js",
+    "create-cypress-start": "bin/cypress-start.js"
   },
   "files": [
     "bin/",
