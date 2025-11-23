@@ -1,0 +1,20 @@
+# Git
+.git/
+.github/workflows/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Development files
+.env
+.env.local
+*.log
