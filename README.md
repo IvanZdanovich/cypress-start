@@ -10,6 +10,7 @@
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Overview](#overview)
 - [What Makes This Framework Unique?](#what-makes-this-framework-unique)
 - [Features](#features)
@@ -19,11 +20,55 @@
 - [Quality Standards](#quality-standards)
 - [Troubleshooting](#troubleshooting)
 
+## Quick Start
+
+Create a new project from this template using one of these methods:
+
+### Prerequisites
+
+- Node.js (latest LTS version)
+- npm or yarn
+- Git
+
+### 🚀 NPM/NPX (Recommended)
+
+```bash
+# Using npm
+npm create cypress-start my-project
+
+# Using npx
+npx create cypress-start my-project
+
+# Using yarn
+yarn create cypress-start my-project
+```
+
+### 📋 GitHub Template
+
+1. Click the **"Use this template"** button at the top of this repository
+2. Choose "Create a new repository"
+3. Clone your new repository and run `npm install`
+
+### 🔗 Manual Clone
+
+```bash
+git clone https://github.com/IvanZdanovich/cypress-start.git my-project
+cd my-project
+npm install
+```
+
+Set up sensitive data:
+Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user
+credentials for the test environment.
+
+---
+
 ## Overview
 
 Unlock rapid and reliable testing with framework, developed using Cypress and JavaScript. Designed to scale
-effortlessly, it is suitable for projects of any size. 
-This framework includes examples of tests: 
+effortlessly, it is suitable for projects of any size.
+This framework includes examples of tests:
+
 - Integration and E2E UI tests for the [Swag Labs Demo application](https://www.saucedemo.com/).
 - Integration API tests [Restful Booker API playground](https://restful-booker.herokuapp.com/apidoc/)
 
@@ -34,10 +79,12 @@ This framework includes examples of tests:
 ## What Makes This Framework Unique?
 
 - **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable, and
+  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
+  and
   understandable for non-technical personnel.
 - **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
-  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid source of truth
+  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid
+  source of truth
   for the entire team.
 - **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
 - **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
@@ -72,36 +119,6 @@ This framework includes examples of tests:
 
 ---
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (latest LTS version)
-- npm or yarn
-- Git
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone <repository-url>
-   cd cypress-start
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Set up sensitive data:
-
-    - Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test
-      user credentials for the test environment.
-
----
-
 ## Running Tests
 
 ### Standard Test Run
@@ -114,13 +131,19 @@ To run tests with default settings in headless mode:
 
 To run tests with specific language and environment parameters in headless mode:
 
-#### Windows:
+#### Windows (PowerShell):
 
-```bash
+```powershell
   $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
 ```
 
-#### macOS:
+#### Windows (CMD):
+
+```cmd
+  set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
+```
+
+#### macOS/Linux:
 
 ```bash
   LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
@@ -138,13 +161,19 @@ Available environment parameters:
 
 For interactive debugging with the Cypress UI:
 
-#### Windows:
+#### Windows (PowerShell):
 
-```bash
+```powershell
   $env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
 ```
 
-#### macOS with caffeinate (prevents system from sleeping):
+#### Windows (CMD):
+
+```cmd
+  set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
+```
+
+#### macOS/Linux (with caffeinate to prevent system from sleeping):
 
 ```bash
   LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open

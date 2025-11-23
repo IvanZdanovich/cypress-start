@@ -1,11 +1,40 @@
 {
   "name": "cypress-start",
   "version": "1.2.1",
-  "description": "Test automation framework based on Cypress.io for web applications.",
+  "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
     "url": "https://github.com/IvanZdanovich/cypress-start"
   },
+  "bin": {
+    "cypress-start": "bin/cypress-start.js"
+  },
+  "files": [
+    "bin/",
+    "cypress/e2e/",
+    "cypress/integration/",
+    "cypress/support/",
+    "cypress/test-data/",
+    "cypress/sensitive-data/env-users.example.json",
+    "cypress/reports/mochawesome/.gitkeep",
+    "cypress/reports/screenshots/.gitkeep",
+    "docs/",
+    "app-structure/",
+    "bug-log/",
+    "development-data/",
+    "eslint-plugin-custom-rules/",
+    "scripts/",
+    ".github/copilot-instructions.md",
+    ".github/instructions/",
+    ".github/FUNDING.yml",
+    "assets/",
+    "cypress.config.js",
+    "eslint.config.mjs",
+    "Dockerfile",
+    ".gitignore",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
     "test": "cypress run --headless",
@@ -18,7 +47,22 @@
     ]
   },
   "private": false,
-  "keywords": [],
+  "keywords": [
+    "cypress",
+    "testing",
+    "framework",
+    "template",
+    "starter",
+    "boilerplate",
+    "test-automation",
+    "e2e",
+    "integration-testing",
+    "ui-testing",
+    "api-testing",
+    "cypress-framework",
+    "cypress-template",
+    "test-framework"
+  ],
   "author": "Ivan Zdanovich",
   "license": "MIT",
   "devDependencies": {
