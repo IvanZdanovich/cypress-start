@@ -37,14 +37,8 @@ Create a new project from this template in seconds! The CLI will automatically:
 ### 🚀 Create New Project (Recommended)
 
 ```bash
-# Using npm create
-npm create cypress-start my-project
-
-# Using npx (alternative)
+# Using npx
 npx cypress-start my-project
-
-# Using yarn
-yarn create cypress-start my-project
 ```
 
 The CLI will guide you through the setup process interactively.
