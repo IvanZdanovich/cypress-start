@@ -1,6 +1,6 @@
 # Cypress Testing Framework
 
-<p align="center">
+<p style="text-align: center;">  
     <picture>
       <source media="(prefers-color-scheme: dark)"  srcset="./assets/cypress-logo-dark.png">
       <source media="(prefers-color-scheme: light)" srcset="./assets/cypress-logo-light.png">
@@ -22,6 +22,7 @@
 ## Quick Start
 
 Create a new project from this template in seconds! The CLI will automatically:
+
 - Clone the template repository
 - Initialize a fresh git repository
 - Set up credentials structure
@@ -37,14 +38,8 @@ Create a new project from this template in seconds! The CLI will automatically:
 ### 🚀 Create New Project (Recommended)
 
 ```bash
-# Using npm create
-npm create cypress-start my-project
-
-# Using npx (alternative)
+# Using npx
 npx cypress-start my-project
-
-# Using yarn
-yarn create cypress-start my-project
 ```
 
 The CLI will guide you through the setup process interactively.

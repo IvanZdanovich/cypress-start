@@ -1,10 +1,10 @@
 {
   "name": "cypress-start",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
-    "url": "https://github.com/IvanZdanovich/cypress-start"
+    "url": "git+https://github.com/IvanZdanovich/cypress-start.git"
   },
   "bin": {
     "cypress-start": "bin/cypress-start.js",
