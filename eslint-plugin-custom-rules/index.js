@@ -7,5 +7,7 @@ module.exports = {
     'verify-todos-have-links': require('./verify-todos-have-links.js'),
     'verify-test-title-without-forbidden-symbols': require('./verify-test-title-without-forbidden-symbols.js'),
     'standardize-test-titles': require('./standardize-test-titles.js'),
+    'verify-api-command-naming': require('./verify-api-command-naming.js'),
+    'verify-ui-command-naming': require('./verify-ui-command-naming.js'),
   },
 };
