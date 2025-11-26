@@ -76,7 +76,7 @@
     "husky": "^9.1.7"
   },
   "dependencies": {
-    "cypress": "^15.6.0",
+    "cypress": "^15.7.0",
     "mochawesome": "^7.1.4"
   },
   "engines": {
