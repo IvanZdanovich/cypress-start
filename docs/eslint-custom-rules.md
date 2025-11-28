@@ -12,6 +12,8 @@ tests.
 - [Verify TODOs Have Links](#verify-todos-have-links)
 - [Verify Test Title Without Forbidden Symbols](#verify-test-title-without-forbidden-symbols)
 - [Standardize Test Titles](#standardize-test-titles)
+- [API Command Naming Rule](#api-command-naming-rule)
+- [UI Command Naming Rule](#ui-command-naming-rule)
 
 ## Do Not Allow Empty Blocks
 
@@ -134,3 +136,68 @@ terms. This improves clarity and uniformity across the test suite.
 The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for
 non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
 
+
+## API Command Naming Rule
+
+### Rule: `verify-api-command-naming`
+
+**Location:** `eslint-plugin-custom-rules/verify-api-command-naming.js`
+
+**Applies to:** Files in `cypress/support/commands/api/` ending with `.api.commands.js`
+
+### Pattern
+```
+resourceName__actionDescription__METHOD
+```
+
+### Requirements
+1. **Three parts separated by double underscores (`__`)**
+    - Resource name (e.g., `settingAuditRound`, `templates`, `questions`)
+    - Action description (e.g., `add`, `getById`, `update`, `delete`)
+    - HTTP method (e.g., `GET`, `POST`, `PUT`, `PATCH`, `DELETE`)
+
+2. **Resource name**
+    - Must start with lowercase letter
+    - Can contain letters, numbers, and underscores
+    - Use camelCase
+    - Examples: `settingAuditRound`, `settingActionPriority`, `templates`, `audits`
+
+3. **Action description**
+    - Must start with lowercase letter
+    - Can contain letters and numbers only
+    - Use camelCase
+    - Examples: `add`, `getById`, `update`, `delete`, `getAll`, `addComment`
+
+4. **HTTP method**
+    - Must be uppercase
+    - Valid methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
+
+## UI Command Naming Rule
+
+### Rule: `verify-ui-command-naming`
+
+**Location:** `eslint-plugin-custom-rules/verify-ui-command-naming.js`
+
+**Applies to:** Files in `cypress/support/commands/ui/` ending with `.ui.commands.js`
+
+### Pattern
+```
+pageName__actionDescription
+```
+
+### Requirements
+1. **Two parts separated by double underscores (`__`)**
+    - Page/component name (e.g., `loginPage`, `checkoutPage`, `auditPerformPage`)
+    - Action description (e.g., `logIn`, `fillForm`, `submitData`)
+
+2. **Page name**
+    - Must start with lowercase letter
+    - Can contain letters and numbers only
+    - Use camelCase
+    - Examples: `loginPage`, `checkoutPage`, `auditPerformPage`, `templatesPage`
+
+3. **Action description**
+    - Must start with lowercase letter
+    - Can contain letters and numbers only
+    - Use camelCase
+    - Examples: `logIn`, `fillForm`, `submitData`, `clickButton`, `selectOption`
