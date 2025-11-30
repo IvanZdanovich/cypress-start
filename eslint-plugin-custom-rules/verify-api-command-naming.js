@@ -72,12 +72,6 @@ module.exports = {
         if (commandNameNode && commandNameNode.type === 'Literal') {
           const commandName = commandNameNode.value;
 
-          // Skip utility commands that don't follow the pattern
-          const utilityCommands = ['getTokenByRole', 'clearSessionCookies', 'getAllLanguages'];
-          if (utilityCommands.includes(commandName)) {
-            return;
-          }
-
           const error = validateApiCommandName(commandName);
 
           if (error) {
