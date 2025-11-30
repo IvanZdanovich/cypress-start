@@ -34,6 +34,8 @@ export default [
       'custom/verify-test-title-without-forbidden-symbols': 'error',
       'custom/standardize-test-titles': 'warn',
       'custom/verify-todos-have-links': 'error',
+      'custom/verify-api-command-naming': 'error',
+      'custom/verify-ui-command-naming': 'error',
     },
   },
 ];
