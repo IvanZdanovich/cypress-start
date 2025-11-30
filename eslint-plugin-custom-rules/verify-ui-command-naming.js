@@ -25,7 +25,6 @@ module.exports = {
     // Pattern: pageName__actionDescription
     // - pageName: camelCase
     // - actionDescription: camelCase
-    const uiCommandPattern = /^[a-z][a-zA-Z0-9]*__[a-z][a-zA-Z0-9]*$/;
 
     function validateUiCommandName(commandName) {
       // Check for double underscores
@@ -51,11 +50,6 @@ module.exports = {
       // Validate action name (must start with lowercase letter, can contain letters and numbers)
       if (!/^[a-z][a-zA-Z0-9]*$/.test(action)) {
         return 'invalidCasing';
-      }
-
-      // Check overall pattern
-      if (!uiCommandPattern.test(commandName)) {
-        return 'invalidUiCommandName';
       }
 
       return null;

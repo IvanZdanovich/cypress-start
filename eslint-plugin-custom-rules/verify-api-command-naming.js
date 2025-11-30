@@ -29,7 +29,6 @@ module.exports = {
     // - resourceName: camelCase (may include underscores for nested resources like setting_auditRound)
     // - actionDescription: camelCase
     // - METHOD: uppercase HTTP method
-    const apiCommandPattern = /^[a-z][a-zA-Z0-9_]*__[a-z][a-zA-Z0-9]*__[A-Z]+$/;
 
     function validateApiCommandName(commandName) {
       // Check for double underscores
@@ -60,11 +59,6 @@ module.exports = {
       // Validate action name (must start with lowercase letter, can contain letters and numbers)
       if (!/^[a-z][a-zA-Z0-9]*$/.test(action)) {
         return 'invalidCasing';
-      }
-
-      // Check overall pattern
-      if (!apiCommandPattern.test(commandName)) {
-        return 'invalidApiCommandName';
       }
 
       return null;

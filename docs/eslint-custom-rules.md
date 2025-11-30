@@ -152,7 +152,7 @@ resourceName__actionDescription__METHOD
 
 ### Requirements
 1. **Three parts separated by double underscores (`__`)**
-    - Resource name (e.g., `settingAuditRound`, `templates`, `questions`)
+    - Resource name (e.g., `restfullBooker`, `templates`)
     - Action description (e.g., `add`, `getById`, `update`, `delete`)
     - HTTP method (e.g., `GET`, `POST`, `PUT`, `PATCH`, `DELETE`)
 
@@ -160,7 +160,7 @@ resourceName__actionDescription__METHOD
     - Must start with lowercase letter
     - Can contain letters, numbers, and underscores
     - Use camelCase
-    - Examples: `settingAuditRound`, `settingActionPriority`, `templates`, `audits`
+    - Examples: `restfullBooker`, `templates`
 
 3. **Action description**
     - Must start with lowercase letter
@@ -187,17 +187,17 @@ pageName__actionDescription
 
 ### Requirements
 1. **Two parts separated by double underscores (`__`)**
-    - Page/component name (e.g., `loginPage`, `checkoutPage`, `auditPerformPage`)
+    - Page/component name (e.g., `loginPage`, `checkoutPage`)
     - Action description (e.g., `logIn`, `fillForm`, `submitData`)
 
 2. **Page name**
     - Must start with lowercase letter
     - Can contain letters and numbers only
     - Use camelCase
-    - Examples: `loginPage`, `checkoutPage`, `auditPerformPage`, `templatesPage`
+    - Examples: `loginPage`, `checkoutPage`
 
 3. **Action description**
     - Must start with lowercase letter
     - Can contain letters and numbers only
     - Use camelCase
-    - Examples: `logIn`, `fillForm`, `submitData`, `clickButton`, `selectOption`
+    - Examples: `logIn`, `fillForm`, `submitData`, `clickButton`
