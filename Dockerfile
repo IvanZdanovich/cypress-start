@@ -9,11 +9,13 @@ COPY .dockerignore ./
 ARG LANGUAGE=en
 ARG TARGET_ENV=dev
 ARG COLOUR_THEME=default
+ARG PARALLEL_STREAMS=3
 
 # Set environment variables from build args
 ENV LANGUAGE=${LANGUAGE}
 ENV TARGET_ENV=${TARGET_ENV}
 ENV COLOUR_THEME=${COLOUR_THEME}
+ENV PARALLEL_STREAMS=${PARALLEL_STREAMS}
 
 RUN npm ci
 
@@ -21,4 +23,5 @@ RUN npm ci
 COPY . .
 
 # Run pretest scripts and tests with environment variables
-CMD ["npm", "run", "test"]
+# Use parallel execution by default
+CMD ["npm", "run", "test:parallel"]

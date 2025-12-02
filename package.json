@@ -39,6 +39,7 @@
   "scripts": {
     "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
     "test": "cypress run --headless",
+    "test:parallel": "node cypress/support/scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
     "prepare": "husky"
   },
@@ -72,11 +73,12 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-cypress": "^5.2.0",
     "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.7.1",
-    "husky": "^9.1.7"
+    "glob": "^13.0.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.7.3"
   },
   "dependencies": {
-    "cypress": "^15.7.0",
+    "cypress": "^15.7.1",
     "mochawesome": "^7.1.4"
   },
   "engines": {
