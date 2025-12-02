@@ -61,7 +61,7 @@ async function validateProjectName(projectName) {
 }
 
 async function cloneTemplate(projectName) {
-  logStep('1/5', 'Cloning template from GitHub...');
+  logStep('1/4', 'Cloning template from GitHub...');
 
   try {
     execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${projectName}"`, { stdio: 'inherit' });
@@ -73,7 +73,7 @@ async function cloneTemplate(projectName) {
 }
 
 async function cleanupGitHistory(projectName) {
-  logStep('2/5', 'Initializing fresh repository...');
+  logStep('2/4', 'Initializing fresh repository...');
 
   const projectPath = path.resolve(projectName);
   const gitPath = path.join(projectPath, '.git');
@@ -89,7 +89,7 @@ async function cleanupGitHistory(projectName) {
 }
 
 async function setupSensitiveData(projectName) {
-  logStep('3/5', 'Setting up credentials structure...');
+  logStep('3/4', 'Setting up credentials structure...');
 
   const projectPath = path.resolve(projectName);
   const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
@@ -109,7 +109,7 @@ async function setupSensitiveData(projectName) {
 }
 
 async function installDependencies(projectName) {
-  logStep('4/5', 'Installing dependencies...');
+  logStep('4/4', 'Installing dependencies...');
   log('This may take a few minutes...', 'yellow');
 
   const projectPath = path.resolve(projectName);
@@ -120,32 +120,6 @@ async function installDependencies(projectName) {
   } catch {
     log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
     log('You can run "npm install" manually in your project directory', 'yellow');
-  }
-}
-
-async function configureProject(projectName) {
-  logStep('5/5', 'Configuration (optional)...');
-
-  const configure = await question(`${COLORS.blue}Would you like to configure the base URL now? (y/n):${COLORS.reset} `);
-
-  if (configure.toLowerCase() === 'y') {
-    const baseUrl = await question(`${COLORS.blue}Enter your application base URL (e.g., https://www.saucedemo.com):${COLORS.reset} `);
-
-    if (baseUrl) {
-      const projectPath = path.resolve(projectName);
-      const configPath = path.join(projectPath, 'cypress.config.js');
-
-      try {
-        let config = fs.readFileSync(configPath, 'utf8');
-        config = config.replace(/baseUrl:\s*['"][^'"]*['"]/, `baseUrl: '${baseUrl}'`);
-        fs.writeFileSync(configPath, config);
-        log(`✅ Base URL configured: ${baseUrl}`, 'green');
-      } catch {
-        log('⚠️  Warning: Could not update configuration automatically', 'yellow');
-      }
-    }
-  } else {
-    log('⏭️  Skipping configuration. You can update cypress.config.js later.', 'cyan');
   }
 }
 
@@ -214,7 +188,6 @@ async function main() {
     await cleanupGitHistory(projectName);
     await setupSensitiveData(projectName);
     await installDependencies(projectName);
-    await configureProject(projectName);
 
     rl.close();
 
