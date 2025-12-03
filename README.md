@@ -104,6 +104,9 @@ This framework includes examples of tests:
 
 ## Features
 
+- **Parallel Test Execution:** Run tests in parallel within a single Docker container with configurable stream count for
+  faster execution.  
+  See [Parallel Execution Guide](docs/parallel-execution.md).
 - **Custom ESLint Rules:** Enforces strict test structure and naming conventions, preventing duplicate or invalid test
   titles.  
   See [Custom ESLint Rules](docs/eslint-custom-rules.md).
@@ -135,6 +138,22 @@ To run tests with default settings in headless mode:
 ```bash
   npm run test
 ```
+
+### Parallel Test Execution
+
+To run tests in parallel for faster execution:
+
+```bash
+  # Default (3 parallel streams)
+  npm run test:parallel
+
+  # Custom stream count
+  PARALLEL_STREAMS=6 npm run test:parallel
+```
+
+See [Parallel Execution Guide](docs/parallel-execution.md) for detailed documentation.
+
+### Environment-Specific Test Run
 
 To run tests with specific language and environment parameters in headless mode:
 
@@ -190,6 +209,7 @@ For interactive debugging with the Cypress UI:
 
 ## Development Guidelines
 
+- [Parallel Execution Guide](docs/parallel-execution.md)
 - [Test Writing Guideline](docs/test-writing-guideline.md)
 - [FAQ](docs/faq.md)
 - [Naming Conventions](docs/naming-conventions.md)
