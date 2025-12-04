@@ -37,9 +37,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "pretest": "node cypress/support/scripts/copy-localization.js && node cypress/support/scripts/copy-colours-theme.js",
+    "pretest": "node scripts/copy-localization.js && node scripts/copy-colours-theme.js",
     "test": "cypress run --headless",
-    "test:parallel": "node cypress/support/scripts/parallel-cypress-runner.js",
+    "test:parallel": "node scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
     "hooks:setup": "node scripts/setup-git-hooks.js",
     "postinstall": "node scripts/setup-git-hooks.js"

@@ -36,6 +36,7 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/bug-log/bug-log.json` - Bug documentation
 - `${WORKSPACE_ROOT}/docs/` - Guidelines and conventions
 - `${WORKSPACE_ROOT}/development-data/` - Local reference data (Swagger, HTML pages)
+- `${WORKSPACE_ROOT}/scripts/` - Build and automation scripts (localization, themes, parallel runner, git hooks)
 
 ## Out of Scope
 

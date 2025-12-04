@@ -6,7 +6,7 @@
  * within a single Docker container.
  *
  * Usage:
- *   PARALLEL_STREAMS=4 node tools/parallel-cypress-runner.js
+ *   PARALLEL_STREAMS=4 node scripts/parallel-cypress-runner.js
  *
  * Environment Variables:
  *   PARALLEL_STREAMS - Number of parallel streams (default: 3)
