@@ -75,7 +75,7 @@
     "eslint-plugin-cypress": "^5.2.0",
     "eslint-plugin-prettier": "^5.5.4",
     "glob": "^13.0.0",
-    "prettier": "^3.7.3"
+    "prettier": "^3.7.4"
   },
   "dependencies": {
     "cypress": "^15.7.1",
