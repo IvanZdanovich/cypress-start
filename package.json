@@ -41,11 +41,12 @@
     "test": "cypress run --headless",
     "test:parallel": "node cypress/support/scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
-    "prepare": "husky"
+    "hooks:setup": "node scripts/setup-git-hooks.js",
+    "postinstall": "node scripts/setup-git-hooks.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "node .husky/check-eslint.js"
+      "node scripts/check-eslint.js"
     ]
   },
   "private": false,
@@ -74,7 +75,6 @@
     "eslint-plugin-cypress": "^5.2.0",
     "eslint-plugin-prettier": "^5.5.4",
     "glob": "^13.0.0",
-    "husky": "^9.1.7",
     "prettier": "^3.7.3"
   },
   "dependencies": {

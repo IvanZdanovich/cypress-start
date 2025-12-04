@@ -44,6 +44,13 @@ npx cypress-start my-project
 
 The CLI will guide you through the setup process interactively.
 
+The setup automatically:
+- ✅ Installs dependencies
+- ✅ Configures pre-commit quality checks
+- ✅ Sets up credentials structure
+
+**Pre-commit checks are mandatory** - they run automatically before every commit to maintain code quality.
+
 ### 📋 GitHub Template
 
 1. Click the **"Use this template"** button at the top of this repository
@@ -56,6 +63,8 @@ The CLI will guide you through the setup process interactively.
    ```
 4. Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
 
+The `npm install` command automatically sets up pre-commit hooks for code quality checks.
+
 ### 🔗 Manual Clone
 
 ```bash
@@ -63,6 +72,8 @@ git clone https://github.com/IvanZdanovich/cypress-start.git my-project
 cd my-project
 npm install
 ```
+
+The `npm install` command automatically sets up pre-commit hooks for code quality checks.
 
 Set up sensitive data:
 Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user
