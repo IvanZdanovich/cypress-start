@@ -18,40 +18,56 @@ INPUT: attached test file
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
+   - USE readable name patterns WITH prefix FOR all instances (e.g., `TestFileRef.Purpose.randomSuffix`)
 
-2. CONSOLIDATE:
-   - duplicate assertions INTO reusable helpers
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using `cy.module__deleteByNames__DELETE([namePrefix])`
+   - CALL cleanup IN both `before` AND `after` hooks
+   - DELETE by NAME PATTERNS, NOT by IDs
 
-3. OPTIMIZE structure PER:
+3. RANDOMIZE negative test data:
+   - CREATE random selection functions FOR invalid values
+   - USE randomized values IN test data instances
+   - AVOID testing all permutations (one random value per test)
+
+4. CONSOLIDATE:
+   - duplicate assertions INTO reusable patterns
+   - REMOVE obvious comments that restate code logic
+
+5. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-4. VALIDATE coverage AGAINST:
+6. VALIDATE coverage AGAINST:
    - `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file]`
 
-5. FIX naming violations PER:
+7. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-6. LOG bugs/issues in functionality under test:
+8. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md` (Bug Logging for API Tests section)
    
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
    
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-7. ENSURE:
+9. ENSURE:
    - All tests pass with current API behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
    - No sensitive data exposure
+   - No obvious or redundant comments
    - ESLint compliance
 
 BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
+- HOW cleanup strategy IS implemented (by names, not IDs)
+- HOW negative data IS randomized
+- WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW assertions ARE consolidated
 - WHAT structural changes FOR clarity
@@ -63,9 +79,12 @@ FOLLOW strictly:
 
 OUTPUT:
 - Complete refactored test code (NOT diff, NOT summary)
-- Updated/created test-data file(s)
+- Updated/created test-data file(s) WITH:
+  - Exported namePrefix for cleanup
+  - Readable name patterns for all instances
+  - Randomization functions for negative data
 - Updated/created API commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log.json (if bugs found)
 ```
 
 ---
@@ -81,39 +100,51 @@ INPUT: attached test file
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.test-data.js`
-   - Use l10n for localized text
-   - Use colours for colour values
+   - USE l10n FOR localized text
+   - USE colours FOR colour values
 
-2. OPTIMIZE structure PER:
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using API commands
+   - CALL cleanup IN both `before` AND `after` hooks
+   - DELETE test data BY name patterns OR identifiers
+
+3. CONSOLIDATE:
+   - duplicate assertions INTO reusable patterns
+   - REMOVE obvious comments that restate code logic
+
+4. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-3. VALIDATE selectors FROM:
+5. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-4. FIX naming violations PER:
+6. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. LOG bugs/issues in functionality under test:
+7. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md` (Bug Logging for UI Tests section)
    
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
    
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-6. ENSURE:
+8. ENSURE:
    - All tests pass with current UI behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
    - Selectors use global variables (loginPage, inventoryPage, etc.)
+   - No obvious or redundant comments
    - ESLint compliance
 
 BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
+- HOW cleanup strategy IS implemented
+- WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW assertions ARE consolidated
 - WHAT structural changes FOR clarity
@@ -127,7 +158,7 @@ OUTPUT:
 - Complete refactored test code (NOT diff, NOT summary)
 - Updated/created test-data file(s)
 - Updated/created UI commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log/bug-log.json (if bugs found)
 ```
 
 ---
@@ -143,41 +174,53 @@ INPUT: attached test file
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.test-data.js`
-   - Use l10n for localized text
-   - Use colours for colour values
+   - USE l10n FOR localized text
+   - USE colours FOR colour values
 
-2. CONSOLIDATE:
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using API commands
+   - CALL cleanup IN both `before` AND `after` hooks
+   - DELETE test data BY name patterns OR identifiers
+
+3. CONSOLIDATE:
    - duplicate navigation steps
    - repetitive form interactions
    - repeated assertions across workflow
+   - REMOVE obvious comments that restate code logic
 
-3. OPTIMIZE structure PER:
+4. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-4. VALIDATE selectors FROM:
+5. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-5. LOG bugs/issues in functionality under test:
+6. FIX naming violations PER:
+   - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
+
+7. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md` (Bug Logging for E2E Tests section)
    
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
    
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-6. ENSURE:
+8. ENSURE:
    - All E2E flows complete successfully
    - Bug references maintain integration context
    - Test data uses randomization via utils
    - Selectors use global variables
+   - No obvious or redundant comments
    - ESLint compliance
 
 BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
+- HOW cleanup strategy IS implemented
+- WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW workflow steps ARE optimized
 - WHAT structural changes FOR clarity
@@ -191,7 +234,7 @@ OUTPUT:
 - Complete refactored test code (NOT diff, NOT summary)
 - Updated/created test-data file(s)
 - Updated/created UI commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log/bug-log.json (if bugs found)
 ```
 
 ---
@@ -250,7 +293,7 @@ EXECUTE:
    - ENSURE proper selectors/commands
 
 3. IF functionality bug:
-   - LOG to `${WORKSPACE_ROOT}/cypress/bug_log.json` following:
+   - LOG to `${WORKSPACE_ROOT}/bug-log/bug-log.json` following:
      * `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
    - ADD bug reference comment in test
    - UPDATE assertions to validate ACTUAL behavior
@@ -263,7 +306,7 @@ EXECUTE:
 
 OUTPUT:
 - Fixed test code
-- Updated bug_log.json (if bug found)
+- Updated bug-log.json (if bug found)
 - Explanation of the issue and resolution
 ```
 
@@ -306,7 +349,7 @@ REQUIREMENTS:
 
 7. LOG bugs found:
    FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
 - Complete test file with all scenarios
@@ -356,7 +399,7 @@ REQUIREMENTS:
 
 8. LOG bugs found:
    FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
 - Complete test file with all scenarios
@@ -401,7 +444,7 @@ REQUIREMENTS:
 
 7. LOG bugs found:
    FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+   TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
 - Complete E2E test file

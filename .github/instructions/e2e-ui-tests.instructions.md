@@ -37,14 +37,34 @@ DESCRIBE ALL checked states EXTENSIVELY IN test data
 ### Test Data Cleanup Strategy
 
 **Test File Independence:**
-EACH test file MUST be independent and executable in isolation
-CLEANUP ensures consistent application state before each test execution
-USE API commands FOR efficient cleanup operations
+- EACH test file MUST be independent and executable in isolation
+- CLEANUP ensures consistent application state before each test execution
+- USE API commands FOR efficient cleanup operations
 
 **Cleanup Implementation:**
+- DEFINE cleanup method: `const cleanUp = () => { /* cleanup logic */ }`
 - CALL cleanup IN both `before` AND `after` hooks
-- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- USE API commands TO delete test data BY name patterns OR identifiers
+- DO NOT rely on IDs only - IDs may be lost between test runs
 - ENSURE removal of data from both current AND previous test runs
+
+**Example:**
+```javascript
+const cleanUp = () => {
+  cy.module__deleteByNames__DELETE(token, [testData.namePrefix]);
+};
+
+before(() => {
+  cy.then(()=>{
+    cleanUp(); // Remove leftover data from previous runs
+  });
+  // Setup test data via API...
+});
+
+after(() => {
+  cleanUp();
+});
+```
 
 ## Commands Strategy
 

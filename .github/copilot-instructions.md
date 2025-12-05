@@ -36,7 +36,6 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/bug-log/bug-log.json` - Bug documentation
 - `${WORKSPACE_ROOT}/docs/` - Guidelines and conventions
 - `${WORKSPACE_ROOT}/development-data/` - Local reference data (Swagger, HTML pages)
-- `${WORKSPACE_ROOT}/scripts/` - Build and automation scripts (localization, themes, parallel runner, git hooks)
 
 ## Out of Scope
 
@@ -216,11 +215,11 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 - ✅ DECLARE all fields explicitly WITH their expected types
 - ✅ GROUP test data BY business scenario or test purpose
 - ✅ NAME instances TO describe test purpose
-- ✅ ADD inline comments FOR non-obvious field purposes
+- ✅ ADD inline comments FOR non-obvious field purposes ONLY (no obvious comments)
 - ✅ STORE dynamically obtained IDs IN test data object immediately after creation
 - ✅ ASSIGN IDs TO the specific test data instance (e.g., `testData.validBookings.standardCheckout.bookingId = response.body.bookingid`)
 - ✅ REUSE test data instances ACROSS tests WITHIN same file
-- ✅ INCLUDE constant properties (names, emails) FOR cleanup identification
+- ✅ USE readable name patterns WITH prefix FOR cleanup identification (e.g., `Prefix.Purpose.RandomSuffix`)
 
 **DON'T:**
 - ❌ HARD-CODE dates that will become outdated
@@ -229,7 +228,8 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 - ❌ MIX valid and invalid data in same group
 - ❌ DUPLICATE similar data structures
 - ❌ CREATE multiple instances when one can be reused
-- ❌ RELY dynamic/randomized values FOR cleanup queries
+- ❌ RELY fully randomized values FOR cleanup queries (use readable prefixes)
+- ❌ ADD obvious comments that restate code logic
 
 ### Test Data Cleanup for Independence
 
@@ -239,27 +239,64 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 - ENSURES consistent database state before each test execution
 
 **Cleanup Implementation:**
-- USE existing or CREATE endpoint-specific commands (e.g., `cy.booking__bulkDelete__DELETE()`)
+- DEFINE cleanup method: `const cleanUp = () => { /* cleanup logic */ }`
 - CALL cleanup IN both `before` AND `after` hooks
-- QUERY by CONSTANT properties (names, emails, static identifiers) NOT dynamic IDs
+- DELETE by NAME PATTERNS using dedicated commands (e.g., `cy.module__deleteByNames__DELETE([namePrefix])`)
+- DO NOT delete by IDs only - IDs may be lost between runs
 - ENSURE removal of data from both current AND previous test runs
+
+**Readable Name Pattern:**
+```javascript
+// Define name prefix in test data file
+const namePrefix = 'TestFileRef.Purpose';
+
+// Use prefix in all test data instances
+const templateName = `${namePrefix}Purpose.${utils.generateRandomString(10)}`;
+
+export const module_testData = {
+  namePrefix: 'TestFileRef.Purpose', // Export for cleanup usage
+  validItems: {
+    standardItem: {
+      itemId: String,
+      name: `${namePrefix}StandardItem.${utils.generateRandomString(8)}`,
+      // ...
+    },
+  },
+};
+```
 
 **Cleanup Pattern:**
 ```javascript
 // In test file
+import { module_testData } from '../../test-data/api/module.submodule.test-data';
+
+const testData = module_testData;
+
 const cleanUp = () => {
-    cy.module__bulkDelete__DELETE(token, testData.validItems);
+  // Delete by name pattern, not by IDs
+  cy.module__deleteByNames__DELETE(token, [testData.namePrefix], { options });
 };
 
 before(() => {
+  cy.then(()=>{
     cleanUp(); // Remove leftover data from previous runs
-    // Setup test data...
+  });
+  // Setup test data...
 });
 
 after(() => {
-    cleanUp(); // Clean up data from current run
+  cleanUp(); // Clean up data from current run
 });
 ```
+
+### Negative Test Data Randomization
+
+**Randomize Negative Scenarios:**
+- DEFINE arrays of invalid values in test data file
+- CREATE random selection functions
+- USE randomized values in test data instances
+- AVOIDS testing all permutations (improves execution time)
+- ENSURES different coverage across multiple test runs
 
 ### Edge Case Testing
 

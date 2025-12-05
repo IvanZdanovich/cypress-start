@@ -40,14 +40,54 @@ DESCRIBE ALL checked states EXTENSIVELY IN test data
 ### Test Data Cleanup Strategy
 
 **Test File Independence:**
-EACH test file MUST be independent and executable in isolation
-CLEANUP ensures consistent application state before each test execution
-USE API commands FOR efficient cleanup operations
+- EACH test file MUST be independent and executable in isolation
+- CLEANUP ensures consistent application state before each test execution
+- USE dedicated delete-by-name commands FOR efficient cleanup
 
 **Cleanup Implementation:**
+- DEFINE cleanup method: `const cleanUp = () => { /* cleanup logic */ }`
 - CALL cleanup IN both `before` AND `after` hooks
-- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
+- DELETE by NAME PATTERNS using `cy.module__deleteByNames__DELETE([namePrefix])`
+- DO NOT rely on IDs only - IDs may be lost between test runs
 - ENSURE removal of data from both current AND previous test runs
+
+**Readable Name Patterns:**
+- ALL test data names MUST include identifiable prefix (e.g., `TestFileRef.Purpose`)
+- FORMAT: `TestFileRef.Purpose.RandomSuffix`
+- EXPORT prefix in test data for cleanup usage
+- ENABLES cleanup even when IDs are lost
+
+**Example:**
+```javascript
+// Test data file
+const namePrefix = 'TestFileRef.Purpose';
+
+export const module_testData = {
+  namePrefix: 'TestFileRef.Purpose',
+  validItems: {
+    standardItem: {
+      itemId: String,
+      name: `${namePrefix}StandardItem.${utils.generateRandomString(8)}`,
+    },
+  },
+};
+
+// Test file
+const cleanUp = () => {
+  cy.module__deleteByNames__DELETE(token, [testData.namePrefix]);
+};
+
+before(() => {
+  cy.then(()=>{
+    cleanUp(); // Remove leftover data from previous runs
+  });  
+  // Create test data...
+});
+
+after(() => {
+  cleanUp(); // Removes all instances matching prefix
+});
+```
 
 ## API Commands Strategy
 
@@ -155,25 +195,18 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
     let tokenUser;
 
     const cleanUp = () => {
-        cy.cleanUpByEndpoint(
-            cy.module__getAll__GET,
-            cy.module__delete__DELETE,
-            [
-                { name: testData.validItems.initialItem.name },
-                { name: testData.validItems.newItem.name },
-                { email: testData.validItems.initialItem.email }
-            ],
-            { token: tokenUser, idField: 'itemId' }
-        );
+        cy.moduleName__deleteByNames__DELETE(tokenUser, [testData.namePrefix]);
     };
 
     before(() => {
         cy.getTokenByRole(userRoles.ADMIN).then((access_token) => {
             tokenUser = access_token;
         });
-        cleanUp(); // Remove any leftover data from previous test runs
+        
+        cleanUp();
+        
         cy.then(() => {
-            cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
+            cy.moduleName__create__POST(tokenUser, { name: testData.validItems.initialItem.name }).then((response) => {
                 testData.validItems.initialItem.itemId = response.body.itemId;
             });
         });
@@ -198,7 +231,7 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
     });
 
     after(() => { 
-        cleanUp(); // Clean up data created in current test run
+        cleanUp();
     });
 });
 ```
