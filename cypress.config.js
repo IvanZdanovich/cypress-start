@@ -63,7 +63,7 @@ module.exports = defineConfig({
       config.env.spec = specPattern;
 
       on('before:browser:launch', (browser = {}, launchOptions) => {
-        if (browser.name === 'chrome') {
+        if (browser.name === 'chrome' || browser.name === 'electron') {
           launchOptions.args.push('--no-sandbox');
           launchOptions.args.push('--disable-gpu');
           launchOptions.args.push('--disable-dev-shm-usage');
