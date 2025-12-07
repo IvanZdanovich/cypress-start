@@ -5,6 +5,68 @@ on:
     # Runs every Sunday at 2 AM UTC
     - cron: '0 2 * * 0'
   workflow_dispatch: # Allows manual triggering
+    inputs:
+      language:
+        description: 'Language for localization testing'
+        required: false
+        default: 'en'
+        type: choice
+        options:
+          - en
+      target_env:
+        description: 'Target environment'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+      colour_theme:
+        description: 'Color theme'
+        required: false
+        default: 'default'
+        type: choice
+        options:
+          - default
+      parallel_streams:
+        description: 'Number of parallel test streams'
+        required: false
+        default: '3'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+      browser:
+        description: 'Browser to run tests in'
+        required: false
+        default: 'electron'
+        type: choice
+        options:
+          - electron
+          - chrome
+          - firefox
+          - edge
+      test_scope:
+        description: 'Test scope filter (empty=all, integration, e2e)'
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - integration
+          - e2e
+      test_type:
+        description: 'Test type filter (empty=all, api, ui)'
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - api
+          - ui
 
 jobs:
   cypress-tests:
@@ -19,9 +81,57 @@ jobs:
           mkdir -p cypress/sensitive-data
           echo '${{ secrets.DEV_USERS_JSON }}' > cypress/sensitive-data/dev-users.json
 
+      - name: Determine spec pattern
+        id: spec-pattern
+        run: |
+          TEST_SCOPE="${{ inputs.test_scope || 'all' }}"
+          TEST_TYPE="${{ inputs.test_type || 'all' }}"
+          
+          # Build spec pattern based on scope and type
+          if [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "all" ]; then
+            # All tests
+            SPEC_PATTERN="**/*.spec.js"
+          elif [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "api" ]; then
+            # All API tests
+            SPEC_PATTERN="cypress/integration/api/**/*.api.spec.js"
+          elif [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "ui" ]; then
+            # All UI tests (integration + e2e)
+            SPEC_PATTERN="cypress/{integration/ui,e2e}/**/*.ui.spec.js"
+          elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "all" ]; then
+            # All integration tests (api + ui)
+            SPEC_PATTERN="cypress/integration/**/*.spec.js"
+          elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "api" ]; then
+            # Integration API tests
+            SPEC_PATTERN="cypress/integration/api/**/*.api.spec.js"
+          elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "ui" ]; then
+            # Integration UI tests
+            SPEC_PATTERN="cypress/integration/ui/**/*.ui.spec.js"
+          elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "all" ]; then
+            # All E2E tests
+            SPEC_PATTERN="cypress/e2e/**/*.spec.js"
+          elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "ui" ]; then
+            # E2E UI tests
+            SPEC_PATTERN="cypress/e2e/**/*.ui.spec.js"
+          elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "api" ]; then
+            # E2E doesn't have API tests, fallback to all e2e
+            SPEC_PATTERN="cypress/e2e/**/*.spec.js"
+            echo "::warning::E2E scope doesn't have API tests. Running all E2E tests."
+          else
+            # Default fallback
+            SPEC_PATTERN="**/*.spec.js"
+          fi
+          
+          echo "SPEC_PATTERN=${SPEC_PATTERN}" >> $GITHUB_OUTPUT
+          echo "Selected spec pattern: ${SPEC_PATTERN}"
+
       - name: Build Docker image
         run: |
-          docker build -t cypress-tests .
+          docker build \
+            --build-arg LANGUAGE=${{ inputs.language || 'en' }} \
+            --build-arg TARGET_ENV=${{ inputs.target_env || 'dev' }} \
+            --build-arg COLOUR_THEME=${{ inputs.colour_theme || 'default' }} \
+            --build-arg PARALLEL_STREAMS=${{ inputs.parallel_streams || '3' }} \
+            -t cypress-tests .
 
       - name: Run Cypress tests in Docker
         id: cypress
@@ -29,6 +139,8 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
             -v ${{ github.workspace }}/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro \
+            -e BROWSER=${{ inputs.browser || 'electron' }} \
+            -e SPEC_PATTERN="${{ steps.spec-pattern.outputs.SPEC_PATTERN }}" \
             cypress-tests
         continue-on-error: true
 

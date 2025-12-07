@@ -15,65 +15,17 @@
 - [What Makes This Framework Unique?](#what-makes-this-framework-unique)
 - [Features](#features)
 - [Running Tests](#running-tests)
-- [Development Guidelines](#development-guidelines)
-- [Quality Standards](#quality-standards)
+    - [Standard Test Run](#standard-test-run)
+    - [Parallel Test Execution](#parallel-test-execution)
+    - [Environment-Specific Test Run](#environment-specific-test-run)
+    - [Debug Mode](#debug-mode)
+    - [GitHub Actions Workflow](#github-actions-workflow)
+- [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
 
 ## Quick Start
 
 Create a new project from this template in seconds! The CLI offers two setup modes to match your needs:
-
-### Setup Modes
-
-#### 🎯 Mode 1: Full Setup (Recommended)
-Complete framework with all features including:
-- ✅ Complete test suite (E2E & Integration UI/API tests)
-- ✅ Test data and development data
-- ✅ ESLint custom rules with app structure validation
-- ✅ Comprehensive documentation and bug tracking system
-- ✅ GitHub Copilot instructions
-- ✅ Parallel test runner
-- ✅ GitHub Actions workflow
-- ✅ Docker support
-- ✅ Git repository initialized
-- ✅ Dependencies installed automatically
-
-**Best for:** New standalone projects or teams wanting the complete testing framework experience.
-
-**Result:** Ready-to-use Cypress project with all tests, data, and tooling configured.
-
-#### 📦 Mode 2: Specific Files
-Copy only selected modules to your existing project:
-- Choose from: ESLint Rules, Documentation, Copilot Instructions, Parallel Runner, GitHub Workflow, Docker
-- Files are copied without git initialization or npm install
-- Package.json is created or updated automatically with required scripts and dependencies
-- No tests, test-data, or development-data included
-
-**Best for:** Adding specific features to an existing project or cherry-picking functionality.
-
-**Result:** Selected files copied + package.json configured. You run `npm install` manually.
-
-### Available Modules (Specific Files Mode)
-
-1. **ESLint Custom Rules** - Custom ESLint rules for test title standardization and validation
-   - Includes: `eslint-plugin-custom-rules/`, `eslint.config.mjs`, `app-structure/`, git hooks setup
-   - Scripts: `lint`, `postinstall` (sets up pre-commit hooks)
-   
-2. **Documentation** - Comprehensive testing guidelines, conventions, and best practices
-   - Includes: `docs/` folder with all documentation
-   
-3. **Copilot Instructions** - GitHub Copilot configuration and test-specific instructions
-   - Includes: `.github/copilot-instructions.md`, `.github/instructions/`
-   
-4. **Parallel Test Execution** - Script for running tests in parallel
-   - Includes: `scripts/parallel-cypress-runner.js`
-   - Scripts: `test:parallel`
-   
-5. **GitHub Actions Workflow** - CI/CD workflows for automated test execution
-   - Includes: `.github/workflows/`
-   
-6. **Docker Support** - Dockerfile for containerized test execution
-   - Includes: `Dockerfile`, `.dockerignore`
 
 ### Prerequisites
 
@@ -92,178 +44,63 @@ npm install -g cypress-start
 cypress-start my-project
 ```
 
-The CLI will guide you through the setup process interactively:
+The CLI guides you through two setup modes:
 
-**Mode 1: Full Setup**
-1. Enter your project name (or pass it as an argument)
-2. Select mode: `1` for Full Setup
-3. Wait for automatic setup to complete
+#### 🎯 Mode 1: Full Setup (Recommended)
 
-The setup automatically:
-- ✅ Clones the complete repository
-- ✅ Initializes a fresh git repository
-- ✅ Sets up credentials structure
-- ✅ Installs all dependencies
-- ✅ Configures pre-commit quality checks
+Complete framework with all features, tests, and data. Git initialized, dependencies auto-installed.  
+**Best for:** New standalone projects.
 
-**Result:** Complete, ready-to-use Cypress project with tests, data, and all features.
+#### 📦 Mode 2: Specific Files
+
+Cherry-pick modules (ESLint, Docs, Copilot, Parallel Runner, GitHub Actions, Docker) for existing projects.  
+Package.json updated automatically. Manual `npm install` required.  
+**Best for:** Adding features to existing projects.
 
 ```bash
 cd my-project
 npm run test              # Run all tests
-npm run lint              # Run ESLint checks
 npm run test:parallel     # Run tests in parallel
+npm run lint              # Run ESLint checks
 npx cypress open          # Open Cypress UI
 ```
 
-**Mode 2: Specific Files**
-1. Enter your project name (or navigate to existing project first)
-2. Select mode: `2` for Specific Files
-3. Choose which modules to include (y/n for each)
-4. Wait for files to be copied
+### Alternative Setup Methods
 
-The setup:
-- ✅ Copies only selected module files
-- ✅ Creates or updates package.json with scripts and dependencies
-- ❌ Does NOT initialize git
-- ❌ Does NOT install dependencies (you run `npm install` manually)
-- ❌ Does NOT include tests or test-data
+**GitHub Template:**
 
-**Result:** Selected files copied to your project with package.json configured.
+1. Click **"Use this template"** → "Create a new repository"
+2. Clone: `git clone https://github.com/YOUR-USERNAME/your-repo-name.git`
 
-```bash
-cd my-project
-npm install               # Install dependencies
-npm run lint              # Use added features
-```
-
-**Note:** Pre-commit checks (when ESLint module is included) run automatically before every commit to maintain code quality.
-
-### 📋 Alternative: GitHub Template
-
-If you prefer using GitHub's template feature:
-
-1. Click the **"Use this template"** button at the top of this repository
-2. Choose "Create a new repository"
-3. Clone your new repository:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/your-repo-name.git
-   cd your-repo-name
-   npm install  # Automatically sets up pre-commit hooks
-   ```
-4. Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
-
-### 🔗 Alternative: Manual Clone
-
-For direct cloning without the CLI:
+**Direct Clone:**
 
 ```bash
 git clone https://github.com/IvanZdanovich/cypress-start.git my-project
 cd my-project
-npm install  # Automatically sets up pre-commit hooks
 ```
 
-Set up sensitive data:
-Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user credentials for the test environment.
+**Post-Setup:**
+
+```bash
+npm install  # Installs dependencies and sets up pre-commit hooks
+```
+
+Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.
 
 ---
 
-## Cypress-Start CLI
-
-The `cypress-start` CLI tool provides a streamlined way to create new projects or add specific features to existing ones.
-
-### Installation
-
-```bash
-# Run directly with npx (no installation needed)
-npx cypress-start my-project
-
-# Or install globally
-npm install -g cypress-start
-cypress-start my-project
-```
-
-### Usage Examples
-
-#### Example 1: New Complete Project
-```bash
-npx cypress-start my-test-project
-# Select: 1 (Full Setup)
-# → Creates complete Cypress project with all features
-```
-
-#### Example 2: Add ESLint to Existing Project
-```bash
-cd my-existing-project
-npx cypress-start eslint-config
-# Select: 2 (Specific Files)
-# ESLint Custom Rules? y
-# Others? n
-# → Copies ESLint files and updates package.json
-# Then run: npm install
-```
-
-#### Example 3: Copy Documentation Only
-```bash
-npx cypress-start docs-copy
-# Select: 2 (Specific Files)
-# Documentation? y
-# Others? n
-# → Copies only docs/ folder
-```
-
-#### Example 4: Multiple Modules
-```bash
-cd my-project
-npx cypress-start features
-# Select: 2 (Specific Files)
-# ESLint? y
-# Documentation? y
-# Copilot Instructions? y
-# Parallel Runner? y
-# Others? n
-# → Copies all selected modules and updates package.json
-```
-
 ### Mode Comparison
 
-| Feature | Full Setup | Specific Files |
-|---------|-----------|----------------|
-| **Target Use Case** | New standalone project | Add to existing project |
-| **Test Files** | ✅ Included | ❌ Not included |
-| **Test Data** | ✅ Included | ❌ Not included |
-| **Module Selection** | All modules | Choose modules |
-| **Git Initialization** | ✅ Yes | ❌ No |
-| **NPM Install** | ✅ Automatic | ❌ Manual |
-| **Package.json** | ✅ Complete | ✅ Created or merged |
-| **Ready to Use** | ✅ Immediately | After `npm install` |
-
-### Package.json Handling (Specific Files Mode)
-
-**Scenario 1: Existing package.json**
-- Merges scripts and dependencies into your existing file
-- Preserves all existing content
-- No conflicts, just additions
-
-**Scenario 2: No package.json**
-- Creates minimal package.json with only scripts and dependencies
-- You should add name, version, etc. with `npm init` if needed
-
-**Example Output:**
-```json
-{
-  "scripts": {
-    "lint": "eslint . --format stylish --fix",
-    "test:parallel": "node scripts/parallel-cypress-runner.js",
-    "postinstall": "node scripts/setup-git-hooks.js"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "eslint": "^9.17.0",
-    "glob": "^11.0.0"
-  }
-}
-```
+| Feature                | Full Setup             | Specific Files          |
+|------------------------|------------------------|-------------------------|
+| **Target Use Case**    | New standalone project | Add to existing project |
+| **Test Files**         | ✅ Included             | ❌ Not included          |
+| **Test Data**          | ✅ Included             | ❌ Not included          |
+| **Module Selection**   | All modules            | Choose modules          |
+| **Git Initialization** | ✅ Yes                  | ❌ No                    |
+| **NPM Install**        | ✅ Automatic            | ❌ Manual                |
+| **Package.json**       | ✅ Complete             | ✅ Created or merged     |
+| **Ready to Use**       | ✅ Immediately          | After `npm install`     |
 
 ---
 
@@ -301,31 +138,16 @@ This framework includes examples of tests:
 
 ## Features
 
-- **Interactive CLI Setup:** Fast project creation with `cypress-start` CLI offering two setup modes:
-  - **Full Setup:** Complete framework with all features, tests, and data
-  - **Specific Files:** Copy only selected modules to existing projects
-- **Parallel Test Execution:** Run tests in parallel within a single Docker container with configurable stream count for
-  faster execution.  
-  See [Parallel Execution Guide](docs/parallel-execution.md).
-- **Custom ESLint Rules:** Enforces strict test structure and naming conventions, preventing duplicate or invalid test
-  titles.  
-  See [Custom ESLint Rules](docs/eslint-custom-rules.md).
-- **Localization Testing:** Dynamically loads and validates localization files, supporting multi-language test runs.  
-  See [Localization Testing](docs/localization-testing.md).
-- **Color Theme Testing:** Easily test across multiple color themes using environment variables.  
-  See [Color Theme Testing](docs/colour-theme-testing.md).
-- **Centralized Selector Management:** All selectors are managed in a single location for maintainability and
-  consistency.
-- **Pre-commit Quality Checks:** Automated linting and code quality checks before every commit.  
-  See [Pre-commit Check](docs/pre-commit-check.md).
-- **Test Structure Guidelines:** Detailed documentation for writing maintainable, readable, and robust tests.  
-  See [Test Writing Guideline](docs/test-writing-guideline.md), [Naming Conventions](docs/naming-conventions.md), [Tagging Strategy](docs/tagging-strategy.md), [FAQ](docs/faq.md).
-- **Copilot Integration:** AI-assisted test writing with ready-to-use instructions.  
-  See [Copilot Instructions](.github/copilot-instructions.md).
-- **Copilot Prompts:** Ready-to-use prompts for AI-assisted test writing.  
-  See [Copilot Prompts](docs/copilot-prompts.md).
-- **Prepared Continuous Integration Sample:** Weekly regression test workflow integrated for automated test execution.
-  See [Weekly Cypress Tests Workflow](.github/workflows/weekly-cypress-tests.yml).
+- **Interactive CLI Setup:** Two setup modes - Full Setup (complete framework) or Specific Files (cherry-pick modules)
+- **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
+- **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
+- **Localization Testing:** Multi-language test support ([docs](docs/localization-testing.md))
+- **Color Theme Testing:** Multiple theme support via environment variables ([docs](docs/colour-theme-testing.md))
+- **Centralized Selector Management:** All selectors in one location for easy maintenance
+- **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
+- **Comprehensive Documentation:** Test writing guidelines, naming conventions, FAQ ([docs](docs/))
+- **AI-Assisted Development:** GitHub Copilot integration with ready-to-use instructions
+- **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
 
 ---
 
@@ -355,81 +177,125 @@ See [Parallel Execution Guide](docs/parallel-execution.md) for detailed document
 
 ### Environment-Specific Test Run
 
-To run tests with specific language and environment parameters in headless mode:
+Run tests with specific environment parameters in headless mode:
 
-#### Windows (PowerShell):
+**Environment Parameters:**
+
+- `LANGUAGE`: Language code (default: `en`)
+- `TARGET_ENV`: Target environment (default: `dev`)
+- `COLOUR_THEME`: Color theme (default: `default`)
+- `BROWSER`: Browser for execution (default: `electron`)
+
+**Windows (PowerShell):**
 
 ```powershell
-  $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
 ```
 
-#### Windows (CMD):
+**Windows (CMD):**
 
 ```cmd
-  set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
 ```
 
-#### macOS/Linux:
+**macOS/Linux:**
 
 ```bash
-  LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
 ```
-
----
-
-Available environment parameters:
-
-- `LANGUAGE`: Specifies the language code (defaults to `en`)
-- `TARGET_ENV`: Specifies the target environment (defaults to `dev`)
-- `COLOUR_THEME`: Specifies the colour theme to use (defaults to `default`)
 
 ### Debug Mode
 
 For interactive debugging with the Cypress UI:
 
-#### Windows (PowerShell):
+**Windows (PowerShell):**
 
 ```powershell
-  $env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
+$env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
 ```
 
-#### Windows (CMD):
+**Windows (CMD):**
 
 ```cmd
-  set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
+set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
 ```
 
-#### macOS/Linux (with caffeinate to prevent system from sleeping):
+**macOS/Linux:**
 
 ```bash
-  LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
+LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
 ```
 
 ---
 
-## Development Guidelines
+### GitHub Actions Workflow
 
-- [Parallel Execution Guide](docs/parallel-execution.md)
-- [Test Writing Guideline](docs/test-writing-guideline.md)
-- [FAQ](docs/faq.md)
-- [Naming Conventions](docs/naming-conventions.md)
-- [Git Strategy](docs/git-strategy.md)
-- [Bug Tracking](docs/bug-tracking.md)
-- [Localization Testing](docs/localization-testing.md)
-- [Color Theme Testing](docs/colour-theme-testing.md)
-- [Copilot Prompts](docs/copilot-prompts.md)
-- [Copilot Instructions](.github/copilot-instructions.md)
-- [Copilot Instructions for Integration API Tests](.github/instructions/integration-api-tests.instructions.md)
-- [Copilot Instructions for Integration UI Tests](.github/instructions/integration-ui-tests.instructions.md)
-- [Copilot Instructions for E2E UI Tests](.github/instructions/e2e-ui-tests.instructions.md)
+Automated CI/CD workflow with weekly scheduled runs or manual triggers:
+
+**Quick Start:**
+
+1. Go to **Actions** tab → Select **"Weekly Cypress Tests"**
+2. Click **"Run workflow"** → Configure parameters → Click **"Run workflow"**
+
+**Available Parameters:**
+
+| Parameter          | Options                         | Default  |
+|--------------------|---------------------------------|----------|
+| `language`         | en                              | en       |
+| `target_env`       | dev                             | dev      |
+| `colour_theme`     | default                         | default  |
+| `parallel_streams` | 1-6                             | 3        |
+| `browser`          | electron, chrome, firefox, edge | electron |
+| `test_scope`       | all, integration, e2e           | all      |
+| `test_type`        | all, api, ui                    | all      |
+
+**Test Filtering Examples:**
+
+| Scope           | Type    | What Runs                        |
+|-----------------|---------|----------------------------------|
+| **all**         | **all** | All tests in the workspace       |
+| **all**         | **api** | All API tests (integration only) |
+| **all**         | **ui**  | All UI tests (integration + e2e) |
+| **integration** | **all** | All integration tests (api + ui) |
+| **integration** | **api** | Integration API tests only       |
+| **integration** | **ui**  | Integration UI tests only        |
+| **e2e**         | **all** | All E2E tests                    |
+| **e2e**         | **ui**  | E2E UI tests only                |
+
+**Viewing Results:** Check **Actions** tab for run status. Download artifacts (reports, screenshots, videos) after
+completion.
 
 ---
 
-## Quality Standards
+## Documentation
+
+**Test Development:**
+
+- [Test Writing Guideline](docs/test-writing-guideline.md)
+- [Naming Conventions](docs/naming-conventions.md)
+- [FAQ](docs/faq.md)
+
+**Features & Tools:**
+
+- [Parallel Execution Guide](docs/parallel-execution.md)
+- [Localization Testing](docs/localization-testing.md)
+- [Color Theme Testing](docs/colour-theme-testing.md)
+- [Bug Tracking](docs/bug-tracking.md)
+
+**Quality & Standards:**
 
 - [Custom ESLint Rules](docs/eslint-custom-rules.md)
 - [Pre-commit Check](docs/pre-commit-check.md)
 - [Tagging Strategy](docs/tagging-strategy.md)
+
+**Git & Collaboration:**
+
+- [Git Strategy](docs/git-strategy.md)
+- [Copilot Prompts](docs/copilot-prompts.md)
+- [Copilot Instructions](.github/copilot-instructions.md)
+- [Integration API Tests Instructions](.github/instructions/integration-api-tests.instructions.md)
+- [Integration UI Tests Instructions](.github/instructions/integration-ui-tests.instructions.md)
+- [E2E UI Tests Instructions](.github/instructions/e2e-ui-tests.instructions.md)
 
 ---
 

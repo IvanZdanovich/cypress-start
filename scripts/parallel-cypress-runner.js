@@ -4,18 +4,6 @@
  *
  * Discovers Cypress test files by naming patterns and executes them in parallel chunks
  * within a single Docker container.
- *
- * Usage:
- *   PARALLEL_STREAMS=4 node scripts/parallel-cypress-runner.js
- *
- * Environment Variables:
- *   PARALLEL_STREAMS - Number of parallel streams (default: 3)
- *   WORKSPACE_ROOT - Project root directory (default: process.cwd())
- *
- * Test Patterns:
- *   - E2E UI: cypress/e2e/**\/*.ui.spec.js
- *   - Integration UI: cypress/integration/ui/**\/*.ui.spec.js
- *   - Integration API: cypress/integration/api/**\/*.api.spec.js
  */
 
 const { spawn } = require('child_process');
@@ -25,8 +13,9 @@ const { glob } = require('glob');
 // Configuration
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 const PARALLEL_STREAMS = Math.max(1, parseInt(process.env.PARALLEL_STREAMS || '3', 10));
+const SPEC_PATTERN = process.env.SPEC_PATTERN || '';
 
-// Test domain patterns
+// Test domain patterns - used when SPEC_PATTERN is not provided
 const TEST_DOMAINS = {
   integrationApi: {
     name: 'Integration API Tests',
@@ -126,17 +115,31 @@ async function runParallelTests() {
   console.log('='.repeat(80));
   console.log(`Workspace: ${WORKSPACE_ROOT}`);
   console.log(`Parallel Streams: ${PARALLEL_STREAMS}`);
+
+  if (SPEC_PATTERN) {
+    console.log(`Spec Pattern: ${SPEC_PATTERN}`);
+  }
+
   console.log('='.repeat(80));
   console.log('');
 
-  // Discover test files for each domain
+  // Discover test files
   const domainFiles = {};
 
-  for (const [domainKey, domainConfig] of Object.entries(TEST_DOMAINS)) {
-    console.log(`Discovering ${domainConfig.name}...`);
-    const files = await discoverTestFiles(domainConfig.pattern);
-    domainFiles[domainKey] = files;
+  if (SPEC_PATTERN) {
+    // Use custom spec pattern
+    console.log(`Discovering tests with custom pattern...`);
+    const files = await discoverTestFiles(SPEC_PATTERN);
+    domainFiles['custom'] = files;
     console.log(`  Found ${files.length} file(s)`);
+  } else {
+    // Use default domain patterns
+    for (const [domainKey, domainConfig] of Object.entries(TEST_DOMAINS)) {
+      console.log(`Discovering ${domainConfig.name}...`);
+      const files = await discoverTestFiles(domainConfig.pattern);
+      domainFiles[domainKey] = files;
+      console.log(`  Found ${files.length} file(s)`);
+    }
   }
 
   console.log('');
@@ -147,10 +150,10 @@ async function runParallelTests() {
   for (const [domainKey, files] of Object.entries(domainFiles)) {
     if (files.length === 0) continue;
 
-    const domainConfig = TEST_DOMAINS[domainKey];
+    const domainName = SPEC_PATTERN ? 'Custom Pattern Tests' : TEST_DOMAINS[domainKey]?.name || domainKey;
     const chunks = splitIntoChunks(files, PARALLEL_STREAMS);
 
-    console.log(`${domainConfig.name}: ${files.length} file(s) → ${chunks.length} chunk(s)`);
+    console.log(`${domainName}: ${files.length} file(s) → ${chunks.length} chunk(s)`);
 
     chunks.forEach((chunk, index) => {
       const chunkName = `${domainKey}-chunk-${index + 1}`;
