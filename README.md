@@ -21,13 +21,59 @@
 
 ## Quick Start
 
-Create a new project from this template in seconds! The CLI will automatically:
+Create a new project from this template in seconds! The CLI offers two setup modes to match your needs:
 
-- Clone the template repository
-- Initialize a fresh git repository
-- Set up credentials structure
-- Install all dependencies
-- Guide you through optional configuration
+### Setup Modes
+
+#### 🎯 Mode 1: Full Setup (Recommended)
+Complete framework with all features including:
+- ✅ Complete test suite (E2E & Integration UI/API tests)
+- ✅ Test data and development data
+- ✅ ESLint custom rules with app structure validation
+- ✅ Comprehensive documentation and bug tracking system
+- ✅ GitHub Copilot instructions
+- ✅ Parallel test runner
+- ✅ GitHub Actions workflow
+- ✅ Docker support
+- ✅ Git repository initialized
+- ✅ Dependencies installed automatically
+
+**Best for:** New standalone projects or teams wanting the complete testing framework experience.
+
+**Result:** Ready-to-use Cypress project with all tests, data, and tooling configured.
+
+#### 📦 Mode 2: Specific Files
+Copy only selected modules to your existing project:
+- Choose from: ESLint Rules, Documentation, Copilot Instructions, Parallel Runner, GitHub Workflow, Docker
+- Files are copied without git initialization or npm install
+- Package.json is created or updated automatically with required scripts and dependencies
+- No tests, test-data, or development-data included
+
+**Best for:** Adding specific features to an existing project or cherry-picking functionality.
+
+**Result:** Selected files copied + package.json configured. You run `npm install` manually.
+
+### Available Modules (Specific Files Mode)
+
+1. **ESLint Custom Rules** - Custom ESLint rules for test title standardization and validation
+   - Includes: `eslint-plugin-custom-rules/`, `eslint.config.mjs`, `app-structure/`, git hooks setup
+   - Scripts: `lint`, `postinstall` (sets up pre-commit hooks)
+   
+2. **Documentation** - Comprehensive testing guidelines, conventions, and best practices
+   - Includes: `docs/` folder with all documentation
+   
+3. **Copilot Instructions** - GitHub Copilot configuration and test-specific instructions
+   - Includes: `.github/copilot-instructions.md`, `.github/instructions/`
+   
+4. **Parallel Test Execution** - Script for running tests in parallel
+   - Includes: `scripts/parallel-cypress-runner.js`
+   - Scripts: `test:parallel`
+   
+5. **GitHub Actions Workflow** - CI/CD workflows for automated test execution
+   - Includes: `.github/workflows/`
+   
+6. **Docker Support** - Dockerfile for containerized test execution
+   - Includes: `Dockerfile`, `.dockerignore`
 
 ### Prerequisites
 
@@ -35,23 +81,67 @@ Create a new project from this template in seconds! The CLI will automatically:
 - npm or yarn
 - Git
 
-### 🚀 Create New Project (Recommended)
+### 🚀 Create New Project with cypress-start CLI (Recommended)
 
 ```bash
-# Using npx
+# Using npx (no installation required)
 npx cypress-start my-project
+
+# Or install globally first
+npm install -g cypress-start
+cypress-start my-project
 ```
 
-The CLI will guide you through the setup process interactively.
+The CLI will guide you through the setup process interactively:
+
+**Mode 1: Full Setup**
+1. Enter your project name (or pass it as an argument)
+2. Select mode: `1` for Full Setup
+3. Wait for automatic setup to complete
 
 The setup automatically:
-- ✅ Installs dependencies
-- ✅ Configures pre-commit quality checks
+- ✅ Clones the complete repository
+- ✅ Initializes a fresh git repository
 - ✅ Sets up credentials structure
+- ✅ Installs all dependencies
+- ✅ Configures pre-commit quality checks
 
-**Pre-commit checks are mandatory** - they run automatically before every commit to maintain code quality.
+**Result:** Complete, ready-to-use Cypress project with tests, data, and all features.
 
-### 📋 GitHub Template
+```bash
+cd my-project
+npm run test              # Run all tests
+npm run lint              # Run ESLint checks
+npm run test:parallel     # Run tests in parallel
+npx cypress open          # Open Cypress UI
+```
+
+**Mode 2: Specific Files**
+1. Enter your project name (or navigate to existing project first)
+2. Select mode: `2` for Specific Files
+3. Choose which modules to include (y/n for each)
+4. Wait for files to be copied
+
+The setup:
+- ✅ Copies only selected module files
+- ✅ Creates or updates package.json with scripts and dependencies
+- ❌ Does NOT initialize git
+- ❌ Does NOT install dependencies (you run `npm install` manually)
+- ❌ Does NOT include tests or test-data
+
+**Result:** Selected files copied to your project with package.json configured.
+
+```bash
+cd my-project
+npm install               # Install dependencies
+npm run lint              # Use added features
+```
+
+**Note:** Pre-commit checks (when ESLint module is included) run automatically before every commit to maintain code quality.
+
+### 📋 Alternative: GitHub Template
+
+If you prefer using GitHub's template feature:
 
 1. Click the **"Use this template"** button at the top of this repository
 2. Choose "Create a new repository"
@@ -59,25 +149,121 @@ The setup automatically:
    ```bash
    git clone https://github.com/YOUR-USERNAME/your-repo-name.git
    cd your-repo-name
-   npm install
+   npm install  # Automatically sets up pre-commit hooks
    ```
 4. Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
 
-The `npm install` command automatically sets up pre-commit hooks for code quality checks.
+### 🔗 Alternative: Manual Clone
 
-### 🔗 Manual Clone
+For direct cloning without the CLI:
 
 ```bash
 git clone https://github.com/IvanZdanovich/cypress-start.git my-project
 cd my-project
-npm install
+npm install  # Automatically sets up pre-commit hooks
 ```
 
-The `npm install` command automatically sets up pre-commit hooks for code quality checks.
-
 Set up sensitive data:
-Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user
-credentials for the test environment.
+Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user credentials for the test environment.
+
+---
+
+## Cypress-Start CLI
+
+The `cypress-start` CLI tool provides a streamlined way to create new projects or add specific features to existing ones.
+
+### Installation
+
+```bash
+# Run directly with npx (no installation needed)
+npx cypress-start my-project
+
+# Or install globally
+npm install -g cypress-start
+cypress-start my-project
+```
+
+### Usage Examples
+
+#### Example 1: New Complete Project
+```bash
+npx cypress-start my-test-project
+# Select: 1 (Full Setup)
+# → Creates complete Cypress project with all features
+```
+
+#### Example 2: Add ESLint to Existing Project
+```bash
+cd my-existing-project
+npx cypress-start eslint-config
+# Select: 2 (Specific Files)
+# ESLint Custom Rules? y
+# Others? n
+# → Copies ESLint files and updates package.json
+# Then run: npm install
+```
+
+#### Example 3: Copy Documentation Only
+```bash
+npx cypress-start docs-copy
+# Select: 2 (Specific Files)
+# Documentation? y
+# Others? n
+# → Copies only docs/ folder
+```
+
+#### Example 4: Multiple Modules
+```bash
+cd my-project
+npx cypress-start features
+# Select: 2 (Specific Files)
+# ESLint? y
+# Documentation? y
+# Copilot Instructions? y
+# Parallel Runner? y
+# Others? n
+# → Copies all selected modules and updates package.json
+```
+
+### Mode Comparison
+
+| Feature | Full Setup | Specific Files |
+|---------|-----------|----------------|
+| **Target Use Case** | New standalone project | Add to existing project |
+| **Test Files** | ✅ Included | ❌ Not included |
+| **Test Data** | ✅ Included | ❌ Not included |
+| **Module Selection** | All modules | Choose modules |
+| **Git Initialization** | ✅ Yes | ❌ No |
+| **NPM Install** | ✅ Automatic | ❌ Manual |
+| **Package.json** | ✅ Complete | ✅ Created or merged |
+| **Ready to Use** | ✅ Immediately | After `npm install` |
+
+### Package.json Handling (Specific Files Mode)
+
+**Scenario 1: Existing package.json**
+- Merges scripts and dependencies into your existing file
+- Preserves all existing content
+- No conflicts, just additions
+
+**Scenario 2: No package.json**
+- Creates minimal package.json with only scripts and dependencies
+- You should add name, version, etc. with `npm init` if needed
+
+**Example Output:**
+```json
+{
+  "scripts": {
+    "lint": "eslint . --format stylish --fix",
+    "test:parallel": "node scripts/parallel-cypress-runner.js",
+    "postinstall": "node scripts/setup-git-hooks.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "glob": "^11.0.0"
+  }
+}
+```
 
 ---
 
@@ -115,6 +301,9 @@ This framework includes examples of tests:
 
 ## Features
 
+- **Interactive CLI Setup:** Fast project creation with `cypress-start` CLI offering two setup modes:
+  - **Full Setup:** Complete framework with all features, tests, and data
+  - **Specific Files:** Copy only selected modules to existing projects
 - **Parallel Test Execution:** Run tests in parallel within a single Docker container with configurable stream count for
   faster execution.  
   See [Parallel Execution Guide](docs/parallel-execution.md).
