@@ -29,7 +29,7 @@ These patterns align with the project's [naming conventions](./naming-convention
 Run tests in parallel locally using npm scripts:
 
 ```bash
-# Default (2 parallel streams)
+# Default (3 parallel streams)
 npm run test:parallel
 
 # Custom stream count

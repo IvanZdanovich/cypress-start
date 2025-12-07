@@ -25,7 +25,7 @@ const OPTIONAL_MODULES = {
     files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/check-eslint.js', 'scripts/setup-git-hooks.js', '.prettierrc.js', 'app-structure/'],
     scripts: {
       lint: 'eslint . --format stylish --fix',
-      postinstall: 'node scripts/setup-git-hooks.js'
+      postinstall: 'node scripts/setup-git-hooks.js',
     },
     devDependencies: ['@eslint/js', 'eslint', 'eslint-config-prettier', 'eslint-plugin-cypress', 'eslint-plugin-prettier', 'prettier'],
   },
@@ -94,6 +94,25 @@ ${COLORS.bright}${COLORS.blue}╔═══════════════�
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝${COLORS.reset}
   `);
+}
+
+function copyDirectory(source, destination) {
+  if (!fs.existsSync(destination)) {
+    fs.mkdirSync(destination, { recursive: true });
+  }
+
+  const entries = fs.readdirSync(source, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const sourcePath = path.join(source, entry.name);
+    const destPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectory(sourcePath, destPath);
+    } else {
+      fs.copyFileSync(sourcePath, destPath);
+    }
+  }
 }
 
 async function validateProjectName(projectName) {
@@ -167,6 +186,78 @@ async function cloneTemplate(projectName) {
   }
 }
 
+async function copyOrUpdatePackageJson(projectPath, selectedModules, tempPath) {
+  logStep('2/2', 'Configuring package.json...');
+
+  const packageJsonPath = path.join(projectPath, 'package.json');
+  const tempPackageJsonPath = path.join(tempPath, 'package.json');
+
+  // Read source package.json to get versions
+  if (!fs.existsSync(tempPackageJsonPath)) {
+    log('⚠️  Source package.json not found', 'yellow');
+    return;
+  }
+
+  const sourcePackageJson = JSON.parse(fs.readFileSync(tempPackageJsonPath, 'utf8'));
+
+  // Collect scripts and dependencies from selected modules
+  const scriptsToAdd = {};
+  const depsToAdd = {};
+
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    if (selectedModules[key]) {
+      // Add scripts
+      if (module.scripts) {
+        Object.assign(scriptsToAdd, module.scripts);
+      }
+      // Add dependencies
+      if (module.devDependencies) {
+        for (const dep of module.devDependencies) {
+          if (sourcePackageJson.devDependencies?.[dep]) {
+            depsToAdd[dep] = sourcePackageJson.devDependencies[dep];
+          }
+        }
+      }
+    }
+  }
+
+  let packageJson;
+
+  // Check if package.json exists in target directory
+  if (fs.existsSync(packageJsonPath)) {
+    // Merge into existing package.json
+    log('  Merging scripts and dependencies into existing package.json...', 'cyan');
+    packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+    // Merge scripts
+    if (!packageJson.scripts) {
+      packageJson.scripts = {};
+    }
+    Object.assign(packageJson.scripts, scriptsToAdd);
+
+    // Merge devDependencies
+    if (!packageJson.devDependencies) {
+      packageJson.devDependencies = {};
+    }
+    Object.assign(packageJson.devDependencies, depsToAdd);
+
+    log('  ✓ Scripts and dependencies merged', 'green');
+  } else {
+    // Create new package.json
+    log('  Creating new package.json...', 'cyan');
+    packageJson = {
+      scripts: scriptsToAdd,
+      devDependencies: depsToAdd,
+    };
+
+    log('  ✓ New package.json created', 'green');
+  }
+
+  // Write package.json
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+  log('✅ Package.json configured', 'green');
+}
+
 async function copySpecificFiles(projectName, selectedModules) {
   logStep('1/2', 'Copying selected files...');
 
@@ -224,98 +315,6 @@ async function copySpecificFiles(projectName, selectedModules) {
   }
 }
 
-function copyDirectory(source, destination) {
-  if (!fs.existsSync(destination)) {
-    fs.mkdirSync(destination, { recursive: true });
-  }
-
-  const entries = fs.readdirSync(source, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const sourcePath = path.join(source, entry.name);
-    const destPath = path.join(destination, entry.name);
-
-    if (entry.isDirectory()) {
-      copyDirectory(sourcePath, destPath);
-    } else {
-      fs.copyFileSync(sourcePath, destPath);
-    }
-  }
-}
-
-async function copyOrUpdatePackageJson(projectPath, selectedModules, tempPath) {
-  logStep('2/2', 'Configuring package.json...');
-
-  const packageJsonPath = path.join(projectPath, 'package.json');
-  const tempPackageJsonPath = path.join(tempPath, 'package.json');
-
-  // Read source package.json to get versions
-  if (!fs.existsSync(tempPackageJsonPath)) {
-    log('⚠️  Source package.json not found', 'yellow');
-    return;
-  }
-
-  const sourcePackageJson = JSON.parse(fs.readFileSync(tempPackageJsonPath, 'utf8'));
-
-  // Collect scripts and dependencies from selected modules
-  const scriptsToAdd = {};
-  const depsToAdd = {};
-
-  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
-    if (selectedModules[key]) {
-      // Add scripts
-      if (module.scripts) {
-        Object.assign(scriptsToAdd, module.scripts);
-      }
-      // Add dependencies
-      if (module.devDependencies) {
-        for (const dep of module.devDependencies) {
-          if (sourcePackageJson.devDependencies?.[dep]) {
-            depsToAdd[dep] = sourcePackageJson.devDependencies[dep];
-          }
-        }
-      }
-    }
-  }
-
-
-  let packageJson;
-
-  // Check if package.json exists in target directory
-  if (fs.existsSync(packageJsonPath)) {
-    // Merge into existing package.json
-    log('  Merging scripts and dependencies into existing package.json...', 'cyan');
-    packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-
-    // Merge scripts
-    if (!packageJson.scripts) {
-      packageJson.scripts = {};
-    }
-    Object.assign(packageJson.scripts, scriptsToAdd);
-
-    // Merge devDependencies
-    if (!packageJson.devDependencies) {
-      packageJson.devDependencies = {};
-    }
-    Object.assign(packageJson.devDependencies, depsToAdd);
-
-    log('  ✓ Scripts and dependencies merged', 'green');
-  } else {
-    // Create new package.json
-    log('  Creating new package.json...', 'cyan');
-    packageJson = {
-      scripts: scriptsToAdd,
-      devDependencies: depsToAdd,
-    };
-
-    log('  ✓ New package.json created', 'green');
-  }
-
-  // Write package.json
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
-  log('✅ Package.json configured', 'green');
-}
-
 async function cleanupGitHistory(projectName) {
   logStep('2/5', 'Initializing fresh repository...');
 
@@ -371,7 +370,6 @@ async function installDependencies(projectName) {
     log('You can run "npm install" manually in your project directory', 'yellow');
   }
 }
-
 
 function printSuccessMessage(projectName, setupMode, selectedModules) {
   const projectPath = path.resolve(projectName);

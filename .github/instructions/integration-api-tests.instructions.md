@@ -37,8 +37,6 @@ DESCRIBE ALL checked states EXTENSIVELY IN test data
 
 ### Test Data Cleanup Strategy
 
-### Test Data Cleanup Strategy
-
 **Test File Independence:**
 - EACH test file MUST be independent and executable in isolation
 - CLEANUP ensures consistent application state before each test execution

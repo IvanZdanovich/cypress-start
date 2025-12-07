@@ -30,9 +30,7 @@ if (!fs.existsSync(hooksDir)) {
 
 // Create pre-commit hook with cross-platform support
 const isWindows = process.platform === 'win32';
-const normalizedCheckScriptPath = isWindows
-  ? checkScriptPath.replace(/\\/g, '/')
-  : checkScriptPath;
+const normalizedCheckScriptPath = isWindows ? checkScriptPath.replace(/\\/g, '/') : checkScriptPath;
 
 const hookContent = isWindows
   ? `#!/bin/sh
