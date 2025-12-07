@@ -42,7 +42,7 @@ on:
       browser:
         description: 'Browser to run tests in'
         required: false
-        default: 'electron'
+        default: 'chrome'
         type: choice
         options:
           - electron

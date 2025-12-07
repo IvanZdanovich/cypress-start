@@ -11,7 +11,7 @@ ARG LANGUAGE=en
 ARG TARGET_ENV=dev
 ARG COLOUR_THEME=default
 ARG PARALLEL_STREAMS=3
-ARG BROWSER=electron
+ARG BROWSER=chrome
 ARG SPEC_PATTERN="**/*.spec.js"
 
 # Set CI environment variable first so postinstall script can detect it
