@@ -85,6 +85,7 @@ function executeCypressChunk(specFiles, chunkName) {
     const cypressProcess = spawn('npx', ['cypress', 'run', '--spec', specArg], {
       stdio: 'inherit',
       cwd: WORKSPACE_ROOT,
+      shell: true, // Enables cross-platform compatibility for npx
     });
 
     cypressProcess.on('close', (exitCode) => {
@@ -221,7 +222,7 @@ async function runParallelTests() {
   console.log(`Total Duration: ${totalDuration}s`);
   console.log(`Total Tasks: ${executionTasks.length}`);
   console.log(`Failed Tasks: ${failedTasks}`);
-  console.log(`Success Rate: ${(((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1)}%`);
+  console.log(`Success Rate: ${executionTasks.length > 0 ? (((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1) : '0.0'}%`);
   console.log('='.repeat(80));
 
   // Exit with error code if any tasks failed

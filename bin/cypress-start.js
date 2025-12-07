@@ -159,7 +159,7 @@ async function cloneTemplate(projectName) {
   logStep('1/5', 'Cloning template from GitHub...');
 
   try {
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${projectName}"`, { stdio: 'inherit' });
+    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${projectName}"`, { stdio: 'inherit', shell: true });
     log('✅ Template cloned successfully', 'green');
   } catch (error) {
     log('❌ Failed to clone template. Please check your internet connection.', 'red');
@@ -176,7 +176,7 @@ async function copySpecificFiles(projectName, selectedModules) {
   try {
     // Clone to temporary directory
     log('  Downloading files from GitHub...', 'cyan');
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${tempPath}"`, { stdio: 'pipe' });
+    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${tempPath}"`, { stdio: 'pipe', shell: true });
 
     // Create project directory
     fs.mkdirSync(projectPath, { recursive: true });
@@ -328,7 +328,7 @@ async function cleanupGitHistory(projectName) {
   }
 
   // Initialize new git repository
-  execSync('git init', { cwd: projectPath, stdio: 'inherit' });
+  execSync('git init', { cwd: projectPath, stdio: 'inherit', shell: true });
   log('✅ Fresh git repository initialized', 'green');
 }
 
@@ -364,7 +364,7 @@ async function installDependencies(projectName) {
   const projectPath = path.resolve(projectName);
 
   try {
-    execSync('npm install', { cwd: projectPath, stdio: 'inherit' });
+    execSync('npm install', { cwd: projectPath, stdio: 'inherit', shell: true });
     log('✅ Dependencies installed successfully', 'green');
   } catch {
     log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');

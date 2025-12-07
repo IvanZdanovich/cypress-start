@@ -3,14 +3,13 @@ const { ESLint } = require('eslint');
 const fs = require('fs');
 const path = require('path');
 
-const gitPath = '/usr/bin/git';
-const wcPath = '/usr/bin/wc';
 const thresholdsFilePath = path.join(__dirname, 'thresholds.json');
 
 function getJsFilesFromGit() {
   try {
-    const command = [gitPath, 'ls-files', '--', '*.js', '*.jsx', '*.ts', '*.tsx', ':!:node_modules/**', ':!:cypress/reports/**', ':!:dist/**', ':!:build/**'];
-    const result = spawnSync(command[0], command.slice(1), { encoding: 'utf8' });
+    // Use 'git' command directly without hardcoded path - works cross-platform
+    const args = ['ls-files', '--', '*.js', '*.jsx', '*.ts', '*.tsx', ':!:node_modules/**', ':!:cypress/reports/**', ':!:dist/**', ':!:build/**'];
+    const result = spawnSync('git', args, { encoding: 'utf8', shell: true });
     if (result.error) {
       throw result.error;
     }
@@ -26,23 +25,17 @@ function countLinesOfCode(files) {
   try {
     if (files.length === 0) return 0;
 
-    // Use the files passed to the function instead of querying git again
-    const wcCommand = [wcPath, '-l'].concat(files);
-    const wcResult = spawnSync(wcCommand[0], wcCommand.slice(1), { encoding: 'utf8' });
-    if (wcResult.error) {
-      throw wcResult.error;
+    // Use Node.js fs to count lines - works cross-platform
+    let totalLines = 0;
+    for (const file of files) {
+      if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file, 'utf8');
+        // Count lines by splitting on newline characters
+        const lines = content.split(/\r\n|\r|\n/).length;
+        totalLines += lines;
+      }
     }
-
-    const output = wcResult.stdout.trim();
-    const lines = output.split('\n');
-    if (lines.length > 1) {
-      const lastLine = lines[lines.length - 1];
-      const match = lastLine.match(/^\s*(\d+)\s+total$/);
-      return match ? parseInt(match[1]) : 0;
-    } else {
-      const match = output.match(/^\s*(\d+)/);
-      return match ? parseInt(match[1]) : 0;
-    }
+    return totalLines;
   } catch (error) {
     console.error(`Error counting lines: ${error.message}`);
     return 0;
