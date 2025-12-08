@@ -91,7 +91,7 @@ AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import nee
 ## Development Reference
 
 REFER TO `.html` pages IN `${WORKSPACE_ROOT}/development-data/pages`
-REGISTER new page/component IN `${WORKSPACE_ROOT}/app-structure/components.json` BEFORE creating tests
+REGISTER new page/component IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/components.json` BEFORE creating tests
 STRUCTURE: `{ "PageName": { "ComponentName": { } } }`
 MATCH functional elements (header, forms, modals, etc.)
 

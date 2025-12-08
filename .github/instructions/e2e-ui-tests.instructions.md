@@ -91,7 +91,7 @@ AVAILABLE globally VIA `${WORKSPACE_ROOT}/support/e2e.js` (NO import needed):
 ## Development Reference
 
 REFER TO `.html` pages IN `${WORKSPACE_ROOT}/development-data/pages`
-REGISTER new workflows IN `${WORKSPACE_ROOT}/app-structure/workflows.json` BEFORE creating tests
+REGISTER new workflows IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/workflows.json` BEFORE creating tests
 STRUCTURE: `{ "WorkflowName": { "SubFlowName": { } } }`
 MATCH business terminology
 

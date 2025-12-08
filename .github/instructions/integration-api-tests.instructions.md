@@ -109,7 +109,7 @@ AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import nee
 ## Development Reference
 
 REFER TO Swagger docs IN `${WORKSPACE_ROOT}/development-data/swagger`
-REGISTER new modules IN `${WORKSPACE_ROOT}/app-structure/modules.json` BEFORE creating tests
+REGISTER new modules IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json` BEFORE creating tests
 STRUCTURE: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
 ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
