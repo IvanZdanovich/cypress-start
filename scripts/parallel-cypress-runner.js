@@ -73,19 +73,24 @@ function splitIntoChunks(files, numChunks) {
  * Execute Cypress for a specific set of spec files
  * @param {string[]} specFiles - Array of spec file paths
  * @param {string} chunkName - Name identifier for this chunk
+ * @param {number} displayNumber - Unique display number for Xvfb (99+)
  * @returns {Promise<number>} Exit code of the Cypress process
  */
-function executeCypressChunk(specFiles, chunkName) {
+function executeCypressChunk(specFiles, chunkName, displayNumber) {
   return new Promise((resolve) => {
     const specArg = specFiles.join(',');
     const startTime = Date.now();
 
-    console.log(`[${chunkName}] Starting execution with ${specFiles.length} file(s)`);
+    console.log(`[${chunkName}] Starting execution with ${specFiles.length} file(s) on display :${displayNumber}`);
 
     const cypressProcess = spawn('npx', ['cypress', 'run', '--spec', specArg], {
       stdio: 'inherit',
       cwd: WORKSPACE_ROOT,
       shell: true, // Enables cross-platform compatibility for npx
+      env: {
+        ...process.env,
+        DISPLAY: `:${displayNumber}`, // Assign unique display to avoid Xvfb conflicts
+      },
     });
 
     cypressProcess.on('close', (exitCode) => {
@@ -189,9 +194,15 @@ async function runParallelTests() {
       while (taskIndex < executionTasks.length && activePromises.size < PARALLEL_STREAMS) {
         const task = executionTasks[taskIndex];
         const taskId = taskIndex;
+        const displayNumber = 99 + taskId; // Assign unique display number (99, 100, 101, ...)
         taskIndex++;
 
-        const promise = executeCypressChunk(task.files, task.name).then((exitCode) => {
+        // Add 1-second delay between starts to prevent race conditions during Xvfb initialization
+        if (activePromises.size > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        const promise = executeCypressChunk(task.files, task.name, displayNumber).then((exitCode) => {
           results.push({ task, exitCode });
           activePromises.delete(taskId);
           return exitCode;
