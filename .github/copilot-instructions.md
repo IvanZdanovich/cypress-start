@@ -211,7 +211,7 @@ cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingI
 ### Test Data Best Practices
 
 **DO:**
-- ✅ USE randomization FOR all variable data (names, numbers, dates)
+- ✅ USE randomization FOR variable data (names, numbers, dates)
 - ✅ DECLARE all fields explicitly WITH their expected types
 - ✅ GROUP test data BY business scenario or test purpose
 - ✅ NAME instances TO describe test purpose
