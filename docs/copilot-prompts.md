@@ -29,6 +29,8 @@ EXECUTE improvements:
    - CREATE random selection functions FOR invalid values
    - USE randomized values IN test data instances
    - AVOID testing all permutations (one random value per test)
+   - PROHIBIT forEach/for-of loops over test data arrays
+   - ENSURE each `it` block tests ONE scenario with ONE data value
 
 4. CONSOLIDATE:
    - duplicate assertions INTO reusable patterns
@@ -66,7 +68,8 @@ BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
 - HOW cleanup strategy IS implemented (by names, not IDs)
-- HOW negative data IS randomized
+- HOW negative data IS randomized (NO loops, ONE value per test)
+- WHAT loop patterns ARE removed (forEach, for-of over test data)
 - WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW assertions ARE consolidated
@@ -108,21 +111,28 @@ EXECUTE improvements:
    - CALL cleanup IN both `before` AND `after` hooks
    - DELETE test data BY name patterns OR identifiers
 
-3. CONSOLIDATE:
+3. RANDOMIZE negative test data:
+   - CREATE random selection functions FOR invalid values in test data file
+   - USE randomized values IN test data instances
+   - AVOID testing all permutations (one random value per test)
+   - PROHIBIT forEach/for-of loops over test data arrays
+   - ENSURE each `it` block tests ONE scenario with ONE data value
+
+4. CONSOLIDATE:
    - duplicate assertions INTO reusable patterns
    - REMOVE obvious comments that restate code logic
 
-4. OPTIMIZE structure PER:
+5. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. VALIDATE selectors FROM:
+6. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-6. FIX naming violations PER:
+7. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-7. LOG bugs/issues in functionality under test:
+8. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md` (Bug Logging for UI Tests section)
@@ -132,7 +142,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-8. ENSURE:
+9. ENSURE:
    - All tests pass with current UI behavior
    - Bug references are clear and traceable
    - Test data uses randomization via utils
@@ -144,6 +154,8 @@ BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
 - HOW cleanup strategy IS implemented
+- HOW negative data IS randomized (NO loops, ONE value per test)
+- WHAT loop patterns ARE removed (forEach, for-of over test data)
 - WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW assertions ARE consolidated
@@ -182,23 +194,30 @@ EXECUTE improvements:
    - CALL cleanup IN both `before` AND `after` hooks
    - DELETE test data BY name patterns OR identifiers
 
-3. CONSOLIDATE:
+3. RANDOMIZE negative test data:
+   - CREATE random selection functions FOR invalid values in test data file
+   - USE randomized values IN test data instances
+   - AVOID testing all permutations (one random value per test)
+   - PROHIBIT forEach/for-of loops over test data arrays
+   - ENSURE each `it` block tests ONE scenario with ONE data value
+
+4. CONSOLIDATE:
    - duplicate navigation steps
    - repetitive form interactions
    - repeated assertions across workflow
    - REMOVE obvious comments that restate code logic
 
-4. OPTIMIZE structure PER:
+5. OPTIMIZE structure PER:
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. VALIDATE selectors FROM:
+6. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-6. FIX naming violations PER:
+7. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-7. LOG bugs/issues in functionality under test:
+8. LOG bugs/issues in functionality under test:
    FOLLOW bug logging guidelines FROM:
    - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md` (Bug Logging for E2E Tests section)
@@ -208,7 +227,7 @@ EXECUTE improvements:
    ADD bug reference comments IN test file per instructions
    UPDATE test assertions per instructions
 
-8. ENSURE:
+9. ENSURE:
    - All E2E flows complete successfully
    - Bug references maintain integration context
    - Test data uses randomization via utils
@@ -220,6 +239,8 @@ BEFORE code, LIST improvement points:
 - WHAT redundancies ARE removed
 - WHICH hard-coded values ARE extracted
 - HOW cleanup strategy IS implemented
+- HOW negative data IS randomized (NO loops, ONE value per test)
+- WHAT loop patterns ARE removed (forEach, for-of over test data)
 - WHAT obvious comments ARE removed
 - WHAT custom commands ARE applied
 - HOW workflow steps ARE optimized

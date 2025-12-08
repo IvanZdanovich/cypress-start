@@ -24,6 +24,14 @@ CONNECT related `context` blocks TO cover scenarios efficiently
 USE `context.skip` and `it.skip` WITH descriptions FOR manual verification
 NO tags FOR filtering; USE file names
 
+**Prohibited Test Patterns:**
+- ❌ NO `forEach` loops over test data within test blocks
+- ❌ NO `for...of` loops over test data within test blocks
+- ❌ NO dynamic test generation with loops
+- ❌ NO multiple values tested in single `it` block
+- ✅ USE randomization functions TO select ONE value per test execution
+- ✅ EACH `it` block validates ONE scenario with ONE data instance
+
 ## Test Data Management
 
 REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)

@@ -24,6 +24,14 @@ USE `context.skip` and `it.skip` WITH descriptions FOR manual verification
 NO tags FOR filtering; USE file names
 USE `failOnStatusCode: false` ONLY WHEN validating error responses
 
+**Prohibited Test Patterns:**
+- ❌ NO `forEach` loops over test data within test blocks
+- ❌ NO `for...of` loops over test data within test blocks
+- ❌ NO dynamic test generation with loops
+- ❌ NO multiple values tested in single `it` block
+- ✅ USE randomization functions TO select ONE value per test execution
+- ✅ EACH `it` block validates ONE scenario with ONE data instance
+
 ## Test Data Management
 
 REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
@@ -34,6 +42,8 @@ ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialIte
 IMPROVES test readability by keeping all related data in one place
 PREFER generated/randomized data USING `utils` functions FOR edge cases
 DESCRIBE ALL checked states EXTENSIVELY IN test data
+
+### Test Data Cleanup Strategy
 
 ### Test Data Cleanup Strategy
 
@@ -109,7 +119,7 @@ AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import nee
 ## Development Reference
 
 REFER TO Swagger docs IN `${WORKSPACE_ROOT}/development-data/swagger`
-REGISTER new modules IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json` BEFORE creating tests
+REGISTER new modules IN `${WORKSPACE_ROOT}//eslint-plugin-custom-rules/app-structure/modules.json` BEFORE creating tests
 STRUCTURE: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
 ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 

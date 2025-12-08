@@ -293,10 +293,57 @@ after(() => {
 
 **Randomize Negative Scenarios:**
 - DEFINE arrays of invalid values in test data file
-- CREATE random selection functions
+- CREATE random use case selection functions for similar checks
 - USE randomized values in test data instances
+- TEST ONE randomly selected value per test execution
 - AVOIDS testing all permutations (improves execution time)
 - ENSURES different coverage across multiple test runs
+
+**Prohibited Patterns:**
+- ❌ NO `forEach` loops iterating over test data arrays in tests
+- ❌ NO `for...of` loops iterating over test data values in tests
+- ❌ NO dynamic test generation with loops
+- ❌ NO testing multiple values within a single `it` block
+
+**Example - WRONG Approach:**
+```javascript
+// ❌ BAD - Loop testing all values
+const invalidIds = [0, -1, null, 'NaN', 1.2];
+invalidIds.forEach((invalidId) => {
+  it(`Should reject invalid ID: ${invalidId}`, () => {
+    cy.module__action__POST(invalidId).then((response) => {
+      expect(response.status).to.eq(400);
+    });
+  });
+});
+```
+
+**Example - CORRECT Approach:**
+```javascript
+// Test Data File
+const invalidIdsArray = [0, -1, null, 'NaN', 1.2];
+const getRandomInvalidId = () => invalidIdsArray[Math.floor(Math.random() * invalidIdsArray.length)];
+
+export const module_testData = {
+  invalidItems: {
+    invalidId: getRandomInvalidId(), // ONE random value per execution
+  },
+};
+
+// Test File
+it('Module.Action.POST: Then return 400 status code for invalid ID', () => {
+  cy.module__action__POST(testData.invalidItems.invalidId, { failOnStatusCode: false }).then((response) => {
+    expect(response.status).to.eq(400);
+  });
+});
+```
+
+**Rationale:**
+- ONE test validates ONE behavior with ONE randomly selected invalid value
+- DIFFERENT test runs cover DIFFERENT invalid values automatically
+- FASTER test execution (no redundant loops)
+- CLEANER test reports (no duplicate test titles)
+- CONSISTENT with Cypress best practices
 
 ### Edge Case Testing
 
