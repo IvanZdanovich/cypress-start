@@ -142,21 +142,12 @@ jobs:
             -e BROWSER=${{ inputs.browser || 'electron' }} \
             -e SPEC_PATTERN="${{ steps.spec-pattern.outputs.SPEC_PATTERN }}" \
             cypress-tests
-        continue-on-error: true
 
       - name: Clean up sensitive files
         if: always()
         run: |
           rm -rf cypress/sensitive-data
 
-      - name: Check test results
-        id: test-status
-        run: |
-          if [ "${{ steps.cypress.outcome }}" = "failure" ]; then
-            echo "tests_failed=true" >> $GITHUB_OUTPUT
-          else
-            echo "tests_failed=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Upload test results
         if: always()
