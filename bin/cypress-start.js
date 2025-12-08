@@ -22,7 +22,7 @@ const OPTIONAL_MODULES = {
   eslintCustomRules: {
     name: 'ESLint Custom Rules',
     description: 'Custom ESLint rules for test title standardization, validation, and JSON structure definitions',
-    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/check-eslint.js', 'scripts/setup-git-hooks.js', '.prettierrc.js', 'app-structure/'],
+    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/check-eslint.js', 'scripts/setup-git-hooks.js', '.prettierrc.js'],
     scripts: {
       lint: 'eslint . --format stylish --fix',
       postinstall: 'node scripts/setup-git-hooks.js',

@@ -32,7 +32,7 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/cypress/sensitive-data/` - User credentials (not committed)
 
 **Config:**
-- `${WORKSPACE_ROOT}/app-structure/` - Structure definitions for test title validation
+- `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/` - Structure definitions for test title validation
 - `${WORKSPACE_ROOT}/bug-log/bug-log.json` - Bug documentation
 - `${WORKSPACE_ROOT}/docs/` - Guidelines and conventions
 - `${WORKSPACE_ROOT}/development-data/` - Local reference data (Swagger, HTML pages)

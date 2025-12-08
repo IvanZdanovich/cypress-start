@@ -20,7 +20,6 @@
     "cypress/reports/mochawesome/.gitkeep",
     "cypress/reports/screenshots/.gitkeep",
     "docs/",
-    "app-structure/",
     "bug-log/",
     "development-data/",
     "eslint-plugin-custom-rules/",

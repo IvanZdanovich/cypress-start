@@ -11,13 +11,12 @@ module.exports = {
   create: function (context) {
     const filename = context.getFilename();
     let structureFile;
-
     if (filename.includes('e2e')) {
-      structureFile = '../app-structure/workflows.json';
+      structureFile = './app-structure/workflows.json';
     } else if (filename.endsWith('.api.spec.js')) {
-      structureFile = '../app-structure/modules.json';
+      structureFile = './app-structure/modules.json';
     } else if (filename.endsWith('.ui.spec.js')) {
-      structureFile = '../app-structure/components.json';
+      structureFile = './app-structure/components.json';
     } else {
       return {};
     }

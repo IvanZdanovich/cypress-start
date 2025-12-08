@@ -82,7 +82,7 @@ OUTPUT:
 - Updated/created test-data file(s) WITH:
   - Exported namePrefix for cleanup
   - Readable name patterns for all instances
-  - Randomization functions for negative data
+  - Randomization functions for negative cases
 - Updated/created API commands file(s)
 - Updated bug-log.json (if bugs found)
 ```
@@ -329,7 +329,7 @@ REQUIREMENTS:
    - Use template provided in instructions
 
 3. REGISTER module IN:
-   - `${WORKSPACE_ROOT}/app-structure/modules.json`
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json`
    - Structure: `{ "ModuleName": { "SubmoduleName": { "Action": {} } } }`
 
 4. CREATE test data file:
@@ -374,8 +374,8 @@ REQUIREMENTS:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 3. REGISTER component IN:
-   - `${WORKSPACE_ROOT}/app-structure/components.json` (for components)
-   - `${WORKSPACE_ROOT}/app-structure/modules.json` (for pages)
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/components.json` (for components)
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json` (for pages)
 
 4. ADD selectors TO:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
@@ -406,7 +406,7 @@ OUTPUT:
 - Test data file
 - UI commands file (if created)
 - Updated selectors
-- Updated app-structure files
+- Updated eslint-plugin-custom-rules/app-structure files
 - Summary of test coverage
 - Bugs found (if any)
 ```
@@ -425,7 +425,7 @@ REQUIREMENTS:
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 3. REGISTER workflow IN:
-   - `${WORKSPACE_ROOT}/app-structure/workflows.json`
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/workflows.json`
    - Structure: `{ "WorkflowName": { "SubFlowName": {} } }`
 
 4. CREATE test data file:
