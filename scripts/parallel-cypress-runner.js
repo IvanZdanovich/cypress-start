@@ -6,7 +6,7 @@
  * within a single Docker container.
  */
 
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const { glob } = require('glob');
 
@@ -14,6 +14,7 @@ const { glob } = require('glob');
 const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 const PARALLEL_STREAMS = Math.max(1, parseInt(process.env.PARALLEL_STREAMS || '3', 10));
 const SPEC_PATTERN = process.env.SPEC_PATTERN || '';
+const IS_CI = process.env.CI === 'true';
 
 // Test domain patterns - used when SPEC_PATTERN is not provided
 const TEST_DOMAINS = {
@@ -30,6 +31,57 @@ const TEST_DOMAINS = {
     pattern: 'cypress/e2e/**/*.ui.spec.js',
   },
 };
+
+/**
+ * Start Xvfb servers for CI environment
+ * @param {number} count - Number of Xvfb servers to start
+ * @returns {Promise<void>}
+ */
+function startXvfbServers(count) {
+  return new Promise((resolve, reject) => {
+    if (!IS_CI) {
+      console.log('Not in CI environment, skipping Xvfb setup');
+      resolve();
+      return;
+    }
+
+    console.log(`Starting ${count} Xvfb server(s) for parallel execution...`);
+
+    const commands = [];
+    for (let i = 99; i < 99 + count; i++) {
+      commands.push(`Xvfb :${i} -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix > /dev/null 2>&1 &`);
+    }
+
+    const startCommand = commands.join(' && sleep 0.1 && ');
+
+    exec(startCommand, (error, _stdout, _stderr) => {
+      if (error) {
+        console.error('Failed to start Xvfb servers:', error.message);
+        reject(error);
+        return;
+      }
+
+      // Give Xvfb servers time to initialize
+      setTimeout(() => {
+        console.log(`Xvfb servers started on displays :99 to :${98 + count}`);
+        resolve();
+      }, 500);
+    });
+  });
+}
+
+/**
+ * Cleanup Xvfb servers on exit
+ */
+function cleanupXvfbServers() {
+  if (!IS_CI) return;
+
+  exec('pkill -f Xvfb', (error) => {
+    if (error) {
+      console.error('Failed to cleanup Xvfb servers:', error.message);
+    }
+  });
+}
 
 /**
  * Discover test files matching a glob pattern
@@ -121,6 +173,7 @@ async function runParallelTests() {
   console.log('='.repeat(80));
   console.log(`Workspace: ${WORKSPACE_ROOT}`);
   console.log(`Parallel Streams: ${PARALLEL_STREAMS}`);
+  console.log(`CI Environment: ${IS_CI ? 'Yes' : 'No'}`);
 
   if (SPEC_PATTERN) {
     console.log(`Spec Pattern: ${SPEC_PATTERN}`);
@@ -128,6 +181,25 @@ async function runParallelTests() {
 
   console.log('='.repeat(80));
   console.log('');
+
+  // Start Xvfb servers if in CI environment
+  try {
+    await startXvfbServers(PARALLEL_STREAMS);
+  } catch (error) {
+    console.error('Failed to initialize Xvfb servers:', error.message);
+    process.exit(1);
+  }
+
+  // Register cleanup handler
+  process.on('exit', cleanupXvfbServers);
+  process.on('SIGINT', () => {
+    cleanupXvfbServers();
+    process.exit(130);
+  });
+  process.on('SIGTERM', () => {
+    cleanupXvfbServers();
+    process.exit(143);
+  });
 
   // Discover test files
   const domainFiles = {};
