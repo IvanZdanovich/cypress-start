@@ -52,8 +52,8 @@ function startXvfbServers(count) {
       commands.push(`Xvfb :${i} -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix > /dev/null 2>&1 &`);
     }
 
-    // Use semicolons and sleep to properly chain background commands
-    const startCommand = commands.join('; sleep 0.1; ') + '; sleep 0.5';
+    // Use newlines to properly separate background commands
+    const startCommand = commands.join('\nsleep 0.1\n') + '\nsleep 0.5';
 
     exec(startCommand, { shell: '/bin/bash' }, (error, _stdout, _stderr) => {
       if (error) {
