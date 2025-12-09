@@ -21,8 +21,8 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/cypress/support/selectors/` - UI selectors by page/component
 - `${WORKSPACE_ROOT}/cypress/support/commands/api/` - API commands by module
 - `${WORKSPACE_ROOT}/cypress/support/commands/ui/` - UI commands by page/component
-- `${WORKSPACE_ROOT}/cypress/support/utils/` - Utility functions
-- `${WORKSPACE_ROOT}/cypress/support/requirements/` - Requirements, error messages, constraints
+- `${WORKSPACE_ROOT}/cypress/support/utils/utils.js` - Utility functions
+- `${WORKSPACE_ROOT}/cypress/support/requirements/requirements.js` - Requirements, error messages, constraints
 - `${WORKSPACE_ROOT}/cypress/support/localization/` - Localization JSON
 - `${WORKSPACE_ROOT}/cypress/support/colours/` - Theme colour JSON
 
@@ -81,54 +81,53 @@ REFER TO documentation:
 - AVOID generic names like `item1`, `item2`, `data1`
 
 **Examples:**
-❌ BAD - unclear purpose
 ```javascript
 export const booking_testData = {
-    validItems: {
-        item1: {},
-        item2: {}
-    }
-}
-```
-✅ GOOD - clear purpose
-```javascript
-export const booking_testData = {
-    validBookings: {
-        standardCheckout: {},
-        extendedStay: {},
-        sameDayCheckout: {}
-    },
-    invalidBookings: {
-        missingRequiredField: {},
-        invalidDateFormat: {},
-        checkoutBeforeCheckin: {},
-        negativePrice: {}
-    }
+  validBookings: {
+    standardCheckout: {},
+    extendedStay: {},
+    sameDayCheckout: {}
+  },
+  invalidBookings: {
+    missingRequiredField: {},
+    invalidDateFormat: {},
+    checkoutBeforeCheckin: {},
+    negativePrice: {}
+  }
 }
 ```
 
 ### Test Data Structure Requirements
 
-**Complete Field Documentation:**
-- DECLARE ALL fields explicitly, even if optional
-- USE randomization FOR variable data
-- GROUP related fields logically
-- USE `String` type placeholders FOR dynamic IDs populated during execution
+General Rules:
+- Separate Instances → per context (group, global, roles, environments)
+- Constants → in requirements.js via global reqs
+- Self-contained → include all required data + IDs
+- Clear Naming → {context}{Purpose} (e.g., groupMinLength)
+- Randomisation → all variable data via utils
+- Direct References → use test data objects in tests
+- Logical Grouping → by scenario/purpose
+- Dynamic IDs → String placeholders, populate during execution
+- Assign IDs Immediately → after creation
 
-**Randomization:**
-- USE `utils` functions FOR all variable data (names, numbers, dates)
-- AVOID hard-coded dates that will become outdated
-- ENSURE test data is unique per execution TO avoid conflicts
+✅ DO:
+- Use utils for randomisation (names, numbers, dates)
+- Explicit field declarations + types
+- Group fields by business scenario
+- Assign IDs to same instance (instance.id)
+- Reuse within file (create → update → delete)
+- Prefix for cleanup: Prefix.Purpose.${randomSuffix}
 
-**Dynamic ID Assignment:**
-- ASSIGN dynamically obtained IDs (bookingId, itemId, etc.) TO the test data object immediately after creation
-- USE descriptive property names matching the response (e.g., `bookingId`, not `id`)
-- IMPROVES test readability by keeping all related data in one place
-- ENABLES easy access in subsequent tests within same file
+❌ DON'T:
+- Hard-code dates/names/values
+- Use generic names (data1, test1)
+- Cross-reference IDs between instances
+- Add obvious comments
 
-**Structure Example:**
+**Structure Example (Single Context):**
 ```javascript
 export const booking_testData = {
+  namePrefix: 'Booking',
   validBookings: {
     standardCheckout: {
       bookingId: String,
@@ -141,225 +140,64 @@ export const booking_testData = {
         checkout: utils.getFutureDate(14)
       },
       additionalneeds: 'Breakfast'
-    },
-    extendedStay: {
-      bookingId: String,
-      firstname: utils.generateRandomString(8),
-      lastname: utils.generateRandomString(10),
-      totalprice: utils.getRandomNumber(2000, 5000),
-      depositpaid: false,
-      bookingdates: {
-        checkin: utils.getFutureDate(30),
-        checkout: utils.getFutureDate(60)
-      },
-      additionalneeds: 'Late checkout, Airport transfer'
     }
   },
   invalidBookings: {
     missingFirstname: {
       bookingId: String,
       // firstname: intentionally omitted
-      lastname: utils.generateRandomString(10), 
+      lastname: utils.generateRandomString(10),
       totalprice: utils.getRandomNumber(100, 500),
       depositpaid: true,
       bookingdates: {
         checkin: utils.getFutureDate(7),
-            checkout: utils.getFutureDate(14)
-        },
-      additionalneeds: null
-    },
-    invalidDateFormat: {
-      ddmmyyyy: {
-        bookingId: String,
-        firstname: utils.generateRandomString(8),
-        lastname: utils.generateRandomString(10),
-        totalprice: utils.getRandomNumber(100, 500),
-        depositpaid: true,
-        bookingdates: {
-          checkin: utils.getRandomInvalidDate('DD-MM-YYYY'),
-          checkout: utils.getRandomInvalidDate('DD-MM-YYYY')
-        },
-        additionalneeds: null
+        checkout: utils.getFutureDate(14)
       },
-      mmddyyyy: {
-        bookingId: String,
-        firstname: utils.generateRandomString(8),
-        lastname: utils.generateRandomString(10),
-        totalprice: utils.getRandomNumber(100, 500),
-        depositpaid: true,
-        bookingdates: {
-          checkin: utils.getRandomInvalidDate('MM/DD/YYYY'),
-          checkout: utils.getRandomInvalidDate('MM/DD/YYYY')
-        },
-        additionalneeds: null
-      }
+      additionalneeds: null
     }
-  },
+  }
 };
 
-// Usage in tests - assign ID immediately after creation
-cy.booking__create__POST(bookingData).then((response) => {
-  // Assign bookingId to test data for reuse in subsequent tests
-  booking_testData.validBookings.standardCheckout.bookingId = response.body.bookingid;
+// Usage - assign ID after creation
+cy.booking__create__POST(testData.validBookings.standardCheckout).then((response) => {
+  testData.validBookings.standardCheckout.bookingId = response.body.bookingid;
   expect(response.status).to.eq(200);
 });
 
-// Later tests can access the ID easily
-cy.booking__update__PUT(booking_testData.validBookings.standardCheckout.bookingId, updatedData);
+// Later tests access ID from same instance
+cy.booking__update__PUT(
+  testData.validBookings.standardCheckout.bookingId,
+  testData.validBookings.standardCheckout
+);
+
 ```
-
-### Test Data Best Practices
-
-**DO:**
-- ✅ USE randomization FOR variable data (names, numbers, dates)
-- ✅ DECLARE all fields explicitly WITH their expected types
-- ✅ GROUP test data BY business scenario or test purpose
-- ✅ NAME instances TO describe test purpose
-- ✅ ADD inline comments FOR non-obvious field purposes ONLY (no obvious comments)
-- ✅ STORE dynamically obtained IDs IN test data object immediately after creation
-- ✅ ASSIGN IDs TO the specific test data instance (e.g., `testData.validBookings.standardCheckout.bookingId = response.body.bookingid`)
-- ✅ REUSE test data instances ACROSS tests WITHIN same file
-- ✅ USE readable name patterns WITH prefix FOR cleanup identification (e.g., `Prefix.Purpose.RandomSuffix`)
-
-**DON'T:**
-- ❌ HARD-CODE dates that will become outdated
-- ❌ USE generic names like `data1`, `test1`, `item1`
-- ❌ OMIT field declarations without documentation
-- ❌ MIX valid and invalid data in same group
-- ❌ DUPLICATE similar data structures
-- ❌ CREATE multiple instances when one can be reused
-- ❌ RELY fully randomized values FOR cleanup queries (use readable prefixes)
-- ❌ ADD obvious comments that restate code logic
 
 ### Test Data Cleanup for Independence
 
-**File Independence Requirement:**
-- EACH test file MUST run independently in isolation
-- CLEANUP prevents data pollution from current AND previous test runs
-- ENSURES consistent database state before each test execution
+**Requirements:**
+- EACH test file MUST run independently IN isolation
+- CLEANUP prevents data pollution FROM current AND previous runs
+- ENSURES consistent database state BEFORE each execution
 
-**Cleanup Implementation:**
-- DEFINE cleanup method: `const cleanUp = () => { /* cleanup logic */ }`
-- CALL cleanup IN both `before` AND `after` hooks
-- DELETE by NAME PATTERNS using dedicated commands (e.g., `cy.module__deleteByNames__DELETE([namePrefix])`)
-- DO NOT delete by IDs only - IDs may be lost between runs
-- ENSURE removal of data from both current AND previous test runs
+**Rules:**
+- DEFINE: `const cleanUp = () => { /* delete logic */ }`
+- CALL: IN both `before` AND `after` hooks
+- DELETE: BY name patterns using `deleteByNames` commands
+- NEVER: Delete by IDs only (IDs lost between runs)
+- FORMAT: `Prefix.Purpose.${randomSuffix}` for all names
 
-**Readable Name Pattern:**
-```javascript
-// Define name prefix in test data file
-const namePrefix = 'TestFileRef.Purpose';
+### Test Data Randomization
 
-// Use prefix in all test data instances
-const templateName = `${namePrefix}Purpose.${utils.generateRandomString(10)}`;
+**Pattern:**
+- USE functions FROM `utils` TO generate random values
+- TEST ONE randomly selected value PER execution
+- DIFFERENT test runs cover DIFFERENT values automatically
 
-export const module_testData = {
-  namePrefix: 'TestFileRef.Purpose', // Export for cleanup usage
-  validItems: {
-    standardItem: {
-      itemId: String,
-      name: `${namePrefix}StandardItem.${utils.generateRandomString(8)}`,
-      // ...
-    },
-  },
-};
-```
-
-**Cleanup Pattern:**
-```javascript
-// In test file
-import { module_testData } from '../../test-data/api/module.submodule.test-data';
-
-const testData = module_testData;
-
-const cleanUp = () => {
-  // Delete by name pattern, not by IDs
-  cy.module__deleteByNames__DELETE(token, [testData.namePrefix], { options });
-};
-
-before(() => {
-  cy.then(()=>{
-    cleanUp(); // Remove leftover data from previous runs
-  });
-  // Setup test data...
-});
-
-after(() => {
-  cleanUp(); // Clean up data from current run
-});
-```
-
-### Negative Test Data Randomization
-
-**Randomize Negative Scenarios:**
-- DEFINE arrays of invalid values in test data file
-- CREATE random use case selection functions for similar checks
-- USE randomized values in test data instances
-- TEST ONE randomly selected value per test execution
-- AVOIDS testing all permutations (improves execution time)
-- ENSURES different coverage across multiple test runs
-
-**Prohibited Patterns:**
-- ❌ NO `forEach` loops iterating over test data arrays in tests
-- ❌ NO `for...of` loops iterating over test data values in tests
-- ❌ NO dynamic test generation with loops
-- ❌ NO testing multiple values within a single `it` block
-
-**Example - WRONG Approach:**
-```javascript
-// ❌ BAD - Loop testing all values
-const invalidIds = [0, -1, null, 'NaN', 1.2];
-invalidIds.forEach((invalidId) => {
-  it(`Should reject invalid ID: ${invalidId}`, () => {
-    cy.module__action__POST(invalidId).then((response) => {
-      expect(response.status).to.eq(400);
-    });
-  });
-});
-```
-
-**Example - CORRECT Approach:**
-```javascript
-// Test Data File
-const invalidIdsArray = [0, -1, null, 'NaN', 1.2];
-const getRandomInvalidId = () => invalidIdsArray[Math.floor(Math.random() * invalidIdsArray.length)];
-
-export const module_testData = {
-  invalidItems: {
-    invalidId: getRandomInvalidId(), // ONE random value per execution
-  },
-};
-
-// Test File
-it('Module.Action.POST: Then return 400 status code for invalid ID', () => {
-  cy.module__action__POST(testData.invalidItems.invalidId, { failOnStatusCode: false }).then((response) => {
-    expect(response.status).to.eq(400);
-  });
-});
-```
-
-**Rationale:**
-- ONE test validates ONE behavior with ONE randomly selected invalid value
-- DIFFERENT test runs cover DIFFERENT invalid values automatically
-- FASTER test execution (no redundant loops)
-- CLEANER test reports (no duplicate test titles)
-- CONSISTENT with Cypress best practices
-
-### Edge Case Testing
-
-**Separate Edge Cases:**
-- CREATE individual test data instances FOR each edge case
-- NAME clearly TO indicate edge case type
-- TEST each edge case in separate `context` block
-- VERIFY specific edge case behavior explicitly
-
-### Invalid Data Testing
-
-**Single Status Code Per Test:**
-- ONE test should validate ONE expected state
-- NO accepting multiple states
-- IF behavior is uncertain, LOG bug and validate ACTUAL behavior
-- SEPARATE tests FOR different validation scenarios
+**Prohibited:**
+- ❌ NO `forEach` loops over test data IN tests
+- ❌ NO `for...of` loops over test data IN tests
+- ❌ NO dynamic test generation WITH loops
+- ❌ NO testing multiple values IN single `it` block
 
 ---
 
@@ -384,29 +222,6 @@ DO NOT LOG IF:
 - Issue is in test code (fix the test)
 - Behavior matches documentation (update understanding)
 - It's a known limitation (document in notes)
-
-### Bug Severity Classification
-
-**High Severity:**
-
-- Data corruption/loss
-- Security vulnerabilities
-- Complete feature failure
-- Incorrect validation allowing bad data
-- Reliability issues affecting core functionality
-
-**Medium Severity:**
-
-- Incorrect status codes
-- Missing/improper error messages
-- Non-critical validation issues
-- Inconsistent behavior
-
-**Low Severity:**
-
-- Minor deviations from standards
-- Cosmetic issues
-- Documentation discrepancies
 
 ### Bug ID Convention
 

@@ -7,7 +7,7 @@ applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 ## File Structure
 
 PLACE files: `${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js` (kebab-case)
-STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.test-data.js` (kebab-case)
 STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
 STORE URLs: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
 
@@ -24,60 +24,39 @@ USE `context.skip` and `it.skip` WITH descriptions FOR manual verification
 NO tags FOR filtering; USE file names
 USE `failOnStatusCode: false` ONLY WHEN validating error responses
 
-**Prohibited Test Patterns:**
-- ❌ NO `forEach` loops over test data within test blocks
-- ❌ NO `for...of` loops over test data within test blocks
-- ❌ NO dynamic test generation with loops
-- ❌ NO multiple values tested in single `it` block
-- ✅ USE randomization functions TO select ONE value per test execution
-- ✅ EACH `it` block validates ONE scenario with ONE data instance
-
 ## Test Data Management
 
-REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
-DESCRIBE state PER `context` block FOR clarity
-DEFINE placeholders WITH `String` type, POPULATE during execution
-SAVE dynamically obtained IDs TO test data object immediately after creation
-ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialItem.itemId = response.body.itemId`)
-IMPROVES test readability by keeping all related data in one place
-PREFER generated/randomized data USING `utils` functions FOR edge cases
-DESCRIBE ALL checked states EXTENSIVELY IN test data
+FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
-### Test Data Cleanup Strategy
+- PREPARE test data instances within test data file
+- REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
+- DESCRIBE state PER `context` block FOR clarity
+- DEFINE placeholders WITH `String` type, POPULATE during execution
+- SAVE dynamically obtained IDs TO test data object immediately after creation
+- ASSIGN IDs TO specific test data instance: `testData.validItems.initialItem.id = response.body.id`
+- PREFER randomized data USING `utils` functions FOR edge cases
+- DESCRIBE ALL checked states extensively IN test data
 
-### Test Data Cleanup Strategy
+### Test Data Cleanup
 
-**Test File Independence:**
-- EACH test file MUST be independent and executable in isolation
-- CLEANUP ensures consistent application state before each test execution
-- USE dedicated delete-by-name commands FOR efficient cleanup
-
-**Cleanup Implementation:**
-- DEFINE cleanup method: `const cleanUp = () => { /* cleanup logic */ }`
+**Requirements:**
+- EACH test file MUST run independently IN isolation
+- DELETE BY name patterns using `deleteByNames` commands
 - CALL cleanup IN both `before` AND `after` hooks
-- DELETE by NAME PATTERNS using `cy.module__deleteByNames__DELETE([namePrefix])`
-- DO NOT rely on IDs only - IDs may be lost between test runs
-- ENSURE removal of data from both current AND previous test runs
+- FORMAT: `Prefix.Purpose.${randomSuffix}` for all names
+- EXPORT `namePrefix` in test data FOR cleanup usage
 
-**Readable Name Patterns:**
-- ALL test data names MUST include identifiable prefix (e.g., `TestFileRef.Purpose`)
-- FORMAT: `TestFileRef.Purpose.RandomSuffix`
-- EXPORT prefix in test data for cleanup usage
-- ENABLES cleanup even when IDs are lost
-
-**Example:**
+**Pattern:**
 ```javascript
 // Test data file
-const namePrefix = 'TestFileRef.Purpose';
-
 export const module_testData = {
-  namePrefix: 'TestFileRef.Purpose',
+  namePrefix: 'ModuleName',
   validItems: {
-    standardItem: {
+    standard: {
       itemId: String,
-      name: `${namePrefix}StandardItem.${utils.generateRandomString(8)}`,
-    },
-  },
+      name: `ModuleName.Standard.${utils.generateRandomString(8)}`
+    }
+  }
 };
 
 // Test file
@@ -86,14 +65,14 @@ const cleanUp = () => {
 };
 
 before(() => {
-  cy.then(()=>{
-    cleanUp(); // Remove leftover data from previous runs
+  cy.then(() => {
+    cleanUp(); // Remove previous run leftovers
   });  
   // Create test data...
 });
 
 after(() => {
-  cleanUp(); // Removes all instances matching prefix
+  cleanUp();
 });
 ```
 
@@ -119,7 +98,7 @@ AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import nee
 ## Development Reference
 
 REFER TO Swagger docs IN `${WORKSPACE_ROOT}/development-data/swagger`
-REGISTER new modules IN `${WORKSPACE_ROOT}//eslint-plugin-custom-rules/app-structure/modules.json` BEFORE creating tests
+REGISTER new modules IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json` BEFORE creating tests
 STRUCTURE: `{ "ModuleName": { "SubmoduleName": { "Action1": {}, "Action2": {} } } }`
 ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
@@ -127,10 +106,11 @@ ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
 ## Test Data Structure
 
-STORE: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.test-data.js`
 NAMING: kebab-case files, camelCase variables
 ORGANIZE: By module/submodule
 USE `String` placeholders FOR dynamic IDs
+EXPORT `namePrefix` FOR cleanup usage
 FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
 ---
@@ -197,7 +177,7 @@ ACCESS: Via global `errors` variable (NO import)
 ## Test Template
 
 ```javascript
-import {testData} from '../../test-data/api/module-name.submodule-name.test-data';
+import {module_testData as testData} from '../../test-data/api/module-name.submodule-name.api.test-data';
 
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;
@@ -211,10 +191,12 @@ describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIso
             tokenUser = access_token;
         });
         
-        cleanUp();
+        cy.then(() => {
+            cleanUp();
+        });
         
         cy.then(() => {
-            cy.moduleName__create__POST(tokenUser, { name: testData.validItems.initialItem.name }).then((response) => {
+            cy.moduleName__create__POST(tokenUser, testData.validItems.initialItem).then((response) => {
                 testData.validItems.initialItem.itemId = response.body.itemId;
             });
         });
@@ -257,13 +239,13 @@ IDENTIFY API issues:
 
 DOCUMENT IN `${WORKSPACE_ROOT}/bug-log/bug-log.json`:
 - FORMAT: `BUG-[MODULE]-[NUMBER]`
-- INCLUDE: all required fields per main instructions
+- FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#bug-logging-guidelines`
 
 ADD bug reference comment:
 ```javascript
 // Bug Reference: BUG-MODULE-001 - Returns 500 instead of 400 for validation errors
 it('Module.Submodule.Action.METHOD: Then return 500 status code and Internal Server Error', () => {
-  cy.module__action__METHOD(invalidData, { failOnStatusCode: false }).then((response) => {
+  cy.module__action__METHOD(tokenUser, invalidData, { failOnStatusCode: false }).then((response) => {
     expect(response.status).to.eq(500); // Actual behavior
     expect(response.body).to.eq(errors.common.internalServerError);
   });
