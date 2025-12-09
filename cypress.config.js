@@ -3,7 +3,8 @@ const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   watchForFileChanges: false,
   e2e: {
-    specPattern: '**/*.spec.js',
+    specPattern: 'cypress/**/*.spec.js',
+    excludeSpecPattern: ['**/node_modules/**', '**/dist/**', '**/build/**'],
     supportFile: 'cypress/support/e2e.js',
     slowTestThreshold: 200,
     chromeWebSecurity: false,
@@ -50,7 +51,7 @@ module.exports = defineConfig({
       const language = process.env.LANGUAGE || 'en';
       const colourTheme = process.env.COLOUR_THEME || 'default';
       const targetEnv = process.env.TARGET_ENV || 'dev';
-      const specPattern = process.env.SPEC || `**/*.spec.js`;
+      const specPattern = process.env.SPEC || 'cypress/**/*.spec.js';
       const browser = process.env.BROWSER || 'chrome';
 
       console.log(`Running tests with specPattern=${specPattern}, language=${language}, targetEnv=${targetEnv}, browser=${browser}, colourTheme=${colourTheme}`);

@@ -89,8 +89,8 @@ jobs:
           
           # Build spec pattern based on scope and type
           if [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "all" ]; then
-            # All tests
-            SPEC_PATTERN="**/*.spec.js"
+            # All tests (only within cypress directory)
+            SPEC_PATTERN="cypress/**/*.spec.js"
           elif [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "api" ]; then
             # All API tests
             SPEC_PATTERN="cypress/integration/api/**/*.api.spec.js"
@@ -117,8 +117,8 @@ jobs:
             SPEC_PATTERN="cypress/e2e/**/*.spec.js"
             echo "::warning::E2E scope doesn't have API tests. Running all E2E tests."
           else
-            # Default fallback
-            SPEC_PATTERN="**/*.spec.js"
+            # Default fallback (only within cypress directory)
+            SPEC_PATTERN="cypress/**/*.spec.js"
           fi
           
           echo "SPEC_PATTERN=${SPEC_PATTERN}" >> $GITHUB_OUTPUT

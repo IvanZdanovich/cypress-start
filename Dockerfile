@@ -20,7 +20,7 @@ ARG TARGET_ENV=dev
 ARG COLOUR_THEME=default
 ARG PARALLEL_STREAMS=3
 ARG BROWSER=chrome
-ARG SPEC_PATTERN="**/*.spec.js"
+ARG SPEC_PATTERN="cypress/**/*.spec.js"
 
 # Set CI environment variable first (required for postinstall script)
 ENV CI=true
