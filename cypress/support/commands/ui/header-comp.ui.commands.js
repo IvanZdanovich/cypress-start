@@ -1,13 +1,16 @@
 Cypress.Commands.add('headerComp__resetAppState', () => {
-  cy.get(headerComp.sidebar.open).scrollIntoView();
-  cy.then(()=>{
+  cy.then(() => {
+    cy.get(headerComp.sidebar.open).scrollIntoView();
+    cy.wait(50);
+  });
+  cy.then(() => {
     cy.get(headerComp.sidebar.open).click();
   });
-  cy.then(()=>{
+  cy.then(() => {
     cy.get(headerComp.sidebar.resetAppState).click();
     cy.get(headerComp.sidebar.close).click();
     cy.reload();
-  })
+  });
 });
 
 Cypress.Commands.add('headerComp__logOut', () => {
