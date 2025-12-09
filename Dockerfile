@@ -11,6 +11,9 @@ RUN apt-get update && \
 COPY package*.json ./
 COPY .dockerignore ./
 
+# Copy scripts directory (needed for postinstall script)
+COPY scripts/ ./scripts/
+
 # Build arguments for test configuration
 ARG LANGUAGE=en
 ARG TARGET_ENV=dev
