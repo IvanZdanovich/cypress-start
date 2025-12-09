@@ -1,10 +1,7 @@
 Cypress.Commands.add('headerComp__resetAppState', () => {
   cy.then(() => {
     cy.get(headerComp.sidebar.open).scrollIntoView();
-    cy.wait(50);
-  });
-  cy.then(() => {
-    cy.get(headerComp.sidebar.open).click();
+    cy.get(headerComp.sidebar.open).click({ animationDistanceThreshold: 1 });
   });
   cy.then(() => {
     cy.get(headerComp.sidebar.resetAppState).click();
