@@ -20,17 +20,13 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      testData.indicesOfProducts.forEach((index) => {
+      cy.wrap(testData.indicesOfProducts).each((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
-            // Bug Reference: BUG-INVENTORY-001 - Map incorrect product title to correct one for test data
-            let productTitle = text;
-            if (text === testData.knownBugs.incorrectProductTitle) {
-              productTitle = testData.knownBugs.correctProductTitle;
-            }
+            const productTitle = text === testData.buggyProductData.wrongTitle ? testData.buggyProductData.correctTitle : text;
             testData.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
       });
@@ -40,7 +36,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.knownBugs);
+      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
     });
   });
 
@@ -52,11 +48,10 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.knownBugs);
+      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
     });
 
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
-      // Bug Reference: BUG-PURCHASE-001 - Floating-point precision errors in price calculation
       const totalPrice = testData.chosenProducts.reduce((acc, product) => acc + product.price, 0);
       const totalPriceRaw = parseFloat(totalPrice);
       const totalPriceCorrect = parseFloat(totalPrice.toFixed(2));

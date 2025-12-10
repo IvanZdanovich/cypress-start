@@ -7,6 +7,7 @@ tests.
 
 - [Do Not Allow Empty Blocks](#do-not-allow-empty-blocks)
 - [Prevent Duplicated Titles](#prevent-duplicated-titles)
+- [Prevent Test Data Loops](#prevent-test-data-loops)
 - [Verify Test Title Against Structure](#verify-test-title-against-structure)
 - [Verify Test Title Pattern](#verify-test-title-pattern)
 - [Verify TODOs Have Links](#verify-todos-have-links)
@@ -49,6 +50,77 @@ Ensures that all test titles are unique across the test suite, preventing confus
 ### Example
 
 ```javascript
+
+describe('Module.Submodule: Given preconditions', () => {
+    it('Module.Submodule.GET: Then return 200', () => {}); // Valid
+    it('Module.Submodule.GET: Then return 200', () => {}); // ❌ Error: duplicate title
+});
+```
+
+## Prevent Test Data Loops
+
+**Rule file:** `eslint-plugin-custom-rules/prevent-test-data-loops.js`
+
+Prevents the use of loops (forEach, for...of, for...in) over test data arrays within test files. Enforces the use of randomization functions instead.
+
+### Rationale
+
+- ONE test validates ONE behavior with ONE randomly selected value
+- DIFFERENT test runs cover DIFFERENT values automatically
+- FASTER test execution (no redundant loops)
+- CLEANER test reports (no duplicate test titles)
+- CONSISTENT with Cypress best practices
+
+### Examples
+
+**❌ Incorrect - Loop over test data:**
+
+```javascript
+const invalidIds = [0, -1, null, 'NaN', 1.2];
+
+describe('Module.Submodule', () => {
+  // ❌ Error: Do not use .forEach() to loop over test data
+  invalidIds.forEach((id) => {
+    it(`Should reject invalid ID: ${id}`, () => {
+      cy.module__action__POST(id, { failOnStatusCode: false }).then((response) => {
+        expect(response.status).to.eq(400);
+      });
+    });
+  });
+
+  // ❌ Error: Do not use for...of loops over test data
+  for (const id of testData.invalidIds) {
+    context(`When ID is ${id}`, () => {
+      it('Should return error', () => {
+        // test logic
+      });
+    });
+  }
+});
+```
+
+**✅ Correct - Use randomization:**
+
+```javascript
+// Test Data File
+const invalidIdsArray = [0, -1, null, 'NaN', 1.2];
+const getRandomInvalidId = () => invalidIdsArray[Math.floor(Math.random() * invalidIdsArray.length)];
+
+export const module_testData = {
+  invalidItems: {
+    invalidId: getRandomInvalidId(), // ONE random value per execution
+  },
+};
+
+// Test File
+describe('Module.Submodule', () => {
+  it('Module.Submodule.POST: Then return 400 status code for invalid ID', () => {
+    cy.module__action__POST(testData.invalidItems.invalidId, { failOnStatusCode: false }).then((response) => {
+      expect(response.status).to.eq(400);
+    });
+  });
+});
+
 describe('UserManagement', () => {
     // ...
 });

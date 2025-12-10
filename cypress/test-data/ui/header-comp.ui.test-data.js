@@ -1,4 +1,9 @@
+const getRandomProductIndices = () => {
+  const numberOfProducts = utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage);
+  return utils.generateArrayOfRandomIndices(numberOfProducts, reqs.inventoryPage.numberOfProductsOnThePage - 1);
+};
+
 export const testData = {
-  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage), reqs.inventoryPage.numberOfProductsOnThePage - 1),
+  randomProductIndices: getRandomProductIndices(),
   sidebarAnimationThreshold: 30,
 };

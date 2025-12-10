@@ -72,7 +72,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
               return;
             }
             const productExists = products.some((product) => product.title === text);
-            expect(productExists).to.be.true;
+            expect(productExists).to.eq(true);
           });
       });
     });
@@ -87,7 +87,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
               return;
             }
             const productExists = products.some((product) => product.description === text);
-            expect(productExists).to.be.true;
+            expect(productExists).to.eq(true);
           });
       });
     });
@@ -102,7 +102,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
           .invoke('text')
           .then((text) => {
             const productExists = products.some((product) => `$${product.price}` === text);
-            expect(productExists).to.be.true;
+            expect(productExists).to.eq(true);
           });
       });
     });
@@ -279,7 +279,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
               return product && product.title === title;
             });
 
-            expect(foundProduct, `Product with title "${title}" should exist in chosen products`).to.exist;
+            expect(foundProduct, `Product with title "${title}" should exist in chosen products`).to.not.eq(undefined);
           });
       });
     });

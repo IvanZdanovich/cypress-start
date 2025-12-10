@@ -20,9 +20,6 @@ npm-debug.log
 cypress/reports/screenshots/**
 cypress/reports/videos/**
 
-# Ignore Cypress app structure files
-app-structure
-
 # Ignore Cypress reports
 cypress/reports/**
 

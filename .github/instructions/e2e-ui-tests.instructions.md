@@ -7,7 +7,7 @@ applyTo: "${WORKSPACE_ROOT}/cypress/e2e/ui/*.ui.spec.js"
 ## File Structure
 
 PLACE files: `${WORKSPACE_ROOT}/cypress/e2e/ui/workflow-name.ui.spec.js` (kebab-case)
-STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.test-data.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.test-data.js` (kebab-case)
 STORE selectors: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js` (grouped by page/component)
 STORE UI commands: `${WORKSPACE_ROOT}/cypress/support/commands/ui/` (named by page/component)
 STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
@@ -26,25 +26,44 @@ NO tags FOR filtering; USE file names
 
 ## Test Data Management
 
-REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
-DESCRIBE state PER `context` block FOR clarity
-DEFINE placeholders WITH `String` type, POPULATE during execution
-SAVE dynamically obtained IDs TO test data object immediately after creation
-ASSIGN IDs TO specific test data instance (e.g., `testData.validItems.initialItem.id = response.body.id`)
-PREFER generated/randomized data USING `utils` functions FOR edge cases
-DESCRIBE ALL checked states EXTENSIVELY IN test data
+FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
-### Test Data Cleanup Strategy
+- PREPARE test data instances within test data file
+- REUSE test data instances ACROSS tests WITHIN file (created → updated → deleted)
+- DESCRIBE state PER `context` block FOR clarity
+- DEFINE placeholders WITH `String` type, POPULATE during execution
+- SAVE dynamically obtained IDs TO test data object immediately after creation
+- ASSIGN IDs TO specific test data instance: `testData.validItems.initialItem.id = response.body.id`
+- PREFER randomized data USING `utils` functions
+- DESCRIBE ALL checked states extensively IN test data
 
-**Test File Independence:**
-EACH test file MUST be independent and executable in isolation
-CLEANUP ensures consistent application state before each test execution
-USE API commands FOR efficient cleanup operations
+### Test Data Cleanup
 
-**Cleanup Implementation:**
+**Requirements:**
+- EACH test file MUST run independently IN isolation
+- USE API commands FOR efficient cleanup operations
 - CALL cleanup IN both `before` AND `after` hooks
-- QUERY by CONSTANT properties (names, emails, identifiers) NOT dynamic IDs
-- ENSURE removal of data from both current AND previous test runs
+- DELETE BY name patterns using `deleteByNames` commands
+- FORMAT: `Prefix.Purpose.${randomSuffix}` for all names
+- EXPORT `namePrefix` in test data FOR cleanup usage
+
+**Pattern:**
+```javascript
+const cleanUp = () => {
+  cy.module__deleteByNames__DELETE(token, [testData.namePrefix]);
+};
+
+before(() => {
+  cy.then(() => {
+    cleanUp(); // Remove previous run leftovers
+  });
+  // Setup via API...
+});
+
+after(() => {
+  cleanUp();
+});
+```
 
 ## Commands Strategy
 
@@ -64,14 +83,14 @@ ENSURE uniqueness WITHIN file
 
 ## Global Resources
 
-AVAILABLE globally VIA `${WORKSPACE_ROOT}/support/e2e.js` (NO import needed):
+AVAILABLE globally VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js` (NO import needed):
 - `utils`, `l10n`, `colours`, `urls`, `reqs`, `userRoles`
 - All UI selectors (`loginPage`, etc.)
 
 ## Development Reference
 
 REFER TO `.html` pages IN `${WORKSPACE_ROOT}/development-data/pages`
-REGISTER new workflows IN `${WORKSPACE_ROOT}/app-structure/workflows.json` BEFORE creating tests
+REGISTER new workflows IN `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/workflows.json` BEFORE creating tests
 STRUCTURE: `{ "WorkflowName": { "SubFlowName": { } } }`
 MATCH business terminology
 
@@ -79,9 +98,10 @@ MATCH business terminology
 
 ## Test Data Structure
 
-STORE: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.test-data.js`
 NAMING: kebab-case files, camelCase variables
 USE `String` placeholders FOR dynamic IDs
+EXPORT `namePrefix` FOR cleanup usage
 FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-data-guidelines`
 
 ---
@@ -140,9 +160,10 @@ IDENTIFY workflow issues:
 - Data inconsistency across pages, navigation problems
 - State management issues
 
-DOCUMENT IN `bug-log/bug-log.json`:
+DOCUMENT IN `${WORKSPACE_ROOT}/bug-log/bug-log.json`:
 - FORMAT: `BUG-[WORKFLOW]-[NUMBER]`
 - INCLUDE: workflow context and affected pages
+- FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#bug-logging-guidelines`
 
 ADD bug reference comment:
 ```javascript

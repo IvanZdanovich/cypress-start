@@ -14,17 +14,26 @@ is structured to guide the AI through refactoring and improving tests while foll
 ```
 TASK: Refactor Integration API test TO production standards
 INPUT: attached test file
+FOLLOW: 
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`   
+   - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
+   - USE readable name patterns WITH prefix FOR all instances: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
+   - REMOVE all inline assignments from test blocks, use test data directly
 
-2. CONSOLIDATE:
-   - duplicate assertions INTO reusable helpers
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using `cy.module__deleteByNames__DELETE([namePrefix])`
+   - CALL IN both `before` AND `after` hooks
+   - DELETE BY name patterns, NOT by IDs
 
-3. OPTIMIZE structure PER:
-   - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
-   - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
+3. RANDOMIZE test data:
+   - CREATE random selector functions IN test data file
+   - USE ONE random value PER test execution
+   - PROHIBIT forEach/for...of loops OVER test data arrays
 
 4. VALIDATE coverage AGAINST:
    - `${WORKSPACE_ROOT}/development-data/swagger/[specific-swagger-file]`
@@ -32,40 +41,37 @@ EXECUTE improvements:
 5. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-6. LOG bugs/issues in functionality under test:
-   FOLLOW bug logging guidelines FROM:
-   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
-   - `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md` (Bug Logging for API Tests section)
-   
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
-   
-   ADD bug reference comments IN test file per instructions
-   UPDATE test assertions per instructions
+6. LOG bugs/issues:
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 7. ENSURE:
-   - All tests pass with current API behavior
-   - Bug references are clear and traceable
-   - Test data uses randomization via utils
-   - No sensitive data exposure
+   - Tests pass WITH current API behavior
+   - Bug references clear and traceable
+   - Test data uses `utils` randomization
+   - NO sensitive data exposure
+   - NO obvious comments
    - ESLint compliance
 
-BEFORE code, LIST improvement points:
-- WHAT redundancies ARE removed
-- WHICH hard-coded values ARE extracted
-- WHAT custom commands ARE applied
-- HOW assertions ARE consolidated
-- WHAT structural changes FOR clarity
-- WHAT bugs/issues WERE found and logged
-
-FOLLOW strictly:
-- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
-- `${WORKSPACE_ROOT}/.github/instructions/integration-api-tests.instructions.md`
+BEFORE code, LIST improvements:
+- Redundancies removed
+- Hard-coded values extracted
+- Cleanup strategy (by names, not IDs)
+- Test data randomization (NO loops)
+- Loop patterns removed
+- Obvious comments removed
+- Custom commands applied
+- Assertions consolidated
+- Structural changes
+- Bugs/issues found and logged
 
 OUTPUT:
-- Complete refactored test code (NOT diff, NOT summary)
-- Updated/created test-data file(s)
+- Refactored test code (NOT diff, NOT summary)
+- Updated/created test-data file(s) WITH:
+  - Exported namePrefix for cleanup
+  - Readable name patterns
+  - Randomization functions
 - Updated/created API commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log.json (if bugs found)
 ```
 
 ---
@@ -77,57 +83,66 @@ OUTPUT:
 ```
 TASK: Refactor Integration UI test TO production standards
 INPUT: attached test file
+FOLLOW: 
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`   
+   - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.test-data.js`
-   - Use l10n for localized text
-   - Use colours for colour values
+   - USE readable name patterns: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
+   - USE l10n FOR localized text
+   - USE colours FOR colour values
 
-2. OPTIMIZE structure PER:
-   - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
-   - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using API commands
+   - CALL IN both `before` AND `after` hooks
+   - DELETE BY name patterns OR identifiers
 
-3. VALIDATE selectors FROM:
+3. RANDOMIZE test data:
+   - CREATE random selector functions IN test data file
+   - USE ONE random value PER test execution
+   - PROHIBIT forEach/for...of loops OVER test data arrays
+
+4. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-4. FIX naming violations PER:
+5. FIX naming violations PER:
    - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 
-5. LOG bugs/issues in functionality under test:
-   FOLLOW bug logging guidelines FROM:
-   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
-   - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md` (Bug Logging for UI Tests section)
-   
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
-   
-   ADD bug reference comments IN test file per instructions
-   UPDATE test assertions per instructions
+6. LOG bugs/issues FOLLOWING:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
-6. ENSURE:
-   - All tests pass with current UI behavior
-   - Bug references are clear and traceable
-   - Test data uses randomization via utils
-   - Selectors use global variables (loginPage, inventoryPage, etc.)
+7. ENSURE:
+   - Tests pass WITH current UI behavior
+   - Bug references clear and traceable
+   - Test data uses `utils` randomization
+   - Selectors use global variables
+   - NO obvious comments
    - ESLint compliance
 
-BEFORE code, LIST improvement points:
-- WHAT redundancies ARE removed
-- WHICH hard-coded values ARE extracted
-- WHAT custom commands ARE applied
-- HOW assertions ARE consolidated
-- WHAT structural changes FOR clarity
-- WHAT bugs/issues WERE found and logged
-
-FOLLOW strictly:
-- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
-- `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
+BEFORE code, LIST improvements:
+- Redundancies removed
+- Hard-coded values extracted
+- Cleanup strategy implemented
+- Test data randomization (NO loops)
+- Loop patterns removed
+- Obvious comments removed
+- Custom commands applied
+- Assertions consolidated
+- Structural changes
+- Bugs/issues found and logged
 
 OUTPUT:
 - Complete refactored test code (NOT diff, NOT summary)
-- Updated/created test-data file(s)
+- Updated/created test-data file(s) WITH:
+  - Exported namePrefix for cleanup
+  - Readable name patterns
+  - Randomization functions
 - Updated/created UI commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log.json (if bugs found)
 ```
 
 ---
@@ -139,59 +154,63 @@ OUTPUT:
 ```
 TASK: Refactor E2E UI test TO production standards
 INPUT: attached test file
+FOLLOW: 
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md`   
+   - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.test-data.js`
-   - Use l10n for localized text
-   - Use colours for colour values
+   - USE readable name patterns: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
+   - USE l10n FOR localized text
+   - USE colours FOR colour values
 
-2. CONSOLIDATE:
-   - duplicate navigation steps
-   - repetitive form interactions
-   - repeated assertions across workflow
+2. IMPLEMENT cleanup strategy:
+   - DEFINE `cleanUp()` method using API commands
+   - CALL IN both `before` AND `after` hooks
+   - DELETE BY name patterns OR identifiers
 
-3. OPTIMIZE structure PER:
-   - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
-   - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
+3. RANDOMIZE test data:
+   - CREATE random selector functions IN test data file
+   - USE ONE random value PER test execution
+   - PROHIBIT forEach/for...of loops OVER test data arrays
 
 4. VALIDATE selectors FROM:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
 
-5. LOG bugs/issues in functionality under test:
-   FOLLOW bug logging guidelines FROM:
-   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines section)
-   - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md` (Bug Logging for E2E Tests section)
-   
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
-   
-   ADD bug reference comments IN test file per instructions
-   UPDATE test assertions per instructions
+5. LOG bugs/issues FOLLOWING:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 6. ENSURE:
-   - All E2E flows complete successfully
+   - E2E flows complete successfully
    - Bug references maintain integration context
-   - Test data uses randomization via utils
+   - Test data uses `utils` randomization
    - Selectors use global variables
+   - NO obvious comments
    - ESLint compliance
 
-BEFORE code, LIST improvement points:
-- WHAT redundancies ARE removed
-- WHICH hard-coded values ARE extracted
-- WHAT custom commands ARE applied
-- HOW workflow steps ARE optimized
-- WHAT structural changes FOR clarity
-- WHAT bugs/issues WERE found and logged
-
-FOLLOW strictly:
-- `${WORKSPACE_ROOT}/.github/copilot-instructions.md`
-- `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
+BEFORE code, LIST improvements:
+- Redundancies removed
+- Hard-coded values extracted
+- Cleanup strategy implemented
+- Test data randomization (NO loops)
+- Loop patterns removed
+- Obvious comments removed
+- Custom commands applied
+- Workflow steps optimized
+- Structural changes
+- Bugs/issues found and logged
 
 OUTPUT:
 - Complete refactored test code (NOT diff, NOT summary)
-- Updated/created test-data file(s)
+- Updated/created test-data file(s) WITH:
+  - Exported namePrefix for cleanup
+  - Readable name patterns
+  - Randomization functions
 - Updated/created UI commands file(s)
-- Updated bug_log.json (if bugs found)
+- Updated bug-log.json (if bugs found)
 ```
 
 ---
@@ -203,6 +222,8 @@ OUTPUT:
 ```
 TASK: Create test data file for [test file]
 INPUT: test file with hard-coded values
+FOLLOW:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Test Data Guidelines)
 
 REQUIREMENTS:
 1. CREATE IN:
@@ -215,12 +236,16 @@ REQUIREMENTS:
    - Edge cases
    - Search filters/parameters
 
-3. USE randomization:
+3. USE naming pattern:
+   - `Prefix.Purpose.${randomSuffix}` for all test data names
+   - EXPORT `namePrefix` FOR cleanup usage
+
+4. USE randomization:
    - `utils.generateRandomString(length)` for unique strings
    - `utils.getRandomNumber(min, max)` for numbers
    - Current/future dates for temporal data
 
-4. EXPORT as:
+5. EXPORT as:
    - `export const [moduleName]_testData = { ... }`
 
 OUTPUT:
@@ -250,7 +275,7 @@ EXECUTE:
    - ENSURE proper selectors/commands
 
 3. IF functionality bug:
-   - LOG to `${WORKSPACE_ROOT}/cypress/bug_log.json` following:
+   - LOG to `${WORKSPACE_ROOT}/bug-log/bug-log.json` following:
      * `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
    - ADD bug reference comment in test
    - UPDATE assertions to validate ACTUAL behavior
@@ -263,7 +288,7 @@ EXECUTE:
 
 OUTPUT:
 - Fixed test code
-- Updated bug_log.json (if bug found)
+- Updated bug-log.json (if bug found)
 - Explanation of the issue and resolution
 ```
 
@@ -286,12 +311,14 @@ REQUIREMENTS:
    - Use template provided in instructions
 
 3. REGISTER module IN:
-   - `${WORKSPACE_ROOT}/app-structure/modules.json`
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/modules.json`
    - Structure: `{ "ModuleName": { "SubmoduleName": { "Action": {} } } }`
 
 4. CREATE test data file:
    - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
-   - Use randomization via `utils` functions
+   - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
+   - USE randomization via `utils` functions
 
 5. CREATE API commands:
    - `${WORKSPACE_ROOT}/cypress/support/commands/api/[module-name].api.commands.js`
@@ -304,12 +331,12 @@ REQUIREMENTS:
    - Edge cases (boundary values)
    - Error handling
 
-7. LOG bugs found:
-   FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+7. LOG bugs FOLLOWING:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
-- Complete test file with all scenarios
+- Complete test file with scenarios
 - Test data file
 - API commands file
 - Updated modules.json
@@ -331,8 +358,7 @@ REQUIREMENTS:
    - `${WORKSPACE_ROOT}/.github/instructions/integration-ui-tests.instructions.md`
 
 3. REGISTER component IN:
-   - `${WORKSPACE_ROOT}/app-structure/components.json` (for components)
-   - `${WORKSPACE_ROOT}/app-structure/modules.json` (for pages)
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/components.json`
 
 4. ADD selectors TO:
    - `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js`
@@ -340,10 +366,12 @@ REQUIREMENTS:
 
 5. CREATE test data file:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.test-data.js`
+   - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
 
 6. CREATE UI commands (if needed):
    - `${WORKSPACE_ROOT}/cypress/support/commands/ui/[page-name].ui.commands.js`
-   - Follow naming: `pageName__action__UI`
+   - Follow naming: `pageName__action`
 
 7. COVER test scenarios:
    - Element visibility and rendering
@@ -354,16 +382,16 @@ REQUIREMENTS:
    - Localization (use `l10n`)
    - Colour themes (use `colours`)
 
-8. LOG bugs found:
-   FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+8. LOG bugs FOLLOWING:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
 - Complete test file with all scenarios
 - Test data file
 - UI commands file (if created)
 - Updated selectors
-- Updated app-structure files
+- Updated eslint-plugin-custom-rules/app-structure files
 - Summary of test coverage
 - Bugs found (if any)
 ```
@@ -382,11 +410,13 @@ REQUIREMENTS:
    - `${WORKSPACE_ROOT}/.github/instructions/e2e-ui-tests.instructions.md`
 
 3. REGISTER workflow IN:
-   - `${WORKSPACE_ROOT}/app-structure/workflows.json`
+   - `${WORKSPACE_ROOT}/eslint-plugin-custom-rules/app-structure/workflows.json`
    - Structure: `{ "WorkflowName": { "SubFlowName": {} } }`
 
 4. CREATE test data file:
    - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.test-data.js`
+   - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
+   - EXPORT `namePrefix` FOR cleanup usage
 
 5. USE existing commands FROM:
    - `${WORKSPACE_ROOT}/cypress/support/commands/ui/` (for UI interactions)
@@ -399,9 +429,9 @@ REQUIREMENTS:
    - Back navigation
    - Data persistence across pages
 
-7. LOG bugs found:
-   FOLLOW: `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
-   TARGET: `${WORKSPACE_ROOT}/cypress/bug_log.json`
+7. LOG bugs FOLLOWING:
+   - `${WORKSPACE_ROOT}/.github/copilot-instructions.md` (Bug Logging Guidelines)
+   - TARGET: `${WORKSPACE_ROOT}/bug-log/bug-log.json`
 
 OUTPUT:
 - Complete E2E test file

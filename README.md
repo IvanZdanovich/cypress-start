@@ -15,19 +15,17 @@
 - [What Makes This Framework Unique?](#what-makes-this-framework-unique)
 - [Features](#features)
 - [Running Tests](#running-tests)
-- [Development Guidelines](#development-guidelines)
-- [Quality Standards](#quality-standards)
+    - [Standard Test Run](#standard-test-run)
+    - [Parallel Test Execution](#parallel-test-execution)
+    - [Environment-Specific Test Run](#environment-specific-test-run)
+    - [Debug Mode](#debug-mode)
+    - [GitHub Actions Workflow](#github-actions-workflow)
+- [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
 
 ## Quick Start
 
-Create a new project from this template in seconds! The CLI will automatically:
-
-- Clone the template repository
-- Initialize a fresh git repository
-- Set up credentials structure
-- Install all dependencies
-- Guide you through optional configuration
+Create a new project from this template in seconds! The CLI offers two setup modes to match your needs:
 
 ### Prerequisites
 
@@ -35,38 +33,74 @@ Create a new project from this template in seconds! The CLI will automatically:
 - npm or yarn
 - Git
 
-### 🚀 Create New Project (Recommended)
+### 🚀 Create New Project with cypress-start CLI (Recommended)
 
 ```bash
-# Using npx
+# Using npx (no installation required)
 npx cypress-start my-project
+
+# Or install globally first
+npm install -g cypress-start
+cypress-start my-project
 ```
 
-The CLI will guide you through the setup process interactively.
+The CLI guides you through two setup modes:
 
-### 📋 GitHub Template
+#### 🎯 Mode 1: Full Setup (Recommended)
 
-1. Click the **"Use this template"** button at the top of this repository
-2. Choose "Create a new repository"
-3. Clone your new repository:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/your-repo-name.git
-   cd your-repo-name
-   npm install
-   ```
-4. Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
+Complete framework with all features, tests, and data. Git initialized, dependencies auto-installed.  
+**Best for:** New standalone projects.
 
-### 🔗 Manual Clone
+#### 📦 Mode 2: Specific Files
+
+Cherry-pick modules (ESLint, Docs, Copilot, Parallel Runner, GitHub Actions, Docker) for existing projects.  
+Package.json updated automatically. Manual `npm install` required.  
+**Best for:** Adding features to existing projects.
+
+```bash
+cd my-project
+npm run test              # Run all tests
+npm run test:parallel     # Run tests in parallel
+npm run lint              # Run ESLint checks
+npx cypress open          # Open Cypress UI
+```
+
+### Alternative Setup Methods
+
+**GitHub Template:**
+
+1. Click **"Use this template"** → "Create a new repository"
+2. Clone: `git clone https://github.com/YOUR-USERNAME/your-repo-name.git`
+
+**Direct Clone:**
 
 ```bash
 git clone https://github.com/IvanZdanovich/cypress-start.git my-project
 cd my-project
-npm install
 ```
 
-Set up sensitive data:
-Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` to provide test user
-credentials for the test environment.
+**Post-Setup:**
+
+```bash
+npm install  # Installs dependencies and sets up pre-commit hooks
+```
+
+Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.
+
+---
+
+### Mode Comparison
+
+| Feature                | Full Setup             | Specific Files          |
+|------------------------|------------------------|-------------------------|
+| **Target Use Case**    | New standalone project | Add to existing project |
+| **Test Files**         | ✅ Included             | ❌ Not included          |
+| **Test Data**          | ✅ Included             | ❌ Not included          |
+| **Module Selection**   | All modules            | Choose modules          |
+| **Git Initialization** | ✅ Yes                  | ❌ No                    |
+| **NPM Install**        | ✅ Automatic            | ❌ Manual                |
+| **Package.json**       | ✅ Complete             | ✅ Created or merged     |
+| **Ready to Use**       | ✅ Immediately          | After `npm install`     |
 
 ---
 
@@ -104,25 +138,16 @@ This framework includes examples of tests:
 
 ## Features
 
-- **Custom ESLint Rules:** Enforces strict test structure and naming conventions, preventing duplicate or invalid test
-  titles.  
-  See [Custom ESLint Rules](docs/eslint-custom-rules.md).
-- **Localization Testing:** Dynamically loads and validates localization files, supporting multi-language test runs.  
-  See [Localization Testing](docs/localization-testing.md).
-- **Color Theme Testing:** Easily test across multiple color themes using environment variables.  
-  See [Color Theme Testing](docs/colour-theme-testing.md).
-- **Centralized Selector Management:** All selectors are managed in a single location for maintainability and
-  consistency.
-- **Pre-commit Quality Checks:** Automated linting and code quality checks before every commit.  
-  See [Pre-commit Check](docs/pre-commit-check.md).
-- **Test Structure Guidelines:** Detailed documentation for writing maintainable, readable, and robust tests.  
-  See [Test Writing Guideline](docs/test-writing-guideline.md), [Naming Conventions](docs/naming-conventions.md), [Tagging Strategy](docs/tagging-strategy.md), [FAQ](docs/faq.md).
-- **Copilot Integration:** AI-assisted test writing with ready-to-use instructions.  
-  See [Copilot Instructions](.github/copilot-instructions.md).
-- **Copilot Prompts:** Ready-to-use prompts for AI-assisted test writing.  
-  See [Copilot Prompts](docs/copilot-prompts.md).
-- **Prepared Continuous Integration Sample:** Weekly regression test workflow integrated for automated test execution.
-  See [Weekly Cypress Tests Workflow](.github/workflows/weekly-cypress-tests.yml).
+- **Interactive CLI Setup:** Two setup modes - Full Setup (complete framework) or Specific Files (cherry-pick modules)
+- **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
+- **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
+- **Localization Testing:** Multi-language test support ([docs](docs/localization-testing.md))
+- **Color Theme Testing:** Multiple theme support via environment variables ([docs](docs/colour-theme-testing.md))
+- **Centralized Selector Management:** All selectors in one location for easy maintenance
+- **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
+- **Comprehensive Documentation:** Test writing guidelines, naming conventions, FAQ ([docs](docs/))
+- **AI-Assisted Development:** GitHub Copilot integration with ready-to-use instructions
+- **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
 
 ---
 
@@ -136,80 +161,141 @@ To run tests with default settings in headless mode:
   npm run test
 ```
 
-To run tests with specific language and environment parameters in headless mode:
+### Parallel Test Execution
 
-#### Windows (PowerShell):
-
-```powershell
-  $env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
-```
-
-#### Windows (CMD):
-
-```cmd
-  set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
-```
-
-#### macOS/Linux:
+To run tests in parallel for faster execution:
 
 ```bash
-  LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
+  # Default (3 parallel streams)
+  npm run test:parallel
+
+  # Custom stream count
+  PARALLEL_STREAMS=6 npm run test:parallel
 ```
 
----
+See [Parallel Execution Guide](docs/parallel-execution.md) for detailed documentation.
 
-Available environment parameters:
+### Environment-Specific Test Run
 
-- `LANGUAGE`: Specifies the language code (defaults to `en`)
-- `TARGET_ENV`: Specifies the target environment (defaults to `dev`)
-- `COLOUR_THEME`: Specifies the colour theme to use (defaults to `default`)
+Run tests with specific environment parameters in headless mode:
+
+**Environment Parameters:**
+
+- `LANGUAGE`: Language code (default: `en`)
+- `TARGET_ENV`: Target environment (default: `dev`)
+- `COLOUR_THEME`: Color theme (default: `default`)
+- `BROWSER`: Browser for execution (default: `chrome`)
+
+**Windows (PowerShell):**
+
+```powershell
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
+```
+
+**Windows (CMD):**
+
+```cmd
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
+```
+
+**macOS/Linux:**
+
+```bash
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=chrome npm run test
+```
 
 ### Debug Mode
 
 For interactive debugging with the Cypress UI:
 
-#### Windows (PowerShell):
+**Windows (PowerShell):**
 
 ```powershell
-  $env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
+$env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
 ```
 
-#### Windows (CMD):
+**Windows (CMD):**
 
 ```cmd
-  set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
+set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
 ```
 
-#### macOS/Linux (with caffeinate to prevent system from sleeping):
+**macOS/Linux:**
 
 ```bash
-  LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
+LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
 ```
 
 ---
 
-## Development Guidelines
+### GitHub Actions Workflow
 
-- [Test Writing Guideline](docs/test-writing-guideline.md)
-- [FAQ](docs/faq.md)
-- [Naming Conventions](docs/naming-conventions.md)
-- [Git Strategy](docs/git-strategy.md)
-- [Bug Tracking](docs/bug-tracking.md)
-- [Localization Testing](docs/localization-testing.md)
-- [Color Theme Testing](docs/colour-theme-testing.md)
-- [Copilot Prompts](docs/copilot-prompts.md)
-- [Copilot Instructions](.github/copilot-instructions.md)
-- [Copilot Instructions for Integration API Tests](.github/instructions/integration-api-tests.instructions.md)
-- [Copilot Instructions for Integration UI Tests](.github/instructions/integration-ui-tests.instructions.md)
-- [Copilot Instructions for E2E UI Tests](.github/instructions/e2e-ui-tests.instructions.md)
+Automated CI/CD workflow with weekly scheduled runs or manual triggers:
+
+**Quick Start:**
+
+1. Go to **Actions** tab → Select **"Weekly Cypress Tests"**
+2. Click **"Run workflow"** → Configure parameters → Click **"Run workflow"**
+
+**Available Parameters:**
+
+| Parameter          | Options                         | Default |
+|--------------------|---------------------------------|---------|
+| `language`         | en                              | en      |
+| `target_env`       | dev                             | dev     |
+| `colour_theme`     | default                         | default |
+| `parallel_streams` | 1-6                             | 3       |
+| `browser`          | electron, chrome, firefox, edge | chrome  |
+| `test_scope`       | all, integration, e2e           | all     |
+| `test_type`        | all, api, ui                    | all     |
+
+**Test Filtering Examples:**
+
+| Scope           | Type    | What Runs                        |
+|-----------------|---------|----------------------------------|
+| **all**         | **all** | All tests in the workspace       |
+| **all**         | **api** | All API tests (integration only) |
+| **all**         | **ui**  | All UI tests (integration + e2e) |
+| **integration** | **all** | All integration tests (api + ui) |
+| **integration** | **api** | Integration API tests only       |
+| **integration** | **ui**  | Integration UI tests only        |
+| **e2e**         | **all** | All E2E tests                    |
+| **e2e**         | **ui**  | E2E UI tests only                |
+
+**Viewing Results:** Check **Actions** tab for run status. Download artifacts (reports, screenshots, videos) after
+completion.
 
 ---
 
-## Quality Standards
+## Documentation
+
+**Test Development:**
+
+- [Test Writing Guideline](docs/test-writing-guideline.md)
+- [Naming Conventions](docs/naming-conventions.md)
+- [FAQ](docs/faq.md)
+
+**Features & Tools:**
+
+- [Parallel Execution Guide](docs/parallel-execution.md)
+- [Localization Testing](docs/localization-testing.md)
+- [Color Theme Testing](docs/colour-theme-testing.md)
+- [Bug Tracking](docs/bug-tracking.md)
+
+**Quality & Standards:**
 
 - [Custom ESLint Rules](docs/eslint-custom-rules.md)
 - [Pre-commit Check](docs/pre-commit-check.md)
 - [Tagging Strategy](docs/tagging-strategy.md)
+
+**Git & Collaboration:**
+
+- [Git Strategy](docs/git-strategy.md)
+- [Copilot Prompts](docs/copilot-prompts.md)
+- [Copilot Instructions](.github/copilot-instructions.md)
+- [Integration API Tests Instructions](.github/instructions/integration-api-tests.instructions.md)
+- [Integration UI Tests Instructions](.github/instructions/integration-ui-tests.instructions.md)
+- [E2E UI Tests Instructions](.github/instructions/e2e-ui-tests.instructions.md)
 
 ---
 

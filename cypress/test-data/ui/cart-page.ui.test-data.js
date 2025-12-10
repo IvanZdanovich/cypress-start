@@ -5,9 +5,9 @@ export const testData = {
   randomIndex: utils.getRandomNumber(0, indicesOfProducts.length - 1),
   chosenProducts: [],
   removedProductTitle: String,
-  knownBugs: {
-    incorrectProductTitle: 'Test.allTheThings() T-Shirt (Red)',
-    correctProductTitle: 'Sauce Labs T-Shirt (Red)',
-    incorrectProductDescription: 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.',
+  buggyProductData: {
+    wrongTitle: 'Test.allTheThings() T-Shirt (Red)',
+    correctTitle: 'Sauce Labs T-Shirt (Red)',
+    wrongDescription: 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.',
   },
 };

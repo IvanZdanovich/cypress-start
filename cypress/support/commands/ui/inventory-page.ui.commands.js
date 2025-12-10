@@ -42,7 +42,7 @@ Cypress.Commands.add('inventoryPage__verifyProductImages', () => {
           return productBase === srcBase;
         });
 
-        expect(productExists, `Product with src base "${srcBase}" should exist in products list`).to.be.true;
+        expect(productExists, `Product with src base "${srcBase}" should exist in products list`).to.eq(true);
       });
   });
 });
