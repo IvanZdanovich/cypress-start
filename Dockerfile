@@ -1,4 +1,4 @@
-FROM cypress/base:latest
+FROM cypress/browsers:latest
 
 WORKDIR /e2e
 

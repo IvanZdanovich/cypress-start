@@ -184,7 +184,7 @@ Run tests with specific environment parameters in headless mode:
 - `LANGUAGE`: Language code (default: `en`)
 - `TARGET_ENV`: Target environment (default: `dev`)
 - `COLOUR_THEME`: Color theme (default: `default`)
-- `BROWSER`: Browser for execution (default: `electron`)
+- `BROWSER`: Browser for execution (default: `chrome`)
 
 **Windows (PowerShell):**
 
@@ -201,7 +201,7 @@ set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chr
 **macOS/Linux:**
 
 ```bash
-LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=chrome npm run test
 ```
 
 ### Debug Mode
@@ -239,15 +239,15 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers:
 
 **Available Parameters:**
 
-| Parameter          | Options                         | Default  |
-|--------------------|---------------------------------|----------|
-| `language`         | en                              | en       |
-| `target_env`       | dev                             | dev      |
-| `colour_theme`     | default                         | default  |
-| `parallel_streams` | 1-6                             | 3        |
-| `browser`          | electron, chrome, firefox, edge | electron |
-| `test_scope`       | all, integration, e2e           | all      |
-| `test_type`        | all, api, ui                    | all      |
+| Parameter          | Options                         | Default |
+|--------------------|---------------------------------|---------|
+| `language`         | en                              | en      |
+| `target_env`       | dev                             | dev     |
+| `colour_theme`     | default                         | default |
+| `parallel_streams` | 1-6                             | 3       |
+| `browser`          | electron, chrome, firefox, edge | chrome  |
+| `test_scope`       | all, integration, e2e           | all     |
+| `test_type`        | all, api, ui                    | all     |
 
 **Test Filtering Examples:**
 

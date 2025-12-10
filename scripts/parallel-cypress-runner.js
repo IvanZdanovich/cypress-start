@@ -133,10 +133,11 @@ function executeCypressChunk(specFiles, chunkName, displayNumber) {
   return new Promise((resolve) => {
     const specArg = specFiles.join(',');
     const startTime = Date.now();
+    const browser = process.env.BROWSER || 'chrome';
 
     console.log(`[${chunkName}] Starting execution with ${specFiles.length} file(s) on display :${displayNumber}`);
 
-    const cypressProcess = spawn('npx', ['cypress', 'run', '--spec', specArg], {
+    const cypressProcess = spawn('npx', ['cypress', 'run', '--spec', specArg, '--browser', browser], {
       stdio: 'inherit',
       cwd: WORKSPACE_ROOT,
       shell: true, // Enables cross-platform compatibility for npx
