@@ -68,9 +68,11 @@
   "author": "Ivan Zdanovich",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-chai-friendly": "^1.1.0",
     "eslint-plugin-cypress": "^5.2.0",
     "eslint-plugin-prettier": "^5.5.4",
     "glob": "^13.0.0",

@@ -139,7 +139,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/cypress/reports:/e2e/cypress/reports \
             -v ${{ github.workspace }}/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro \
-            -e BROWSER=${{ inputs.browser || 'electron' }} \
+            -e BROWSER=${{ inputs.browser || 'chrome' }} \
             -e SPEC_PATTERN="${{ steps.spec-pattern.outputs.SPEC_PATTERN }}" \
             cypress-tests
 

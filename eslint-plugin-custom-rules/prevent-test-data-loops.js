@@ -34,23 +34,23 @@ module.exports = {
   },
 
   create(context) {
-    let inTestBlock = false;
-    let inDescribeBlock = false;
+    let describeDepth = 0;
+    let testDepth = 0;
 
     return {
-      // Track when we're inside describe/context blocks
+      // Track when we're inside describe/context/it blocks using depth counters
       CallExpression(node) {
         const calleeName = node.callee.name;
         if (['describe', 'context', 'it', 'specify', 'test'].includes(calleeName)) {
           if (['describe', 'context'].includes(calleeName)) {
-            inDescribeBlock = true;
+            describeDepth++;
           } else {
-            inTestBlock = true;
+            testDepth++;
           }
         }
 
         // Check for .forEach() calls within test blocks
-        if ((inDescribeBlock || inTestBlock) && node.callee.type === 'MemberExpression' && node.callee.property.name === 'forEach') {
+        if ((describeDepth > 0 || testDepth > 0) && node.callee.type === 'MemberExpression' && node.callee.property.name === 'forEach') {
           // Check if it's likely iterating over test data (arrays or objects)
           const objectName = context.getSourceCode().getText(node.callee.object);
 
@@ -72,16 +72,16 @@ module.exports = {
         const calleeName = node.callee.name;
         if (['describe', 'context', 'it', 'specify', 'test'].includes(calleeName)) {
           if (['describe', 'context'].includes(calleeName)) {
-            inDescribeBlock = false;
+            describeDepth--;
           } else {
-            inTestBlock = false;
+            testDepth--;
           }
         }
       },
 
       // Check for for...of loops within test blocks
       ForOfStatement(node) {
-        if (inDescribeBlock || inTestBlock) {
+        if (describeDepth > 0 || testDepth > 0) {
           const rightSource = context.getSourceCode().getText(node.right);
 
           const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
@@ -99,7 +99,7 @@ module.exports = {
 
       // Check for for...in loops within test blocks
       ForInStatement(node) {
-        if (inDescribeBlock || inTestBlock) {
+        if (describeDepth > 0 || testDepth > 0) {
           const rightSource = context.getSourceCode().getText(node.right);
 
           const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];

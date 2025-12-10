@@ -2,7 +2,7 @@ import cypress from 'eslint-plugin-cypress';
 import chaiFriendly from 'eslint-plugin-chai-friendly';
 import customPlugin from './eslint-plugin-custom-rules/index.js';
 import js from '@eslint/js';
-import {FlatCompat} from '@eslint/eslintrc';
+import { FlatCompat } from '@eslint/eslintrc';
 
 const __dirname = process.cwd();
 const compat = new FlatCompat({

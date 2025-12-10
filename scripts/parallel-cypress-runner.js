@@ -55,7 +55,7 @@ function startXvfbServers(count) {
     // Use newlines to properly separate background commands
     const startCommand = commands.join('\nsleep 0.1\n') + '\nsleep 0.5';
 
-    exec(startCommand, { shell: '/bin/bash' }, (error, _stdout, _stderr) => {
+    exec(startCommand, { shell: '/bin/bash' }, (error) => {
       if (error) {
         console.error('Failed to start Xvfb servers:', error.message);
         reject(error);
@@ -272,7 +272,7 @@ async function runParallelTests() {
 
         // Add 1-second delay between starts to prevent race conditions during Xvfb initialization
         if (activePromises.size > 0) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
         const promise = executeCypressChunk(task.files, task.name, displayNumber).then((exitCode) => {
@@ -314,11 +314,7 @@ async function runParallelTests() {
 }
 
 // Execute main function
-runParallelTests()
-  .then((exitCode) => {
-    process.exit(exitCode);
-  })
-  .catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+runParallelTests().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
