@@ -1,5 +1,12 @@
+const getRandomProductCount = () => utils.getRandomNumber(2, reqs.inventoryPage.numberOfProductsOnThePage);
+
+const getRandomProductIndices = () => {
+  const productCount = getRandomProductCount();
+  return utils.generateArrayOfRandomIndices(productCount, reqs.inventoryPage.numberOfProductsOnThePage - 1);
+};
+
 export const testData = {
-  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, reqs.inventoryPage.numberOfProductsOnThePage), reqs.inventoryPage.numberOfProductsOnThePage - 1),
+  getRandomProductIndices,
   chosenProducts: [],
   deliveryInfo: {
     firstName: utils.generateRandomString(utils.getRandomNumber(5, 15)),

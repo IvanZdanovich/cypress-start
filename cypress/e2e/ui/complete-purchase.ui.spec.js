@@ -20,17 +20,14 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      testData.indicesOfProducts.forEach((index) => {
+      const productIndices = testData.getRandomProductIndices();
+      productIndices.forEach((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
-            // Bug Reference: BUG-INVENTORY-001 - Map incorrect product title to correct one for test data
-            let productTitle = text;
-            if (text === testData.knownBugs.incorrectProductTitle) {
-              productTitle = testData.knownBugs.correctProductTitle;
-            }
+            const productTitle = text === testData.knownBugs.incorrectProductTitle ? testData.knownBugs.correctProductTitle : text;
             testData.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
       });
@@ -56,7 +53,6 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
-      // Bug Reference: BUG-PURCHASE-001 - Floating-point precision errors in price calculation
       const totalPrice = testData.chosenProducts.reduce((acc, product) => acc + product.price, 0);
       const totalPriceRaw = parseFloat(totalPrice);
       const totalPriceCorrect = parseFloat(totalPrice.toFixed(2));

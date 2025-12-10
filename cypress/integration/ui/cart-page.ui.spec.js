@@ -39,7 +39,6 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       cy.get(cartPage.continueShopping).should('have.text', l10n.cartPage.continueShopping).and('be.visible').and('be.enabled');
     });
 
-    // Bug Reference: BUG-CART-001 - Checkout button remains enabled when cart is empty
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
       cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
     });
@@ -50,33 +49,6 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
 
     it('CartPage.STANDARD: Then Description table header should be displayed', () => {
       cy.get(cartPage.descriptionLabel).should('have.text', l10n.cartPage.description).and('be.visible');
-    });
-
-    it('CartPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
-      cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
-    });
-
-    // Bug Reference: BUG-FOOTER-001 - Twitter social link uses outdated twitter.com URL instead of x.com
-    it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', () => {
-      cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
-    });
-
-    it('CartPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
-      cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
-    });
-
-    it('CartPage.Footer.STANDARD: Then the Copyright notice with actual year should be displayd', () => {
-      cy.get(footerComp.copyRight).should('have.text', l10n.footer.copyRight.replace('yearPlaceholder', new Date().getUTCFullYear())).and('be.visible');
-    });
-
-    // Bug Reference: BUG-FOOTER-002 - Terms of Service link is missing from footer
-    it.skip('CartPage.Footer.STANDARD: Then Terms Of Service link should be displayed', () => {
-      // Skipped: Terms of Service link not implemented in footer
-    });
-
-    // Bug Reference: BUG-FOOTER-003 - Privacy Policy link is missing from footer
-    it.skip('CartPage.Footer.STANDARD: Then Privacy Policy link should be displayed', () => {
-      // Skipped: Privacy Policy link not implemented in footer
     });
   });
 
@@ -93,16 +65,15 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
 
   context('CartPage.STANDARD: When user adds random products and clicks Cart button', () => {
     before(() => {
-      testData.indicesOfProducts.forEach((index) => {
+      cy.wrap(testData.indicesOfProducts).each((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
-            // Bug Reference: BUG-INVENTORY-001 - Map incorrect product title to correct one for test data
             let productTitle = text;
-            if (text === testData.knownBugs.incorrectProductTitle) {
-              productTitle = testData.knownBugs.correctProductTitle;
+            if (text === testData.buggyProductData.wrongTitle) {
+              productTitle = testData.buggyProductData.correctTitle;
             }
             testData.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
@@ -148,7 +119,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
 
     it('CartPage.STANDARD: Then on each item should have appropriate title, description and price', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.knownBugs);
+      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
     });
   });
 

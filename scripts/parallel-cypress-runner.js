@@ -267,7 +267,7 @@ async function runParallelTests() {
       while (taskIndex < executionTasks.length && activePromises.size < PARALLEL_STREAMS) {
         const task = executionTasks[taskIndex];
         const taskId = taskIndex;
-        const displayNumber = 99 + taskId; // Assign unique display number (99, 100, 101, ...)
+        const displayNumber = 99 + (taskId % PARALLEL_STREAMS); // Reuse display numbers from available Xvfb servers
         taskIndex++;
 
         // Add 1-second delay between starts to prevent race conditions during Xvfb initialization
