@@ -20,14 +20,13 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      const productIndices = testData.getRandomProductIndices();
-      productIndices.forEach((index) => {
+      cy.wrap(testData.indicesOfProducts).each((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
-            const productTitle = text === testData.knownBugs.incorrectProductTitle ? testData.knownBugs.correctProductTitle : text;
+            const productTitle = text === testData.buggyProductData.wrongTitle ? testData.buggyProductData.correctTitle : text;
             testData.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
       });
@@ -37,7 +36,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.knownBugs);
+      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
     });
   });
 
@@ -49,7 +48,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.knownBugs);
+      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
     });
 
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
