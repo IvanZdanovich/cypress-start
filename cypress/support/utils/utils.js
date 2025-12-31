@@ -5,11 +5,11 @@ const getRandomIndex = (arrayLength) => {
   return Math.floor(Math.random() * arrayLength);
 };
 
-const getRandomNumber = (min, max) => {
-  if (typeof min !== 'number' || typeof max !== 'number' || min > max) {
+const getRandomNumber = (min, maxNotIncluded) => {
+  if (typeof min !== 'number' || typeof maxNotIncluded !== 'number' || min >= maxNotIncluded) {
     throw new RangeError('getRandomNumber: min should be a number less than max');
   }
-  return Math.floor(Math.random() * (max - min + 1) + min);
+  return Math.floor(Math.random() * (maxNotIncluded - min) + min);
 };
 
 const generateRandomBoolean = () => {
