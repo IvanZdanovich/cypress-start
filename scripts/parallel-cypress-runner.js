@@ -6,7 +6,7 @@
  * within a single Docker container.
  */
 
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const { glob } = require('glob');
 
@@ -41,48 +41,38 @@ const TEST_DOMAINS = {
  * @param {number} count - Number of Xvfb servers to start
  * @returns {Promise<void>}
  */
-async function startXvfbServers(count) {
-  if (!IS_CI) {
-    console.log('Not in CI environment, skipping Xvfb setup');
-    return;
-  }
+function startXvfbServers(count) {
+  return new Promise((resolve, reject) => {
+    if (!IS_CI) {
+      console.log('Not in CI environment, skipping Xvfb setup');
+      resolve();
+      return;
+    }
 
-  console.log(`Starting ${count} Xvfb server(s) for parallel execution...`);
+    console.log(`Starting ${count} Xvfb server(s) for parallel execution...`);
 
-  const startPromises = [];
+    const commands = [];
+    for (let i = 99; i < 99 + count; i++) {
+      commands.push(`Xvfb :${i} -screen 0 1280x1024x24 -ac -nolisten tcp -nolisten unix > /dev/null 2>&1 &`);
+    }
 
-  for (let i = 99; i < 99 + count; i++) {
-    const displayNumber = i;
+    // Use newlines to properly separate background commands
+    const startCommand = commands.join('\nsleep 0.1\n') + '\nsleep 0.5';
 
-    const promise = new Promise((resolve, reject) => {
-      // Start Xvfb without shell to avoid security vulnerabilities
-      const xvfbProcess = spawn('Xvfb', [`:${displayNumber}`, '-screen', '0', '1280x1024x24', '-ac', '-nolisten', 'tcp', '-nolisten', 'unix'], {
-        detached: true,
-        stdio: 'ignore', // Suppress output
-      });
-
-      xvfbProcess.unref(); // Allow parent to exit independently
-
-      xvfbProcess.on('error', (error) => {
-        console.error(`Failed to start Xvfb on display :${displayNumber}:`, error.message);
+    exec(startCommand, { shell: '/bin/bash' }, (error) => {
+      if (error) {
+        console.error('Failed to start Xvfb servers:', error.message);
         reject(error);
-      });
+        return;
+      }
 
-      // Give Xvfb a moment to start before resolving
-      setTimeout(() => resolve(), 100);
+      // Give Xvfb servers time to initialize
+      setTimeout(() => {
+        console.log(`Xvfb servers started on displays :99 to :${98 + count}`);
+        resolve();
+      }, 500);
     });
-
-    startPromises.push(promise);
-  }
-
-  try {
-    await Promise.all(startPromises);
-    // Give all Xvfb servers time to fully initialize
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log(`Xvfb servers started on displays :99 to :${98 + count}`);
-  } catch (error) {
-    throw new Error(`Failed to start Xvfb servers: ${error.message}`);
-  }
+  });
 }
 
 /**
@@ -91,13 +81,10 @@ async function startXvfbServers(count) {
 function cleanupXvfbServers() {
   if (!IS_CI) return;
 
-  // Use spawn instead of exec to avoid shell usage
-  const pkillProcess = spawn('pkill', ['-f', 'Xvfb'], {
-    stdio: 'ignore',
-  });
-
-  pkillProcess.on('error', (error) => {
-    console.error('Failed to cleanup Xvfb servers:', error.message);
+  exec('pkill -f Xvfb', (error) => {
+    if (error) {
+      console.error('Failed to cleanup Xvfb servers:', error.message);
+    }
   });
 }
 
@@ -223,9 +210,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       },
     });
 
-    // Track stream completion to avoid race conditions with buffered output
-    const streamPromises = [];
-
     // Buffer output if requested
     if (bufferOutput) {
       cypressProcess.stdout?.on('data', (data) => {
@@ -235,34 +219,14 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       cypressProcess.stderr?.on('data', (data) => {
         outputBuffer += data.toString();
       });
-
-      // Wait for streams to fully drain before resolving
-      if (cypressProcess.stdout) {
-        streamPromises.push(
-          new Promise((streamResolve) => {
-            cypressProcess.stdout.on('end', streamResolve);
-          })
-        );
-      }
-
-      if (cypressProcess.stderr) {
-        streamPromises.push(
-          new Promise((streamResolve) => {
-            cypressProcess.stderr.on('end', streamResolve);
-          })
-        );
-      }
     }
 
-    cypressProcess.on('close', async (exitCode) => {
+    cypressProcess.on('close', (exitCode) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       // Handle null exit code (abnormal termination)
       const actualExitCode = exitCode !== null ? exitCode : 1;
 
       if (bufferOutput) {
-        // Wait for all streams to fully drain before resolving
-        await Promise.all(streamPromises);
-
         resolve({
           exitCode: actualExitCode,
           output: outputBuffer,
@@ -287,16 +251,12 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       }
     });
 
-    cypressProcess.on('error', async (error) => {
+    cypressProcess.on('error', (error) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       const errorMsg = `[${chunkName}] ✖ Process error: ${error.message}`;
 
       if (bufferOutput) {
         outputBuffer += errorMsg + '\n';
-
-        // Wait for all streams to fully drain before resolving
-        await Promise.all(streamPromises);
-
         resolve({
           exitCode: 1,
           output: outputBuffer,
