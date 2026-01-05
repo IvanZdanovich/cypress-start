@@ -30,15 +30,13 @@ on:
       parallel_streams:
         description: 'Number of parallel test streams'
         required: false
-        default: '3'
+        default: '2'
         type: choice
         options:
           - '1'
           - '2'
           - '3'
           - '4'
-          - '5'
-          - '6'
       browser:
         description: 'Browser to run tests in'
         required: false

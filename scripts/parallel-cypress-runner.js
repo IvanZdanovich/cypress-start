@@ -161,7 +161,7 @@ function classifyFilesIntoDomains(files) {
  * @param {string} chunkName - Name identifier for this chunk
  * @param {number} displayNumber - Unique display number for Xvfb (99+)
  * @param {boolean} bufferOutput - Whether to buffer output for sequential display
- * @returns {Promise<{exitCode: number, output: string, duration: number}>} Result object
+ * @returns {Promise<{exitCode: number, output: string, duration: number, chunkName: string, specFiles: string[]}>} Result object
  */
 function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput = false) {
   return new Promise((resolve) => {
@@ -176,8 +176,8 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
     let outputBuffer = '';
 
     // Create unique screenshot and report folders for each stream to prevent overwrites
-    const screenshotFolder = bufferOutput ? `cypress/reports/screenshots/${chunkName}` : 'cypress/reports/screenshots';
-    const reportDir = bufferOutput ? `cypress/reports/separate-reports/${chunkName}` : 'cypress/reports/separate-reports';
+    const screenshotFolder = `cypress/reports/screenshots/${chunkName}`;
+    const reportDir = `cypress/reports/separate-reports/${chunkName}`;
 
     // Ensure screenshots and reports are always saved with unique paths per stream
     const reporterOptions = `reportDir=${reportDir},reportFilename=[name]-[status]-[datetime]-report`;
@@ -190,7 +190,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
     const cypressProcess = spawn('npx', cypressArgs, {
       stdio: bufferOutput ? 'pipe' : 'inherit',
       cwd: WORKSPACE_ROOT,
-      shell: true, // Enables cross-platform compatibility for npx
       env: {
         ...processEnv,
         DISPLAY: `:${displayNumber}`, // Assign unique display to avoid Xvfb conflicts
@@ -210,52 +209,59 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
     cypressProcess.on('close', (exitCode) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      // Handle null exit code (abnormal termination)
+      const actualExitCode = exitCode !== null ? exitCode : 1;
 
       if (bufferOutput) {
         resolve({
-          exitCode,
+          exitCode: actualExitCode,
           output: outputBuffer,
           duration: parseFloat(duration),
           chunkName,
           specFiles,
+          screenshotFolder,
         });
       } else {
-        if (exitCode === 0) {
-          console.log(`[${chunkName}] ✓ Completed successfully in ${duration}s`);
+        if (actualExitCode === 0) {
+          console.log(`[${chunkName}] ✔ Completed successfully in ${duration}s`);
         } else {
-          console.error(`[${chunkName}] ✗ Failed with exit code ${exitCode} after ${duration}s`);
+          console.error(`[${chunkName}] ✖ Failed with exit code ${actualExitCode} after ${duration}s`);
         }
 
         resolve({
-          exitCode,
+          exitCode: actualExitCode,
           output: '',
           duration: parseFloat(duration),
           chunkName,
           specFiles,
+          screenshotFolder,
         });
       }
     });
 
     cypressProcess.on('error', (error) => {
-      const errorMsg = `[${chunkName}] ✗ Process error: ${error.message}`;
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const errorMsg = `[${chunkName}] ✖ Process error: ${error.message}`;
 
       if (bufferOutput) {
         outputBuffer += errorMsg + '\n';
         resolve({
           exitCode: 1,
           output: outputBuffer,
-          duration: 0,
+          duration: parseFloat(duration),
           chunkName,
           specFiles,
+          screenshotFolder,
         });
       } else {
         console.error(errorMsg);
         resolve({
           exitCode: 1,
           output: '',
-          duration: 0,
+          duration: parseFloat(duration),
           chunkName,
           specFiles,
+          screenshotFolder,
         });
       }
     });
@@ -327,16 +333,24 @@ async function runParallelTests() {
     process.exit(1);
   }
 
-  // Register cleanup handler
-  process.on('exit', cleanupXvfbServers);
-  process.on('SIGINT', () => {
+  // Register cleanup handlers (use once to prevent duplicates)
+  const handleExit = () => {
+    cleanupXvfbServers();
+  };
+
+  const handleSigInt = () => {
     cleanupXvfbServers();
     process.exit(130);
-  });
-  process.on('SIGTERM', () => {
+  };
+
+  const handleSigTerm = () => {
     cleanupXvfbServers();
     process.exit(143);
-  });
+  };
+
+  process.once('exit', handleExit);
+  process.once('SIGINT', handleSigInt);
+  process.once('SIGTERM', handleSigTerm);
 
   // Execute pre-setup tests first
   const preSetupExitCode = await executePreSetupTests();
@@ -402,19 +416,27 @@ async function runParallelTests() {
   // Create execution tasks
   const executionTasks = [];
 
-  for (const [domainKey, files] of Object.entries(domainFiles)) {
-    if (files.length === 0) continue;
+  // Collect all files from all domains into a single array for unified chunking
+  const allFiles = [];
+  for (const [, files] of Object.entries(domainFiles)) {
+    allFiles.push(...files);
+  }
 
-    const domainName = TEST_DOMAINS[domainKey]?.name || domainKey;
-    const chunks = splitIntoChunks(files, PARALLEL_STREAMS);
+  if (allFiles.length > 0) {
+    // Split all files into chunks without domain separation
+    const chunks = splitIntoChunks(allFiles, PARALLEL_STREAMS);
 
-    console.log(`${domainName}: ${files.length} file(s) → ${chunks.length} chunk(s)`);
+    console.log('Unified Chunking Strategy (no domain separation):');
+    console.log(`  Total files: ${allFiles.length}`);
+    console.log(`  Chunks created: ${chunks.length}`);
+    console.log(`  Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
+    console.log('');
 
     chunks.forEach((chunk, index) => {
-      const chunkName = `${domainKey}-chunk-${index + 1}`;
+      const chunkName = `stream-${index + 1}`;
       executionTasks.push({
         name: chunkName,
-        domain: domainKey,
+        domain: 'mixed', // Indicates mixed domain content
         files: chunk,
       });
     });
@@ -437,6 +459,7 @@ async function runParallelTests() {
 
   async function executeTasksInParallel() {
     let taskIndex = 0;
+    const displayMap = new Map(); // Track which display is assigned to which active task
 
     console.log('Starting parallel execution with buffered output...');
     console.log('');
@@ -446,21 +469,31 @@ async function runParallelTests() {
       while (taskIndex < executionTasks.length && activePromises.size < PARALLEL_STREAMS) {
         const task = executionTasks[taskIndex];
         const taskId = taskIndex;
-        const displayNumber = 99 + (taskId % PARALLEL_STREAMS); // Reuse display numbers from available Xvfb servers
+
+        // Find available display number (99 to 99+PARALLEL_STREAMS-1)
+        let displayNumber = 99;
+        const usedDisplays = new Set(displayMap.values());
+        for (let i = 0; i < PARALLEL_STREAMS; i++) {
+          const candidate = 99 + i;
+          if (!usedDisplays.has(candidate)) {
+            displayNumber = candidate;
+            break;
+          }
+        }
+        displayMap.set(taskId, displayNumber);
 
         console.log(`[${task.name}] Starting execution with ${task.files.length} file(s) on display :${displayNumber}`);
 
         taskIndex++;
 
         // Add 1-second delay between starts to prevent race conditions during Xvfb initialization
-        if (activePromises.size > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const promise = executeCypressChunk(task.files, task.name, displayNumber, true).then((result) => {
-          console.log(`[${result.chunkName}] ${result.exitCode === 0 ? '✓' : '✗'} Completed in ${result.duration}s`);
+          console.log(`[${result.chunkName}] ${result.exitCode === 0 ? '✔' : '✖'} Completed in ${result.duration}s`);
           results.push({ task, result });
           activePromises.delete(taskId);
+          displayMap.delete(taskId); // Free up the display number
           return result;
         });
 
@@ -490,7 +523,7 @@ async function runParallelTests() {
     console.log(`Stream: ${result.chunkName} | Duration: ${result.duration}s | Status: ${result.exitCode === 0 ? 'PASSED' : 'FAILED'}`);
     console.log(`Files: ${result.specFiles.length}`);
     result.specFiles.forEach((file) => console.log(`  - ${file}`));
-    console.log(`Screenshots: cypress/reports/screenshots/${result.chunkName}/`);
+    console.log(`Screenshots: ${result.screenshotFolder || 'N/A'}`);
     console.log(`Reports: cypress/reports/separate-reports/${result.chunkName}/`);
     console.log('─'.repeat(80));
     if (result.output) {
