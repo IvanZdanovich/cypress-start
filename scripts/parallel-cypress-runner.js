@@ -175,9 +175,7 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
     let outputBuffer = '';
 
-    // Use default Cypress folders for screenshots and reports
-    const reporterOptions = `reportDir=cypress/reports/separate-reports,reportFilename=[name]-[status]-[datetime]-report,overwrite=false,html=true,json=false,charts=false,reportPageTitle=Cypress Test Report,showHooks=always,embeddedScreenshots=true,inlineAssets=true,timestamp=longDate`;
-    const cypressArgs = ['cypress', 'run', '--spec', specArg, '--browser', browser, '--reporter', 'mochawesome', '--reporter-options', reporterOptions];
+    const cypressArgs = ['cypress', 'run', '--spec', specArg, '--browser', browser];
 
     // Prepare environment variables - always unset SPEC_PATTERN to prevent cypress.config.js override
     const processEnv = { ...process.env };
@@ -540,10 +538,6 @@ async function runParallelTests() {
   console.log(`Total Tasks: ${executionTasks.length}`);
   console.log(`Failed Tasks: ${failedTasks}`);
   console.log(`Success Rate: ${executionTasks.length > 0 ? (((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1) : '0.0'}%`);
-  console.log('');
-  console.log('Artifacts:');
-  console.log(`  Screenshots: ${WORKSPACE_ROOT}/cypress/screenshots/`);
-  console.log(`  Reports: ${WORKSPACE_ROOT}/cypress/reports/separate-reports/`);
   console.log('='.repeat(80));
 
   // Exit with error code if any tasks failed
