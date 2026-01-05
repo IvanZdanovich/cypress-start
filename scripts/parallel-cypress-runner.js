@@ -175,13 +175,9 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
     let outputBuffer = '';
 
-    // Create unique screenshot and report folders for each stream to prevent overwrites
-    const screenshotFolder = `cypress/reports/screenshots/${chunkName}`;
-    const reportDir = `cypress/reports/separate-reports/${chunkName}`;
-
-    // Ensure screenshots and reports are always saved with unique paths per stream
-    const reporterOptions = `reportDir=${reportDir},reportFilename=[name]-[status]-[datetime]-report`;
-    const cypressArgs = ['cypress', 'run', '--spec', specArg, '--browser', browser, '--config', `screenshotsFolder=${screenshotFolder}`, '--reporter-options', reporterOptions];
+    // Use default Cypress folders for screenshots and reports
+    const reporterOptions = `reportDir=cypress/reports/separate-reports,reportFilename=[name]-[status]-[datetime]-report,overwrite=false,html=true,json=false,charts=false,reportPageTitle=Cypress Test Report,showHooks=always,embeddedScreenshots=true,inlineAssets=true,timestamp=longDate`;
+    const cypressArgs = ['cypress', 'run', '--spec', specArg, '--browser', browser, '--reporter', 'mochawesome', '--reporter-options', reporterOptions];
 
     // Prepare environment variables - always unset SPEC_PATTERN to prevent cypress.config.js override
     const processEnv = { ...process.env };
@@ -224,7 +220,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
           duration: parseFloat(duration),
           chunkName,
           specFiles,
-          screenshotFolder,
         });
       } else {
         if (actualExitCode === 0) {
@@ -239,7 +234,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
           duration: parseFloat(duration),
           chunkName,
           specFiles,
-          screenshotFolder,
         });
       }
     });
@@ -256,7 +250,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
           duration: parseFloat(duration),
           chunkName,
           specFiles,
-          screenshotFolder,
         });
       } else {
         console.error(errorMsg);
@@ -266,7 +259,6 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
           duration: parseFloat(duration),
           chunkName,
           specFiles,
-          screenshotFolder,
         });
       }
     });
@@ -527,8 +519,6 @@ async function runParallelTests() {
     console.log(`Stream: ${result.chunkName} | Duration: ${result.duration}s | Status: ${result.exitCode === 0 ? 'PASSED' : 'FAILED'}`);
     console.log(`Files: ${result.specFiles.length}`);
     result.specFiles.forEach((file) => console.log(`  - ${file}`));
-    console.log(`Screenshots: ${result.screenshotFolder || 'N/A'}`);
-    console.log(`Reports: cypress/reports/separate-reports/${result.chunkName}/`);
     console.log('─'.repeat(80));
     if (result.output) {
       console.log(result.output);
@@ -552,8 +542,8 @@ async function runParallelTests() {
   console.log(`Success Rate: ${executionTasks.length > 0 ? (((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1) : '0.0'}%`);
   console.log('');
   console.log('Artifacts:');
-  console.log(`  Screenshots: ${WORKSPACE_ROOT}/cypress/reports/screenshots/ (organized by stream)`);
-  console.log(`  Reports: ${WORKSPACE_ROOT}/cypress/reports/separate-reports/ (organized by stream)`);
+  console.log(`  Screenshots: ${WORKSPACE_ROOT}/cypress/screenshots/`);
+  console.log(`  Reports: ${WORKSPACE_ROOT}/cypress/reports/separate-reports/`);
   console.log('='.repeat(80));
 
   // Exit with error code if any tasks failed
