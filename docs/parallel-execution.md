@@ -192,7 +192,7 @@ The runner supports two chunking strategies controlled by `CHUNK_STRATEGY`:
 
 - **Combines all discovered tests** from all domains into a single pool
 - Splits using **round-robin distribution** for balanced load
-- Number of chunks ≤ PARALLEL_STREAMS (fewer if not enough test files)
+- Number of chunks = `min(PARALLEL_STREAMS, total number of test files)`
 - Chunks are named: `stream-{N}` (e.g., `stream-1`, `stream-2`)
 - Each chunk contains a mix of tests from different domains
 
