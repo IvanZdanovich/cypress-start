@@ -37,8 +37,6 @@ on:
           - '2'
           - '3'
           - '4'
-          - '5'
-          - '6'
       browser:
         description: 'Browser to run tests in'
         required: false
