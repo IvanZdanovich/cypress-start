@@ -7,7 +7,7 @@ const getRandomIndex = (arrayLength) => {
 
 const getRandomNumber = (min, maxNotIncluded) => {
   if (typeof min !== 'number' || typeof maxNotIncluded !== 'number' || min >= maxNotIncluded) {
-    throw new RangeError('getRandomNumber: min should be a number less than max');
+    throw new RangeError('getRandomNumber: min should be a number less than maxNotIncluded');
   }
   return Math.floor(Math.random() * (maxNotIncluded - min) + min);
 };

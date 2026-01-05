@@ -17,7 +17,7 @@ const SPEC_PATTERN = process.env.SPEC_PATTERN || '';
 const IS_CI = process.env.CI === 'true';
 
 // Pre-setup tests that must run first
-const PRE_SETUP_PATTERN = 'cypress/support/global-before.hook.spec.js';
+const PRE_SETUP_PATTERN = 'cypress/support/00-global-before.hook.spec.js';
 
 // Test domain patterns - used when SPEC_PATTERN is not provided
 const TEST_DOMAINS = {
@@ -187,7 +187,12 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
     const processEnv = { ...process.env };
     delete processEnv.SPEC_PATTERN;
 
-    const cypressProcess = spawn('npx', cypressArgs, {
+    // Determine the correct npx command for cross-platform compatibility
+    // On Windows, npx is a .cmd file that requires shell or explicit .cmd extension
+    const isWindows = process.platform === 'win32';
+    const npxCommand = isWindows ? 'npx.cmd' : 'npx';
+
+    const cypressProcess = spawn(npxCommand, cypressArgs, {
       stdio: bufferOutput ? 'pipe' : 'inherit',
       cwd: WORKSPACE_ROOT,
       env: {
@@ -270,7 +275,7 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
 /**
  * Execute pre-setup tests sequentially before parallel execution
- * @returns {Promise<number>} Exit code (0 = success, non-zero = failure)
+ * @returns {Promise<{exitCode: number, preSetupFiles: string[]}>} Exit code and discovered files
  */
 async function executePreSetupTests() {
   console.log('='.repeat(80));
@@ -285,7 +290,7 @@ async function executePreSetupTests() {
     console.log('No pre-setup tests found. Skipping.');
     console.log('='.repeat(80));
     console.log('');
-    return 0;
+    return { exitCode: 0, preSetupFiles: [] };
   }
 
   console.log(`Found ${preSetupFiles.length} pre-setup test file(s):`);
@@ -299,12 +304,12 @@ async function executePreSetupTests() {
 
   if (result.exitCode !== 0) {
     console.error('Pre-setup tests failed. Aborting parallel execution.');
-    return result.exitCode;
+    return { exitCode: result.exitCode, preSetupFiles };
   }
 
   console.log('Pre-setup tests completed successfully. Proceeding to parallel execution...');
   console.log('');
-  return 0;
+  return { exitCode: 0, preSetupFiles };
 }
 
 /**
@@ -353,14 +358,13 @@ async function runParallelTests() {
   process.once('SIGTERM', handleSigTerm);
 
   // Execute pre-setup tests first
-  const preSetupExitCode = await executePreSetupTests();
+  const { exitCode: preSetupExitCode, preSetupFiles } = await executePreSetupTests();
   if (preSetupExitCode !== 0) {
     console.error('Exiting due to pre-setup test failure.');
     process.exit(preSetupExitCode);
   }
 
-  // Discover pre-setup files to exclude them from parallel execution
-  const preSetupFiles = await discoverTestFiles(PRE_SETUP_PATTERN);
+  // Use pre-setup files discovered during execution to exclude them from parallel execution
   const preSetupFilesSet = new Set(preSetupFiles);
 
   // Discover test files

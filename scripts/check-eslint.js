@@ -9,7 +9,7 @@ function getJsFilesFromGit() {
   try {
     // Use 'git' command directly without hardcoded path - works cross-platform
     const args = ['ls-files', '--', '*.js', '*.jsx', '*.ts', '*.tsx', ':!:node_modules/**', ':!:cypress/reports/**', ':!:dist/**', ':!:build/**'];
-    const result = spawnSync('git', args, { encoding: 'utf8', shell: true });
+    const result = spawnSync('git', args, { encoding: 'utf8' });
     if (result.error) {
       throw result.error;
     }
