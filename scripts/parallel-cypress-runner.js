@@ -223,6 +223,9 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       },
     });
 
+    // Track stream completion to avoid race conditions with buffered output
+    const streamPromises = [];
+
     // Buffer output if requested
     if (bufferOutput) {
       cypressProcess.stdout?.on('data', (data) => {
@@ -232,14 +235,34 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       cypressProcess.stderr?.on('data', (data) => {
         outputBuffer += data.toString();
       });
+
+      // Wait for streams to fully drain before resolving
+      if (cypressProcess.stdout) {
+        streamPromises.push(
+          new Promise((streamResolve) => {
+            cypressProcess.stdout.on('end', streamResolve);
+          })
+        );
+      }
+
+      if (cypressProcess.stderr) {
+        streamPromises.push(
+          new Promise((streamResolve) => {
+            cypressProcess.stderr.on('end', streamResolve);
+          })
+        );
+      }
     }
 
-    cypressProcess.on('close', (exitCode) => {
+    cypressProcess.on('close', async (exitCode) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       // Handle null exit code (abnormal termination)
       const actualExitCode = exitCode !== null ? exitCode : 1;
 
       if (bufferOutput) {
+        // Wait for all streams to fully drain before resolving
+        await Promise.all(streamPromises);
+
         resolve({
           exitCode: actualExitCode,
           output: outputBuffer,
@@ -264,12 +287,16 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       }
     });
 
-    cypressProcess.on('error', (error) => {
+    cypressProcess.on('error', async (error) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       const errorMsg = `[${chunkName}] ✖ Process error: ${error.message}`;
 
       if (bufferOutput) {
         outputBuffer += errorMsg + '\n';
+
+        // Wait for all streams to fully drain before resolving
+        await Promise.all(streamPromises);
+
         resolve({
           exitCode: 1,
           output: outputBuffer,
