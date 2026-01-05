@@ -1,8 +1,8 @@
-const indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage), reqs.inventoryPage.numberOfProductsOnThePage - 1);
+const indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage + 1), reqs.inventoryPage.numberOfProductsOnThePage - 1);
 
 export const testData = {
   indicesOfProducts: indicesOfProducts,
-  randomIndex: utils.getRandomNumber(0, indicesOfProducts.length - 1),
+  randomIndex: utils.getRandomNumber(0, indicesOfProducts.length),
   chosenProducts: [],
   removedProductTitle: String,
   buggyProductData: {

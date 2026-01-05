@@ -15,6 +15,7 @@ const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT || process.cwd();
 const PARALLEL_STREAMS = Math.max(1, parseInt(process.env.PARALLEL_STREAMS || '3', 10));
 const SPEC_PATTERN = process.env.SPEC_PATTERN || '';
 const IS_CI = process.env.CI === 'true';
+const CHUNK_STRATEGY = process.env.CHUNK_STRATEGY || 'unified'; // 'unified' or 'domain'
 
 // Pre-setup tests that must run first
 const PRE_SETUP_PATTERN = 'cypress/support/00-global-before.hook.spec.js';
@@ -137,6 +138,8 @@ function classifyFilesIntoDomains(files) {
     e2eUi: [],
   };
 
+  const unmatchedFiles = [];
+
   files.forEach((file) => {
     // Normalize path for consistent matching
     const normalizedPath = file.replace(/\\/g, '/');
@@ -148,9 +151,21 @@ function classifyFilesIntoDomains(files) {
       domainFiles.integrationUi.push(file);
     } else if (normalizedPath.match(/^cypress\/e2e\/.*\.ui\.spec\.js$/)) {
       domainFiles.e2eUi.push(file);
+    } else {
+      unmatchedFiles.push(file);
     }
-    // Files that don't match any domain pattern are ignored (shouldn't happen with proper patterns)
   });
+
+  // Warn about files that don't match any domain pattern
+  if (unmatchedFiles.length > 0) {
+    console.warn(`Warning: ${unmatchedFiles.length} file(s) did not match any domain pattern and will be ignored:`);
+    unmatchedFiles.forEach((file) => console.warn(`  - ${file}`));
+    console.warn('  Expected patterns:');
+    console.warn('    - cypress/integration/api/**/*.api.spec.js');
+    console.warn('    - cypress/integration/ui/**/*.ui.spec.js');
+    console.warn('    - cypress/e2e/**/*.ui.spec.js');
+    console.warn('');
+  }
 
   return domainFiles;
 }
@@ -311,6 +326,7 @@ async function runParallelTests() {
   console.log('='.repeat(80));
   console.log(`Workspace: ${WORKSPACE_ROOT}`);
   console.log(`Parallel Streams: ${PARALLEL_STREAMS}`);
+  console.log(`Chunking Strategy: ${CHUNK_STRATEGY}`);
   console.log(`CI Environment: ${IS_CI ? 'Yes' : 'No'}`);
 
   if (SPEC_PATTERN) {
@@ -410,30 +426,57 @@ async function runParallelTests() {
   // Create execution tasks
   const executionTasks = [];
 
-  // Collect all files from all domains into a single array for unified chunking
-  const allFiles = [];
-  for (const [, files] of Object.entries(domainFiles)) {
-    allFiles.push(...files);
-  }
+  if (CHUNK_STRATEGY === 'domain') {
+    // Domain-separated strategy: split each domain independently into chunks
+    console.log('Domain-Separated Chunking Strategy:');
 
-  if (allFiles.length > 0) {
-    // Split all files into chunks without domain separation
-    const chunks = splitIntoChunks(allFiles, PARALLEL_STREAMS);
+    for (const [domainKey, files] of Object.entries(domainFiles)) {
+      if (files.length === 0) continue;
 
-    console.log('Unified Chunking Strategy (no domain separation):');
-    console.log(`  Total files: ${allFiles.length}`);
-    console.log(`  Chunks created: ${chunks.length}`);
-    console.log(`  Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
-    console.log('');
+      const domainName = TEST_DOMAINS[domainKey]?.name || `${domainKey} tests`;
+      const chunks = splitIntoChunks(files, PARALLEL_STREAMS);
 
-    chunks.forEach((chunk, index) => {
-      const chunkName = `stream-${index + 1}`;
-      executionTasks.push({
-        name: chunkName,
-        domain: 'mixed', // Indicates mixed domain content
-        files: chunk,
+      console.log(`  ${domainName}:`);
+      console.log(`    Total files: ${files.length}`);
+      console.log(`    Chunks: ${chunks.length}`);
+      console.log(`    Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
+
+      chunks.forEach((chunk, index) => {
+        const chunkName = `${domainKey}-${index + 1}`;
+        executionTasks.push({
+          name: chunkName,
+          domain: domainKey,
+          files: chunk,
+        });
       });
-    });
+    }
+
+    console.log(`  Total tasks: ${executionTasks.length}`);
+  } else {
+    // Unified strategy: collect all files from all domains into a single array
+    const allFiles = [];
+    for (const [, files] of Object.entries(domainFiles)) {
+      allFiles.push(...files);
+    }
+
+    if (allFiles.length > 0) {
+      // Split all files into chunks without domain separation
+      const chunks = splitIntoChunks(allFiles, PARALLEL_STREAMS);
+
+      console.log('Unified Chunking Strategy (no domain separation):');
+      console.log(`  Total files: ${allFiles.length}`);
+      console.log(`  Chunks created: ${chunks.length}`);
+      console.log(`  Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
+
+      chunks.forEach((chunk, index) => {
+        const chunkName = `stream-${index + 1}`;
+        executionTasks.push({
+          name: chunkName,
+          domain: 'mixed', // Indicates mixed domain content
+          files: chunk,
+        });
+      });
+    }
   }
 
   console.log('');

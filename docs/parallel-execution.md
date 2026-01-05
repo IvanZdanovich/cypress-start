@@ -22,28 +22,34 @@ The parallel test runner executes Cypress tests in parallel streams within a sin
    └─ Find all test files matching pattern(s)
    └─ Filter out pre-setup files (already executed)
    
-3. Unified Chunking Phase
-   └─ Combine all discovered tests (mixed domains)
-   └─ Split into N chunks using round-robin distribution
+3. Chunking Phase (based on CHUNK_STRATEGY)
+   
+   A. Unified Strategy (default):
+      └─ Combine all discovered tests (mixed domains)
+      └─ Split into N chunks using round-robin distribution
+   
+   B. Domain-Separated Strategy:
+      └─ Split each domain independently into chunks
+      └─ Keeps domain tests isolated
    
 4. Parallel Execution Phase (Buffered Output)
-   ├─ Stream 1 → mixed domain tests
-   ├─ Stream 2 → mixed domain tests
-   ├─ Stream 3 → mixed domain tests
+   ├─ Stream 1 → test chunk
+   ├─ Stream 2 → test chunk
+   ├─ Stream 3 → test chunk
    └─ (up to PARALLEL_STREAMS concurrent)
    
 5. Sequential Output Display
    └─ Show each stream's complete output in order
    
 6. Execution Summary
-   └─ Duration, pass/fail stats, artifact locations
+   └─ Duration, pass/fail stats
 ```
 
 ## Usage
 
 ### Local Execution
 
-**Default (3 parallel streams, all tests):**
+**Default (3 parallel streams, all tests, unified chunking):**
 
 ```bash
 npm run test:parallel
@@ -55,10 +61,22 @@ npm run test:parallel
 PARALLEL_STREAMS=6 npm run test:parallel
 ```
 
+**Domain-separated chunking:**
+
+```bash
+CHUNK_STRATEGY=domain npm run test:parallel
+```
+
 **Custom spec pattern:**
 
 ```bash
 SPEC_PATTERN="cypress/integration/api/**/*.spec.js" npm run test:parallel
+```
+
+**Combined options:**
+
+```bash
+PARALLEL_STREAMS=4 CHUNK_STRATEGY=domain npm run test:parallel
 ```
 
 ### Docker Execution
@@ -76,6 +94,12 @@ docker run cypress-tests
 docker run -e PARALLEL_STREAMS=6 cypress-tests
 ```
 
+**Domain-separated chunking:**
+
+```bash
+docker run -e CHUNK_STRATEGY=domain cypress-tests
+```
+
 **With custom spec pattern:**
 
 ```bash
@@ -86,6 +110,12 @@ docker run -e SPEC_PATTERN="cypress/integration/api/**/*.spec.js" cypress-tests
 
 ```bash
 docker run -e BROWSER=electron -e PARALLEL_STREAMS=4 cypress-tests
+```
+
+**Combined options:**
+
+```bash
+docker run -e PARALLEL_STREAMS=4 -e CHUNK_STRATEGY=domain -e BROWSER=chrome cypress-tests
 ```
 
 ### Sequential Execution (Fallback)
@@ -118,6 +148,7 @@ Discovers all files matching the provided glob pattern. Files are classified by 
 | Variable           | Description                            | Default         | Example                            |
 |--------------------|----------------------------------------|-----------------|------------------------------------|
 | `PARALLEL_STREAMS` | Number of parallel execution streams   | `3`             | `6`                                |
+| `CHUNK_STRATEGY`   | Chunking strategy (unified or domain)  | `unified`       | `domain`                           |
 | `SPEC_PATTERN`     | Custom glob pattern for test discovery | _(all domains)_ | `cypress/integration/**/*.spec.js` |
 | `BROWSER`          | Browser to use for test execution      | `chrome`        | `electron`, `firefox`, `edge`      |
 | `WORKSPACE_ROOT`   | Project root directory                 | `process.cwd()` | `/tests`                           |
@@ -137,77 +168,6 @@ Discovers all files matching the provided glob pattern. Files are classified by 
 - Test flakiness due to resource starvation
 - Memory issues
 
-## Artifacts Organization
-
-Tests running in parallel save artifacts to stream-specific folders to prevent overwrites:
-
-```
-cypress/reports/
-├── screenshots/
-│   ├── stream-1/                      ← Stream 1 screenshots
-│   ├── stream-2/                      ← Stream 2 screenshots
-│   └── stream-3/                      ← Stream 3 screenshots
-└── separate-reports/
-    ├── stream-1/                      ← Stream 1 reports
-    ├── stream-2/                      ← Stream 2 reports
-    └── stream-3/                      ← Stream 3 reports
-```
-
-**Pre-setup tests** use the folder name `pre-setup`:
-
-- `cypress/reports/screenshots/pre-setup/`
-- `cypress/reports/separate-reports/pre-setup/`
-
-## Output Structure
-
-### During Execution
-
-```
-[stream-1] Starting execution with 15 file(s) on display :99
-[stream-2] Starting execution with 12 file(s) on display :100
-[stream-3] Starting execution with 8 file(s) on display :101
-[stream-1] ✔ Completed in 45.2s
-[stream-3] ✔ Completed in 38.7s
-[stream-2] ✔ Completed in 52.1s
-```
-
-### After Completion
-
-```
-────────────────────────────────────────────────────────────
-Stream: stream-1 | Duration: 45.2s | Status: PASSED
-Files: 15
-  - cypress/integration/api/auth/login.api.spec.js
-  - cypress/integration/ui/forms/form-validation.ui.spec.js
-  - cypress/e2e/checkout/payment.ui.spec.js
-  - ...
-Screenshots: cypress/reports/screenshots/stream-1/
-Reports: cypress/reports/separate-reports/stream-1/
-────────────────────────────────────────────────────────────
-[Complete buffered output from Stream 1]
-
-────────────────────────────────────────────────────────────
-Stream: stream-2 | Duration: 52.1s | Status: PASSED
-...
-```
-
-### Execution Summary
-
-```
-================================================================================
-Execution Summary
-================================================================================
-Total Duration: 52.5s
-Total Tasks: 3
-Failed Tasks: 1
-Success Rate: 66.7%
-
-Artifacts:
-  Screenshots: /path/to/project/cypress/reports/screenshots/ (organized by stream)
-  Reports: /path/to/project/cypress/reports/separate-reports/ (organized by stream)
-================================================================================
-```
-
 ## How It Works
 
 ### 1. Pre-Setup Tests (Sequential)
@@ -224,13 +184,73 @@ Artifacts:
 - Filters out pre-setup tests (already executed)
 - Classifies files by domain (for reporting purposes)
 
-### 3. Unified Chunking
+### 3. Chunking Strategies
+
+The runner supports two chunking strategies controlled by `CHUNK_STRATEGY`:
+
+#### A. Unified Strategy (default: `CHUNK_STRATEGY=unified`)
 
 - **Combines all discovered tests** from all domains into a single pool
 - Splits using **round-robin distribution** for balanced load
 - Number of chunks ≤ PARALLEL_STREAMS (fewer if not enough test files)
 - Chunks are named: `stream-{N}` (e.g., `stream-1`, `stream-2`)
 - Each chunk contains a mix of tests from different domains
+
+**When to use:**
+- Fastest overall execution time
+- Maximum parallelization
+- Simple reporting structure
+- Tests are fully independent
+
+**Example output:**
+```
+Unified Chunking Strategy (no domain separation):
+  Total files: 24
+  Chunks created: 3
+  Files per chunk: 8, 8, 8
+
+Stream 1: [api-test-1.js, ui-test-3.js, e2e-test-2.js, ...]
+Stream 2: [api-test-2.js, ui-test-4.js, e2e-test-3.js, ...]
+Stream 3: [api-test-3.js, ui-test-5.js, e2e-test-4.js, ...]
+```
+
+#### B. Domain-Separated Strategy (`CHUNK_STRATEGY=domain`)
+
+- **Splits each domain independently** into chunks
+- Keeps domain tests isolated (no mixing)
+- Each domain creates its own set of chunks
+- Chunks are named: `{domainKey}-{N}` (e.g., `integrationApi-1`, `e2eUi-2`)
+- Total tasks can exceed PARALLEL_STREAMS (limited by concurrency control)
+
+**When to use:**
+- Domain isolation is required
+- Different domains have different characteristics
+- Better organization in reporting
+- Debugging specific domain issues
+
+**Example output:**
+```
+Domain-Separated Chunking Strategy:
+  Integration API Tests:
+    Total files: 10
+    Chunks: 3
+    Files per chunk: 4, 3, 3
+  Integration UI Tests:
+    Total files: 8
+    Chunks: 3
+    Files per chunk: 3, 3, 2
+  E2E UI Tests:
+    Total files: 6
+    Chunks: 2
+    Files per chunk: 3, 3
+  Total tasks: 8
+
+Stream names: integrationApi-1, integrationApi-2, integrationApi-3,
+              integrationUi-1, integrationUi-2, integrationUi-3,
+              e2eUi-1, e2eUi-2
+```
+
+**Note:** With domain-separated strategy, total tasks can exceed PARALLEL_STREAMS, but only PARALLEL_STREAMS will run concurrently. Remaining tasks will queue and execute as streams become available.
 
 ### 4. Parallel Execution
 

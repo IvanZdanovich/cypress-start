@@ -21,6 +21,7 @@ ARG COLOUR_THEME=default
 ARG PARALLEL_STREAMS=3
 ARG BROWSER=chrome
 ARG SPEC_PATTERN="cypress/**/*.spec.js"
+ARG CHUNK_STRATEGY="unified"
 
 # Set CI environment variable first (required for postinstall script)
 ENV CI=true
@@ -31,7 +32,8 @@ ENV LANGUAGE=${LANGUAGE} \
     COLOUR_THEME=${COLOUR_THEME} \
     PARALLEL_STREAMS=${PARALLEL_STREAMS} \
     BROWSER=${BROWSER} \
-    SPEC_PATTERN=${SPEC_PATTERN}
+    SPEC_PATTERN=${SPEC_PATTERN} \
+    CHUNK_STRATEGY=${CHUNK_STRATEGY}
 
 # Install dependencies
 RUN npm ci
