@@ -1,6 +1,5 @@
 # Git
 .git/
-.github/workflows/
 
 # IDE
 .idea/
