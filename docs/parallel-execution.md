@@ -115,7 +115,7 @@ docker run -e BROWSER=electron -e PARALLEL_STREAMS=4 cypress-tests
 **Combined options:**
 
 ```bash
-docker run -e PARALLEL_STREAMS=4 -e CHUNK_STRATEGY=domain -e BROWSER=chrome cypress-tests
+docker run -e PARALLEL_STREAMS=4 -e CHUNK_STRATEGY=domain -e BROWSER=electron cypress-tests
 ```
 
 ### Sequential Execution (Fallback)
@@ -150,7 +150,7 @@ Discovers all files matching the provided glob pattern. Files are classified by 
 | `PARALLEL_STREAMS` | Number of parallel execution streams   | `3`             | `6`                                |
 | `CHUNK_STRATEGY`   | Chunking strategy (unified or domain)  | `unified`       | `domain`                           |
 | `SPEC_PATTERN`     | Custom glob pattern for test discovery | _(all domains)_ | `cypress/integration/**/*.spec.js` |
-| `BROWSER`          | Browser to use for test execution      | `chrome`        | `electron`, `firefox`, `edge`      |
+| `BROWSER`          | Browser to use for test execution      | `electron`      | `chrome`, `firefox`, `edge`        |
 | `WORKSPACE_ROOT`   | Project root directory                 | `process.cwd()` | `/tests`                           |
 | `CI`               | CI environment flag (enables Xvfb)     | `false`         | `true`                             |
 

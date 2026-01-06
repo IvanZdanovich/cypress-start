@@ -182,7 +182,7 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
   return new Promise((resolve) => {
     const specArg = specFiles.join(',');
     const startTime = Date.now();
-    const browser = process.env.BROWSER || 'chrome';
+    const browser = process.env.BROWSER || 'electron';
 
     if (!bufferOutput) {
       console.log(`[${chunkName}] Starting execution with ${specFiles.length} file(s) on display :${displayNumber}`);

@@ -184,24 +184,24 @@ Run tests with specific environment parameters in headless mode:
 - `LANGUAGE`: Language code (default: `en`)
 - `TARGET_ENV`: Target environment (default: `dev`)
 - `COLOUR_THEME`: Color theme (default: `default`)
-- `BROWSER`: Browser for execution (default: `chrome`)
+- `BROWSER`: Browser for execution (default: `electron`, options: `electron`, `chrome`, `edge`, `firefox`)
 
 **Windows (PowerShell):**
 
 ```powershell
-$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="electron"; npm run test
 ```
 
 **Windows (CMD):**
 
 ```cmd
-set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=electron&& npm run test
 ```
 
 **macOS/Linux:**
 
 ```bash
-LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=chrome npm run test
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
 ```
 
 ### Debug Mode

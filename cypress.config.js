@@ -52,7 +52,7 @@ module.exports = defineConfig({
       const colourTheme = process.env.COLOUR_THEME || 'default';
       const targetEnv = process.env.TARGET_ENV || 'dev';
       const specPattern = process.env.SPEC || 'cypress/**/*.spec.js';
-      const browser = process.env.BROWSER || 'chrome';
+      const browser = process.env.BROWSER || 'electron';
 
       console.log(`Running tests with specPattern=${specPattern}, language=${language}, targetEnv=${targetEnv}, browser=${browser}, colourTheme=${colourTheme}`);
 
