@@ -119,7 +119,8 @@ This framework includes examples of tests:
 
 ## What Makes This Framework Unique?
 
-- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework provides
+- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
+  provides
   a clear structure and naming conventions while using Gherkin‑style syntax to make tests self‑descriptive, readable,
   and understandable for non‑technical stakeholders.
 - **Efficiency**: Parallel test execution and optimized configurations ensure fast feedback cycles.
@@ -127,7 +128,8 @@ This framework includes examples of tests:
   directly in code, making it the single source of truth for the team. Describing requirements and use cases in
   detail—regardless of whether they are automated — enables accurate coverage metrics, eliminates test gaps, and removes
   the complexity associated with manual test cases, requirement matrices, and redundant test‑management tools.
-- **Scalability**: It starts with proper test organization and test file isolation, avoiding manual test case structures. It
+- **Scalability**: It starts with proper test organization and test file isolation, avoiding manual test case
+  structures. It
   eliminates unnecessary complex coding patterns or abstraction layers, promotes straightforward test‑data organization,
   and introduces custom static code analysis rules to enforce naming conventions and test structure. The framework is
   built to scale effortlessly with your project and aligns the entire team around what truly matters — well‑defined
@@ -146,8 +148,9 @@ This framework includes examples of tests:
 - **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
 - **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
 - **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
-- **Comprehensive Documentation:** Test writing guidelines, naming conventions, FAQ ([docs](docs/))
-- **AI-Assisted Development:** Ready-to-use instructions for GitHub Copilot and custom prompts for test creation
+- **Comprehensive Documentation:** Test writing guidelines, naming conventions, FAQ ([docs](docs/.))
+- **AI-Assisted Development:** Ready-to-use instructions for GitHub Copilot and custom prompts for test
+  creation ([docs](.github/copilot-instructions.md))
 - **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
 
 ---
@@ -173,8 +176,6 @@ To run tests in parallel for faster execution:
   # Custom stream count
   PARALLEL_STREAMS=6 npm run test:parallel
 ```
-
-See [Parallel Execution Guide](docs/parallel-execution.md) for detailed documentation.
 
 ### Environment-Specific Test Run
 
@@ -240,15 +241,15 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers:
 
 **Available Parameters:**
 
-| Parameter          | Options                         | Default |
-|--------------------|---------------------------------|---------|
-| `language`         | en                              | en      |
-| `target_env`       | dev                             | dev     |
-| `colour_theme`     | default                         | default |
-| `parallel_streams` | 1-6                             | 3       |
-| `browser`          | electron, chrome, firefox, edge | chrome  |
-| `test_scope`       | all, integration, e2e           | all     |
-| `test_type`        | all, api, ui                    | all     |
+| Parameter          | Options                         | Default  |
+|--------------------|---------------------------------|----------|
+| `language`         | en                              | en       |
+| `target_env`       | dev                             | dev      |
+| `colour_theme`     | default                         | default  |
+| `parallel_streams` | 1-6                             | 3        |
+| `browser`          | electron, chrome, firefox, edge | electron |
+| `test_scope`       | all, integration, e2e           | all      |
+| `test_type`        | all, api, ui                    | all      |
 
 **Test Filtering Examples:**
 
