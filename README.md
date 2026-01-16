@@ -119,19 +119,23 @@ This framework includes examples of tests:
 
 ## What Makes This Framework Unique?
 
-- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a defined structure and naming conventions, using Gherkin syntax to make tests self-descriptive, readable,
-  and
-  understandable for non-technical personnel.
-- **Comprehensive Use Case Documentation**: All business use cases are described in detail, regardless of their
-  automation status. This approach provides accurate coverage metrics, eliminates test gaps, and serves as a solid
-  source of truth
-  for the entire team.
-- **Scalability**: The simple yet efficient approach makes the framework easily extendable for future needs.
-- **Maintainability**: Clear project structure and comprehensive documentation for easy onboarding,
-  effortless maintenance, and test writing.
+- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework provides
+  a clear structure and naming conventions while using Gherkin‑style syntax to make tests self‑descriptive, readable,
+  and understandable for non‑technical stakeholders.
+- **Efficiency**: Parallel test execution and optimized configurations ensure fast feedback cycles.
+- **Comprehensive Approach**: The framework is designed not to duplicate manual test cases but to describe requirements
+  directly in code, making it the single source of truth for the team. Describing requirements and use cases in
+  detail—regardless of whether they are automated — enables accurate coverage metrics, eliminates test gaps, and removes
+  the complexity associated with manual test cases, requirement matrices, and redundant test‑management tools.
+- **Scalability**: It starts with proper test organization and test file isolation, avoiding manual test case structures. It
+  eliminates unnecessary complex coding patterns or abstraction layers, promotes straightforward test‑data organization,
+  and introduces custom static code analysis rules to enforce naming conventions and test structure. The framework is
+  built to scale effortlessly with your project and aligns the entire team around what truly matters — well‑defined
+  requirements.
+- **Maintainability**: A clear project structure and comprehensive documentation ensure easy onboarding, effortless
+  maintenance, and smooth test creation.
 - **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
-- **Lightweight and Easy Startup**: Quick setup with minimal configuration. The low number of third-party dependencies
+- **Lightweight and Easy Startup**: Quick setup with minimal configuration. A minimal number of third‑party dependencies
   helps avoid conflicts and ensures fast build times.
 
 ---
@@ -141,12 +145,9 @@ This framework includes examples of tests:
 - **Interactive CLI Setup:** Two setup modes - Full Setup (complete framework) or Specific Files (cherry-pick modules)
 - **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
 - **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
-- **Localization Testing:** Multi-language test support ([docs](docs/localization-testing.md))
-- **Color Theme Testing:** Multiple theme support via environment variables ([docs](docs/colour-theme-testing.md))
-- **Centralized Selector Management:** All selectors in one location for easy maintenance
 - **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
 - **Comprehensive Documentation:** Test writing guidelines, naming conventions, FAQ ([docs](docs/))
-- **AI-Assisted Development:** GitHub Copilot integration with ready-to-use instructions
+- **AI-Assisted Development:** Ready-to-use instructions for GitHub Copilot and custom prompts for test creation
 - **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
 
 ---
