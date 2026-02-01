@@ -4,7 +4,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
   let standardUser;
 
   before(() => {
-    cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
     cy.then(() => {

@@ -4,7 +4,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
   let standardUser;
 
   before(() => {
-    cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
     cy.then(() => {

@@ -4,10 +4,10 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
   let standardUser, lockedUser;
 
   before(() => {
-    cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
-    cy.getUserDataByRole(userRoles.LOCKED).then((user) => {
+    cy.common__getUserDataByRole(userRoles.LOCKED).then((user) => {
       lockedUser = user;
     });
     cy.visit('/');

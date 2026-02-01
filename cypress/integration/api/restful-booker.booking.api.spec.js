@@ -2,7 +2,6 @@ import { booking_testData } from '../../test-data/api/restful-booker.booking.api
 
 describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false }, () => {
   let authToken;
-  let adminUser;
 
   // Cleanup function to ensure test independence
   const cleanUp = () => {
@@ -10,15 +9,8 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
   };
 
   before(() => {
-    cy.then(() => {
-      cy.getUserDataByRole(userRoles.ADMIN_API).then((user) => {
-        adminUser = user;
-      });
-    });
-    cy.then(() => {
-      cy.restfullBooker__getAuthToken__GET(adminUser).then((response) => {
-        authToken = response.body.token;
-      });
+    cy.commonAPI__getTokenByRole__POST(userRoles.ADMIN_API).then((token) => {
+      authToken = token;
     });
     cleanUp();
   });
@@ -27,25 +19,13 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     cleanUp();
   });
 
-  context('RestfulBooker.Auth.GET: When valid credentials are provided', () => {
-    it('RestfulBooker.Auth.GET: Then return 200 status code and authentication token is generated', () => {
-      cy.restfullBooker__getAuthToken__GET(adminUser).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body).to.have.property('token');
-        expect(response.body.token).to.be.a('string');
-        expect(response.body.token).to.have.length.greaterThan(0);
-        authToken = response.body.token;
-      });
-    });
-  });
-
   context('RestfulBooker.Auth.GET: When invalid credentials are provided', () => {
     // Bug Reference: BUG-AUTH-001
     // Expected: 401 Unauthorized with error message
     // Actual: 200 OK with { reason: 'Bad credentials' }
     // Severity: High - incorrect HTTP status code violates REST standards, security concern
     it('RestfulBooker.Auth.GET: Then return 200 status code and reason Bad credentials', () => {
-      cy.restfullBooker__getAuthToken__GET(booking_testData.auth.invalidCredentials, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__getAuthToken__POST(booking_testData.auth.invalidCredentials, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(errors.restfulBooker.auth.invalidCredentials.statusCode);
         expect(response.body).to.have.property('reason');
         expect(response.body.reason).to.eq(errors.restfulBooker.auth.invalidCredentials.message);

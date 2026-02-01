@@ -4,7 +4,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
   let standardUser;
 
   before(() => {
-    cy.getUserDataByRole(userRoles.STANDARD).then((user) => {
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
       standardUser = user;
     });
     cy.then(() => {

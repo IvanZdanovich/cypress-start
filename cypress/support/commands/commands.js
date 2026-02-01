@@ -24,7 +24,7 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
-Cypress.Commands.add('getUserDataByRole', (role) => {
+Cypress.Commands.add('common__getUserDataByRole', (role) => {
   if (!Object.values(userRoles).includes(role)) {
     throw new Error(`Invalid user: ${role}`);
   }

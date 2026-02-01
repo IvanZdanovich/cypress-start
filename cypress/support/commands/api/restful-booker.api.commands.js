@@ -25,7 +25,7 @@ const mapBookingFields = (body) => {
  * @param {string} user.password - Password
  * @param {Object} restOptions - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__getAuthToken__GET', (user, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__getAuthToken__POST', (user, restOptions = {}) => {
   const { username, password } = user;
 
   return cy.request({
