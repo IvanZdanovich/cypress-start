@@ -44,9 +44,10 @@ export default [
       'custom/verify-test-title-pattern': 'error',
       'custom/verify-test-title-against-structure': 'error',
       'custom/verify-todos-have-links': 'error',
-      'custom/standardize-test-titles': 'warn',
+      'custom/standardize-test-titles': 'error',
       'custom/verify-api-command-naming': 'error',
       'custom/verify-ui-command-naming': 'error',
+      'custom/find-unused-selectors': 'error',
     },
   },
 ];

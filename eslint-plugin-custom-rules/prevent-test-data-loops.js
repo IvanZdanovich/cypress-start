@@ -52,7 +52,7 @@ module.exports = {
         // Check for .forEach() calls within test blocks
         if ((describeDepth > 0 || testDepth > 0) && node.callee.type === 'MemberExpression' && node.callee.property.name === 'forEach') {
           // Check if it's likely iterating over test data (arrays or objects)
-          const objectName = context.getSourceCode().getText(node.callee.object);
+          const objectName = (context.sourceCode || context.getSourceCode()).getText(node.callee.object);
 
           // Common patterns that suggest test data iteration
           const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
@@ -82,7 +82,7 @@ module.exports = {
       // Check for for...of loops within test blocks
       ForOfStatement(node) {
         if (describeDepth > 0 || testDepth > 0) {
-          const rightSource = context.getSourceCode().getText(node.right);
+          const rightSource = (context.sourceCode || context.getSourceCode()).getText(node.right);
 
           const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
 
@@ -100,7 +100,7 @@ module.exports = {
       // Check for for...in loops within test blocks
       ForInStatement(node) {
         if (describeDepth > 0 || testDepth > 0) {
-          const rightSource = context.getSourceCode().getText(node.right);
+          const rightSource = (context.sourceCode || context.getSourceCode()).getText(node.right);
 
           const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];
 

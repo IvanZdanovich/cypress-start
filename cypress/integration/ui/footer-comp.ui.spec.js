@@ -1,4 +1,4 @@
-import { testData } from '../../test-data/ui/footer-comp.ui.test-data';
+import { testData } from '../../integration-test-data/ui/footer-comp.ui.test-data';
 
 describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;

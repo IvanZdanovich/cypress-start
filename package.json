@@ -15,7 +15,7 @@
     "cypress/e2e/",
     "cypress/integration/",
     "cypress/support/",
-    "cypress/test-data/",
+    "cypress/integration-test-data/",
     "cypress/sensitive-data/env-users.example.json",
     "cypress/reports/mochawesome/.gitkeep",
     "cypress/reports/screenshots/.gitkeep",
@@ -41,7 +41,9 @@
     "test:parallel": "node scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
     "hooks:setup": "node scripts/setup-git-hooks.js",
-    "postinstall": "node scripts/setup-git-hooks.js"
+    "postinstall": "node scripts/setup-git-hooks.js",
+    "check:unused": "eslint cypress/support/selectors/selectors.js cypress/support/localization/l10n.json",
+    "update-swagger": "node scripts/update-swagger-schemas.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -68,18 +70,18 @@
   "author": "Ivan Zdanovich",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
-    "eslint": "^9.39.2",
+    "@eslint/eslintrc": "^3.3.4",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.1.0",
-    "eslint-plugin-cypress": "^5.2.1",
+    "eslint-plugin-cypress": "^6.1.0",
     "eslint-plugin-prettier": "^5.5.5",
-    "glob": "^13.0.0",
-    "prettier": "^3.8.0"
+    "glob": "^13.0.6",
+    "prettier": "^3.8.1"
   },
   "dependencies": {
-    "cypress": "^15.9.0",
+    "cypress": "^15.11.0",
     "mochawesome": "^7.1.4"
   },
   "engines": {

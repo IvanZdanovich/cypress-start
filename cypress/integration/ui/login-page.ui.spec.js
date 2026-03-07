@@ -1,4 +1,4 @@
-import { testData } from '../../test-data/ui/login-page.ui.test-data.js';
+import { testData } from '../../integration-test-data/ui/login-page.ui.test-data.js';
 
 describe('LoginPage: Given authenticate page opened', { testIsolation: false }, () => {
   let standardUser, lockedUser;

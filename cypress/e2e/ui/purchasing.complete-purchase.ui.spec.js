@@ -1,4 +1,4 @@
-import { testData } from '../../test-data/ui/complete-purchase.ui.test-data';
+import { testData } from '../../integration-test-data/ui/complete-purchase.ui.test-data';
 
 describe('CompletePurchase: Given No preconditions', { testIsolation: false }, () => {
   let standardUser;

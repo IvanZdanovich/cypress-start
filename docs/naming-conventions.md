@@ -19,7 +19,7 @@
 ### E2E UI Test Files
 
 - **Pattern:** `business-flow-title.ui.spec.js`
-- **Example:** `complete-purchase.ui.spec.js`
+- **Example:** `purchasing.complete-purchase.ui.spec.js`
 
 ---
 
@@ -29,7 +29,7 @@
 - Use PascalCase for page and component names in UI tests.
 - Use PascalCase for user flows in E2E tests.
 - The allowed special characters for test titles (after prefix and colon) are: Spaces ( ), Commas (,)
-- Keep action description concise and action-oriented for API tests (e.g., `Create`, `Update`, `Delete`, `Retrieve`)
+- Keep operation description concise and action-oriented for API tests (e.g., `Create`, `Update`, `Delete`, `Retrieve`)
 - Include HTTP method for API tests (e.g., `POST`, `GET`, `PUT`, `DELETE`, `PATCH`)
 - Include user role for UI tests (e.g., `STANDARD`)
 
@@ -43,14 +43,14 @@
 ### Context Block Title
 
 - Provide the scope and condition being tested.
-- **Integration API Tests:** `ModuleName.SubmoduleName.Action.METHOD: When 'condition'`
+- **Integration API Tests:** `ModuleName.SubmoduleName.Operation.METHOD: When 'condition'`
 - **Integration UI Tests:** `PageName.ComponentName.USER_ROLE: When 'condition'`
 - **E2E UI Tests:** `FlowName.SubFlowName.USER_ROLE: When 'condition'`
 
 ### It Block Title
 
 - Describe the expected result.
-- **Integration API Tests:** `ModuleName.SubmoduleName.Action.METHOD: Then 'expected result'`
+- **Integration API Tests:** `ModuleName.SubmoduleName.Operation.METHOD: Then 'expected result'`
 - **Integration UI Tests:** `PageName.ComponentName.USER_ROLE: Then 'expected result'`
 - **E2E UI Tests:** `FlowName.SubFlowName.USER_ROLE: Then 'expected result'`
 
@@ -122,9 +122,9 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 ### Cypress API Commands Naming Convention
 
 - Use camelCase for naming commands.
-- Clearly indicate the resource, action, and HTTP method.
-- **Pattern:** `resourceName__actionDescription__METHOD`
-- **Example:** `restfullBooker__updateBooking__PUT`
+- Clearly indicate the unique endpoint name, operation, and HTTP method.
+- **Pattern:** `endpointName__operationDescription__PUT`
+- **Example:** `restfullBookerBooking__updateBooking__PUT`
 
 ### Cypress UI Commands Naming Convention
 
@@ -137,12 +137,12 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ## Test Data Naming Convention
 
-- Store test data in javascript files in `cypress/test-data/api`, `cypress/test-data/ui`.
+- Store test data in javascript files in `cypress/integration-test-data/api`, `cypress/integration-test-data/ui`, `cypress/e2e-test-data/ui`.
 - Test data files should be named according to the test files they support.
 - Use camelCase for naming files.
 - Use a hierarchical structure organized by module and submodule.
-- **Pattern:** `module-name.submodule-name.api.test-data.js`, `page-name.component-name.ui.test-data.js`
-- **Example:** `restful-booker.booking.api.test-data.js`, `checkout-page.ui.test-data.js`
+- **Pattern:** `module-name.submodule-name.api.test-data.js`, `page-name.component-name.ui.test-data.js`, `business-domain.flow-name.ui.test-data.js`
+- **Example:** `restful-booker.booking.api.test-data.js`, `checkout-page.ui.test-data.js`, `purchasing.complete-purchase.ui.test-data.js`
 
 ---
 
@@ -150,7 +150,7 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 - Use camelCase for selector names.
 - Clearly indicate the element's purpose and type.
-- **Static Text Elements:** Use nouns (e.g., `errorMessage`, `userNameInput`).
+- **Static Elements:** Use nouns (e.g., `errorMessage`, `userNameInput`).
 - **Action Elements:** Use verbs (e.g., `submitForm`, `openListingTab`).
 - **Pattern:** `elementPurposeElementType` or `elementPurposeElementTypeState`
 - **Example:** `submitForm`, `userNameInput`, `errorMessage`

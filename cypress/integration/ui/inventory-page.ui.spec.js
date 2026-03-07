@@ -1,4 +1,4 @@
-import { testData } from '../../test-data/ui/inventory-page.ui.test-data';
+import { testData } from '../../integration-test-data/ui/inventory-page.ui.test-data';
 
 describe('InventoryPage: Given STANDARD user on Inventory page, no products are added to cart', { testIsolation: false }, () => {
   let standardUser;

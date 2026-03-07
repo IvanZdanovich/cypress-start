@@ -10,5 +10,6 @@ module.exports = {
     'standardize-test-titles': require('./standardize-test-titles.js'),
     'verify-api-command-naming': require('./verify-api-command-naming.js'),
     'verify-ui-command-naming': require('./verify-ui-command-naming.js'),
+    'find-unused-selectors': require('./find-unused-selectors.js'),
   },
 };

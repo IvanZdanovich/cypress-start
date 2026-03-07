@@ -15,7 +15,7 @@ module.exports = {
     },
   },
   create(context) {
-    const filename = context.getFilename();
+    const filename = context.filename || context.getFilename();
 
     // Only apply this rule to UI command files
     if (!filename.includes('/commands/ui/') || !filename.endsWith('.ui.commands.js')) {

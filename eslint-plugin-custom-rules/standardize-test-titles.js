@@ -10,7 +10,7 @@ module.exports = {
     schema: [],
   },
   create(context) {
-    const filename = context.getFilename();
+    const filename = context.filename || context.getFilename();
     const isApiTest = filename.includes('/integration/api/');
     const isUiTest = filename.includes('/integration/ui/') || filename.includes('/e2e/ui/');
 

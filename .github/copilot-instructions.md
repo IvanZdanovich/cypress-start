@@ -16,19 +16,22 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/cypress/integration/ui/` - Integration UI (pages/components)
 - `${WORKSPACE_ROOT}/cypress/integration/api/` - Integration API (modules/submodules)
 
+** Commands:**
+- `${WORKSPACE_ROOT}/cypress/commands/api/` - API commands by module
+- `${WORKSPACE_ROOT}/cypress/commands/ui/` - UI commands by page/component
+
 **Support:**
 - `${WORKSPACE_ROOT}/cypress/support/e2e.js` - Global imports and configs
 - `${WORKSPACE_ROOT}/cypress/support/selectors/` - UI selectors by page/component
-- `${WORKSPACE_ROOT}/cypress/support/commands/api/` - API commands by module
-- `${WORKSPACE_ROOT}/cypress/support/commands/ui/` - UI commands by page/component
 - `${WORKSPACE_ROOT}/cypress/support/utils/utils.js` - Utility functions
 - `${WORKSPACE_ROOT}/cypress/support/requirements/requirements.js` - Requirements, error messages, constraints
 - `${WORKSPACE_ROOT}/cypress/support/localization/` - Localization JSON
 - `${WORKSPACE_ROOT}/cypress/support/colours/` - Theme colour JSON
 
 **Data:**
-- `${WORKSPACE_ROOT}/cypress/test-data/api/` - API test data
-- `${WORKSPACE_ROOT}/cypress/test-data/ui/` - UI test data
+- `${WORKSPACE_ROOT}/cypress/integration-test-data/ui/` - E2E UI test data
+- `${WORKSPACE_ROOT}/cypress/integration-test-data/api/` - Integration API test data
+- `${WORKSPACE_ROOT}/cypress/integration-test-data/ui/` - Integration UI test data
 - `${WORKSPACE_ROOT}/cypress/sensitive-data/` - User credentials (not committed)
 
 **Config:**

@@ -1,4 +1,4 @@
-import { testData } from '../../test-data/ui/cart-page.ui.test-data';
+import { testData } from '../../integration-test-data/ui/cart-page.ui.test-data';
 
 describe('CartPage: Given STANDARD user on Cart page and no products are added to cart', { testIsolation: false }, () => {
   let standardUser;

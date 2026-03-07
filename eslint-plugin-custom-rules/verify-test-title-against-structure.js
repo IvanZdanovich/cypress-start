@@ -9,8 +9,9 @@ module.exports = {
     schema: [], // no options
   },
   create: function (context) {
-    const filename = context.getFilename();
+    const filename = context.filename || context.getFilename();
     let structureFile;
+
     if (filename.includes('e2e')) {
       structureFile = './app-structure/workflows.json';
     } else if (filename.endsWith('.api.spec.js')) {
@@ -23,14 +24,37 @@ module.exports = {
 
     const moduleStructure = require(structureFile);
 
-    function validateTitleAgainstStructure(title, structure) {
-      const parts = title.split(':')[0].trim().split('.');
-      if (parts.length > 1 && /^[A-Z]+$/.test(parts[parts.length - 1])) {
-        parts.pop(); // Remove the last part if it is uppercase
+    // Recursively sort all object properties alphabetically
+    function sortObjectPropertiesRecursively(obj) {
+      if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+        return obj;
       }
+
+      const sortedObj = {};
+      const keys = Object.keys(obj).sort((a, b) => a.localeCompare(b));
+
+      for (const key of keys) {
+        sortedObj[key] = sortObjectPropertiesRecursively(obj[key]);
+      }
+
+      return sortedObj;
+    }
+
+    const sortedStructure = sortObjectPropertiesRecursively(moduleStructure);
+
+    function validateTitleAgainstStructure(title, structure, partsToExclude = 0) {
+      const parts = title.split(':')[0].trim().split('.');
+
+      // Exclude last N parts for container blocks (describe/context)
+      const partsToValidate = partsToExclude > 0 && parts.length > partsToExclude ? parts.slice(0, -partsToExclude) : parts;
+
       let currentLevel = structure;
 
-      for (const element of parts) {
+      // Navigate through the structure
+      for (let i = 0; i < partsToValidate.length; i++) {
+        const element = partsToValidate[i];
+
+        // Navigate to the next level
         if (currentLevel[element]) {
           currentLevel = currentLevel[element];
         } else {
@@ -40,10 +64,10 @@ module.exports = {
       return true;
     }
 
-    function checkTitlePattern(node) {
+    function checkTitlePattern(node, partsToExclude = 0) {
       const title = node.arguments[0].value;
       if (title) {
-        const validationResult = validateTitleAgainstStructure(title, moduleStructure);
+        const validationResult = validateTitleAgainstStructure(title, sortedStructure, partsToExclude);
         if (validationResult !== true) {
           context.report({
             node,
@@ -55,19 +79,19 @@ module.exports = {
 
     return {
       'CallExpression[callee.name="describe"]'(node) {
-        checkTitlePattern(node);
+        checkTitlePattern(node, 2);
       },
       'CallExpression[callee.name="context"]'(node) {
-        checkTitlePattern(node);
+        checkTitlePattern(node, 0);
       },
       'CallExpression[callee.object.name="describe"][callee.property.name="skip"]'(node) {
-        checkTitlePattern(node);
+        checkTitlePattern(node, 2);
       },
       'CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
-        checkTitlePattern(node);
+        checkTitlePattern(node, 0);
       },
       'CallExpression[callee.name="it"]'(node) {
-        checkTitlePattern(node);
+        checkTitlePattern(node, 0);
       },
     };
   },

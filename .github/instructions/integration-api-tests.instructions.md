@@ -177,7 +177,7 @@ ACCESS: Via global `errors` variable (NO import)
 ## Test Template
 
 ```javascript
-import {module_testData as testData} from '../../test-data/api/module-name.submodule-name.api.test-data';
+import {module_testData as testData} from '../../integration-test-data/api/module-name.submodule-name.api.integration-test-data';
 
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;
