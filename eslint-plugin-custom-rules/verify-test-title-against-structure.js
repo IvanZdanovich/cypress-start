@@ -9,7 +9,7 @@ module.exports = {
     schema: [], // no options
   },
   create: function (context) {
-    const filename = context.filename || context.getFilename();
+    const filename = context.filename;
     let structureFile;
 
     if (filename.includes('e2e')) {

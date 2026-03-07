@@ -41,12 +41,7 @@ const footerComp = {
 };
 
 const productPage = {
-  back: '[data-test="back-to-products"]',
-  image: '.inventory_details_img',
   title: '[data-test="inventory-item-name"]',
-  description: '[data-test="inventory-item-name"]',
-  price: '[data-test="inventory-item-name"]',
-  remove: '[data-test="back-to-products"]',
 };
 
 const cartPage = {
@@ -60,7 +55,6 @@ const cartPage = {
     title: '[data-test="inventory-item-name"]',
     description: '[data-test="inventory-item-desc"]',
     price: '[data-test="inventory-item-price"]',
-    quantity: '[data-test="item-quantity"]',
     remove: '[data-test^="remove-"]',
   },
 };
@@ -71,39 +65,14 @@ const checkoutPage = {
   lastName: '[data-test="lastName"]',
   zip: '[data-test="postalCode"]',
   continue: '[data-test="continue"]',
-  cancel: '[data-test="cancel"]',
-  error: '.error-message-container',
-  errorMessage: '[data-test="error"]',
-  errorClose: '[data-test="error-button"]',
 };
 
-const checkoutOverview = {
-  title: '[data-test="title"]',
-  finish: '[data-test="finish"]',
-  cancel: '[data-test="cancel"]',
-  paymentInfoLabel: '[data-test="payment-info-label"]',
-  paymentInfo: '[data-test="payment-info-value"]',
-  shippingInfoLabel: '[data-test="shipping-info-label"]',
-  shippingInfo: '[data-test="shipping-info-value"]',
-  itemsTotalLabel: '[data-test="total-info-label"]',
-  itemsTotal: '[data-test="subtotal-label"]',
-  priceTotal: '[data-test="total-label"]',
-  tax: '[data-test="tax-label"]',
-  items: '[data-test="inventory-item"]',
-  item: {
-    title: '[data-test="item-0-title-link"]',
-    description: '[data-test="inventory-item-desc"]',
-    price: '[data-test="item-quantity"]',
-    quantity: '[data-test="item-quantity"]',
-  },
-};
+const checkoutOverview = {};
 
 const checkoutCompletePage = {
-  title: '[data-test="title"]',
   confirmation: {
     title: '[data-test="complete-header"]',
     message: '[data-test="complete-text"]',
-    icon: '[data-test="complete-image"]',
   },
   backHome: '[data-test="back-to-products"]',
 };
