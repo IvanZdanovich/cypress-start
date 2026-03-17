@@ -111,11 +111,11 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ### Cypress Commands Files Naming Convention
 
-- **API Commands:** Located in `cypress/support/commands/api`
+- **API Commands:** Located in `cypress/commands/api`
     - **Pattern:** `module-name.api.commands.js`
     - **Example:** `restful-booker.api.commands.js`
 
-- **UI Commands:** Located in `cypress/support/commands/ui`
+- **UI Commands:** Located in `cypress/commands/ui`
     - **Pattern:** `page-name.ui.commands.js`
     - **Example:** `checkout-page.ui.commands.js`
 

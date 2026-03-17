@@ -43,7 +43,7 @@ specifications to be defined, even if not yet implemented.
 - **Sensitive Data**: Store credentials and sensitive information in `cypress/sensitive-data/`. Never commit this folder
   to version control.
 
-- **Custom Commands**: Leverage existing custom commands from `cypress/support/commands/` before writing inline code.
+- **Custom Commands**: Leverage existing custom commands from `cypress/commands/` before writing inline code.
   Create new commands for frequently used operations.
 
 - **Requirements Reference**: Use project-wide requirements from `cypress/support/requirements/` for consistent error

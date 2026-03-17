@@ -1,0 +1,26 @@
+{
+  "CartPage": {
+    "STANDARD": {}
+  },
+  "Header": {
+    "STANDARD": {}
+  },
+  "Footer": {
+    "STANDARD": {}
+  },
+  "InventoryPage": {
+    "STANDARD": {},
+    "Footer": {
+      "STANDARD": {}
+    },
+    "Card": {
+      "STANDARD": {}
+    },
+    "Header": {
+      "STANDARD": {}
+    }
+  },
+  "LoginPage": {
+    "STANDARD": {}
+  }
+}

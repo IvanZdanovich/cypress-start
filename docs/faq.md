@@ -441,23 +441,23 @@ costs and allow for more frequent, comprehensive test runs.
 
 Here's a clearer and more detailed explanation of why UI tests should be tied to one page or component:
 
-## 11. Why should UI tests be tied to one page or component?
+## 11. Why should UI tests be scoped to a single page or component?
 
-Test file isolation is crucial in test automation because test runs within a file share the same context. Organizing
-tests
-by pages or components prevents state conflicts between functional areas and makes test failures easily traceable to
-specific functionality. When each test file focuses on one page or component, updates to one area don't affect unrelated
-tests. This creates clear boundaries for test responsibility and enables efficient parallel execution.
-
-The modular approach simplifies maintenance, debugging and naturally aligns test organization with application
-architecture. Coverage becomes clearly mapped to the application structure, making the test suite easier to scale as the
-application grows.
+Prioritize integration tests for individual pages and components rather than E2E scenarios spanning multiple pages.
+Keeping UI tests isolated to one page or component is essential because all tests within a file share the same execution
+context. When tests are organized by specific functional areas, you avoid unintended state contamination and make it
+much easier to identify which part of the application caused a failure.
+Scoping each test file to a single page or component ensures that changes in one area do not cascade into unrelated
+tests. This creates well‑defined boundaries, improves test reliability, and enables safe parallel execution.
+A modular structure also simplifies maintenance and debugging. It naturally mirrors the application’s architecture,
+making test coverage transparent and aligned with real feature boundaries. As the application grows, this organization
+allows the test suite to scale cleanly and predictably.
 
 **Example: Bad approach (mixing pages)**
 
 ```javascript
 // checkout.ui.spec.js
-context('Checkout: When user completes purchase', () => {
+context('When user completes purchase', () => {
     it('Then order confirmation is displayed', () => {
         // Cart page actions
         cy.visit(urls.cart);
@@ -478,26 +478,36 @@ context('Checkout: When user completes purchase', () => {
 
 ```javascript
 // cart-page.ui.spec.js
-context('CartPage.STANDARD: When user proceeds to checkout', () => {
-    before(() => {
-        cy.visit(urls.cart);
-    });
-    it('CartPage.STANDARD: Then checkout button navigates to checkout page', () => {
-        cy.get(cartPage.checkoutButton).click();
-        cy.url().should('eq', urls.checkout);
+describe('CartPage: No preconditions ', () => {
+    context('CartPage.STANDARD: When user navigates to the page', () => {
+        before(() => {
+            cy.visit(urls.cart);
+        });
+        it('CartPage.STANDARD: Then checkout button is displayed and enabled', () => {
+            cy.get(cartPage.checkoutButton).should('be.displayed').and('be.enabled');
+        });
     });
 });
 
 // checkout-page.ui.spec.js
-context('CheckoutPage.STANDARD: When user submits valid details', () => {
+describe('CheckoutPage: There are random items in the cart', () => {
     before(() => {
-        cy.visit(urls.checkout);
-        cy.get(checkoutPage.firstName).type('John');
-        cy.get(checkoutPage.lastName).type('Doe');
+        // Could be done via API, but for better readability, we will do it via UI
+        cy.visit(urls.cart);
+        cy.cartPage__addRandomItemsToCart();
+        cy.get(cartPage.checkoutButton).click()
     });
-    it('CheckoutPage.STANDARD: Then user proceeds to confirmation', () => {
-        cy.get(checkoutPage.continueButton).click();
-        cy.url().should('eq', urls.confirmation);
+
+    context('CheckoutPage.STANDARD: When user submits valid details', () => {
+        before(() => {
+            cy.visit(urls.checkout);
+            cy.get(checkoutPage.firstName).type('John');
+            cy.get(checkoutPage.lastName).type('Doe');
+        });
+        it('CheckoutPage.STANDARD: Then user proceeds to confirmation', () => {
+            cy.get(checkoutPage.continueButton).click();
+            cy.url().should('eq', urls.confirmation);
+        });
     });
 });
 ```
@@ -554,11 +564,14 @@ context('CartPage.STANDARD: When user visits the page', () => {
 
 and here is the output of the test run:
 
+```
        Spec                                              Tests  Passing  Failing  Pending  Skipped
 
 ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔ integration/ui/cart-page.ui.spec.js 00:01 3 1 - 2 - │
+│ ✔ integration/ui/cart-page.ui.spec.js         00:01      3       1        -        2        -  │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
-✖ 0 of 1 failed (0%)                          00:01 3 1 - 2 -
+  ✖ 0 of 1 failed (0%)                          00:01      3       1        -        2        -
+  
+```
 
 This makes the scope and current coverage explicit, even before all tests are implemented.

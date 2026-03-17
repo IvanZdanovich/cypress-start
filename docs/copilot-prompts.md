@@ -321,7 +321,7 @@ REQUIREMENTS:
    - USE randomization via `utils` functions
 
 5. CREATE API commands:
-   - `${WORKSPACE_ROOT}/cypress/support/commands/api/[module-name].api.commands.js`
+   - `${WORKSPACE_ROOT}/cypress/commands/api/[module-name].api.commands.js`
    - Follow naming: `moduleName__action__METHOD`
 
 6. COVER test scenarios:
@@ -370,7 +370,7 @@ REQUIREMENTS:
    - EXPORT `namePrefix` FOR cleanup usage
 
 6. CREATE UI commands (if needed):
-   - `${WORKSPACE_ROOT}/cypress/support/commands/ui/[page-name].ui.commands.js`
+   - `${WORKSPACE_ROOT}/cypress/commands/ui/[page-name].ui.commands.js`
    - Follow naming: `pageName__action`
 
 7. COVER test scenarios:
@@ -419,8 +419,8 @@ REQUIREMENTS:
    - EXPORT `namePrefix` FOR cleanup usage
 
 5. USE existing commands FROM:
-   - `${WORKSPACE_ROOT}/cypress/support/commands/ui/` (for UI interactions)
-   - `${WORKSPACE_ROOT}/cypress/support/commands/api/` (for setup/teardown)
+   - `${WORKSPACE_ROOT}/cypress/commands/ui/` (for UI interactions)
+   - `${WORKSPACE_ROOT}/cypress/commands/api/` (for setup/teardown)
 
 6. COVER workflow scenarios:
    - Complete happy path flow

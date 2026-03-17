@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "1.3.2",
+  "version": "2.0.0",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
@@ -42,8 +42,15 @@
     "lint": "eslint . --format stylish --fix",
     "hooks:setup": "node scripts/setup-git-hooks.js",
     "postinstall": "node scripts/setup-git-hooks.js",
-    "check:unused": "eslint cypress/support/selectors/selectors.js cypress/support/localization/l10n.json",
-    "update-swagger": "node scripts/update-swagger-schemas.js"
+    "update-swagger": "node scripts/update-swagger-schemas.js",
+    "coverage:report": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
+    "coverage:report:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
+    "coverage:report:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",
+    "coverage:report:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown --output=reports/coverage-e2e-ui.md",
+    "coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
+    "coverage:check:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80",
+    "coverage:check:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80",
+    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -70,18 +77,18 @@
   "author": "Ivan Zdanovich",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.4",
+    "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.0.2",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-chai-friendly": "^1.1.0",
-    "eslint-plugin-cypress": "^6.1.0",
+    "eslint-plugin-chai-friendly": "^1.1.1",
+    "eslint-plugin-cypress": "^6.2.0",
     "eslint-plugin-prettier": "^5.5.5",
     "glob": "^13.0.6",
     "prettier": "^3.8.1"
   },
   "dependencies": {
-    "cypress": "^15.11.0",
+    "cypress": "^15.12.0",
     "mochawesome": "^7.1.4"
   },
   "engines": {

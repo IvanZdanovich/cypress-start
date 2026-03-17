@@ -8,7 +8,7 @@ applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 
 PLACE files: `${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js` (kebab-case)
 STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.test-data.js` (kebab-case)
-STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
+STORE API commands: `${WORKSPACE_ROOT}/cypress/commands/api/` (named by module/submodule)
 STORE URLs: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
 
 ## Test Organization
@@ -117,7 +117,7 @@ FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-d
 
 ## API Commands
 
-STORE: `${WORKSPACE_ROOT}/cypress/support/commands/api/module-name.api.commands.js`
+STORE: `${WORKSPACE_ROOT}/cypress/commands/api/module-name.api.commands.js`
 NAMING: kebab-case files, camelCase command names
 PATTERN: `moduleName__Action__METHOD`
 AUTO-IMPORTED VIA `${WORKSPACE_ROOT}/cypress/support/e2e.js`

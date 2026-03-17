@@ -13,7 +13,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'], // Add your ignore patterns here
+    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'],
   },
   ...compat.extends('plugin:chai-friendly/recommended', 'plugin:prettier/recommended'),
   {

@@ -9,8 +9,8 @@ applyTo: "${WORKSPACE_ROOT}/cypress/integration/ui/*.ui.spec.js"
 PLACE files: `${WORKSPACE_ROOT}/cypress/integration/ui/page-name.component-name.ui.spec.js` (kebab-case)
 STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/page-name.component-name.ui.test-data.js` (kebab-case)
 STORE selectors: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js` (grouped by page/component)
-STORE UI commands: `${WORKSPACE_ROOT}/cypress/support/commands/ui/` (named by page/component)
-STORE API commands: `${WORKSPACE_ROOT}/cypress/support/commands/api/` (named by module/submodule)
+STORE UI commands: `${WORKSPACE_ROOT}/cypress/commands/ui/` (named by page/component)
+STORE API commands: `${WORKSPACE_ROOT}/cypress/commands/api/` (named by module/submodule)
 
 ## Test Organization
 
@@ -110,7 +110,7 @@ FOLLOW guidelines FROM `${WORKSPACE_ROOT}/.github/copilot-instructions.md#test-d
 ## UI Commands
 
 PATTERN: `pageName__action` or `componentName__action`
-STORE: `${WORKSPACE_ROOT}/cypress/support/commands/ui/page-name.component-name.ui.commands.js`
+STORE: `${WORKSPACE_ROOT}/cypress/commands/ui/page-name.component-name.ui.commands.js`
 NAMING: kebab-case files, `__` separator in commands
 
 ### When to CREATE Custom Commands

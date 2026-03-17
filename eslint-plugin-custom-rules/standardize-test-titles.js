@@ -98,7 +98,6 @@ module.exports = {
       [/\bpress\b/gi, 'click'],
       [/\btap\b/gi, 'click'],
       [/\bfill\b/gi, 'input'],
-      [/\bchoose\b/gi, 'select'],
       [/\bpick\b/gi, 'select'],
       [/\bunfold\b/gi, 'expand'],
       [/\bfold\b/gi, 'collapse'],
