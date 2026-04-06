@@ -19,13 +19,40 @@ development, creating a staging area for review before migration to the issue tr
 
 ### What Triggers AI Logging
 
-- Incorrect HTTP status codes
-- Missing/improper error messages
-- Unexpected response formats
-- Inconsistent behavior vs documentation
-- Security/validation issues
-- UI rendering problems
-- Broken user flows
+**Core Principle**: Log bugs when the application exhibits mistakes, inconsistencies, or harmful practices - **even if
+tests pass**. The analysis focuses on identifying whether the observed behavior poses a risk or harm to the application
+under test, not merely on test outcomes.
+
+**Trigger Categories**:
+
+**Harmful Practices** (Application Design/Implementation):
+
+- Security vulnerabilities (weak validation, exposed sensitive data, insecure defaults)
+- Data integrity risks (missing constraints, inconsistent state management)
+- Poor error handling (silent failures, misleading error messages)
+- Resource management issues (memory leaks, unclosed connections, excessive resource consumption)
+- Accessibility violations (missing ARIA labels, keyboard navigation issues)
+- Performance anti-patterns (N+1 queries, inefficient algorithms, blocking operations)
+
+**Inconsistencies** (Behavior vs Expectations):
+
+- Deviation from API specification/documentation
+- Inconsistent behavior across similar operations
+- Breaking REST/HTTP conventions without justification
+- Contradictory responses for equivalent requests
+- Mismatched data formats between related endpoints
+
+**Implementation Mistakes** (Incorrect Functionality):
+
+- Incorrect HTTP status codes (200 for failures, 500 for validation errors)
+- Missing/improper validation on required fields
+- Unexpected response formats or data types
+- Broken functionality (404s, runtime errors, null reference exceptions)
+- State corruption (data loss, incomplete updates, orphaned records)
+- UI rendering defects (broken layouts, missing elements, incorrect displays)
+
+**Note**: Tests may pass while validating current (incorrect) behavior. Bug logging captures the discrepancy between
+**what the application does** vs **what it should do**.
 
 ### Bug Entry Structure
 
@@ -63,22 +90,6 @@ When AI logs a bug, it automatically:
 1. **Review** `${WORKSPACE_ROOT}/bug-log/bug-log.json` regularly (weekly or after major test development)
 2. **Validate** logged issues are legitimate bugs (not test code issues)
 3. **Create** issues in tracking system using this template:
-
-```markdown
-**Bug ID**: BUG-RESTFUL-001  
-**Module**: RestfulBooker | **Severity**: Medium
-
-**Description**  
-Authentication endpoint returns 200 for invalid credentials instead of 401
-
-**Expected**: Return 401 Unauthorized  
-**Actual**: Returns 200 OK with reason: 'Bad credentials'
-
-**Endpoint**: POST /auth  
-**Test Reference**: `cypress/integration/api/restful-booker.auth.api.spec.js`  
-**Reproducible**: Yes | **Date**: 2025-11-06
-```
-
 4. **Update** `${WORKSPACE_ROOT}/bug-log/bug-log.json` with issue tracker URL in `notes` field
 
 ### Bug Status Lifecycle
@@ -91,38 +102,6 @@ Authentication endpoint returns 200 for invalid credentials instead of 401
 
 ---
 
-## Manual Bug Reporting
-
-### When to Report Manually
-
-- Bugs found during manual/exploratory testing
-- Issues discovered while reviewing the UI
-- Problems identified during code review
-- Stakeholder or end-user reports
-
-### Reporting Process
-
-1. **Create issue** in tracking system with:
-    - Clear title and description
-    - Steps to reproduce
-    - Expected vs actual behavior
-    - Screenshots/videos (if applicable)
-    - Environment details
-    - Severity classification
-
-2. **Link to tests** (if applicable):
-    ```javascript
-      it.skip('CartPage.STANDARD: Then Checkout button is displayed and enabled', () => {
-        // TODO: https://github.com/org/repo/issues/123
-        cy.get(cartPage.checkout)
-          .should('have.text', l10n.cartPage.checkout)
-          .and('be.visible')
-          .and('be.enabled');
-      });
-   ```
-
-3. **Monitor and update** issue status when resolved
-
 ### Severity Classification
 
 | Severity     | Criteria                                                          |
@@ -131,32 +110,6 @@ Authentication endpoint returns 200 for invalid credentials instead of 401
 | **High**     | Major feature broken, significant UX impact, no workaround        |
 | **Medium**   | Feature works with issues, workaround available                   |
 | **Low**      | Cosmetic issues, minor inconveniences, edge cases                 |
-
----
-
-## Comparison
-
-| Aspect               | AI-Automated            | Manual                |
-|----------------------|-------------------------|-----------------------|
-| **Discovery**        | During test development | During manual testing |
-| **Initial Location** | `bug-log.json`          | Issue tracker         |
-| **Documentation**    | Automatic, structured   | Manual, flexible      |
-| **Test Adaptation**  | Automatic               | Manual `.skip()`      |
-| **Best For**         | API/backend issues      | UI/UX problems        |
-
----
-
-## Combined Workflow
-
-```
-
-AI discovers bugs => bug-log.json => Team reviews => Issue tracker
-↑
-Manual testing discovers bugs ──────────────────────────┘
-
-```
-
-**All bugs** eventually tracked in the central issue tracking system.
 
 ---
 
