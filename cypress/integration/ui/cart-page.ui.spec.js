@@ -1,4 +1,4 @@
-import { testData } from '../../integration-test-data/ui/cart-page.ui.test-data';
+import { examples } from '../../integration-examples/ui/cart-page.ui.examples';
 
 describe('CartPage: Given STANDARD user on Cart page and no products are added to cart', { testIsolation: false }, () => {
   let standardUser;
@@ -65,17 +65,17 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
 
   context('CartPage.STANDARD: When user adds random products and clicks Cart button', () => {
     before(() => {
-      cy.wrap(testData.indicesOfProducts).each((index) => {
+      cy.wrap(examples.indicesOfProducts).each((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
             let productTitle = text;
-            if (text === testData.buggyProductData.wrongTitle) {
-              productTitle = testData.buggyProductData.correctTitle;
+            if (text === examples.buggyProductData.wrongTitle) {
+              productTitle = examples.buggyProductData.correctTitle;
             }
-            testData.chosenProducts.push(products.find((product) => product.title === productTitle));
+            examples.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
       });
       cy.then(() => {
@@ -89,11 +89,11 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
 
     it('CartPage.STANDARD: Then number of items should correspond to the number of chosen products', () => {
-      cy.get(cartPage.items).should('have.length', testData.indicesOfProducts.length);
+      cy.get(cartPage.items).should('have.length', examples.indicesOfProducts.length);
     });
 
     it('CartPage.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.get(headerComp.cartBadge).should('have.text', testData.indicesOfProducts.length).and('be.visible');
+      cy.get(headerComp.cartBadge).should('have.text', examples.indicesOfProducts.length).and('be.visible');
     });
 
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
@@ -119,46 +119,46 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
 
     it('CartPage.STANDARD: Then on each item should have appropriate title, description and price', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
+      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
   });
 
   context('CartPage.STANDARD: When user clicks delete button on random item', () => {
     before(() => {
       cy.get(cartPage.items)
-        .eq(testData.randomIndex)
+        .eq(examples.randomIndex)
         .find(cartPage.item.title)
         .invoke('text')
         .then((title) => {
-          testData.removedProductTitle = title;
+          examples.removedProductTitle = title;
         });
 
       cy.then(() => {
-        cy.get(cartPage.items).eq(testData.randomIndex).find(cartPage.item.remove).click();
+        cy.get(cartPage.items).eq(examples.randomIndex).find(cartPage.item.remove).click();
       });
     });
 
     it('CartPage.STANDARD: Then the number of products is decreased', () => {
-      cy.get(cartPage.items).should('have.length', testData.indicesOfProducts.length - 1);
+      cy.get(cartPage.items).should('have.length', examples.indicesOfProducts.length - 1);
     });
 
     it('CartPage.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      if (testData.indicesOfProducts.length - 1 === 0) {
+      if (examples.indicesOfProducts.length - 1 === 0) {
         cy.get(headerComp.cartBadge).should('not.exist');
         return;
       }
       cy.get(headerComp.cartBadge)
-        .should('have.text', testData.indicesOfProducts.length - 1)
+        .should('have.text', examples.indicesOfProducts.length - 1)
         .and('be.visible');
     });
 
     it('CartPage.STANDARD: Then the removed product is not displayed', () => {
-      if (testData.indicesOfProducts.length - 1 === 0) {
+      if (examples.indicesOfProducts.length - 1 === 0) {
         cy.get(cartPage.items).should('not.exist');
         return;
       }
       cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).find(cartPage.item.title).should('not.have.text', testData.removedProductTitle);
+        cy.wrap($item).find(cartPage.item.title).should('not.have.text', examples.removedProductTitle);
       });
     });
   });

@@ -24,14 +24,15 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/cypress/support/e2e.js` - Global imports and configs
 - `${WORKSPACE_ROOT}/cypress/support/selectors/` - UI selectors by page/component
 - `${WORKSPACE_ROOT}/cypress/support/utils/utils.js` - Utility functions
-- `${WORKSPACE_ROOT}/cypress/support/requirements/requirements.js` - Requirements, error messages, constraints
+- `${WORKSPACE_ROOT}/cypress/support/requirements/requirements.js` - Global UI constraints (shared, available as global.reqs)
+- `${WORKSPACE_ROOT}/cypress/support/requirements/*.reqs.js` - Module requirement files (source of truth, import directly)
 - `${WORKSPACE_ROOT}/cypress/support/localization/` - Localization JSON
 - `${WORKSPACE_ROOT}/cypress/support/colours/` - Theme colour JSON
 
 **Data:**
-- `${WORKSPACE_ROOT}/cypress/integration-test-data/ui/` - E2E UI test data
-- `${WORKSPACE_ROOT}/cypress/integration-test-data/api/` - Integration API test data
-- `${WORKSPACE_ROOT}/cypress/integration-test-data/ui/` - Integration UI test data
+- `${WORKSPACE_ROOT}/cypress/integration-examples/ui/` - E2E UI test data
+- `${WORKSPACE_ROOT}/cypress/integration-examples/api/` - Integration API test data
+- `${WORKSPACE_ROOT}/cypress/integration-examples/ui/` - Integration UI test data
 - `${WORKSPACE_ROOT}/cypress/sensitive-data/` - User credentials (not committed)
 
 **Config:**
@@ -71,6 +72,7 @@ REFER TO documentation:
 - `${WORKSPACE_ROOT}/docs/naming-conventions.md`
 - `${WORKSPACE_ROOT}/docs/localization-testing.md`
 - `${WORKSPACE_ROOT}/docs/colour-theme-testing.md`
+- `${WORKSPACE_ROOT}/docs/requirements-examples-approach.md`
 
 ---
 

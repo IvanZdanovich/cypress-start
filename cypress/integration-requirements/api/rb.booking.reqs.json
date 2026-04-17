@@ -1,0 +1,351 @@
+{
+  "auth": {
+    "validLogin": {
+      "id": "REQ-RB-001",
+      "rule": "POST /auth with valid credentials returns 200 OK and a non-empty token string.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/auth",
+      "statusCode": 200
+    },
+    "invalidCredentials": {
+      "id": "REQ-RB-002",
+      "rule": "POST /auth with invalid credentials returns 200 OK with body { reason: \"Bad credentials\" }.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/auth",
+      "statusCode": 200,
+      "reason": "Bad credentials",
+      "bugs": ["BUG-AUTH-001"]
+    }
+  },
+  "create": {
+    "success": {
+      "id": "REQ-RB-010",
+      "rule": "POST /booking with a valid, complete payload returns 200 OK and a numeric bookingid.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "withoutAdditionalNeeds": {
+      "id": "REQ-RB-011",
+      "rule": "additionalneeds is optional; omitting it still returns 200 OK.",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "minimalPrice": {
+      "id": "REQ-RB-012",
+      "rule": "totalprice minimum valid value is 1; booking at that boundary is accepted.",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "minValue": 1
+    },
+    "maximalPrice": {
+      "id": "REQ-RB-013",
+      "rule": "totalprice maximum valid value is 100000; booking at that boundary is accepted.",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "maxValue": 100000
+    },
+    "sameDayCheckout": {
+      "id": "REQ-RB-014",
+      "rule": "A booking where checkin equals checkout (same-day checkout) is accepted.",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "longStay": {
+      "id": "REQ-RB-015",
+      "rule": "A long stay (≥ 90 days between checkin and checkout) is accepted.",
+      "priority": "P3",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "minStayDays": 90
+    },
+    "depositNotPaid": {
+      "id": "REQ-RB-016",
+      "rule": "depositpaid: false is a valid state; booking is accepted.",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "missingRequiredField": {
+      "id": "REQ-RB-017",
+      "rule": "POST /booking with a missing required field returns 500 Internal Server Error.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 500,
+      "body": "Internal Server Error",
+      "requiredFields": ["firstname", "lastname", "totalPrice", "depositPaid", "bookingDates.checkin", "bookingDates.checkout"],
+      "bugs": ["BUG-BOOKING-002"]
+    },
+    "invalidDataType": {
+      "id": "REQ-RB-018",
+      "rule": "POST /booking with coercible invalid types (string price, string deposit) returns 200; non-coercible types (number firstname, boolean lastname) return 500.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCodeCoercible": 200,
+      "statusCodeNonCoercible": 500,
+      "affectedFields": ["firstname", "lastname", "totalPrice", "depositPaid", "bookingDates.checkin", "bookingDates.checkout"],
+      "bugs": ["BUG-BOOKING-003"]
+    },
+    "negativePrice": {
+      "id": "REQ-RB-019",
+      "rule": "POST /booking with a negative totalprice returns 500 Internal Server Error.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 500,
+      "bugs": ["BUG-BOOKING-004"]
+    },
+    "zeroPrice": {
+      "id": "REQ-RB-020",
+      "rule": "POST /booking with totalprice: 0 is accepted (promotional bookings).",
+      "priority": "P2",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "value": 0
+    },
+    "invalidDateFormat": {
+      "id": "REQ-RB-021",
+      "rule": "POST /booking with a date not matching YYYY-MM-DD format returns 200 OK.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "expectedFormat": "YYYY-MM-DD",
+      "bugs": ["BUG-BOOKING-009"]
+    },
+    "checkoutBeforeCheckin": {
+      "id": "REQ-RB-022",
+      "rule": "POST /booking with checkout before checkin returns 200 OK (date logic not validated).",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "bugs": ["BUG-BOOKING-005"]
+    },
+    "emptyStringField": {
+      "id": "REQ-RB-023",
+      "rule": "POST /booking with an empty string for a required field returns 200 OK.",
+      "priority": "P1",
+      "method": "POST",
+      "path": "/booking",
+      "statusCode": 200,
+      "affectedFields": ["firstname", "lastname", "totalPrice", "depositPaid", "bookingDates.checkin", "bookingDates.checkout"],
+      "bugs": ["BUG-BOOKING-006"]
+    }
+  },
+  "retrieve": {
+    "allIds": {
+      "id": "REQ-RB-030",
+      "rule": "GET /booking returns 200 OK with a non-empty array of { bookingid } objects.",
+      "priority": "P1",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-010"]
+    },
+    "filterByFirstname": {
+      "id": "REQ-RB-031",
+      "rule": "GET /booking?firstname={value} returns 200 OK and includes only matching bookings.",
+      "priority": "P2",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-010"]
+    },
+    "filterByLastname": {
+      "id": "REQ-RB-032",
+      "rule": "GET /booking?lastname={value} returns 200 OK and includes only matching bookings.",
+      "priority": "P2",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-010"]
+    },
+    "filterByFullName": {
+      "id": "REQ-RB-033",
+      "rule": "GET /booking?firstname=&lastname= combined filter returns 200 OK and includes only matching bookings.",
+      "priority": "P2",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-010"]
+    },
+    "filterByDateRange": {
+      "id": "REQ-RB-034",
+      "rule": "GET /booking?checkin=&checkout= returns 200 OK with an array response.",
+      "priority": "P3",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "filterNoResults": {
+      "id": "REQ-RB-035",
+      "rule": "GET /booking with a non-existing name filter returns 200 OK with an empty array.",
+      "priority": "P2",
+      "method": "GET",
+      "path": "/booking",
+      "statusCode": 200
+    },
+    "byExistingId": {
+      "id": "REQ-RB-036",
+      "rule": "GET /booking/{id} with an existing ID returns 200 OK with the full booking object.",
+      "priority": "P1",
+      "method": "GET",
+      "path": "/booking/{id}",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-010"]
+    },
+    "byNonExistingId": {
+      "id": "REQ-RB-037",
+      "rule": "GET /booking/{id} with a non-existing ID returns 404 Not Found.",
+      "priority": "P1",
+      "method": "GET",
+      "path": "/booking/{id}",
+      "statusCode": 404,
+      "body": "Not Found"
+    },
+    "byInvalidId": {
+      "id": "REQ-RB-038",
+      "rule": "GET /booking/{id} with invalid ID formats returns 404; float IDs are truncated and may return 200 or 404.",
+      "priority": "P2",
+      "method": "GET",
+      "path": "/booking/{id}",
+      "statusCode": 404,
+      "statusCodeFloat": [200, 404],
+      "body": "Not Found",
+      "bugs": ["BUG-BOOKING-011"]
+    }
+  },
+  "update": {
+    "success": {
+      "id": "REQ-RB-040",
+      "rule": "PUT /booking/{id} with a valid auth token and complete payload returns 200 OK with the updated booking.",
+      "priority": "P1",
+      "method": "PUT",
+      "path": "/booking/{id}",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-001", "REQ-RB-010"]
+    },
+    "unauthorized": {
+      "id": "REQ-RB-041",
+      "rule": "PUT /booking/{id} without a valid auth token returns 403 Forbidden.",
+      "priority": "P1",
+      "method": "PUT",
+      "path": "/booking/{id}",
+      "statusCode": 403,
+      "body": "Forbidden",
+      "preconditions": ["REQ-RB-010"]
+    },
+    "nonExistingId": {
+      "id": "REQ-RB-042",
+      "rule": "PUT /booking/{nonExisting} with a valid auth token returns 405 Method Not Allowed.",
+      "priority": "P1",
+      "method": "PUT",
+      "path": "/booking/{id}",
+      "statusCode": 405,
+      "body": "Method Not Allowed",
+      "preconditions": ["REQ-RB-001"],
+      "bugs": ["BUG-BOOKING-007"]
+    }
+  },
+  "partialUpdate": {
+    "singleField": {
+      "id": "REQ-RB-050",
+      "rule": "PATCH /booking/{id} with a single field and valid auth returns 200 OK; only the specified field changes.",
+      "priority": "P1",
+      "method": "PATCH",
+      "path": "/booking/{id}",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-001", "REQ-RB-010"]
+    },
+    "partialDateUpdate": {
+      "id": "REQ-RB-051",
+      "rule": "PATCH /booking/{id} with only one date field corrupts the other date to \"0NaN-aN-aN\". Workaround: send both dates.",
+      "priority": "P1",
+      "method": "PATCH",
+      "path": "/booking/{id}",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-001", "REQ-RB-010"],
+      "bugs": ["BUG-BOOKING-010"]
+    },
+    "multipleFields": {
+      "id": "REQ-RB-052",
+      "rule": "PATCH /booking/{id} with multiple fields and valid auth returns 200 OK; all specified fields change, others are unchanged.",
+      "priority": "P1",
+      "method": "PATCH",
+      "path": "/booking/{id}",
+      "statusCode": 200,
+      "preconditions": ["REQ-RB-001", "REQ-RB-010"]
+    },
+    "unauthorized": {
+      "id": "REQ-RB-053",
+      "rule": "PATCH /booking/{id} without a valid auth token returns 403 Forbidden.",
+      "priority": "P1",
+      "method": "PATCH",
+      "path": "/booking/{id}",
+      "statusCode": 403,
+      "body": "Forbidden",
+      "preconditions": ["REQ-RB-010"]
+    },
+    "nonExistingId": {
+      "id": "REQ-RB-054",
+      "rule": "PATCH /booking/{nonExisting} with a valid auth token returns 405 Method Not Allowed.",
+      "priority": "P1",
+      "method": "PATCH",
+      "path": "/booking/{id}",
+      "statusCode": 405,
+      "body": "Method Not Allowed",
+      "preconditions": ["REQ-RB-001"],
+      "bugs": ["BUG-BOOKING-007"]
+    }
+  },
+  "delete": {
+    "success": {
+      "id": "REQ-RB-060",
+      "rule": "DELETE /booking/{id} with a valid auth token returns 201 Created and the booking is no longer retrievable.",
+      "priority": "P1",
+      "method": "DELETE",
+      "path": "/booking/{id}",
+      "statusCode": 201,
+      "preconditions": ["REQ-RB-001", "REQ-RB-010"],
+      "bugs": ["BUG-BOOKING-008"]
+    },
+    "unauthorized": {
+      "id": "REQ-RB-061",
+      "rule": "DELETE /booking/{id} without a valid auth token returns 403 Forbidden.",
+      "priority": "P1",
+      "method": "DELETE",
+      "path": "/booking/{id}",
+      "statusCode": 403,
+      "body": "Forbidden",
+      "preconditions": ["REQ-RB-010"]
+    },
+    "nonExistingId": {
+      "id": "REQ-RB-062",
+      "rule": "DELETE /booking/{nonExisting} with a valid auth token returns 405 Method Not Allowed.",
+      "priority": "P1",
+      "method": "DELETE",
+      "path": "/booking/{id}",
+      "statusCode": 405,
+      "body": "Method Not Allowed",
+      "preconditions": ["REQ-RB-001"],
+      "bugs": ["BUG-BOOKING-007"]
+    }
+  }
+}

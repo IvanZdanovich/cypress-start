@@ -1,4 +1,4 @@
-export const testData = {
+export const examples = {
   indicesOfProducts: utils.generateArrayOfRandomIndices(3, reqs.inventoryPage.numberOfProductsOnThePage - 1),
   chosenProducts: [],
   cartBadgeCounts: {

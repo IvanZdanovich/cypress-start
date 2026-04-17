@@ -1,5 +1,5 @@
 /**
- * ESLint Rule: prevent-test-data-loops
+ * ESLint Rule: prevent-examples-loops
  *
  * Prevents the use of loops (forEach, for...of) over test data arrays within test files.
  * Enforces the use of randomization functions instead.

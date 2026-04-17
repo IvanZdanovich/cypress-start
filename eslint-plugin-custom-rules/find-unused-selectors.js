@@ -77,7 +77,7 @@ function extractSelectorKeys(sourceCode) {
  * Search for selector usage in test files and commands
  */
 function findSelectorUsage(workspaceRoot, selectorKeys) {
-  const testDirs = [path.join(workspaceRoot, 'cypress', 'integration'), path.join(workspaceRoot, 'cypress', 'e2e'), path.join(workspaceRoot, 'cypress', 'commands')];
+  const testDirs = [path.join(workspaceRoot, 'cypress', 'integration-requirements'), path.join(workspaceRoot, 'cypress', 'e2e'), path.join(workspaceRoot, 'cypress', 'commands')];
 
   const usedSelectors = new Set();
 

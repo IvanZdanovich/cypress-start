@@ -5,7 +5,7 @@ module.exports = defineConfig({
   e2e: {
     specPattern: 'cypress/**/*.spec.js',
     excludeSpecPattern: ['**/node_modules/**', '**/dist/**', '**/build/**'],
-    supportFile: 'cypress/support/e2e.js',
+    supportFile: 'cypress/support/e2e-requirements.js',
     slowTestThreshold: 200,
     chromeWebSecurity: false,
     numTestsKeptInMemory: 200,

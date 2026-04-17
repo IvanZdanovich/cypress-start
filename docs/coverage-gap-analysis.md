@@ -138,7 +138,7 @@ Produces actionable insights:
 
 ```bash
 # Analyze specific test type
-node scripts/analyze-coverage-gaps.js --type=integration-ui
+node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui
 
 # Analyze all test types
 node scripts/analyze-coverage-gaps.js --type=all
@@ -148,10 +148,10 @@ node scripts/analyze-coverage-gaps.js --type=all
 
 ```bash
 # CLI output only (default)
-node scripts/analyze-coverage-gaps.js --type=integration-api --format=cli
+node scripts/analyze-coverage-gaps.js --type=integration-requirements-api --format=cli
 
 # Markdown output only
-node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown
+node scripts/analyze-coverage-gaps.js --type=e2e-requirements-ui --format=markdown
 
 # Both CLI and Markdown
 node scripts/analyze-coverage-gaps.js --type=all --format=both
@@ -171,7 +171,7 @@ node scripts/analyze-coverage-gaps.js --type=all --format=both --output=reports/
 
 ```bash
 # Fail if coverage below 80%
-node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80
+node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui --threshold=80
 
 # Use in CI/CD pipeline
 node scripts/analyze-coverage-gaps.js --type=all --threshold=75 || exit 1
@@ -206,7 +206,7 @@ node scripts/analyze-coverage-gaps.js --type=all --threshold=75 || exit 1
 **Scenario**: Planning sprint testing work
 
 ```bash
-node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/ui-gaps.md
+node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui --format=markdown --output=reports/ui-gaps.md
 ```
 
 **Output**: Markdown report showing which components lack tests, prioritized by number of missing paths
@@ -218,7 +218,7 @@ node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --
 **Scenario**: Reviewing PR that adds new features
 
 ```bash
-node scripts/analyze-coverage-gaps.js --type=integration-api --format=cli
+node scripts/analyze-coverage-gaps.js --type=integration-requirements-api --format=cli
 ```
 
 **Output**: CLI report showing if new API endpoints have corresponding tests
@@ -408,9 +408,9 @@ Add to `package.json`:
 {
   "scripts": {
     "analyze:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=both",
-    "analyze:ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui",
-    "analyze:api": "node scripts/analyze-coverage-gaps.js --type=integration-api",
-    "analyze:e2e": "node scripts/analyze-coverage-gaps.js --type=e2e-ui",
+    "analyze:ui": "node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui",
+    "analyze:api": "node scripts/analyze-coverage-gaps.js --type=integration-requirements-api",
+    "analyze:e2e": "node scripts/analyze-coverage-gaps.js --type=e2e-requirements-ui",
     "coverage:report": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80"
   }

@@ -20,6 +20,7 @@ module.exports = {
             message: `Title "${title}" has leading or trailing whitespace.`,
           });
         } else {
+          invalidCharactersPattern.lastIndex = 0;
           const invalidCharacters = [];
           let match;
           while ((match = invalidCharactersPattern.exec(title)) !== null) {

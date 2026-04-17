@@ -1,4 +1,4 @@
-import { testData } from '../../integration-test-data/ui/header-comp.ui.test-data';
+import { examples } from '../../integration-examples/ui/header-comp.ui.examples';
 
 describe('Header: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;
@@ -86,7 +86,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user adds products to cart', () => {
     before(() => {
       cy.get(inventoryPage.cards).then(($cards) => {
-        const selectedIndex = testData.randomProductIndices[0];
+        const selectedIndex = examples.randomProductIndices[0];
         cy.wrap($cards[selectedIndex]).find(inventoryPage.card.add).click();
       });
     });
@@ -99,7 +99,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user clicks Reset App State', () => {
     before(() => {
       cy.get(headerComp.sidebar.open).scrollIntoView();
-      cy.get(headerComp.sidebar.open).click({ animationDistanceThreshold: testData.sidebarAnimationThreshold });
+      cy.get(headerComp.sidebar.open).click({ animationDistanceThreshold: examples.sidebarAnimationThreshold });
       cy.get(headerComp.sidebar.resetAppState).click();
       cy.get(headerComp.sidebar.close).click();
     });
@@ -115,7 +115,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
     // Bug Reference: BUG-HEADER-001 - Reset App State does not reset product Add/Remove button states
     it('Header.STANDARD: Then Remove buttons remain unchanged', () => {
       cy.get(inventoryPage.cards).then(($cards) => {
-        const selectedIndex = testData.randomProductIndices[0];
+        const selectedIndex = examples.randomProductIndices[0];
         cy.wrap($cards[selectedIndex]).find(inventoryPage.card.remove).should('be.visible');
       });
     });

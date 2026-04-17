@@ -24,15 +24,15 @@ const PRE_SETUP_PATTERN = 'cypress/support/00-global-before.hook.spec.js';
 const TEST_DOMAINS = {
   integrationApi: {
     name: 'Integration API Tests',
-    pattern: 'cypress/integration/api/**/*.api.spec.js',
+    pattern: 'cypress/integration-requirements/api/**/*.api.spec.js',
   },
   integrationUi: {
     name: 'Integration UI Tests',
-    pattern: 'cypress/integration/ui/**/*.ui.spec.js',
+    pattern: 'cypress/integration-requirements/ui/**/*.ui.spec.js',
   },
   e2eUi: {
     name: 'E2E UI Tests',
-    pattern: 'cypress/e2e/**/*.ui.spec.js',
+    pattern: 'cypress/e2e-requirements/**/*.ui.spec.js',
   },
 };
 
@@ -161,9 +161,9 @@ function classifyFilesIntoDomains(files) {
     console.warn(`Warning: ${unmatchedFiles.length} file(s) did not match any domain pattern and will be ignored:`);
     unmatchedFiles.forEach((file) => console.warn(`  - ${file}`));
     console.warn('  Expected patterns:');
-    console.warn('    - cypress/integration/api/**/*.api.spec.js');
-    console.warn('    - cypress/integration/ui/**/*.ui.spec.js');
-    console.warn('    - cypress/e2e/**/*.ui.spec.js');
+    console.warn('    - cypress/integration-requirements/api/**/*.api.spec.js');
+    console.warn('    - cypress/integration-requirements/ui/**/*.ui.spec.js');
+    console.warn('    - cypress/e2e-requirements/**/*.ui.spec.js');
     console.warn('');
   }
 

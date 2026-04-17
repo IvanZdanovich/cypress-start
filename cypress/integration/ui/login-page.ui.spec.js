@@ -1,4 +1,4 @@
-import { testData } from '../../integration-test-data/ui/login-page.ui.test-data.js';
+import { examples } from '../../integration-examples/ui/login-page.ui.examples.js';
 
 describe('LoginPage: Given authenticate page opened', { testIsolation: false }, () => {
   let standardUser, lockedUser;
@@ -18,10 +18,10 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', testData.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', testData.field.passwordType).and('have.value', testData.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
       cy.get(loginPage.login).should('have.value', l10n.loginPage.form.login).and('be.visible').and('be.enabled');
@@ -46,10 +46,10 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', testData.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', testData.field.passwordType).and('have.value', testData.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
       cy.get(loginPage.login).should('have.value', l10n.loginPage.form.login).and('be.visible').and('be.enabled');
@@ -151,7 +151,7 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
 
   context('LoginPage.STANDARD: When user types valid username and invalid password', () => {
     before(() => {
-      cy.loginPage__logIn({ username: standardUser.username, password: testData.invalidCredentials.password });
+      cy.loginPage__logIn({ username: standardUser.username, password: examples.invalidCredentials.password });
     });
     it('LoginPage.STANDARD: Then colored fail notification about credentials do not match any existing user should be shown', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.userNotFound).and('be.visible');

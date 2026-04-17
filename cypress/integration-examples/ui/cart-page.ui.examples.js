@@ -1,6 +1,6 @@
 const indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage + 1), reqs.inventoryPage.numberOfProductsOnThePage - 1);
 
-export const testData = {
+export const examples = {
   indicesOfProducts: indicesOfProducts,
   randomIndex: utils.getRandomNumber(0, indicesOfProducts.length),
   chosenProducts: [],

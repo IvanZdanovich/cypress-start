@@ -7,7 +7,7 @@ tests.
 
 - [Do Not Allow Empty Blocks](#do-not-allow-empty-blocks)
 - [Prevent Duplicated Titles](#prevent-duplicated-titles)
-- [Prevent Test Data Loops](#prevent-test-data-loops)
+- [Prevent Test Data Loops](#prevent-examples-loops)
 - [Verify Test Title Against Structure](#verify-test-title-against-structure)
 - [Verify Test Title Pattern](#verify-test-title-pattern)
 - [Verify TODOs Have Links](#verify-todos-have-links)
@@ -63,7 +63,7 @@ describe('Module.Submodule: Given preconditions', () => {
 
 ## Prevent Test Data Loops
 
-**Rule file:** `eslint-plugin-custom-rules/prevent-test-data-loops.js`
+**Rule file:** `eslint-plugin-custom-rules/prevent-examples-loops.js`
 
 Prevents the use of loops (forEach, for...of, for...in) over test data arrays within test files. Enforces the use of
 randomization functions instead.

@@ -1,3 +1,5 @@
+import { TEXT } from '../../integration-requirements/ui/shared-ui.reqs';
+
 const getRandomIndex = (arrayLength) => {
   if (typeof arrayLength !== 'number' || arrayLength <= 0 || !Number.isInteger(arrayLength)) {
     throw new RangeError('getRandomIndex: array length should be a positive integer');
@@ -16,7 +18,7 @@ const generateRandomBoolean = () => {
   return Math.random() < 0.5;
 };
 
-const generateRandomString = (length, chars = reqs.text.allowedSymbols) => {
+const generateRandomString = (length, chars = TEXT.allowedSymbols) => {
   if (typeof length !== 'number' || length <= 0) {
     throw new Error('Length must be a positive number');
   }

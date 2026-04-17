@@ -54,7 +54,7 @@ PARALLEL_STREAMS=6 npm run test:parallel  # Splits tests by naming patterns, not
 ## Project-Specific Patterns
 
 ### Test Data Management
-**Location:** Test data files mirror test files in `cypress/integration-test-data/{api,ui}/`
+**Location:** Test data files mirror test files in `cypress/integration-examples/{api,ui}/`
 
 **Key Rules:**
 1. Use `utils` functions for ALL dynamic data (names, dates, numbers) - never hardcode
@@ -120,7 +120,7 @@ Then adapt test to validate ACTUAL behavior with comment referencing bug ID.
 ## Key Constraints
 
 **Prohibited:**
-- ❌ Loops over test data (`forEach`, `for...of`) - use randomization instead (enforced by `prevent-test-data-loops` rule)
+- ❌ Loops over test data (`forEach`, `for...of`) - use randomization instead (enforced by `prevent-examples-loops` rule)
 - ❌ Duplicate test titles - enforced by `prevent-duplicated-titles` rule
 - ❌ Empty `context`/`it` blocks without `.skip()` - enforced by `do-not-allow-empty-blocks` rule
 - ❌ Generic test names like "Should return 401" - must include specific details
@@ -144,11 +144,19 @@ Then adapt test to validate ACTUAL behavior with comment referencing bug ID.
 - `npm run test` - Run all tests headless
 - `npm run test:parallel` - Parallel execution (default 3 streams)
 - `npm run lint` - Lint with auto-fix
-- `npm run coverage:report` - Generate coverage gap analysis
+- `npm run coverage:report` - Generate structure coverage gap analysis
+- `npm run req:coverage` - Report requirement ID coverage from `*.reqs.js` files
+- `npm run req:coverage:check` - Fail if P1 requirement coverage drops below 90%
 - `npx cypress open` - Interactive test runner
 
 **Structure Validation Files:**
 - `eslint-plugin-custom-rules/app-structure/modules.json` - Valid API module names
 - `eslint-plugin-custom-rules/app-structure/components.json` - Valid UI component names
 - `eslint-plugin-custom-rules/app-structure/workflows.json` - Valid E2E workflow names
+
+**Requirement Files** (`cypress/support/requirements/`):
+- `*.reqs.js` — module requirement files (source of truth, import directly in tests)
+- `requirements.js` — global UI constraints (shared, exposed as `global.reqs`)
+- `error_messages.json` — error message strings (exposed as `global.errors`)
+- `user-roles.js` — user role constants (exposed as `global.userRoles`)
 

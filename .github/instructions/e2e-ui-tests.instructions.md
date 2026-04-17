@@ -1,5 +1,5 @@
 ---
-applyTo: "${WORKSPACE_ROOT}/cypress/e2e/ui/*.ui.spec.js"
+applyTo: "${WORKSPACE_ROOT}/cypress/e2e-requirements/ui/*.ui.spec.js"
 ---
 
 # E2E UI Tests
@@ -7,7 +7,7 @@ applyTo: "${WORKSPACE_ROOT}/cypress/e2e/ui/*.ui.spec.js"
 ## File Structure
 
 PLACE files: `${WORKSPACE_ROOT}/cypress/e2e/ui/workflow-name.ui.spec.js` (kebab-case)
-STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.test-data.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.examples.js` (kebab-case)
 STORE selectors: `${WORKSPACE_ROOT}/cypress/support/selectors/selectors.js` (grouped by page/component)
 STORE UI commands: `${WORKSPACE_ROOT}/cypress/commands/ui/` (named by page/component)
 STORE API commands: `${WORKSPACE_ROOT}/cypress/commands/api/` (named by module/submodule)
@@ -98,7 +98,7 @@ MATCH business terminology
 
 ## Test Data Structure
 
-STORE: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/ui/workflow-name.ui.examples.js`
 NAMING: kebab-case files, camelCase variables
 USE `String` placeholders FOR dynamic IDs
 EXPORT `namePrefix` FOR cleanup usage

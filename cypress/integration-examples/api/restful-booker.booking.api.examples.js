@@ -20,7 +20,7 @@
  *   - Simulates real booking scenarios (future reservations)
  */
 
-export const booking_testData = {
+export const booking_examples = {
   validBookings: {
     standard: {
       bookingId: String,

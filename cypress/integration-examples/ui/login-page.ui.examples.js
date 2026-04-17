@@ -1,4 +1,4 @@
-export const testData = {
+export const examples = {
   field: {
     emptyValue: '',
     passwordType: 'password',

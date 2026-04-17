@@ -1,4 +1,4 @@
-import { testData } from '../../integration-test-data/ui/complete-purchase.ui.test-data';
+import { examples } from '../../integration-examples/ui/complete-purchase.ui.examples';
 
 describe('CompletePurchase: Given No preconditions', { testIsolation: false }, () => {
   let standardUser;
@@ -20,14 +20,14 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      cy.wrap(testData.indicesOfProducts).each((index) => {
+      cy.wrap(examples.indicesOfProducts).each((index) => {
         cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
         cy.get(inventoryPage.card.title)
           .eq(index)
           .invoke('text')
           .then((text) => {
-            const productTitle = text === testData.buggyProductData.wrongTitle ? testData.buggyProductData.correctTitle : text;
-            testData.chosenProducts.push(products.find((product) => product.title === productTitle));
+            const productTitle = text === examples.buggyProductData.wrongTitle ? examples.buggyProductData.correctTitle : text;
+            examples.chosenProducts.push(products.find((product) => product.title === productTitle));
           });
       });
       cy.then(() => {
@@ -36,23 +36,23 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
 
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
+      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
   });
 
   context('CompletePurchase.STANDARD: When user proceeds to checkout and completes the delivery information form', () => {
     before(() => {
       cy.get(cartPage.checkout).click();
-      cy.checkoutPage__fillDeliveryInfo(testData.deliveryInfo);
+      cy.checkoutPage__fillDeliveryInfo(examples.deliveryInfo);
       cy.get(checkoutPage.continue).click();
     });
 
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
-      cy.cartPage__validateProductDetails(testData.chosenProducts, testData.buggyProductData);
+      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
 
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
-      const totalPrice = testData.chosenProducts.reduce((acc, product) => acc + product.price, 0);
+      const totalPrice = examples.chosenProducts.reduce((acc, product) => acc + product.price, 0);
       const totalPriceRaw = parseFloat(totalPrice);
       const totalPriceCorrect = parseFloat(totalPrice.toFixed(2));
 

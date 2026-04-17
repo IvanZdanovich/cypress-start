@@ -20,7 +20,7 @@ FOLLOW:
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
-   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.examples.js`
    - USE readable name patterns WITH prefix FOR all instances: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
    - REMOVE all inline assignments from test blocks, use test data directly
@@ -89,7 +89,7 @@ FOLLOW:
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
-   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.examples.js`
    - USE readable name patterns: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
    - USE l10n FOR localized text
@@ -160,7 +160,7 @@ FOLLOW:
 
 EXECUTE improvements:
 1. EXTRACT hard-coded values TO:
-   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.examples.js`
    - USE readable name patterns: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
    - USE l10n FOR localized text
@@ -227,8 +227,8 @@ FOLLOW:
 
 REQUIREMENTS:
 1. CREATE IN:
-   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module].[submodule].api.test-data.js` (for API)
-   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page].[component].ui.test-data.js` (for UI)
+   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module].[submodule].api.examples.js` (for API)
+   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page].[component].ui.examples.js` (for UI)
 
 2. STRUCTURE data BY:
    - Valid test cases
@@ -315,7 +315,7 @@ REQUIREMENTS:
    - Structure: `{ "ModuleName": { "SubmoduleName": { "Action": {} } } }`
 
 4. CREATE test data file:
-   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/api/[module-name].[submodule-name].api.examples.js`
    - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
    - USE randomization via `utils` functions
@@ -365,7 +365,7 @@ REQUIREMENTS:
    - Use global selector variables
 
 5. CREATE test data file:
-   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[page-name].[component-name].ui.examples.js`
    - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
 
@@ -414,7 +414,7 @@ REQUIREMENTS:
    - Structure: `{ "WorkflowName": { "SubFlowName": {} } }`
 
 4. CREATE test data file:
-   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.test-data.js`
+   - `${WORKSPACE_ROOT}/cypress/test-data/ui/[workflow-name].ui.examples.js`
    - USE naming pattern: `Prefix.Purpose.${randomSuffix}`
    - EXPORT `namePrefix` FOR cleanup usage
 

@@ -135,14 +135,14 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ---
 
-## Test Data Naming Convention
+## Examples Naming Convention
 
-- Store test data in javascript files in `cypress/integration-test-data/api`, `cypress/integration-test-data/ui`, `cypress/e2e-test-data/ui`.
-- Test data files should be named according to the test files they support.
+- Store named examples in javascript files in `cypress/integration-examples/api`, `cypress/integration-examples/ui`, `cypress/e2e-examples/ui`.
+- Examples files should be named according to the spec files they support.
 - Use camelCase for naming files.
 - Use a hierarchical structure organized by module and submodule.
-- **Pattern:** `module-name.submodule-name.api.test-data.js`, `page-name.component-name.ui.test-data.js`, `business-domain.flow-name.ui.test-data.js`
-- **Example:** `restful-booker.booking.api.test-data.js`, `checkout-page.ui.test-data.js`, `purchasing.complete-purchase.ui.test-data.js`
+- **Pattern:** `module-name.submodule-name.api.examples.js`, `page-name.component-name.ui.examples.js`, `business-domain.flow-name.ui.examples.js`
+- **Example:** `restful-booker.booking.api.examples.js`, `checkout-page.ui.examples.js`, `purchasing.complete-purchase.ui.examples.js`
 
 ---
 

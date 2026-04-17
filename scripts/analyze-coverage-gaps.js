@@ -8,12 +8,12 @@
  * it blocks, skipped tests, and calculate real test coverage.
  *
  * Usage:
- *   node scripts/analyze-coverage-gaps.js --type=integration-ui
+ *   node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui
  *   node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=report.md
- *   node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80
+ *   node scripts/analyze-coverage-gaps.js --type=integration-requirements-api --threshold=80
  *
  * Options:
- *   --type=<type>         Test type: integration-ui, integration-api, e2e-ui, all (default: all)
+ *   --type=<type>         Test type: integration-requirements-ui, integration-requirements-api, e2e-requirements-ui, all (default: all)
  *   --format=<format>     Output format: cli, markdown, both (default: both)
  *   --output=<path>       Save markdown report to file
  *   --threshold=<number>  Fail if coverage below percentage (0-100)
@@ -29,7 +29,7 @@ const CONFIG = {
     actualFile: 'actual/components.json',
     fallbackFile: 'components.json',
     name: 'Integration UI',
-    testDir: 'cypress/integration/ui',
+    testDir: 'cypress/integration-requirements/ui',
     testPattern: /\.ui\.spec\.js$/,
   },
   'integration-api': {
@@ -37,7 +37,7 @@ const CONFIG = {
     actualFile: 'actual/modules.json',
     fallbackFile: 'modules.json',
     name: 'Integration API',
-    testDir: 'cypress/integration/api',
+    testDir: 'cypress/integration-requirements/api',
     testPattern: /\.api\.spec\.js$/,
   },
   'e2e-ui': {
@@ -45,7 +45,7 @@ const CONFIG = {
     actualFile: 'actual/workflows.json',
     fallbackFile: 'workflows.json',
     name: 'E2E UI',
-    testDir: 'cypress/e2e/ui',
+    testDir: 'cypress/e2e-requirements/ui',
     testPattern: /\.spec\.js$/,
   },
 };

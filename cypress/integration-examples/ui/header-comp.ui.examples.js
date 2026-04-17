@@ -3,7 +3,7 @@ const getRandomProductIndices = () => {
   return utils.generateArrayOfRandomIndices(numberOfProducts, reqs.inventoryPage.numberOfProductsOnThePage - 1);
 };
 
-export const testData = {
+export const examples = {
   randomProductIndices: getRandomProductIndices(),
   sidebarAnimationThreshold: 30,
 };

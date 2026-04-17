@@ -1,5 +1,5 @@
 // ***********************************************************
-// This example support/e2e.js is processed and
+// This example support/e2e-requirements.js is processed and
 // loaded automatically before your test files.
 //
 // This is a great place to put global configuration and
@@ -32,7 +32,6 @@ import urls from './urls/urls';
 import utils from './utils/utils';
 import errors from './requirements/error_messages.json';
 import userRoles from './requirements/user-roles';
-import requirements from './requirements/requirements';
 import products from './products/products';
 
 // Make resources globally available
@@ -42,7 +41,6 @@ global.urls = urls;
 global.utils = utils;
 global.errors = errors;
 global.userRoles = userRoles.userRoles;
-global.reqs = requirements;
 global.products = products;
 
 // Separate selectors by pages

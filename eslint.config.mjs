@@ -39,7 +39,7 @@ export default [
       'chai-friendly/no-unused-expressions': 'error',
       'custom/do-not-allow-empty-blocks': 'error',
       'custom/prevent-duplicated-titles': 'error',
-      'custom/prevent-test-data-loops': 'error',
+      'custom/prevent-examples-loops': 'error',
       'custom/verify-test-title-without-forbidden-symbols': 'error',
       'custom/verify-test-title-pattern': 'error',
       'custom/verify-test-title-against-structure': 'error',
@@ -48,6 +48,7 @@ export default [
       'custom/verify-api-command-naming': 'error',
       'custom/verify-ui-command-naming': 'error',
       'custom/find-unused-selectors': 'error',
+      'custom/verify-req-config': 'warn',
     },
   },
 ];

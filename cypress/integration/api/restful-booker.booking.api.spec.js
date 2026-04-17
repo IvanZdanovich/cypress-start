@@ -1,11 +1,11 @@
-import { booking_testData } from '../../integration-test-data/api/restful-booker.booking.api.test-data';
+import { booking_examples } from '../../integration-examples/api/restful-booker.booking.api.examples';
 
 describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false }, () => {
   let authToken;
 
   // Cleanup function to ensure test independence
   const cleanUp = () => {
-    cy.restfullBooker__bulkDelete__DELETE(authToken, booking_testData);
+    cy.restfullBooker__bulkDelete__DELETE(authToken, booking_examples);
   };
 
   before(() => {
@@ -25,7 +25,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 200 OK with { reason: 'Bad credentials' }
     // Severity: High - incorrect HTTP status code violates REST standards, security concern
     it('RestfulBooker.Auth.GET: Then return 200 status code and reason Bad credentials', () => {
-      cy.restfullBooker__getAuthToken__POST(booking_testData.auth.invalidCredentials, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__getAuthToken__POST(booking_examples.auth.invalidCredentials, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(errors.restfulBooker.auth.invalidCredentials.statusCode);
         expect(response.body).to.have.property('reason');
         expect(response.body.reason).to.eq(errors.restfulBooker.auth.invalidCredentials.message);
@@ -35,29 +35,29 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Create.POST: When valid booking data with all fields is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created successfully', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.standard).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.standard).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
         expect(response.body.bookingid).to.be.a('number');
-        booking_testData.validBookings.standard.bookingId = response.body.bookingid;
-        expect(response.body.booking.firstname).to.eq(booking_testData.validBookings.standard.firstname);
-        expect(response.body.booking.lastname).to.eq(booking_testData.validBookings.standard.lastname);
-        expect(response.body.booking.totalprice).to.eq(booking_testData.validBookings.standard.totalPrice);
-        expect(response.body.booking.depositpaid).to.eq(booking_testData.validBookings.standard.depositPaid);
-        expect(response.body.booking.bookingdates.checkin).to.eq(booking_testData.validBookings.standard.bookingDates.checkin);
-        expect(response.body.booking.bookingdates.checkout).to.eq(booking_testData.validBookings.standard.bookingDates.checkout);
-        expect(response.body.booking.additionalneeds).to.eq(booking_testData.validBookings.standard.additionalNeeds);
+        booking_examples.validBookings.standard.bookingId = response.body.bookingid;
+        expect(response.body.booking.firstname).to.eq(booking_examples.validBookings.standard.firstname);
+        expect(response.body.booking.lastname).to.eq(booking_examples.validBookings.standard.lastname);
+        expect(response.body.booking.totalprice).to.eq(booking_examples.validBookings.standard.totalPrice);
+        expect(response.body.booking.depositpaid).to.eq(booking_examples.validBookings.standard.depositPaid);
+        expect(response.body.booking.bookingdates.checkin).to.eq(booking_examples.validBookings.standard.bookingDates.checkin);
+        expect(response.body.booking.bookingdates.checkout).to.eq(booking_examples.validBookings.standard.bookingDates.checkout);
+        expect(response.body.booking.additionalneeds).to.eq(booking_examples.validBookings.standard.additionalNeeds);
       });
     });
   });
 
   context('RestfulBooker.Booking.Create.POST: When booking without optional field is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with empty additionalNeeds', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.withoutAdditionalNeeds).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.withoutAdditionalNeeds).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
-        booking_testData.validBookings.withoutAdditionalNeeds.bookingId = response.body.bookingid;
+        booking_examples.validBookings.withoutAdditionalNeeds.bookingId = response.body.bookingid;
         expect(response.body.booking.additionalneeds).to.eq(undefined);
       });
     });
@@ -65,69 +65,69 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Create.POST: When booking with minimal price is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with price of 1', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.edgeCases.minimalPrice).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.edgeCases.minimalPrice).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
-        booking_testData.validBookings.edgeCases.minimalPrice.bookingId = response.body.bookingid;
+        booking_examples.validBookings.edgeCases.minimalPrice.bookingId = response.body.bookingid;
         expect(response.body.booking.totalprice).to.eq(1);
-        expect(response.body.booking.firstname).to.eq(booking_testData.validBookings.edgeCases.minimalPrice.firstname);
-        expect(response.body.booking.lastname).to.eq(booking_testData.validBookings.edgeCases.minimalPrice.lastname);
+        expect(response.body.booking.firstname).to.eq(booking_examples.validBookings.edgeCases.minimalPrice.firstname);
+        expect(response.body.booking.lastname).to.eq(booking_examples.validBookings.edgeCases.minimalPrice.lastname);
       });
     });
   });
 
   context('RestfulBooker.Booking.Create.POST: When booking with maximal price is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with price of 100000', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.edgeCases.maximalPrice).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.edgeCases.maximalPrice).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
-        booking_testData.validBookings.edgeCases.maximalPrice.bookingId = response.body.bookingid;
+        booking_examples.validBookings.edgeCases.maximalPrice.bookingId = response.body.bookingid;
         expect(response.body.booking.totalprice).to.eq(100000);
-        expect(response.body.booking.firstname).to.eq(booking_testData.validBookings.edgeCases.maximalPrice.firstname);
-        expect(response.body.booking.lastname).to.eq(booking_testData.validBookings.edgeCases.maximalPrice.lastname);
+        expect(response.body.booking.firstname).to.eq(booking_examples.validBookings.edgeCases.maximalPrice.firstname);
+        expect(response.body.booking.lastname).to.eq(booking_examples.validBookings.edgeCases.maximalPrice.lastname);
       });
     });
   });
 
   context('RestfulBooker.Booking.Create.POST: When booking with same-day checkout is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and checkin equals checkout date', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.edgeCases.sameDayCheckout).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.edgeCases.sameDayCheckout).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
-        booking_testData.validBookings.edgeCases.sameDayCheckout.bookingId = response.body.bookingid;
+        booking_examples.validBookings.edgeCases.sameDayCheckout.bookingId = response.body.bookingid;
         expect(response.body.booking.bookingdates.checkin).to.eq(response.body.booking.bookingdates.checkout);
-        expect(response.body.booking.bookingdates.checkin).to.eq(booking_testData.validBookings.edgeCases.sameDayCheckout.bookingDates.checkin);
+        expect(response.body.booking.bookingdates.checkin).to.eq(booking_examples.validBookings.edgeCases.sameDayCheckout.bookingDates.checkin);
       });
     });
   });
 
   context('RestfulBooker.Booking.Create.POST: When booking with long stay is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with extended duration', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.edgeCases.longStay).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.edgeCases.longStay).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
-        booking_testData.validBookings.edgeCases.longStay.bookingId = response.body.bookingid;
-        expect(response.body.booking.bookingdates.checkin).to.eq(booking_testData.validBookings.edgeCases.longStay.bookingDates.checkin);
-        expect(response.body.booking.bookingdates.checkout).to.eq(booking_testData.validBookings.edgeCases.longStay.bookingDates.checkout);
-        expect(response.body.booking.totalprice).to.eq(booking_testData.validBookings.edgeCases.longStay.totalPrice);
+        booking_examples.validBookings.edgeCases.longStay.bookingId = response.body.bookingid;
+        expect(response.body.booking.bookingdates.checkin).to.eq(booking_examples.validBookings.edgeCases.longStay.bookingDates.checkin);
+        expect(response.body.booking.bookingdates.checkout).to.eq(booking_examples.validBookings.edgeCases.longStay.bookingDates.checkout);
+        expect(response.body.booking.totalprice).to.eq(booking_examples.validBookings.edgeCases.longStay.totalPrice);
       });
     });
   });
 
   context('RestfulBooker.Booking.Create.POST: When booking with deposit not paid is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and depositpaid is false', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.validBookings.edgeCases.depositNotPaid).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.validBookings.edgeCases.depositNotPaid).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body).to.have.property('booking');
-        booking_testData.validBookings.edgeCases.depositNotPaid.bookingId = response.body.bookingid;
+        booking_examples.validBookings.edgeCases.depositNotPaid.bookingId = response.body.bookingid;
         expect(response.body.booking.depositpaid).to.eq(false);
-        expect(response.body.booking.firstname).to.eq(booking_testData.validBookings.edgeCases.depositNotPaid.firstname);
-        expect(response.body.booking.lastname).to.eq(booking_testData.validBookings.edgeCases.depositNotPaid.lastname);
+        expect(response.body.booking.firstname).to.eq(booking_examples.validBookings.edgeCases.depositNotPaid.firstname);
+        expect(response.body.booking.lastname).to.eq(booking_examples.validBookings.edgeCases.depositNotPaid.lastname);
       });
     });
   });
@@ -138,7 +138,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 500 Internal Server Error
     // Severity: High - missing validation for required fields, poor error handling
     it('RestfulBooker.Booking.Create.POST: Then return 500 status code and Internal Server Error', () => {
-      const { baseBooking, requiredFields } = booking_testData.invalidBookings.missingRequired;
+      const { baseBooking, requiredFields } = booking_examples.invalidBookings.missingRequired;
       const randomField = utils.getRandomElement(requiredFields);
       // Clone and remove random field
       const testData = utils.cloneObject(baseBooking);
@@ -163,7 +163,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Severity: High - inconsistent validation, data corruption, poor error handling
 
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code when price is string', () => {
-      const testData = booking_testData.invalidBookings.invalidTypes.priceAsString;
+      const testData = booking_examples.invalidBookings.invalidTypes.priceAsString;
       cy.restfullBooker__createBooking__POST(testData, { failOnStatusCode: false }).then((response) => {
         // Current actual behavior - API accepts string price
         expect(response.status).to.eq(200);
@@ -182,7 +182,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code when deposit is string', () => {
-      const testData = booking_testData.invalidBookings.invalidTypes.depositAsString;
+      const testData = booking_examples.invalidBookings.invalidTypes.depositAsString;
       cy.restfullBooker__createBooking__POST(testData, { failOnStatusCode: false }).then((response) => {
         // Current actual behavior - API accepts string deposit
         expect(response.status).to.eq(200);
@@ -201,7 +201,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Create.POST: Then return 500 status code when firstname is number', () => {
-      const testData = booking_testData.invalidBookings.invalidTypes.firstnameAsNumber;
+      const testData = booking_examples.invalidBookings.invalidTypes.firstnameAsNumber;
       cy.restfullBooker__createBooking__POST(testData, { failOnStatusCode: false }).then((response) => {
         // Current actual behavior - API returns 500 server error
         expect(response.status).to.eq(500);
@@ -217,7 +217,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Create.POST: Then return 500 status code when lastname is boolean', () => {
-      const testData = booking_testData.invalidBookings.invalidTypes.lastnameAsBoolean;
+      const testData = booking_examples.invalidBookings.invalidTypes.lastnameAsBoolean;
       cy.restfullBooker__createBooking__POST(testData, { failOnStatusCode: false }).then((response) => {
         // Current actual behavior - API returns 500 server error
         expect(response.status).to.eq(500);
@@ -239,8 +239,8 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 500 Internal Server Error
     // Severity: High - business logic violation, financial integrity risk
     it.skip('RestfulBooker.Booking.Create.POST: Then return 500 status code due to missing validation', () => {
-      cy.log(`Testing negative price: ${booking_testData.invalidBookings.invalidValues.negativePrice.totalPrice}`);
-      cy.restfullBooker__createBooking__POST(booking_testData.invalidBookings.invalidValues.negativePrice, { failOnStatusCode: false }).then((response) => {
+      cy.log(`Testing negative price: ${booking_examples.invalidBookings.invalidValues.negativePrice.totalPrice}`);
+      cy.restfullBooker__createBooking__POST(booking_examples.invalidBookings.invalidValues.negativePrice, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(500);
         expect(response.body).to.eq('Internal Server Error');
         // Expected behavior after bug fix:
@@ -253,12 +253,12 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Create.POST: When zero price is provided', () => {
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code as valid for promotional bookings', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.invalidBookings.invalidValues.zeroPrice).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.invalidBookings.invalidValues.zeroPrice).then((response) => {
         // API accepts zero price - business decision for promotions
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
         expect(response.body.booking.totalprice).to.eq(0);
-        booking_testData.invalidBookings.invalidValues.zeroPrice.bookingId = response.body.bookingid;
+        booking_examples.invalidBookings.invalidValues.zeroPrice.bookingId = response.body.bookingid;
       });
     });
   });
@@ -269,13 +269,13 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 200 OK - accepts invalid date formats without validation
     // Severity: High - missing validation allows data corruption, date parsing issues downstream
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and invalid date format is accepted', () => {
-      cy.restfullBooker__createBooking__POST(booking_testData.invalidBookings.invalidValues.invalidDateFormat, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__createBooking__POST(booking_examples.invalidBookings.invalidValues.invalidDateFormat, { failOnStatusCode: false }).then((response) => {
         // Current actual behavior - API accepts invalid date format
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('bookingid');
 
         // Store booking ID for potential cleanup
-        booking_testData.invalidBookings.invalidValues.invalidDateFormat.bookingId = response.body.bookingid;
+        booking_examples.invalidBookings.invalidValues.invalidDateFormat.bookingId = response.body.bookingid;
 
         // Verify invalid date was stored
         cy.log(`Invalid dates accepted: checkin=${response.body.booking.bookingdates.checkin}, checkout=${response.body.booking.bookingdates.checkout}`);
@@ -294,7 +294,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 200 OK - accepts illogical dates
     // Severity: Medium - business logic validation missing, data integrity risk
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code due to missing date logic validation', () => {
-      const bookingData = booking_testData.invalidBookings.invalidValues.checkoutBeforeCheckin;
+      const bookingData = booking_examples.invalidBookings.invalidValues.checkoutBeforeCheckin;
       cy.log(`Testing checkout before checkin: ${bookingData.bookingDates.checkout} < ${bookingData.bookingDates.checkin}`);
       cy.restfullBooker__createBooking__POST(bookingData).then((response) => {
         // Current actual behavior - API accepts illogical dates
@@ -304,7 +304,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         // Verify the illogical dates were stored
         expect(response.body.booking.bookingdates.checkin).to.eq(bookingData.bookingDates.checkin);
         expect(response.body.booking.bookingdates.checkout).to.eq(bookingData.bookingDates.checkout);
-        booking_testData.invalidBookings.invalidValues.checkoutBeforeCheckin.bookingId = response.body.bookingid;
+        booking_examples.invalidBookings.invalidValues.checkoutBeforeCheckin.bookingId = response.body.bookingid;
         // Expected behavior after bug fix:
         // expect(response.status).to.eq(400);
         // expect(response.body).to.have.property('error');
@@ -319,7 +319,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 200 OK - accepts empty strings
     // Severity: High - validation bypass, data quality issue
     it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with empty field', () => {
-      const { baseBooking, emptyStringFields } = booking_testData.invalidBookings.emptyValues;
+      const { baseBooking, emptyStringFields } = booking_examples.invalidBookings.emptyValues;
       const randomField = utils.getRandomElement(emptyStringFields);
       const testData = { ...baseBooking, [randomField]: '' };
       cy.log(`Testing with empty field: ${randomField}`);
@@ -357,35 +357,35 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
         // Verify our created booking is in the list
         const bookingIds = response.body.map((b) => b.bookingid);
-        expect(bookingIds).to.include(booking_testData.validBookings.standard.bookingId);
+        expect(bookingIds).to.include(booking_examples.validBookings.standard.bookingId);
       });
     });
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by firstname are requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
-      const searchParams = { firstname: booking_testData.validBookings.standard.firstname };
+      const searchParams = { firstname: booking_examples.validBookings.standard.firstname };
 
       cy.restfullBooker__getBookingIds__GET(searchParams).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.be.an('array');
 
         const bookingIds = response.body.map((b) => b.bookingid);
-        expect(bookingIds).to.include(booking_testData.validBookings.standard.bookingId);
+        expect(bookingIds).to.include(booking_examples.validBookings.standard.bookingId);
       });
     });
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by lastname are requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
-      const searchParams = { lastname: booking_testData.validBookings.standard.lastname };
+      const searchParams = { lastname: booking_examples.validBookings.standard.lastname };
 
       cy.restfullBooker__getBookingIds__GET(searchParams).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.be.an('array');
 
         const bookingIds = response.body.map((b) => b.bookingid);
-        expect(bookingIds).to.include(booking_testData.validBookings.standard.bookingId);
+        expect(bookingIds).to.include(booking_examples.validBookings.standard.bookingId);
       });
     });
   });
@@ -393,8 +393,8 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by full name are requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
       const searchParams = {
-        firstname: booking_testData.validBookings.standard.firstname,
-        lastname: booking_testData.validBookings.standard.lastname,
+        firstname: booking_examples.validBookings.standard.firstname,
+        lastname: booking_examples.validBookings.standard.lastname,
       };
 
       cy.restfullBooker__getBookingIds__GET(searchParams).then((response) => {
@@ -402,7 +402,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.body).to.be.an('array');
 
         const bookingIds = response.body.map((b) => b.bookingid);
-        expect(bookingIds).to.include(booking_testData.validBookings.standard.bookingId);
+        expect(bookingIds).to.include(booking_examples.validBookings.standard.bookingId);
       });
     });
   });
@@ -411,7 +411,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Note: Date filtering in this API is unreliable and often returns empty results
     // Testing that endpoint responds correctly, but not asserting specific results
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and array response', () => {
-      const searchParams = booking_testData.filters.byDateRange;
+      const searchParams = booking_examples.filters.byDateRange;
 
       cy.restfullBooker__getBookingIds__GET(searchParams).then((response) => {
         expect(response.status).to.eq(200);
@@ -423,7 +423,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by non-existing name are requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and empty array', () => {
-      const searchParams = booking_testData.filters.nonExisting;
+      const searchParams = booking_examples.filters.nonExisting;
 
       cy.restfullBooker__getBookingIds__GET(searchParams).then((response) => {
         expect(response.status).to.eq(200);
@@ -435,7 +435,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Retrieve.GET: When existing booking ID is requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and complete booking details', () => {
-      cy.restfullBooker__getBookingById__GET(booking_testData.validBookings.standard.bookingId).then((response) => {
+      cy.restfullBooker__getBookingById__GET(booking_examples.validBookings.standard.bookingId).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('firstname');
         expect(response.body).to.have.property('lastname');
@@ -443,19 +443,19 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.body).to.have.property('depositpaid');
         expect(response.body).to.have.property('bookingdates');
         expect(response.body).to.have.property('additionalneeds');
-        expect(response.body.firstname).to.eq(booking_testData.validBookings.standard.firstname);
-        expect(response.body.lastname).to.eq(booking_testData.validBookings.standard.lastname);
-        expect(response.body.totalprice).to.eq(booking_testData.validBookings.standard.totalPrice);
-        expect(response.body.depositpaid).to.eq(booking_testData.validBookings.standard.depositPaid);
-        expect(response.body.bookingdates.checkin).to.eq(booking_testData.validBookings.standard.bookingDates.checkin);
-        expect(response.body.bookingdates.checkout).to.eq(booking_testData.validBookings.standard.bookingDates.checkout);
+        expect(response.body.firstname).to.eq(booking_examples.validBookings.standard.firstname);
+        expect(response.body.lastname).to.eq(booking_examples.validBookings.standard.lastname);
+        expect(response.body.totalprice).to.eq(booking_examples.validBookings.standard.totalPrice);
+        expect(response.body.depositpaid).to.eq(booking_examples.validBookings.standard.depositPaid);
+        expect(response.body.bookingdates.checkin).to.eq(booking_examples.validBookings.standard.bookingDates.checkin);
+        expect(response.body.bookingdates.checkout).to.eq(booking_examples.validBookings.standard.bookingDates.checkout);
       });
     });
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When non-existing booking ID is requested', () => {
     it('RestfulBooker.Booking.Retrieve.GET: Then return 404 status code and Not Found message', () => {
-      const nonExistingId = utils.getRandomElement(booking_testData.ids.nonExisting);
+      const nonExistingId = utils.getRandomElement(booking_examples.ids.nonExisting);
 
       cy.restfullBooker__getBookingById__GET(nonExistingId, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(404);
@@ -471,7 +471,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Severity: Medium - weak ID validation, inconsistent behavior
 
     it('RestfulBooker.Booking.Retrieve.GET: Then return 404 status code for string ID', () => {
-      const invalidId = booking_testData.ids.invalid.string;
+      const invalidId = booking_examples.ids.invalid.string;
       cy.log(`Testing with string ID: ${invalidId}`);
 
       cy.restfullBooker__getBookingById__GET(invalidId, { failOnStatusCode: false }).then((response) => {
@@ -481,7 +481,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Retrieve.GET: Then return 404 status code for negative ID', () => {
-      const invalidId = booking_testData.ids.invalid.negative;
+      const invalidId = booking_examples.ids.invalid.negative;
       cy.log(`Testing with negative ID: ${invalidId}`);
 
       cy.restfullBooker__getBookingById__GET(invalidId, { failOnStatusCode: false }).then((response) => {
@@ -491,7 +491,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Retrieve.GET: Then return 404 status code for zero ID', () => {
-      const invalidId = booking_testData.ids.invalid.zero;
+      const invalidId = booking_examples.ids.invalid.zero;
       cy.log(`Testing with zero ID: ${invalidId}`);
 
       cy.restfullBooker__getBookingById__GET(invalidId, { failOnStatusCode: false }).then((response) => {
@@ -501,7 +501,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code for float ID due to truncation', () => {
-      const invalidId = booking_testData.ids.invalid.float;
+      const invalidId = booking_examples.ids.invalid.float;
       cy.log(`Testing with float ID: ${invalidId}`);
 
       cy.restfullBooker__getBookingById__GET(invalidId, { failOnStatusCode: false }).then((response) => {
@@ -520,7 +520,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     });
 
     it('RestfulBooker.Booking.Retrieve.GET: Then return 404 status code for special character ID', () => {
-      const invalidId = booking_testData.ids.invalid.special;
+      const invalidId = booking_examples.ids.invalid.special;
       cy.log(`Testing with special character ID: ${invalidId}`);
 
       cy.restfullBooker__getBookingById__GET(invalidId, { failOnStatusCode: false }).then((response) => {
@@ -532,9 +532,9 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Update.PUT: When valid full update is provided with authentication', () => {
     it('RestfulBooker.Booking.Update.PUT: Then return 200 status code and all fields are updated', () => {
-      const updateData = booking_testData.updates.full;
+      const updateData = booking_examples.updates.full;
 
-      cy.restfullBooker__updateBooking__PUT(authToken, booking_testData.validBookings.standard.bookingId, updateData).then((response) => {
+      cy.restfullBooker__updateBooking__PUT(authToken, booking_examples.validBookings.standard.bookingId, updateData).then((response) => {
         expect(response.status).to.eq(200);
 
         // Verify all fields updated
@@ -547,16 +547,16 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.body.additionalneeds).to.eq(updateData.additionalNeeds);
 
         // Update stored booking data
-        booking_testData.validBookings.standard = { ...booking_testData.validBookings.standard, ...updateData };
+        booking_examples.validBookings.standard = { ...booking_examples.validBookings.standard, ...updateData };
       });
     });
   });
 
   context('RestfulBooker.Booking.Update.PUT: When update is attempted without authentication', () => {
     it('RestfulBooker.Booking.Update.PUT: Then return 403 status code and Forbidden message', () => {
-      const updateData = booking_testData.updates.full;
+      const updateData = booking_examples.updates.full;
 
-      cy.restfullBooker__updateBooking__PUT('invalid_token', booking_testData.validBookings.withoutAdditionalNeeds.bookingId, updateData, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__updateBooking__PUT('invalid_token', booking_examples.validBookings.withoutAdditionalNeeds.bookingId, updateData, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(403);
         expect(response.body).to.eq(errors.common.forbidden);
       });
@@ -569,8 +569,8 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 405 Method Not Allowed
     // Severity: Medium - incorrect HTTP status code
     it('RestfulBooker.Booking.Update.PUT: Then return 405 status code and Method Not Allowed message', () => {
-      const nonExistingId = utils.getRandomElement(booking_testData.ids.nonExisting);
-      const updateData = booking_testData.updates.full;
+      const nonExistingId = utils.getRandomElement(booking_examples.ids.nonExisting);
+      const updateData = booking_examples.updates.full;
 
       cy.restfullBooker__updateBooking__PUT(authToken, nonExistingId, updateData, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(405);
@@ -581,20 +581,20 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.PartialUpdate.PATCH: When single field is partially updated', () => {
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then only specified field changes and others remain unchanged', () => {
-      const singleFieldUpdates = booking_testData.updates.partial.singleFieldUpdates;
+      const singleFieldUpdates = booking_examples.updates.partial.singleFieldUpdates;
       const [fieldName, newValue] = utils.getRandomEntry(singleFieldUpdates);
 
       // Handle depositPaid toggle
       let updateData;
       if (fieldName === 'depositPaid') {
-        updateData = { [fieldName]: !booking_testData.validBookings.edgeCases.minimalPrice[fieldName] };
+        updateData = { [fieldName]: !booking_examples.validBookings.edgeCases.minimalPrice[fieldName] };
       } else {
         updateData = { [fieldName]: newValue };
       }
 
       cy.log(`Updating field: ${fieldName}`);
 
-      cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_testData.validBookings.edgeCases.minimalPrice.bookingId, updateData).then((response) => {
+      cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_examples.validBookings.edgeCases.minimalPrice.bookingId, updateData).then((response) => {
         expect(response.status).to.eq(200);
 
         // Map camelCase to API response format
@@ -603,7 +603,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.body[apiFieldName]).to.eq(updateData[fieldName]);
 
         // Update stored booking
-        booking_testData.validBookings.edgeCases.minimalPrice[fieldName] = updateData[fieldName];
+        booking_examples.validBookings.edgeCases.minimalPrice[fieldName] = updateData[fieldName];
       });
     });
   });
@@ -614,10 +614,10 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: PATCH with only one date field corrupts the other date to '0NaN-aN-aN'
     // Severity: High - partial date updates corrupt data, requires workaround of sending both dates
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then checkin changes and checkout is preserved using workaround', () => {
-      const updateData = booking_testData.updates.partial.updateCheckinOnly;
+      const updateData = booking_examples.updates.partial.updateCheckinOnly;
 
       // First, get current booking state to capture original checkout date
-      cy.restfullBooker__getBookingById__GET(booking_testData.validBookings.edgeCases.maximalPrice.bookingId).then((getResponse) => {
+      cy.restfullBooker__getBookingById__GET(booking_examples.validBookings.edgeCases.maximalPrice.bookingId).then((getResponse) => {
         const originalCheckout = getResponse.body.bookingdates.checkout;
 
         // Workaround: Include both dates in PATCH to prevent corruption
@@ -628,14 +628,14 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
           },
         };
 
-        cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_testData.validBookings.edgeCases.maximalPrice.bookingId, completeUpdateData).then((response) => {
+        cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_examples.validBookings.edgeCases.maximalPrice.bookingId, completeUpdateData).then((response) => {
           expect(response.status).to.eq(200);
           expect(response.body.bookingdates.checkin).to.eq(updateData.bookingDates.checkin);
           expect(response.body.bookingdates.checkout).to.eq(originalCheckout);
 
           // Update stored booking
-          booking_testData.validBookings.edgeCases.maximalPrice.bookingDates.checkin = updateData.bookingDates.checkin;
-          booking_testData.validBookings.edgeCases.maximalPrice.bookingDates.checkout = originalCheckout;
+          booking_examples.validBookings.edgeCases.maximalPrice.bookingDates.checkin = updateData.bookingDates.checkin;
+          booking_examples.validBookings.edgeCases.maximalPrice.bookingDates.checkout = originalCheckout;
 
           // Expected behavior after bug fix (sending only checkin):
           // cy.restfullBooker__partialUpdateBooking__PATCH(authToken, bookingId, { bookingDates: { checkin: newDate } })
@@ -651,10 +651,10 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: PATCH with only one date field corrupts the other date to '0NaN-aN-aN'
     // Severity: High - partial date updates corrupt data, requires workaround of sending both dates
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then checkout changes and checkin is preserved using workaround', () => {
-      const updateData = booking_testData.updates.partial.updateCheckoutOnly;
+      const updateData = booking_examples.updates.partial.updateCheckoutOnly;
 
       // First, get current booking state to capture original checkin date
-      cy.restfullBooker__getBookingById__GET(booking_testData.validBookings.edgeCases.maximalPrice.bookingId).then((getResponse) => {
+      cy.restfullBooker__getBookingById__GET(booking_examples.validBookings.edgeCases.maximalPrice.bookingId).then((getResponse) => {
         const originalCheckin = getResponse.body.bookingdates.checkin;
 
         // Workaround: Include both dates in PATCH to prevent corruption
@@ -665,14 +665,14 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
           },
         };
 
-        cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_testData.validBookings.edgeCases.maximalPrice.bookingId, completeUpdateData).then((response) => {
+        cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_examples.validBookings.edgeCases.maximalPrice.bookingId, completeUpdateData).then((response) => {
           expect(response.status).to.eq(200);
           expect(response.body.bookingdates.checkout).to.eq(updateData.bookingDates.checkout);
           expect(response.body.bookingdates.checkin).to.eq(originalCheckin);
 
           // Update stored booking
-          booking_testData.validBookings.edgeCases.maximalPrice.bookingDates.checkout = updateData.bookingDates.checkout;
-          booking_testData.validBookings.edgeCases.maximalPrice.bookingDates.checkin = originalCheckin;
+          booking_examples.validBookings.edgeCases.maximalPrice.bookingDates.checkout = updateData.bookingDates.checkout;
+          booking_examples.validBookings.edgeCases.maximalPrice.bookingDates.checkin = originalCheckin;
 
           // Expected behavior after bug fix (sending only checkout):
           // cy.restfullBooker__partialUpdateBooking__PATCH(authToken, bookingId, { bookingDates: { checkout: newDate } })
@@ -684,9 +684,9 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.PartialUpdate.PATCH: When multiple fields are partially updated', () => {
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then all specified fields change and others remain unchanged', () => {
-      const updateData = booking_testData.updates.partial.multipleFields;
+      const updateData = booking_examples.updates.partial.multipleFields;
 
-      cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_testData.validBookings.edgeCases.longStay.bookingId, updateData).then((response) => {
+      cy.restfullBooker__partialUpdateBooking__PATCH(authToken, booking_examples.validBookings.edgeCases.longStay.bookingId, updateData).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body.firstname).to.eq(updateData.firstname);
         expect(response.body.totalprice).to.eq(updateData.totalPrice);
@@ -694,16 +694,16 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
         expect(response.body.additionalneeds).to.eq(updateData.additionalNeeds);
 
         // Verify unchanged field (lastname)
-        expect(response.body.lastname).to.eq(booking_testData.validBookings.edgeCases.longStay.lastname);
+        expect(response.body.lastname).to.eq(booking_examples.validBookings.edgeCases.longStay.lastname);
       });
     });
   });
 
   context('RestfulBooker.Booking.PartialUpdate.PATCH: When partial update is attempted without authentication', () => {
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then return 403 status code and Forbidden message', () => {
-      const updateData = booking_testData.updates.partial.multipleFields;
+      const updateData = booking_examples.updates.partial.multipleFields;
 
-      cy.restfullBooker__partialUpdateBooking__PATCH('invalid_token', booking_testData.validBookings.edgeCases.depositNotPaid.bookingId, updateData, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__partialUpdateBooking__PATCH('invalid_token', booking_examples.validBookings.edgeCases.depositNotPaid.bookingId, updateData, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(403);
         expect(response.body).to.eq(errors.common.forbidden);
       });
@@ -716,7 +716,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 405 Method Not Allowed
     // Severity: Medium - incorrect HTTP status code
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then return 405 status code and Method Not Allowed message', () => {
-      const nonExistingId = utils.getRandomElement(booking_testData.ids.nonExisting);
+      const nonExistingId = utils.getRandomElement(booking_examples.ids.nonExisting);
       const updateData = { firstname: 'Test' };
 
       cy.restfullBooker__partialUpdateBooking__PATCH(authToken, nonExistingId, updateData, { failOnStatusCode: false }).then((response) => {
@@ -734,12 +734,12 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 201 Created
     // Severity: Medium - incorrect HTTP status code (201 is for resource creation)
     it('RestfulBooker.Booking.Delete.DELETE: Then return 201 status code and booking is deleted', () => {
-      cy.restfullBooker__deleteBooking__DELETE(authToken, booking_testData.validBookings.edgeCases.sameDayCheckout.bookingId).then((response) => {
+      cy.restfullBooker__deleteBooking__DELETE(authToken, booking_examples.validBookings.edgeCases.sameDayCheckout.bookingId).then((response) => {
         expect(response.status).to.eq(201);
       });
 
       // Verify deletion
-      cy.restfullBooker__getBookingById__GET(booking_testData.validBookings.edgeCases.sameDayCheckout.bookingId, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__getBookingById__GET(booking_examples.validBookings.edgeCases.sameDayCheckout.bookingId, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(404);
         expect(response.body).to.eq(errors.common.notFound);
       });
@@ -748,7 +748,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
   context('RestfulBooker.Booking.Delete.DELETE: When delete is attempted without authentication', () => {
     it('RestfulBooker.Booking.Delete.DELETE: Then return 403 status code and Forbidden message', () => {
-      cy.restfullBooker__deleteBooking__DELETE('invalid_token', booking_testData.validBookings.standard.bookingId, { failOnStatusCode: false }).then((response) => {
+      cy.restfullBooker__deleteBooking__DELETE('invalid_token', booking_examples.validBookings.standard.bookingId, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(403);
         expect(response.body).to.eq(errors.common.forbidden);
       });
@@ -761,7 +761,7 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
     // Actual: 405 Method Not Allowed
     // Severity: Medium - incorrect HTTP status code
     it('RestfulBooker.Booking.Delete.DELETE: Then return 405 status code and Method Not Allowed message', () => {
-      const nonExistingId = utils.getRandomElement(booking_testData.ids.nonExisting);
+      const nonExistingId = utils.getRandomElement(booking_examples.ids.nonExisting);
 
       cy.restfullBooker__deleteBooking__DELETE(authToken, nonExistingId, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(405);
@@ -777,15 +777,15 @@ describe('RestfulBooker.Booking: Given No preconditions', { testIsolation: false
 
       // Collect booking IDs from validBookings (standard, withoutAdditionalNeeds)
       ['standard', 'withoutAdditionalNeeds'].forEach((key) => {
-        if (booking_testData.validBookings[key]?.bookingId) {
-          bookingsToDelete.push(booking_testData.validBookings[key].bookingId);
+        if (booking_examples.validBookings[key]?.bookingId) {
+          bookingsToDelete.push(booking_examples.validBookings[key].bookingId);
         }
       });
 
       // Collect booking IDs from edgeCases (excluding sameDayCheckout which is already deleted)
       ['minimalPrice', 'maximalPrice', 'longStay', 'depositNotPaid'].forEach((key) => {
-        if (booking_testData.validBookings.edgeCases[key]?.bookingId) {
-          bookingsToDelete.push(booking_testData.validBookings.edgeCases[key].bookingId);
+        if (booking_examples.validBookings.edgeCases[key]?.bookingId) {
+          bookingsToDelete.push(booking_examples.validBookings.edgeCases[key].bookingId);
         }
       });
 

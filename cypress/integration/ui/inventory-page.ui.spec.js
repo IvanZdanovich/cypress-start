@@ -1,4 +1,5 @@
-import { testData } from '../../integration-test-data/ui/inventory-page.ui.test-data';
+import { examples } from '../../integration-examples/ui/inventory-page.ui.examples';
+import ip from '../../integration-requirements/ui/inventory-page.reqs';
 
 describe('InventoryPage: Given STANDARD user on Inventory page, no products are added to cart', { testIsolation: false }, () => {
   let standardUser;
@@ -28,7 +29,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
 
     it('InventoryPage.STANDARD: Then default sorting dropdown with default value', () => {
-      cy.inventoryPage__verifySortingDropdown(reqs.inventoryPage.defaultSortOption);
+      cy.inventoryPage__verifySortingDropdown(ip.defaultSort.defaultValue);
     });
 
     it('InventoryPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
@@ -59,7 +60,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
 
     it('InventoryPage.STANDARD: Then default number of product cards should be displayed', () => {
-      cy.get(inventoryPage.cards).should('have.length', reqs.inventoryPage.numberOfProductsOnThePage);
+      cy.get(inventoryPage.cards).should('have.length', ip.productCount.limit);
     });
 
     // Bug Reference: BUG-INVENTORY-001 - Product title displays incorrect value
@@ -68,7 +69,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         cy.wrap($title)
           .invoke('text')
           .then((text) => {
-            if (text === testData.buggyProductData.wrongTitle) {
+            if (text === examples.buggyProductData.wrongTitle) {
               return;
             }
             const productExists = products.some((product) => product.title === text);
@@ -83,7 +84,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         cy.wrap($description)
           .invoke('text')
           .then((text) => {
-            if (text === testData.buggyProductData.wrongDescription) {
+            if (text === examples.buggyProductData.wrongDescription) {
               return;
             }
             const productExists = products.some((product) => product.description === text);
@@ -146,11 +147,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
   context('InventoryPage.STANDARD: When user clicks on name descending sorting option', () => {
     before(() => {
-      cy.inventoryPage__selectSortOption(reqs.inventoryPage.sortOptions.nameDescending);
+      cy.inventoryPage__selectSortOption(ip.sortOptions.options.nameDescending);
     });
 
     it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
-      cy.inventoryPage__verifySortingDropdown(reqs.inventoryPage.sortOptions.nameDescending);
+      cy.inventoryPage__verifySortingDropdown(ip.sortOptions.options.nameDescending);
     });
 
     it('InventoryPage.STANDARD: Then products are sorted by name descending', () => {
@@ -164,11 +165,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
   context('InventoryPage.STANDARD: When user clicks on price ascending sorting option', () => {
     before(() => {
-      cy.inventoryPage__selectSortOption(reqs.inventoryPage.sortOptions.priceAscending);
+      cy.inventoryPage__selectSortOption(ip.sortOptions.options.priceAscending);
     });
 
     it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
-      cy.inventoryPage__verifySortingDropdown(reqs.inventoryPage.sortOptions.priceAscending);
+      cy.inventoryPage__verifySortingDropdown(ip.sortOptions.options.priceAscending);
     });
 
     it('InventoryPage.STANDARD: Then products are sorted by price ascending', () => {
@@ -181,11 +182,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
   context('InventoryPage.STANDARD: When user clicks on price descending sorting option', () => {
     before(() => {
-      cy.inventoryPage__selectSortOption(reqs.inventoryPage.sortOptions.priceDescending);
+      cy.inventoryPage__selectSortOption(ip.sortOptions.options.priceDescending);
     });
 
     it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
-      cy.inventoryPage__verifySortingDropdown(reqs.inventoryPage.sortOptions.priceDescending);
+      cy.inventoryPage__verifySortingDropdown(ip.sortOptions.options.priceDescending);
     });
 
     it('InventoryPage.STANDARD: Then products are sorted by price descending', () => {
@@ -199,11 +200,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
   context('InventoryPage.STANDARD: When user clicks on Name ascending sorting option', () => {
     before(() => {
-      cy.inventoryPage__selectSortOption(reqs.inventoryPage.sortOptions.nameAscending);
+      cy.inventoryPage__selectSortOption(ip.sortOptions.options.nameAscending);
     });
 
     it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
-      cy.inventoryPage__verifySortingDropdown(reqs.inventoryPage.sortOptions.nameAscending);
+      cy.inventoryPage__verifySortingDropdown(ip.sortOptions.options.nameAscending);
     });
 
     it('InventoryPage.STANDARD: Then products are sorted by name ascending', () => {
@@ -217,41 +218,41 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
   context('InventoryPage.STANDARD: When user clicks on add to cart button for first random product', () => {
     before(() => {
-      cy.inventoryPage__addProductToCart(testData.indicesOfProducts[0]);
+      cy.inventoryPage__addProductToCart(examples.indicesOfProducts[0]);
       cy.get(inventoryPage.card.title)
-        .eq(testData.indicesOfProducts[0])
+        .eq(examples.indicesOfProducts[0])
         .invoke('text')
         .then((text) => {
-          testData.chosenProducts.push(products.find((product) => product.title === text));
+          examples.chosenProducts.push(products.find((product) => product.title === text));
         });
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.oneProduct);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
     });
 
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
     });
   });
 
   context('InventoryPage.STANDARD: When user clicks on add to cart button for second random product', () => {
     before(() => {
-      cy.inventoryPage__addProductToCart(testData.indicesOfProducts[1]);
+      cy.inventoryPage__addProductToCart(examples.indicesOfProducts[1]);
       cy.get(inventoryPage.card.title)
-        .eq(testData.indicesOfProducts[1])
+        .eq(examples.indicesOfProducts[1])
         .invoke('text')
         .then((text) => {
-          testData.chosenProducts.push(products.find((product) => product.title === text));
+          examples.chosenProducts.push(products.find((product) => product.title === text));
         });
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.twoProducts);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
 
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
     });
   });
 
@@ -271,11 +272,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         cy.wrap($title)
           .invoke('text')
           .then((title) => {
-            if (title === testData.buggyProductData.wrongTitle) {
+            if (title === examples.buggyProductData.wrongTitle) {
               return;
             }
 
-            const foundProduct = testData.chosenProducts.find((product) => {
+            const foundProduct = examples.chosenProducts.find((product) => {
               return product && product.title === title;
             });
 
@@ -285,7 +286,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
 
     it('InventoryPage.Card.STANDARD: Then the total number of products is correct', () => {
-      cy.get(cartPage.items).should('have.length', testData.cartBadgeCounts.twoProducts);
+      cy.get(cartPage.items).should('have.length', examples.cartBadgeCounts.twoProducts);
     });
   });
 
@@ -300,40 +301,40 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.twoProducts);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
 
     it('InventoryPage.Card.STANDARD: Then the remove button is displayed for the products added to the cart', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
     });
   });
 
   context('InventoryPage.STANDARD: When user clicks on remove button for first random product', () => {
     before(() => {
-      cy.inventoryPage__removeProductFromCart(testData.indicesOfProducts[0]);
+      cy.inventoryPage__removeProductFromCart(examples.indicesOfProducts[0]);
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.oneProduct);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
     });
 
     it('InventoryPage.Card.STANDARD: Then the remove button is changed to add button', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[0]).find(inventoryPage.card.add).should('have.text', l10n.inventoryPage.addToCart).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.add).should('have.text', l10n.inventoryPage.addToCart).and('be.visible');
     });
   });
 
   context('InventoryPage.STANDARD: When user clicks on add to cart button for first random product again', () => {
     before(() => {
-      cy.inventoryPage__addProductToCart(testData.indicesOfProducts[0]);
+      cy.inventoryPage__addProductToCart(examples.indicesOfProducts[0]);
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.twoProducts);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
 
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
     });
   });
 
@@ -343,16 +344,16 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 
     before(() => {
       cy.get(inventoryPage.card.title)
-        .eq(testData.indicesOfProducts[2])
+        .eq(examples.indicesOfProducts[2])
         .invoke('text')
         .then((text) => {
-          if (text === testData.buggyProductData.wrongTitle) {
+          if (text === examples.buggyProductData.wrongTitle) {
             return;
           }
           productForReview = products.find((product) => product.title === text);
         });
       cy.then(() => {
-        cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[2]).find(inventoryPage.card.title).click();
+        cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[2]).find(inventoryPage.card.title).click();
       });
     });
 
@@ -365,7 +366,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(productPage.title)
         .invoke('text')
         .then((text) => {
-          if (text === testData.buggyProductData.wrongTitle) {
+          if (text === examples.buggyProductData.wrongTitle) {
             return;
           }
           cy.get(productPage.title).should('have.text', productForReview.title);
@@ -384,27 +385,27 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.twoProducts);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
 
     it('InventoryPage.Card.STANDARD: Then the remove button is displayed for the products added to the cart', () => {
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
-      cy.get(inventoryPage.cards).eq(testData.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
+      cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n.inventoryPage.remove).and('be.visible');
     });
   });
 
   context('InventoryPage.STANDARD: When user clicks remove on all the added cards', () => {
     before(() => {
-      cy.inventoryPage__removeProductFromCart(testData.indicesOfProducts[0]);
-      cy.inventoryPage__removeProductFromCart(testData.indicesOfProducts[1]);
+      cy.inventoryPage__removeProductFromCart(examples.indicesOfProducts[0]);
+      cy.inventoryPage__removeProductFromCart(examples.indicesOfProducts[1]);
     });
 
     it('InventoryPage.Header.STANDARD: Then the Cart button badge is not existed', () => {
-      cy.inventoryPage__verifyCartBadge(testData.cartBadgeCounts.empty);
+      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.empty);
     });
 
     it('InventoryPage.Card.STANDARD: Then the all the product cards have add to cart buttons', () => {
-      cy.get(inventoryPage.card.add).should('have.length', reqs.inventoryPage.numberOfProductsOnThePage);
+      cy.get(inventoryPage.card.add).should('have.length', ip.productCount.limit);
     });
   });
 });

@@ -11,8 +11,8 @@ module.exports = {
   },
   create(context) {
     const filename = context.filename;
-    const isApiTest = filename.includes('/integration/api/');
-    const isUiTest = filename.includes('/integration/ui/') || filename.includes('/e2e/ui/');
+    const isApiTest = filename.includes('/integration-requirements/api/');
+    const isUiTest = filename.includes('/integration-requirements/ui/') || filename.includes('/e2e-requirements/ui/');
 
     // Common replacements for all tests
     const commonReplacements = [

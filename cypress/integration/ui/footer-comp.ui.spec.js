@@ -1,4 +1,4 @@
-import { testData } from '../../integration-test-data/ui/footer-comp.ui.test-data';
+import { examples } from '../../integration-examples/ui/footer-comp.ui.examples';
 
 describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;
@@ -20,7 +20,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
 
   context('Footer.STANDARD: When user reviews LinkedIn icon', () => {
     it('Footer.STANDARD: Then LinkedIn icon should have correct href attribute', () => {
-      cy.get(footerComp.linkedin).should('have.attr', 'href', testData.socialLinks.linkedin.url);
+      cy.get(footerComp.linkedin).should('have.attr', 'href', examples.socialLinks.linkedin.url);
     });
 
     it('Footer.STANDARD: Then LinkedIn icon should open in new tab', () => {
@@ -40,7 +40,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
           // Bug Reference: BUG-FOOTER-001 - Twitter link uses outdated twitter.com URL
           // Actual: https://twitter.com/saucelabs
           // Expected: https://x.com/saucelabs
-          return href === 'https://twitter.com/saucelabs' || href === testData.socialLinks.twitter.url;
+          return href === 'https://twitter.com/saucelabs' || href === examples.socialLinks.twitter.url;
         });
     });
 
@@ -55,7 +55,7 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
 
   context('Footer.STANDARD: When user reviews Facebook icon', () => {
     it('Footer.STANDARD: Then Facebook icon should have correct href attribute', () => {
-      cy.get(footerComp.facebook).should('have.attr', 'href', testData.socialLinks.facebook.url);
+      cy.get(footerComp.facebook).should('have.attr', 'href', examples.socialLinks.facebook.url);
     });
 
     it('Footer.STANDARD: Then Facebook icon should open in new tab', () => {

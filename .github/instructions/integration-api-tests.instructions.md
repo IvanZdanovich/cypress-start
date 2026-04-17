@@ -1,5 +1,5 @@
 ---
-applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
+applyTo: '${WORKSPACE_ROOT}/cypress/integration-requirements/api/*.api.spec.js'
 ---
 
 # Integration API Tests
@@ -7,7 +7,7 @@ applyTo: '${WORKSPACE_ROOT}/cypress/integration/api/*.api.spec.js'
 ## File Structure
 
 PLACE files: `${WORKSPACE_ROOT}/cypress/integration/api/module-name.submodule-name.api.spec.js` (kebab-case)
-STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.test-data.js` (kebab-case)
+STORE test data: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.examples.js` (kebab-case)
 STORE API commands: `${WORKSPACE_ROOT}/cypress/commands/api/` (named by module/submodule)
 STORE URLs: `${WORKSPACE_ROOT}/cypress/support/urls/urls.js`
 
@@ -106,7 +106,7 @@ ACTIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 
 ## Test Data Structure
 
-STORE: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.test-data.js`
+STORE: `${WORKSPACE_ROOT}/cypress/test-data/api/module-name.submodule-name.api.examples.js`
 NAMING: kebab-case files, camelCase variables
 ORGANIZE: By module/submodule
 USE `String` placeholders FOR dynamic IDs
@@ -177,7 +177,7 @@ ACCESS: Via global `errors` variable (NO import)
 ## Test Template
 
 ```javascript
-import {module_testData as testData} from '../../integration-test-data/api/module-name.submodule-name.api.integration-test-data';
+import {module_testData as testData} from '../../integration-requirements-test-data/api/module-name.submodule-name.api.integration-requirements-test-data';
 
 describe('ModuleName.SubmoduleName: Given preconditions, created data', {testIsolation: false}, () => {
     let tokenUser;

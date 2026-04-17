@@ -1,4 +1,4 @@
-export const testData = {
+export const examples = {
   indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, reqs.inventoryPage.numberOfProductsOnThePage), reqs.inventoryPage.numberOfProductsOnThePage - 1),
   chosenProducts: [],
   deliveryInfo: {
