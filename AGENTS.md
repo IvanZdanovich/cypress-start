@@ -21,13 +21,12 @@ describe('Module.Submodule: Given preconditions', { testIsolation: false }, () =
 ```
 
 **Global Resources** (loaded in `cypress/support/e2e.js`):
-- `global.l10n` - Localization strings from `cypress/support/localization/l10n.json`
-- `global.colours` - Theme colors from `cypress/support/colours/default-theme-colours.json`
+- `global.l10n` - Localization strings from `cypress/localization/l10n.json`
+- `global.colours` - Theme colors from `cypress/colours/default-theme-colours.json`
 - `global.urls` - API/UI URLs from `cypress/support/urls/urls.js`
 - `global.utils` - Random data generators from `cypress/support/utils/utils.js`
-- `global.reqs` - Requirements/constraints from `cypress/support/requirements/requirements.js`
-- `global.errors` - Expected error messages from `cypress/support/requirements/error_messages.json`
-- `global.userRoles` - User role definitions from `cypress/support/requirements/user-roles.js`
+- `global.errors` - Expected error messages from `cypress/constants/ui/error-messages.json`
+- `global.userRoles` - User role definitions from `cypress/constants/ui/user-roles.js`
 - Page selectors (e.g., `global.loginPage`, `global.inventoryPage`) from `cypress/support/selectors/selectors.js`
 
 ## Critical Workflows
@@ -154,9 +153,8 @@ Then adapt test to validate ACTUAL behavior with comment referencing bug ID.
 - `eslint-plugin-custom-rules/app-structure/components.json` - Valid UI component names
 - `eslint-plugin-custom-rules/app-structure/workflows.json` - Valid E2E workflow names
 
-**Requirement Files** (`cypress/support/requirements/`):
-- `*.reqs.js` — module requirement files (source of truth, import directly in tests)
-- `requirements.js` — global UI constraints (shared, exposed as `global.reqs`)
-- `error_messages.json` — error message strings (exposed as `global.errors`)
-- `user-roles.js` — user role constants (exposed as `global.userRoles`)
+**Requirement Files** (`cypress/constants/`):
+- `constants/api/*.constraints.js` — module boundary values and domain constants
+- `constants/ui/user-roles.js` — user role constants (exposed as `global.userRoles`)
+- `constants/ui/error-messages.json` — error message strings (exposed as `global.errors`)
 

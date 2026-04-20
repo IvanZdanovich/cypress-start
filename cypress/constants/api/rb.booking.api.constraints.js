@@ -4,7 +4,7 @@
  *   used by both spec files and examples files.
  *
  *   Import in specs and test data:
- *     import { PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS } from '../../support/constants/rb.booking.constraints';
+ *     import { PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
  */
 
 /** Price constraints for totalprice validation. */

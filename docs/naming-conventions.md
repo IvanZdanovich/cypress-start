@@ -135,7 +135,17 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ---
 
-## Examples Naming Convention
+## Constants / Constraints Naming Convention
+
+- Store boundary values and domain constants in `cypress/constants/api/` or `cypress/constants/ui/`.
+- Use kebab-case for file names.
+- **API Constants:** `{module-name}.api.constraints.js` — e.g., `rb.booking.api.constraints.js`
+- **UI Constants:** `{page-name}.ui.constraints.js` — e.g., `login-page.ui.constraints.js`
+- Import directly in both spec files and examples files — never hardcode boundary values.
+
+---
+
+## Example files Naming Convention
 
 - Store named examples in javascript files in `cypress/integration-examples/api`, `cypress/integration-examples/ui`, `cypress/e2e-examples/ui`.
 - Examples files should be named according to the spec files they support.
@@ -143,6 +153,137 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 - Use a hierarchical structure organized by module and submodule.
 - **Pattern:** `module-name.submodule-name.api.examples.js`, `page-name.component-name.ui.examples.js`, `business-domain.flow-name.ui.examples.js`
 - **Example:** `restful-booker.booking.api.examples.js`, `checkout-page.ui.examples.js`, `purchasing.complete-purchase.ui.examples.js`
+
+---
+
+## Example File Instances Naming Convention
+
+### Instance Names
+
+Instance names describe the **boundary condition or purpose**, not the values. Follow the pattern:
+
+```
+{entity}__{field}__{BoundaryCondition}
+```
+
+The double underscore (`__`) acts as a namespace separator between the three segments — consistent with the `__` convention used in Cypress command names (`entity__operation__METHOD`).
+
+| Suffix             | Meaning                                      |
+|--------------------|----------------------------------------------|
+| `AtMaxLength`      | Valid — exactly at the upper character limit |
+| `OverMaxLength`    | Invalid — one step over the upper limit      |
+| `AtMinLength`      | Valid — exactly at the lower character limit |
+| `UnderMinLength`   | Invalid — one step under the lower limit     |
+| `MinimalPrice`     | Boundary minimum value for a numeric field   |
+| `MaximalPrice`     | Boundary maximum value for a numeric field   |
+| `Missing`          | Required field intentionally absent          |
+| `Duplicate`        | Conflicts with an existing record            |
+| `ForbiddenChar`    | Contains a disallowed character              |
+| `SameDayCheckout`  | Edge-case date scenario (same-day)           |
+
+**❌ Avoid:** `item1`, `data1`, `test1`, `validBooking1`, `booking2`
+
+### Structure Rules
+
+- **Group** instances by scenario category: `validBookings`, `invalidBookings`, `edgeCases`, etc.
+- **Annotate** every instance with a `// Boundary:` comment explaining the scenario
+- **Import** boundary values from constraint files — never hardcode them
+- **Use `utils`** for all dynamic data (strings, numbers, dates, booleans)
+- **Declare `bookingId: String`** (or equivalent ID field) as a placeholder — assign after creation
+- **Include `namePrefix`** at the root for cleanup identification
+
+### Example Structure
+
+```javascript
+// cypress/integration-examples/api/rb.booking.api.examples.js
+import { PRICE, FIRSTNAME, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+
+export const booking_examples = {
+    namePrefix: 'API.Booking',
+
+    validBookings: {
+        standard: {
+            // Boundary: all fields present, price within range — must be accepted
+            bookingId: String,
+            firstname: `API.Booking.${utils.generateRandomString(6)}`,
+            lastname: utils.generateRandomString(8),
+            totalprice: utils.getRandomNumber(PRICE.MIN, PRICE.MAX),
+            depositpaid: true,
+            bookingdates: {
+                checkin: utils.getFutureDate(7),
+                checkout: utils.getFutureDate(14),
+            },
+        },
+
+        minimalPrice: {
+            // Boundary: totalprice = PRICE.MIN (1) — lowest accepted value
+            bookingId: String,
+            firstname: `API.Booking.${utils.generateRandomString(6)}`,
+            lastname: utils.generateRandomString(8),
+            totalprice: PRICE.MIN,
+            depositpaid: true,
+            bookingdates: {
+                checkin: utils.getFutureDate(1),
+                checkout: utils.getFutureDate(7),
+            },
+        },
+
+        firstname__AtMaxLength: {
+            // Boundary: firstname = FIRSTNAME.MAX_LENGTH characters — must be accepted
+            bookingId: String,
+            firstname: utils.extendStringWithPrefix('API.Booking', FIRSTNAME.MAX_LENGTH),
+            lastname: utils.generateRandomString(8),
+            totalprice: utils.getRandomNumber(PRICE.MIN, PRICE.MAX),
+            depositpaid: utils.getRandomBoolean(),
+            bookingdates: {
+                checkin: utils.getFutureDate(1),
+                checkout: utils.getFutureDate(7),
+            },
+        },
+    },
+
+    invalidBookings: {
+        missingRequired: {
+            // Boundary: one randomly selected required field omitted per run
+            baseBooking: {
+                firstname: `API.Booking.${utils.generateRandomString(6)}`,
+                lastname: utils.generateRandomString(8),
+                totalprice: utils.getRandomNumber(PRICE.MIN, PRICE.MAX),
+                depositpaid: true,
+                bookingdates: {
+                    checkin: utils.getFutureDate(1),
+                    checkout: utils.getFutureDate(7),
+                },
+            },
+            requiredFields: REQUIRED_FIELDS,
+        },
+
+        firstname__OverMaxLength: {
+            // Boundary: firstname exceeds FIRSTNAME.MAX_LENGTH — must be rejected
+            bookingId: String,
+            firstname: utils.extendStringWithPrefix('API.Booking', FIRSTNAME.MAX_LENGTH + 1),
+            lastname: utils.generateRandomString(8),
+            totalprice: utils.getRandomNumber(PRICE.MIN, PRICE.MAX),
+            depositpaid: true,
+            bookingdates: {
+                checkin: utils.getFutureDate(1),
+                checkout: utils.getFutureDate(7),
+            },
+        },
+    },
+};
+```
+
+### Instance — Spec Traceability
+
+Each named instance maps 1-to-1 to a boundary condition tested in a `context` block:
+
+```
+PRICE.MIN = 1                                     ← constraint
+  → booking_examples.validBookings.minimalPrice   ← named instance
+    → context: "When booking with price of 1..."  ← spec context (uses ${PRICE.MIN})
+      → expect(totalprice).to.eq(PRICE.MIN)       ← assertion
+```
 
 ---
 
@@ -159,7 +300,7 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ## UI Elements Localization Keys Naming Convention
 
-- Store localization keys in JSON files in `cypress/support/localization`.
+- Store localization keys in JSON files in `cypress/localization`.
 - Use camelCase for naming keys.
 - Use a hierarchical structure organized by page and component.
 - **Static Text Elements:** Use nouns (e.g., `title`, `placeholder`).

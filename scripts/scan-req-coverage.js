@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const REQS_GLOB = path.join(ROOT, 'cypress/support/requirements');
+const REQS_GLOB = path.join(ROOT, 'cypress/integration');
 const SPEC_DIRS = [path.join(ROOT, 'cypress/integration-requirements'), path.join(ROOT, 'cypress/e2e-requirements')];
 
 // ─── ANSI colours ─────────────────────────────────────────────────────────────
@@ -348,7 +348,7 @@ function main() {
 
   const allReqs = collectAllRequirements(REQS_GLOB, args.priority);
   if (allReqs.length === 0) {
-    console.warn(col('\n  ⚠  No *.reqs.js files found in cypress/support/requirements/\n' + '     Create module requirement files following the JS-first pattern.\n', 'yellow'));
+    console.warn(col('\n  ⚠  No *.reqs.js files found in cypress/integration/\n' + '     Create module requirement files following the JS-first pattern.\n', 'yellow'));
     process.exit(0);
   }
 

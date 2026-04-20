@@ -4,7 +4,7 @@
  * Requirement Schema Validator
  *
  * Validates every *.reqs.js file against the schema definitions
- * in `cypress/support/requirements/req-schemas.js`.
+ * in `cypress/integration/req-schemas.js`.
  *
  * Checks:
  *   - Mandatory fields present and correctly typed
@@ -31,7 +31,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const REQS_DIR = path.join(ROOT, 'cypress/support/requirements');
+const REQS_DIR = path.join(ROOT, 'cypress/integration');
 
 // ─── CLI args ─────────────────────────────────────────────────────────────────
 

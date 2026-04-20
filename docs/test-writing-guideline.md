@@ -46,17 +46,17 @@ specifications to be defined, even if not yet implemented.
 - **Custom Commands**: Leverage existing custom commands from `cypress/commands/` before writing inline code.
   Create new commands for frequently used operations.
 
-- **Requirements Reference**: Use project-wide requirements from `cypress/support/requirements/` for consistent error
+- **Requirements Reference**: Use project-wide requirements from `cypress/integration/` for consistent error
   messages and configurations.
 
 - **Automated Enforcement**: Custom ESLint rules in `eslint-plugin-custom-rules/` automatically enforce naming
   conventions and structure guidelines during development.
 
-- **Store Localization in Variables**: Store localization keys in JSON files in `cypress/support/localization`. Use
+- **Store Localization in Variables**: Store localization keys in JSON files in `cypress/localization`. Use
   localization keys in tests instead of hardcoded values. Use the global `l10n` variable to obtain values from the
   `l10n.json` file that contains the applied localization file.
 
-- **Store Colour Values in Variables**: Store colour values in JSON files in `cypress/support/colours`. Use colour
+- **Store Colour Values in Variables**: Store colour values in JSON files in `cypress/colours`. Use colour
   values in tests instead of hardcoded values. Use the global `colours` variable to
   obtain values from the `current-theme-colours.json` file that contains the applied colour theme file.
 

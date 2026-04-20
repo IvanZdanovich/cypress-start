@@ -3,7 +3,7 @@
 /**
  * Requirement JSON Exporter
  *
- * Reads every *.reqs.js file in cypress/support/requirements/,
+ * Reads every *.reqs.js file in cypress/integration/,
  * dynamically imports the default export, and writes a companion
  * *.reqs.json alongside it.
  *
@@ -16,7 +16,7 @@
  *
  * Python consumption:
  *   import json, pathlib
- *   rb = json.loads(pathlib.Path('cypress/support/requirements/rb.booking.reqs.json').read_text())
+ *   rb = json.loads(pathlib.Path('cypress/integration/rb.booking.reqs.json').read_text())
  *   rb['create']['success']['statusCode']  # 200
  *   rb['create']['success']['id']          # 'REQ-RB-010'
  */
@@ -27,7 +27,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const REQS_DIR = path.join(ROOT, 'cypress/support/requirements');
+const REQS_DIR = path.join(ROOT, 'cypress/integration');
 
 const isDryRun = process.argv.includes('--dry-run');
 const skipValidation = process.argv.includes('--skip-validation');

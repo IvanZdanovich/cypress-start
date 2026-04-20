@@ -156,7 +156,7 @@ export default { moduleName };
 
 ## Error Messages
 
-STORE: `${WORKSPACE_ROOT}/cypress/support/requirements/error_messages.json`
+STORE: `${WORKSPACE_ROOT}/cypress/constants/ui/error-messages.json`
 ORGANIZE: By module/submodule
 ACCESS: Via global `errors` variable (NO import)
 

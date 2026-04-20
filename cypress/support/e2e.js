@@ -25,14 +25,13 @@ import '../commands/api/common.api.commands';
 import '../commands/api/restful-booker.api.commands';
 
 // Import necessary modules and resources
-import l10n from './localization/l10n.json';
-import colours from './colours/default-theme-colours.json';
-import selectors from './selectors/selectors';
-import urls from './urls/urls';
-import utils from './utils/utils';
-import errors from './requirements/error_messages.json';
-import userRoles from './requirements/user-roles';
-import products from './products/products';
+import l10n from '../localization/l10n.json';
+import colours from '../colours/default-theme-colours.json';
+import selectors from '../selectors/selectors';
+import urls from '../urls/urls';
+import utils from './utils';
+import errors from '../constants/api/error-messages.json';
+import userRoles from '../constants/user-roles';
 
 // Make resources globally available
 global.l10n = l10n;
@@ -41,7 +40,6 @@ global.urls = urls;
 global.utils = utils;
 global.errors = errors;
 global.userRoles = userRoles.userRoles;
-global.products = products;
 
 // Separate selectors by pages
 global.loginPage = selectors.loginPage;

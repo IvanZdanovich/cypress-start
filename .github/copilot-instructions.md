@@ -24,10 +24,10 @@ NO local usernames or machine-specific paths in committed docs
 - `${WORKSPACE_ROOT}/cypress/support/e2e.js` - Global imports and configs
 - `${WORKSPACE_ROOT}/cypress/support/selectors/` - UI selectors by page/component
 - `${WORKSPACE_ROOT}/cypress/support/utils/utils.js` - Utility functions
-- `${WORKSPACE_ROOT}/cypress/support/requirements/requirements.js` - Global UI constraints (shared, available as global.reqs)
-- `${WORKSPACE_ROOT}/cypress/support/requirements/*.reqs.js` - Module requirement files (source of truth, import directly)
-- `${WORKSPACE_ROOT}/cypress/support/localization/` - Localization JSON
-- `${WORKSPACE_ROOT}/cypress/support/colours/` - Theme colour JSON
+- `${WORKSPACE_ROOT}/cypress/localization/` - Localization JSON
+- `${WORKSPACE_ROOT}/cypress/colours/` - Theme colour JSON
+- `${WORKSPACE_ROOT}/cypress/constants/api/` - API boundary values and domain constants
+- `${WORKSPACE_ROOT}/cypress/constants/ui/` - UI constants (error messages, user roles)
 
 **Data:**
 - `${WORKSPACE_ROOT}/cypress/integration-examples/ui/` - E2E UI test data
