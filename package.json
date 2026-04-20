@@ -28,6 +28,7 @@
     ".github/instructions/",
     ".github/FUNDING.yml",
     "assets/",
+    "config/",
     "cypress.config.js",
     "eslint.config.mjs",
     "Dockerfile",
@@ -91,17 +92,16 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.0.3",
+    "eslint": "^10.2.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-chai-friendly": "^1.1.1",
-    "eslint-plugin-cypress": "^6.2.0",
+    "eslint-plugin-chai-friendly": "^1.2.0",
+    "eslint-plugin-cypress": "^6.3.1",
     "eslint-plugin-prettier": "^5.5.5",
     "glob": "^13.0.6",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.3"
   },
   "dependencies": {
-    "cypress": "^15.12.0",
-    "mochawesome": "^7.1.4"
+    "cypress": "^15.14.0"
   },
   "engines": {
     "node": ">=24.0.0"
