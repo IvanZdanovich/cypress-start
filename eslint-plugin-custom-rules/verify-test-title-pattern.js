@@ -1,3 +1,11 @@
+function getNodeTitle(node) {
+  const arg = node.arguments[0];
+  if (!arg) return null;
+  if (arg.type === 'Literal' && typeof arg.value === 'string') return arg.value;
+  if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0) return arg.quasis[0].value.cooked;
+  return null;
+}
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -14,7 +22,7 @@ module.exports = {
     const itBlockTitlePattern = /^([A-Z][a-zA-Z]+\.){1,6}[A-Z]{1,15}: Then .{1,200}(?<!\s)$/;
 
     function checkTitlePattern(node, pattern) {
-      const title = node.arguments[0].value;
+      const title = getNodeTitle(node);
       if (title && !pattern.test(title)) {
         context.report({
           node,
@@ -28,6 +36,8 @@ module.exports = {
         checkTitlePattern(node, describeBlockTitlePattern);
       },
       'CallExpression[callee.name="context"]'(node) {
+        const title = getNodeTitle(node);
+        if (title && title.startsWith('STATE:')) return;
         checkTitlePattern(node, contextBlockTitlePattern);
       },
       'CallExpression[callee.object.name="describe"][callee.property.name="skip"]'(node) {

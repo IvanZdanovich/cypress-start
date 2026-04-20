@@ -1,192 +1,223 @@
 const path = require('path');
 const fs = require('fs');
 
+function getNodeTitle(node) {
+  const arg = node.arguments[0];
+  if (!arg) return null;
+  if (arg.type === 'Literal' && typeof arg.value === 'string') return arg.value;
+  if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0) return arg.quasis[0].value.cooked;
+  return null;
+}
+
+// Detect --fix mode: new paths are added to expected/ only when fixing.
+const _isFixMode = process.argv.includes('--fix');
+
+// ---------------------------------------------------------------------------
+// Single source of truth: expected/ structure files.
+// Loaded once per ESLint process per type, then cached.
+// ---------------------------------------------------------------------------
+
+/** @type {{ api: object|null, ui: object|null, e2e: object|null }} */
+const _expectedStructures = {
+  api: null,
+  ui: null,
+  e2e: null,
+};
+
+// Track whether an expected file was modified during this run (needs write).
+const _expectedDirty = {
+  api: false,
+  ui: false,
+  e2e: false,
+};
+
+let _exitHandlerRegistered = false;
+
+const _expectedPaths = {
+  api: path.resolve(__dirname, './app-structure/expected/modules.json'),
+  ui: path.resolve(__dirname, './app-structure/expected/components.json'),
+  e2e: path.resolve(__dirname, './app-structure/expected/workflows.json'),
+};
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Calculate the maximum nesting depth of an object.
+ * Empty `{}` → 0, `{ A: {} }` → 1, `{ A: { B: {} } }` → 2, etc.
+ */
+function getDepth(obj) {
+  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) return 0;
+  const keys = Object.keys(obj);
+  if (keys.length === 0) return 0;
+  return 1 + Math.max(...keys.map((k) => getDepth(obj[k])));
+}
+
+/**
+ * Recursively sort object keys for readable, stable serialisation.
+ * Within each level keys are ordered by:
+ *   1. Nesting depth (leaves first, then shallowest children, …)
+ *   2. Alphabetically within the same depth group
+ */
+function sortObjectKeys(obj) {
+  if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+    return obj;
+  }
+  return Object.keys(obj)
+    .sort((a, b) => {
+      const depthDiff = getDepth(obj[a]) - getDepth(obj[b]);
+      return depthDiff !== 0 ? depthDiff : a.localeCompare(b);
+    })
+    .reduce((sorted, key) => {
+      sorted[key] = sortObjectKeys(obj[key]);
+      return sorted;
+    }, {});
+}
+
+/**
+ * Load (and cache) the expected structure for the given test type.
+ * The file is read from disk exactly once per ESLint process per type.
+ *
+ * @param {'api'|'ui'|'e2e'} testType
+ * @returns {object}
+ */
+function _loadExpectedStructure(testType) {
+  if (_expectedStructures[testType] !== null) {
+    return _expectedStructures[testType];
+  }
+
+  const filePath = _expectedPaths[testType];
+  const fileDir = path.dirname(filePath);
+
+  // Bootstrap: ensure directory and file exist.
+  if (!fs.existsSync(fileDir)) {
+    fs.mkdirSync(fileDir, { recursive: true });
+  }
+  if (!fs.existsSync(filePath)) {
+    try {
+      fs.writeFileSync(filePath, JSON.stringify({}, null, 2) + '\n', 'utf8');
+    } catch {
+      // Silent – fall back to empty structure
+    }
+  }
+
+  let structure = {};
+  try {
+    structure = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    // Silent – every path will fail validation
+  }
+
+  _expectedStructures[testType] = structure;
+  return structure;
+}
+
+/**
+ * Register a one-time process exit handler that writes modified expected
+ * structure files to disk (sorted, with trailing newline).
+ */
+function _registerExitHandler() {
+  if (_exitHandlerRegistered) return;
+  _exitHandlerRegistered = true;
+
+  process.on('exit', () => {
+    if (!_isFixMode) return;
+
+    for (const type of ['api', 'ui', 'e2e']) {
+      if (!_expectedDirty[type]) continue;
+      const structure = _expectedStructures[type];
+      if (structure === null) continue;
+      try {
+        fs.writeFileSync(_expectedPaths[type], JSON.stringify(sortObjectKeys(structure), null, 2) + '\n', 'utf8');
+      } catch {
+        // Silent – structure tracking is best-effort
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Rule
+// ---------------------------------------------------------------------------
+
 module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'verify that actual test structure paths exist in expected structure files',
+      description: 'verify that test structure paths exist in expected structure files; ' + 'use --fix to auto-add valid new paths',
       category: 'Best Practices',
       recommended: true,
     },
-    schema: [], // no options
+    fixable: 'code',
+    schema: [],
   },
-  create: function (context) {
+  create(context) {
     const filename = context.filename;
-    let expectedStructureFile;
-    let actualStructureFile;
     let testType;
 
-    // Determine test type and structure files
     if (filename.includes('e2e')) {
-      expectedStructureFile = './app-structure/expected/workflows.json';
-      actualStructureFile = './app-structure/actual/workflows.json';
       testType = 'e2e';
     } else if (filename.endsWith('.api.spec.js')) {
-      expectedStructureFile = './app-structure/expected/modules.json';
-      actualStructureFile = './app-structure/actual/modules.json';
       testType = 'api';
     } else if (filename.endsWith('.ui.spec.js')) {
-      expectedStructureFile = './app-structure/expected/components.json';
-      actualStructureFile = './app-structure/actual/components.json';
       testType = 'ui';
     } else {
       return {};
     }
 
-    // Load or initialize expected structure
-    const expectedStructurePath = path.resolve(__dirname, expectedStructureFile);
-    const expectedStructureDir = path.dirname(expectedStructurePath);
+    const expectedStructure = _loadExpectedStructure(testType);
+    _registerExitHandler();
 
-    // Ensure expected directory exists
-    if (!fs.existsSync(expectedStructureDir)) {
-      fs.mkdirSync(expectedStructureDir, { recursive: true });
-    }
-
-    let expectedStructure = {};
-    if (!fs.existsSync(expectedStructurePath)) {
-      // Create the file with an empty structure if it doesn't exist
-      try {
-        fs.writeFileSync(expectedStructurePath, JSON.stringify(expectedStructure, null, 2), 'utf8');
-      } catch {
-        // Silent: expectedStructure stays {}, every path will fail validation surfacing the issue via context.report()
-      }
-    } else {
-      try {
-        // Clear require cache to get fresh data
-        delete require.cache[expectedStructurePath];
-        expectedStructure = require(expectedStructureFile);
-      } catch {
-        // Silent: fall back to empty structure; every path will fail validation surfacing the issue via context.report()
-        expectedStructure = {};
-      }
-    }
-
-    // Load or initialize actual structure
-    const actualStructurePath = path.resolve(__dirname, actualStructureFile);
-    const actualStructureDir = path.dirname(actualStructurePath);
-
-    // Ensure actual directory exists
-    if (!fs.existsSync(actualStructureDir)) {
-      fs.mkdirSync(actualStructureDir, { recursive: true });
-    }
-
-    let actualStructure = {};
-    if (fs.existsSync(actualStructurePath)) {
-      try {
-        const fileContent = fs.readFileSync(actualStructurePath, 'utf8');
-        actualStructure = JSON.parse(fileContent);
-      } catch {
-        // If file is corrupted, start fresh
-        actualStructure = {};
-      }
-    } else {
-      // Create the file with an empty structure if it doesn't exist
-      try {
-        fs.writeFileSync(actualStructurePath, JSON.stringify(actualStructure, null, 2), 'utf8');
-      } catch {
-        // Silent: actual structure tracking is best-effort; lint still runs correctly
-      }
-    }
+    // ----- helpers local to this file's context ----- //
 
     /**
-     * Add a path to the actual structure and save to file
-     */
-    function addPathToActualStructure(pathStr) {
-      const parts = pathStr.split('.');
-      let currentLevel = actualStructure;
-
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        if (!currentLevel[part]) {
-          currentLevel[part] = {};
-        }
-        currentLevel = currentLevel[part];
-      }
-
-      // Save the updated structure to file
-      try {
-        fs.writeFileSync(actualStructurePath, JSON.stringify(actualStructure, null, 2), 'utf8');
-      } catch {
-        // Silent: actual structure tracking is best-effort; lint still runs correctly
-      }
-    }
-
-    /**
-     * Validate if a path is a valid structure path
-     * Must have at least one dot and follow PascalCase convention
-     * Each part must be a valid PascalCase identifier (no spaces, no lowercase words)
+     * Check whether a path string is well-formed (PascalCase / uppercase
+     * abbreviation segments separated by dots).  Only well-formed paths are
+     * eligible for auto-addition to expected structure.
      */
     function isValidStructurePath(pathStr) {
-      if (!pathStr.includes('.')) {
-        return false;
-      }
+      if (!pathStr.includes('.')) return false;
 
       const parts = pathStr.split('.');
-
-      // PascalCase pattern: starts with uppercase, contains only letters and numbers, no spaces
-      // Also allows common abbreviations like GET, POST, PUT, DELETE, ADMIN, etc.
-      const pascalCasePattern = /^[A-Z][A-Za-z0-9]*$/;
+      const pascalCase = /^[A-Z][A-Za-z0-9]*$/;
 
       for (const part of parts) {
         if (!part || part.length < 2) return false;
-
-        // Must match PascalCase pattern (no spaces allowed)
-        if (!pascalCasePattern.test(part)) return false;
-
-        // Reject parts that contain spaces (sentences)
-        if (part.includes(' ')) return false;
+        if (!pascalCase.test(part)) return false;
       }
-
       return true;
     }
 
     /**
-     * Extract structure path from test title (before colon)
+     * Extract the structure path from a test title (everything before the
+     * first colon).  Returns `null` when the path is not valid.
      */
     function extractStructurePath(title, partsToExclude = 0) {
       const fullPath = title.split(':')[0].trim();
+      if (!isValidStructurePath(fullPath)) return null;
 
-      if (!isValidStructurePath(fullPath)) {
-        return null;
-      }
+      if (partsToExclude === 0) return fullPath;
 
-      if (partsToExclude === 0) {
-        return fullPath;
-      }
-
-      // For describe blocks, exclude last N parts
       const parts = fullPath.split('.');
-      if (parts.length <= partsToExclude) {
-        return null; // Not enough parts to validate
-      }
-
+      if (parts.length <= partsToExclude) return null;
       return parts.slice(0, -partsToExclude).join('.');
     }
 
     /**
-     * Check if path exists in expected structure
+     * Walk the expected structure for `pathStr`.  Returns an object describing
+     * whether the full path exists and, if not, the deepest valid prefix.
      */
-    function pathExistsInStructure(pathStr, structure) {
+    function pathExistsInStructure(pathStr) {
       const parts = pathStr.split('.');
-      let currentLevel = structure;
+      let currentLevel = expectedStructure;
+      const validParts = [];
 
       for (const part of parts) {
         if (currentLevel[part]) {
+          validParts.push(part);
           currentLevel = currentLevel[part];
         } else {
-          // Find the deepest valid path
-          const validParts = [];
-          let tempLevel = structure;
-          for (const p of parts) {
-            if (tempLevel[p]) {
-              validParts.push(p);
-              tempLevel = tempLevel[p];
-            } else {
-              break;
-            }
-          }
-
           return {
             exists: false,
             missingPart: part,
@@ -200,82 +231,82 @@ module.exports = {
     }
 
     /**
-     * Build suggestion message for missing path
+     * Add a path to the in-memory expected structure.  Only called in --fix
+     * mode for paths that pass format validation.  The actual file write is
+     * deferred to the process exit handler.
      */
-    function buildSuggestionMessage(pathInfo, testType) {
-      const { missingPart, validPath, fullPath } = pathInfo;
+    function addPathToExpected(pathStr) {
+      const parts = pathStr.split('.');
+      let currentLevel = expectedStructure;
 
-      let message = `Path "${fullPath}" not found in expected structure. `;
-
-      if (validPath) {
-        message += `Valid until "${validPath}", but "${missingPart}" is missing. `;
-      } else {
-        message += `"${missingPart}" does not exist. `;
+      for (const part of parts) {
+        if (!currentLevel[part]) {
+          currentLevel[part] = {};
+        }
+        currentLevel = currentLevel[part];
       }
 
-      message += `The path has been added to actual structure. `;
-      message += `Update eslint-plugin-custom-rules/app-structure/expected/`;
-
-      if (testType === 'ui') {
-        message += 'components.json';
-      } else if (testType === 'api') {
-        message += 'modules.json';
-      } else if (testType === 'e2e') {
-        message += 'workflows.json';
-      }
-
-      message += ` to match the actual structure.`;
-
-      return message;
+      _expectedDirty[testType] = true;
     }
 
     /**
-     * Validate test block title
+     * Build a human-readable error message for a missing path.
      */
-    function checkTitlePattern(node, partsToExclude = 0) {
-      const title = node.arguments[0].value;
-      if (!title) {
-        return;
-      }
+    function buildMessage(pathInfo, type) {
+      const { missingPart, validPath, fullPath } = pathInfo;
+      const file = type === 'ui' ? 'components.json' : type === 'api' ? 'modules.json' : 'workflows.json';
+
+      let msg = `Path "${fullPath}" not found in expected structure. `;
+      msg += validPath ? `Valid until "${validPath}", but "${missingPart}" is missing. ` : `"${missingPart}" does not exist. `;
+      msg += `Run with --fix to auto-add, or update eslint-plugin-custom-rules/app-structure/expected/${file} manually.`;
+      return msg;
+    }
+
+    /**
+     * Core check applied to every describe / context / it node.
+     */
+    function checkTitle(node, partsToExclude = 0) {
+      const title = getNodeTitle(node);
+      if (!title) return;
 
       const structurePath = extractStructurePath(title, partsToExclude);
-      if (!structurePath) {
-        // Not a valid structure path or not enough parts
-        return;
-      }
+      if (!structurePath) return;
 
-      // Always add to actual structure (tracks what exists in tests)
-      addPathToActualStructure(structurePath);
+      const result = pathExistsInStructure(structurePath);
 
-      // Validate against expected structure
-      const validationResult = pathExistsInStructure(structurePath, expectedStructure);
+      if (!result.exists) {
+        if (_isFixMode) {
+          // Auto-add the validated path to expected structure.
+          addPathToExpected(structurePath);
+        }
 
-      if (!validationResult.exists) {
         context.report({
           node,
-          message: buildSuggestionMessage(validationResult, testType),
+          message: buildMessage(result, testType),
         });
       }
     }
 
+    // ----- AST visitors ----- //
+
     return {
       'CallExpression[callee.name="describe"]'(node) {
-        checkTitlePattern(node, 2);
+        checkTitle(node, 2);
       },
       'CallExpression[callee.name="context"]'(node) {
-        checkTitlePattern(node, 0);
+        checkTitle(node, 0);
       },
       'CallExpression[callee.object.name="describe"][callee.property.name="skip"]'(node) {
-        checkTitlePattern(node, 2);
+        checkTitle(node, 2);
       },
       'CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
-        checkTitlePattern(node, 0);
+        checkTitle(node, 0);
       },
       'CallExpression[callee.name="it"]'(node) {
-        checkTitlePattern(node, 0);
+        checkTitle(node, 0);
       },
       'CallExpression[callee.object.name="it"][callee.property.name="skip"]'(node) {
-        checkTitlePattern(node, 0);
+        checkTitle(node, 0);
       },
     };
   },

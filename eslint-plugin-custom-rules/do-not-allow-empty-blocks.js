@@ -12,6 +12,16 @@ module.exports = {
     return {
       'CallExpression[callee.name="it"], CallExpression[callee.name="context"], CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
         const args = node.arguments;
+
+        // Allow empty context blocks whose title starts with 'STATE:' — they serve as
+        // descriptive phase separators in long test scenarios.
+        const isContextCall = node.callee.name === 'context' || (node.callee.object && node.callee.object.name === 'context' && node.callee.property && node.callee.property.name === 'skip');
+        const titleArg = args[0];
+        const title = titleArg && titleArg.type === 'Literal' && typeof titleArg.value === 'string' ? titleArg.value : '';
+        if (isContextCall && title.startsWith('STATE:')) {
+          return;
+        }
+
         const callback = args[args.length - 1];
         if (!callback || callback.type === 'ArrowFunctionExpression' || callback.type === 'FunctionExpression') {
           if (

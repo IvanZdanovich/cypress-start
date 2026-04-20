@@ -1,8 +1,9 @@
 module.exports = {
   rules: {
+    'enforce-spec-blank-lines': require('./enforce-spec-blank-lines.js'),
     'do-not-allow-empty-blocks': require('./do-not-allow-empty-blocks.js'),
     'prevent-duplicated-titles': require('./prevent-duplicated-titles.js'),
-    'prevent-examples-loops': require('./prevent-examples-loops.js'),
+    'prevent-test-data-loops': require('./prevent-test-data-loops.js'),
     'verify-test-title-pattern': require('./verify-test-title-pattern.js'),
     'verify-test-title-against-structure': require('./verify-test-title-against-structure.js'),
     'verify-todos-have-links': require('./verify-todos-have-links.js'),
@@ -10,7 +11,8 @@ module.exports = {
     'standardize-test-titles': require('./standardize-test-titles.js'),
     'verify-api-command-naming': require('./verify-api-command-naming.js'),
     'verify-ui-command-naming': require('./verify-ui-command-naming.js'),
-    'find-unused-selectors': require('./find-unused-selectors.js'),
     'verify-req-config': require('./verify-req-config.js'),
+    'find-unused-selectors': require('./find-unused-selectors.js'),
+    'find-unused-test-data': require('./find-unused-test-data.js'),
   },
 };

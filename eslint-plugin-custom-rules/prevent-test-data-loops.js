@@ -1,20 +1,13 @@
 /**
- * ESLint Rule: prevent-examples-loops
- *
- * Prevents the use of loops (forEach, for...of) over test data arrays within test files.
- * Enforces the use of randomization functions instead.
- *
- * Examples of incorrect code:
- * - testData.items.forEach(item => it('test', () => {}))
- * - for (const item of testData.items) { it('test', () => {}) }
- * - invalidIds.forEach(id => { context('test', () => {}) })
- *
- * Rationale:
- * - One test should validate one behavior with one randomly selected value
- * - Different test runs cover different values automatically
- * - Faster test execution (no redundant loops)
- * - Cleaner test reports (no duplicate test titles)
+ * ESLint Rule: prevent-test-data-loops
+ * // ...existing code...
  */
+
+// Patterns compiled once at module scope — reused across every file and every
+// matching AST node instead of being re-allocated inside visitor callbacks.
+const FOREACH_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
+const FOROF_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
+const FORIN_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];
 
 module.exports = {
   meta: {
@@ -36,6 +29,7 @@ module.exports = {
   create(context) {
     let describeDepth = 0;
     let testDepth = 0;
+    let hookDepth = 0; // Tracks before/after/beforeEach/afterEach - loops here are setup, not test generation
 
     return {
       // Track when we're inside describe/context/it blocks using depth counters
@@ -49,15 +43,17 @@ module.exports = {
           }
         }
 
-        // Check for .forEach() calls within test blocks
-        if ((describeDepth > 0 || testDepth > 0) && node.callee.type === 'MemberExpression' && node.callee.property.name === 'forEach') {
+        // Track hook depth - loops inside hooks are legitimate setup/teardown, not test generation
+        if (['before', 'after', 'beforeEach', 'afterEach'].includes(calleeName)) {
+          hookDepth++;
+        }
+
+        // Check for .forEach() calls within test blocks (but not inside hooks)
+        if (hookDepth === 0 && (describeDepth > 0 || testDepth > 0) && node.callee.type === 'MemberExpression' && node.callee.property.name === 'forEach') {
           // Check if it's likely iterating over test data (arrays or objects)
           const objectName = context.sourceCode.getText(node.callee.object);
 
-          // Common patterns that suggest test data iteration
-          const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
-
-          const isSuspicious = suspiciousPatterns.some((pattern) => pattern.test(objectName));
+          const isSuspicious = FOREACH_SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(objectName));
 
           if (isSuspicious) {
             context.report({
@@ -77,16 +73,17 @@ module.exports = {
             testDepth--;
           }
         }
+        if (['before', 'after', 'beforeEach', 'afterEach'].includes(calleeName)) {
+          hookDepth--;
+        }
       },
 
       // Check for for...of loops within test blocks
       ForOfStatement(node) {
-        if (describeDepth > 0 || testDepth > 0) {
+        if (hookDepth === 0 && (describeDepth > 0 || testDepth > 0)) {
           const rightSource = context.sourceCode.getText(node.right);
 
-          const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
-
-          const isSuspicious = suspiciousPatterns.some((pattern) => pattern.test(rightSource));
+          const isSuspicious = FOROF_SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(rightSource));
 
           if (isSuspicious) {
             context.report({
@@ -99,12 +96,10 @@ module.exports = {
 
       // Check for for...in loops within test blocks
       ForInStatement(node) {
-        if (describeDepth > 0 || testDepth > 0) {
+        if (hookDepth === 0 && (describeDepth > 0 || testDepth > 0)) {
           const rightSource = context.sourceCode.getText(node.right);
 
-          const suspiciousPatterns = [/testData/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];
-
-          const isSuspicious = suspiciousPatterns.some((pattern) => pattern.test(rightSource));
+          const isSuspicious = FORIN_SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(rightSource));
 
           if (isSuspicious) {
             context.report({
