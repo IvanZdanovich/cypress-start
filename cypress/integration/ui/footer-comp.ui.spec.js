@@ -1,4 +1,4 @@
-import { examples } from '../../integration-examples/ui/footer-comp.ui.examples';
+import { footerComp__examples as examples } from '../../integration-examples/ui/footer-comp.ui.examples';
 
 describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false }, () => {
   let standardUser;
@@ -13,7 +13,6 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
       cy.headerComp__resetAppState();
     });
   });
-
   after(() => {
     cy.headerComp__resetAppState();
   });
@@ -22,11 +21,9 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
     it('Footer.STANDARD: Then LinkedIn icon should have correct href attribute', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'href', examples.socialLinks.linkedin.url);
     });
-
     it('Footer.STANDARD: Then LinkedIn icon should open in new tab', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'target', '_blank');
     });
-
     it('Footer.STANDARD: Then LinkedIn icon should be visible', () => {
       cy.get(footerComp.linkedin).should('be.visible');
     });
@@ -43,11 +40,9 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
           return href === 'https://twitter.com/saucelabs' || href === examples.socialLinks.twitter.url;
         });
     });
-
     it('Footer.STANDARD: Then Twitter icon should open in new tab', () => {
       cy.get(footerComp.twitter).should('have.attr', 'target', '_blank');
     });
-
     it('Footer.STANDARD: Then Twitter icon should be visible', () => {
       cy.get(footerComp.twitter).should('be.visible');
     });
@@ -57,11 +52,9 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
     it('Footer.STANDARD: Then Facebook icon should have correct href attribute', () => {
       cy.get(footerComp.facebook).should('have.attr', 'href', examples.socialLinks.facebook.url);
     });
-
     it('Footer.STANDARD: Then Facebook icon should open in new tab', () => {
       cy.get(footerComp.facebook).should('have.attr', 'target', '_blank');
     });
-
     it('Footer.STANDARD: Then Facebook icon should be visible', () => {
       cy.get(footerComp.facebook).should('be.visible');
     });

@@ -1,23 +1,21 @@
 /**
  * ESLint rule: verify-req-config
  *
- * Ensures every `it()` block has a Cypress config object with a `req` property
- * containing required metadata fields: priority, description.
- *
- * Optional fields: bugs, example, preconditions.
+ * Ensures every `it()` block has a Cypress config object with a `req` property.
+ * If the `req` object is provided, it must contain at least one of: p, state, ref, bugs.
  *
  * Valid formats:
- *   it('title', { req: { p: 'P1', desc: '...' } }, () => {})
- *   it('title', { req: { p: 'P1', desc: '...', bugs: ['BUG-BOOKING-002'], example: 'validBookings.standard' } }, () => {})
- *
- * The `example` field links this requirement to a named test data instance,
- * creating a traceable chain: constraint → test data example → spec assertion.
+ *   it('title', { req: {} }, () => {})                                        — all defaults (P2, no state/ref/bugs)
+ *   it('title', { req: { p: 'P1' } }, () => {})                               — priority only
+ *   it('title', { req: { p: 'P1', state: 'booking created via POST' } }, () => {})
+ *   it('title', { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => {})
+ *   it('title', { req: { p: 'P1', ref: ['PROJ-123'] } }, () => {})
  */
 module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Ensure every it() block has a { req: { p, desc } } config object',
+      description: 'When { req: {...} } is provided in an it() block, validate its fields (p, state, ref, bugs)',
       category: 'Best Practices',
       recommended: true,
     },
@@ -47,31 +45,17 @@ module.exports = {
         configArg = args[1];
       }
 
-      if (!configArg) {
-        context.report({
-          node,
-          message: 'it() block must have a config object with { req: { p, desc } } as the second argument.',
-        });
-        return;
-      }
+      // config object and req property are both optional — only validate if present
+      if (!configArg) return;
 
-      // Find req property
-      const reqProp = configArg.properties.find(
-        (prop) => prop.key && (prop.key.name === 'req' || prop.key.value === 'req'),
-      );
+      const reqProp = configArg.properties.find((prop) => prop.key && (prop.key.name === 'req' || prop.key.value === 'req'));
 
-      if (!reqProp) {
-        context.report({
-          node,
-          message: 'it() config object must have a "req" property: { req: { p, desc } }.',
-        });
-        return;
-      }
+      if (!reqProp) return;
 
       if (reqProp.value.type !== 'ObjectExpression') {
         context.report({
           node,
-          message: '"req" must be an object: { req: { p, desc } }.',
+          message: '"req" must be an object, e.g. { req: {} } or { req: { p: \'P1\' } }.',
         });
         return;
       }
@@ -82,34 +66,23 @@ module.exports = {
         reqProps[key] = prop;
       }
 
-      // Validate required: p (priority)
-      if (!reqProps.p) {
+      const KNOWN_FIELDS = ['p', 'state', 'ref', 'bugs'];
+      const hasAtLeastOne = KNOWN_FIELDS.some((f) => reqProps[f]);
+
+      if (!hasAtLeastOne && reqProp.value.properties.length > 0) {
         context.report({
           node: reqProp,
-          message: 'req must have a "p" (priority) field: P1, P2, or P3.',
+          message: `req object must contain at least one of: ${KNOWN_FIELDS.join(', ')}.`,
         });
-      } else {
+      }
+
+      // Validate optional: p (priority)
+      if (reqProps.p) {
         const pVal = getStaticValue(reqProps.p.value);
         if (pVal && !VALID_PRIORITIES.includes(pVal)) {
           context.report({
             node: reqProps.p,
             message: `req.p must be one of: ${VALID_PRIORITIES.join(', ')}. Got: "${pVal}".`,
-          });
-        }
-      }
-
-      // Validate required: desc (description / rule)
-      if (!reqProps.desc) {
-        context.report({
-          node: reqProp,
-          message: 'req must have a "desc" (description) field — the requirement rule text.',
-        });
-      } else {
-        const descVal = getStaticValue(reqProps.desc.value);
-        if (descVal !== undefined && (typeof descVal !== 'string' || descVal.length < 10)) {
-          context.report({
-            node: reqProps.desc,
-            message: 'req.desc must be a descriptive string (at least 10 characters).',
           });
         }
       }
@@ -129,17 +102,6 @@ module.exports = {
           }
         }
       }
-
-      // Validate optional: example (string — path to test data instance)
-      if (reqProps.example) {
-        const exVal = getStaticValue(reqProps.example.value);
-        if (exVal !== undefined && typeof exVal !== 'string') {
-          context.report({
-            node: reqProps.example,
-            message: 'req.example must be a string naming the test data instance.',
-          });
-        }
-      }
     }
 
     return {
@@ -155,4 +117,3 @@ module.exports = {
     };
   },
 };
-

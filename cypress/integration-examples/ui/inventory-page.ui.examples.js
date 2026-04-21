@@ -1,5 +1,7 @@
-export const examples = {
-  indicesOfProducts: utils.generateArrayOfRandomIndices(3, reqs.inventoryPage.numberOfProductsOnThePage - 1),
+import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
+
+export const inventoryPage__examples = {
+  indicesOfProducts: utils.generateArrayOfRandomIndices(3, PRODUCT_COUNT.limit - 1),
   chosenProducts: [],
   cartBadgeCounts: {
     empty: 0,

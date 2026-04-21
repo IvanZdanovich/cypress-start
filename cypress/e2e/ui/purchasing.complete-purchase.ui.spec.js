@@ -1,4 +1,4 @@
-import { examples } from '../../integration-examples/ui/complete-purchase.ui.examples';
+import { completePurchase__examples as examples } from '../../e2e-examples/ui/purchasing.complete-purchase.ui.examples';
 
 describe('CompletePurchase: Given No preconditions', { testIsolation: false }, () => {
   let standardUser;
@@ -13,7 +13,6 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.headerComp__resetAppState();
     });
   });
-
   after(() => {
     cy.headerComp__resetAppState();
   });
@@ -21,32 +20,35 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
       cy.wrap(examples.indicesOfProducts).each((index) => {
-        cy.get(inventoryPage.cards).eq(index).within(() => {
-          cy.get(inventoryPage.card.title).invoke('text').then((title) => {
-            cy.get(inventoryPage.card.description).invoke('text').then((description) => {
-              cy.get(inventoryPage.card.price).invoke('text').then((priceText) => {
-                const resolvedTitle = title === examples.buggyProductData.wrongTitle
-                  ? examples.buggyProductData.correctTitle
-                  : title;
-                const resolvedDescription = description === examples.buggyProductData.wrongDescription
-                  ? undefined
-                  : description;
-                examples.chosenProducts.push({
-                  title: resolvedTitle,
-                  description: resolvedDescription,
-                  price: parseFloat(priceText.replace('$', '')),
-                });
-                cy.get(inventoryPage.card.add).click();
+        cy.get(inventoryPage.cards)
+          .eq(index)
+          .within(() => {
+            cy.get(inventoryPage.card.title)
+              .invoke('text')
+              .then((title) => {
+                cy.get(inventoryPage.card.description)
+                  .invoke('text')
+                  .then((description) => {
+                    cy.get(inventoryPage.card.price)
+                      .invoke('text')
+                      .then((priceText) => {
+                        const resolvedTitle = title === examples.buggyProductData.wrongTitle ? examples.buggyProductData.correctTitle : title;
+                        const resolvedDescription = description === examples.buggyProductData.wrongDescription ? undefined : description;
+                        examples.chosenProducts.push({
+                          title: resolvedTitle,
+                          description: resolvedDescription,
+                          price: parseFloat(priceText.replace('$', '')),
+                        });
+                        cy.get(inventoryPage.card.add).click();
+                      });
+                  });
               });
-            });
           });
-        });
       });
       cy.then(() => {
         cy.get(headerComp.openCart).click();
       });
     });
-
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
       cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
@@ -58,11 +60,9 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.checkoutPage__fillDeliveryInfo(examples.deliveryInfo);
       cy.get(checkoutPage.continue).click();
     });
-
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
       cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
-
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
       const totalPrice = examples.chosenProducts.reduce((acc, product) => acc + product.price, 0);
       const totalPriceRaw = parseFloat(totalPrice);
@@ -99,7 +99,6 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     before(() => {
       cy.get(checkoutOverviewPage.finish).click();
     });
-
     it('CompletePurchase.STANDARD: Then user should see a thank you notification and order confirmation', () => {
       cy.get(checkoutCompletePage.confirmation.title).should('have.text', l10n.checkoutCompletePage.messageTitle);
       cy.get(checkoutCompletePage.confirmation.message).should('have.text', l10n.checkoutCompletePage.message);
@@ -110,7 +109,6 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     before(() => {
       cy.get(checkoutCompletePage.backHome).click();
     });
-
     it('CompletePurchase.STANDARD: Then user should be redirected to the inventory page with product catalog and reset shopping cart', () => {
       cy.url().should('eq', urls.pages.inventory);
       cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title);

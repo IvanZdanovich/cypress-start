@@ -1,4 +1,4 @@
-export const examples = {
+export const footerComp__examples = {
   socialLinks: {
     linkedin: {
       name: 'LinkedIn',

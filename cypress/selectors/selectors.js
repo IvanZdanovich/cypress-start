@@ -67,8 +67,6 @@ const checkoutPage = {
   continue: '[data-test="continue"]',
 };
 
-const checkoutOverview = {};
-
 const checkoutCompletePage = {
   confirmation: {
     title: '[data-test="complete-header"]',

@@ -1,4 +1,4 @@
-import { examples } from '../../integration-examples/ui/login-page.ui.examples.js';
+import { loginPage__examples as examples } from '../../integration-examples/ui/login-page.ui.examples.js';
 
 describe('LoginPage: Given authenticate page opened', { testIsolation: false }, () => {
   let standardUser, lockedUser;

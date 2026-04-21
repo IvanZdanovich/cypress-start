@@ -54,43 +54,42 @@
 - **Integration UI Tests:** `PageName.ComponentName.USER_ROLE: Then 'expected result'`
 - **E2E UI Tests:** `FlowName.SubFlowName.USER_ROLE: Then 'expected result'`
 
-
 ---
 
 ### Integration UI Test Titles Example
 
 ```javascript
     describe('InventoryPage: Given No preconditions', () => {
-        context('InventoryPage.STANDARD: When user clicks Remove on all the added cards', () => {
-            it('InventoryPage.STANDARD: Then the Cart button badge is not existed', () => {
-                // Test code here
-            });
+    context('InventoryPage.STANDARD: When user clicks Remove on all the added cards', () => {
+        it('InventoryPage.STANDARD: Then the Cart button badge is not existed', () => {
+            // Test code here
         });
     });
+});
 ```
 
 ### Integration API Test Titles Example
 
 ```javascript
     describe('RestfulBooker.Booking: Given No preconditions', () => {
-        context('RestfulBooker.Booking.Create.POST: When valid request is sent', () => {
-            it('RestfulBooker.Booking.Create.POST: Then return 201 status code and booking is created', () => {
-                // Test code here
-            });
+    context('RestfulBooker.Booking.Create.POST: When valid request is sent', () => {
+        it('RestfulBooker.Booking.Create.POST: Then return 201 status code and booking is created', () => {
+            // Test code here
         });
     });
+});
 ```
 
 ### E2E UI Test Titles Example
 
 ```javascript
     describe('CompletePurchase: Given No preconditions', () => {
-        context('CompletePurchase.STANDARD: When user proceeds to checkout and completes the delivery information form', () => {
-            it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
-                // Test code here
-            });
+    context('CompletePurchase.STANDARD: When user proceeds to checkout and completes the delivery information form', () => {
+        it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
+            // Test code here
         });
     });
+});
 ```
 
 ### Relationship with ESLint Rules
@@ -147,12 +146,48 @@ Refer to the [ESLint Guide](./eslint-custom-rules.md) for more information on th
 
 ## Example files Naming Convention
 
-- Store named examples in javascript files in `cypress/integration-examples/api`, `cypress/integration-examples/ui`, `cypress/e2e-examples/ui`.
+- Store named examples in javascript files in `cypress/integration-examples/api`, `cypress/integration-examples/ui`,
+  `cypress/e2e-examples/ui`.
 - Examples files should be named according to the spec files they support.
-- Use camelCase for naming files.
+- Use kebab-case for file names.
 - Use a hierarchical structure organized by module and submodule.
-- **Pattern:** `module-name.submodule-name.api.examples.js`, `page-name.component-name.ui.examples.js`, `business-domain.flow-name.ui.examples.js`
-- **Example:** `restful-booker.booking.api.examples.js`, `checkout-page.ui.examples.js`, `purchasing.complete-purchase.ui.examples.js`
+- **Pattern:** `module-name.submodule-name.api.examples.js`, `page-name.component-name.ui.examples.js`,
+  `business-domain.flow-name.ui.examples.js`
+- **Example:** `restful-booker.booking.api.examples.js`, `checkout-page.ui.examples.js`,
+  `purchasing.complete-purchase.ui.examples.js`
+
+---
+
+## Example Object Naming Convention
+
+### Export name
+
+The exported examples object must use a **unique, context-scoped name** that reflects the page or component it belongs
+to.
+
+- **Pattern:** `{pageName}__{examples}` or `{componentName}__{examples}` using camelCase prefix and `__examples` suffix
+- **Examples:**
+
+| File                                          | Exported name                |
+|-----------------------------------------------|------------------------------|
+| `login-page.ui.examples.js`                   | `loginPage__examples`        |
+| `inventory-page.ui.examples.js`               | `inventoryPage__examples`    |
+| `cart-page.ui.examples.js`                    | `cartPage__examples`         |
+| `header-comp.ui.examples.js`                  | `headerComp__examples`       |
+| `footer-comp.ui.examples.js`                  | `footerComp__examples`       |
+| `purchasing.complete-purchase.ui.examples.js` | `completePurchase__examples` |
+
+❌ **Never** export as the generic `examples` — it collides when multiple files are imported in the same scope.
+
+### Import alias in spec files
+
+In spec files, always import with `as examples` to keep test code uniform and readable:
+
+```javascript
+import {cartPage__examples as examples} from '../../integration-examples/ui/cart-page.ui.examples';
+```
+
+This gives the spec a local `examples` alias while the export name stays unique and traceable.
 
 ---
 
@@ -166,20 +201,21 @@ Instance names describe the **boundary condition or purpose**, not the values. F
 {entity}__{field}__{BoundaryCondition}
 ```
 
-The double underscore (`__`) acts as a namespace separator between the three segments — consistent with the `__` convention used in Cypress command names (`entity__operation__METHOD`).
+The double underscore (`__`) acts as a namespace separator between the three segments — consistent with the `__`
+convention used in Cypress command names (`entity__operation__METHOD`).
 
-| Suffix             | Meaning                                      |
-|--------------------|----------------------------------------------|
-| `AtMaxLength`      | Valid — exactly at the upper character limit |
-| `OverMaxLength`    | Invalid — one step over the upper limit      |
-| `AtMinLength`      | Valid — exactly at the lower character limit |
-| `UnderMinLength`   | Invalid — one step under the lower limit     |
-| `MinimalPrice`     | Boundary minimum value for a numeric field   |
-| `MaximalPrice`     | Boundary maximum value for a numeric field   |
-| `Missing`          | Required field intentionally absent          |
-| `Duplicate`        | Conflicts with an existing record            |
-| `ForbiddenChar`    | Contains a disallowed character              |
-| `SameDayCheckout`  | Edge-case date scenario (same-day)           |
+| Suffix            | Meaning                                      |
+|-------------------|----------------------------------------------|
+| `AtMaxLength`     | Valid — exactly at the upper character limit |
+| `OverMaxLength`   | Invalid — one step over the upper limit      |
+| `AtMinLength`     | Valid — exactly at the lower character limit |
+| `UnderMinLength`  | Invalid — one step under the lower limit     |
+| `MinimalPrice`    | Boundary minimum value for a numeric field   |
+| `MaximalPrice`    | Boundary maximum value for a numeric field   |
+| `Missing`         | Required field intentionally absent          |
+| `Duplicate`       | Conflicts with an existing record            |
+| `ForbiddenChar`   | Contains a disallowed character              |
+| `SameDayCheckout` | Edge-case date scenario (same-day)           |
 
 **❌ Avoid:** `item1`, `data1`, `test1`, `validBooking1`, `booking2`
 
@@ -196,9 +232,9 @@ The double underscore (`__`) acts as a namespace separator between the three seg
 
 ```javascript
 // cypress/integration-examples/api/rb.booking.api.examples.js
-import { PRICE, FIRSTNAME, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+import {PRICE, FIRSTNAME, REQUIRED_FIELDS} from '../../constants/api/rb.booking.api.constraints';
 
-export const booking_examples = {
+export const booking__examples = {
     namePrefix: 'API.Booking',
 
     validBookings: {
@@ -280,7 +316,7 @@ Each named instance maps 1-to-1 to a boundary condition tested in a `context` bl
 
 ```
 PRICE.MIN = 1                                     ← constraint
-  → booking_examples.validBookings.minimalPrice   ← named instance
+  → booking__examples.validBookings.minimalPrice   ← named instance
     → context: "When booking with price of 1..."  ← spec context (uses ${PRICE.MIN})
       → expect(totalprice).to.eq(PRICE.MIN)       ← assertion
 ```

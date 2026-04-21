@@ -30,7 +30,6 @@ import colours from '../colours/default-theme-colours.json';
 import selectors from '../selectors/selectors';
 import urls from '../urls/urls';
 import utils from './utils';
-import errors from '../constants/api/error-messages.json';
 import userRoles from '../constants/user-roles';
 
 // Make resources globally available
@@ -38,7 +37,6 @@ global.l10n = l10n;
 global.colours = colours;
 global.urls = urls;
 global.utils = utils;
-global.errors = errors;
 global.userRoles = userRoles.userRoles;
 
 // Separate selectors by pages

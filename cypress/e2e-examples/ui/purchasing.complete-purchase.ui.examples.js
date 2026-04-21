@@ -1,5 +1,7 @@
-export const examples = {
-  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, reqs.inventoryPage.numberOfProductsOnThePage), reqs.inventoryPage.numberOfProductsOnThePage - 1),
+import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
+
+export const completePurchase__examples = {
+  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, PRODUCT_COUNT.limit), PRODUCT_COUNT.limit - 1),
   chosenProducts: [],
   deliveryInfo: {
     firstName: utils.generateRandomString(utils.getRandomNumber(5, 15)),

@@ -5,6 +5,9 @@
  *
  *   Import in specs and test data:
  *     import { PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+ *
+ *   For HTTP status codes and error messages, import directly from common:
+ *     import { HTTP_STATUS, ERROR_MESSAGE } from '../../constants/api/common.api.constraints';
  */
 
 /** Price constraints for totalprice validation. */
@@ -24,12 +27,4 @@ export const DATE_FORMAT = 'YYYY-MM-DD';
  * Fields required for a valid booking payload.
  * Used by missing-field, invalid-type, and empty-string tests.
  */
-export const REQUIRED_FIELDS = [
-  'firstname',
-  'lastname',
-  'totalPrice',
-  'depositPaid',
-  'bookingDates.checkin',
-  'bookingDates.checkout',
-];
-
+export const REQUIRED_FIELDS = ['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout'];

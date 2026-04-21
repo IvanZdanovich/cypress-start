@@ -49,7 +49,7 @@ metadata, coverage is computed directly from the test suite.
 executable. A passing test suite is proof that the stated requirements hold. A failing test is an
 immediately actionable signal, not a documentation discrepancy to investigate.
 
-**Lightweight and sustainable.** No extra file type to learn. No synchronisation rituals. No tooling
+**Lightweight and sustainable.** No extra file type to learn. No synchronization rituals. No tooling
 beyond the ESLint rules already enforcing naming and structure. The entire approach fits inside the
 existing Cypress + JavaScript stack.
 
@@ -72,6 +72,7 @@ cypress/constants/
 ```
 
 **Rules:**
+
 - Imported directly in BOTH spec files and examples files — never hardcoded
 - Represent domain boundaries (min/max values, formats, field lists)
 - Plain ES module named exports — no global injection
@@ -80,8 +81,8 @@ cypress/constants/
 
 ```javascript
 // cypress/constants/api/rb.booking.api.constraints.js
-export const PRICE = { MIN: 1, MAX: 100_000, ZERO: 0 };
-export const FIRSTNAME = { MIN_LENGTH: 1, MAX_LENGTH: 50 };
+export const PRICE = {MIN: 1, MAX: 100_000, ZERO: 0};
+export const FIRSTNAME = {MIN_LENGTH: 1, MAX_LENGTH: 50};
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const REQUIRED_FIELDS = [
     'firstname', 'lastname', 'totalprice', 'depositpaid',
@@ -119,18 +120,18 @@ Instance names describe the **boundary condition or purpose**, not the values:
 The double underscore (`__`) separates the three segments — consistent with the `__` convention used in
 Cypress command names (`entity__operation__METHOD`).
 
-| Suffix             | Meaning                                      |
-|--------------------|----------------------------------------------|
-| `AtMaxLength`      | Valid — exactly at the upper character limit |
-| `OverMaxLength`    | Invalid — one step over the upper limit      |
-| `AtMinLength`      | Valid — exactly at the lower character limit |
-| `UnderMinLength`   | Invalid — one step under the lower limit     |
-| `MinimalPrice`     | Boundary minimum value for a numeric field   |
-| `MaximalPrice`     | Boundary maximum value for a numeric field   |
-| `Missing`          | Required field intentionally absent          |
-| `Duplicate`        | Conflicts with an existing record            |
-| `ForbiddenChar`    | Contains a disallowed character              |
-| `SameDayCheckout`  | Edge-case date scenario                      |
+| Suffix            | Meaning                                      |
+|-------------------|----------------------------------------------|
+| `AtMaxLength`     | Valid — exactly at the upper character limit |
+| `OverMaxLength`   | Invalid — one step over the upper limit      |
+| `AtMinLength`     | Valid — exactly at the lower character limit |
+| `UnderMinLength`  | Invalid — one step under the lower limit     |
+| `MinimalPrice`    | Boundary minimum value for a numeric field   |
+| `MaximalPrice`    | Boundary maximum value for a numeric field   |
+| `Missing`         | Required field intentionally absent          |
+| `Duplicate`       | Conflicts with an existing record            |
+| `ForbiddenChar`   | Contains a disallowed character              |
+| `SameDayCheckout` | Edge-case date scenario                      |
 
 **❌ Avoid:** `item1`, `data1`, `test1`, `validBooking1`, `booking2`
 
@@ -147,7 +148,7 @@ Cypress command names (`entity__operation__METHOD`).
 
 ```javascript
 // cypress/integration-examples/api/rb.booking.api.examples.js
-import { PRICE, FIRSTNAME, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+import {PRICE, FIRSTNAME, REQUIRED_FIELDS} from '../../constants/api/rb.booking.api.constraints';
 
 export const booking_examples = {
     namePrefix: 'API.Booking',
@@ -250,21 +251,26 @@ Constraint values belong in titles — never hardcoded:
 
 ### `req` Config Object
 
-Every `it()` takes `{ req: {...} }` as its second argument — even if empty `{}`.
+Every `it()` can take `{ req: {...} }` as its second argument.
 
-| Field   | Type                    | Required      | Default | Description                                                            |
-|---------|-------------------------|---------------|---------|------------------------------------------------------------------------|
+| Field   | Type                   | Required      | Default | Description                                                            |
+|---------|------------------------|---------------|---------|------------------------------------------------------------------------|
 | `p`     | `'P1' \| 'P2' \| 'P3'` | optional      | `'P2'`  | Priority. Omit when P2.                                                |
-| `state` | `string`                | if applicable | —       | Accumulated prior state for stateful sequences.                        |
-| `ref`   | `string[]`              | if applicable | —       | External story / AC IDs: `['PROJ-123']`.                               |
-| `bugs`  | `string[]`              | if applicable | —       | Defect IDs: `['BUG-BOOKING-002']`. Mirrored in `bug-log/bug-log.json`.|
+| `state` | `string`               | if applicable | —       | Accumulated prior state for stateful sequences.                        |
+| `ref`   | `string[]`             | if applicable | —       | External story / AC IDs: `['PROJ-123']`.                               |
+| `bugs`  | `string[]`             | if applicable | —       | Defect IDs: `['BUG-BOOKING-002']`. Mirrored in `bug-log/bug-log.json`. |
 
 ```javascript
-it('...Then return 200 and booking is created',  { req: {} }, () => { ... });                                            // P2 default
-it('...Then return 200 and booking is created',  { req: { p: 'P1' } }, () => { ... });                                  // P1
-it('...Then return 200 and all fields updated',  { req: { p: 'P1', state: 'booking created via POST' } }, () => { ... }); // stateful
-it('...Then return 500 Internal Server Error',   { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => { ... });       // bug ref
-it('...Then return 200 and booking is created',  { req: { p: 'P1', ref: ['PROJ-123'] } }, () => { ... });               // story ref
+it('...Then return 200 and booking is created', {req: {}}, () => { ...
+});                                            // P2 default
+it('...Then return 200 and booking is created', {req: {p: 'P1'}}, () => { ...
+});                                  // P1
+it('...Then return 200 and all fields updated', {req: {p: 'P1', state: 'booking created via POST'}}, () => { ...
+}); // stateful
+it('...Then return 500 Internal Server Error', {req: {p: 'P1', bugs: ['BUG-BOOKING-002']}}, () => { ...
+});       // bug ref
+it('...Then return 200 and booking is created', {req: {p: 'P1', ref: ['PROJ-123']}}, () => { ...
+});               // story ref
 ```
 
 ### Context Block Rules
@@ -273,16 +279,20 @@ it('...Then return 200 and booking is created',  { req: { p: 'P1', ref: ['PROJ-1
 
 ```javascript
 context('RestfulBooker.Booking.Create.POST: When valid booking data with all fields is provided', () => {
-    it('...Then return 200 status code and bookingid is a number', { req: { p: 'P1' } }, () => { ... });
-    it('...Then booking body contains all submitted field values', { req: { p: 'P1' } }, () => { ... });
+    it('...Then return 200 status code and bookingid is a number', {req: {p: 'P1'}}, () => { ...
+    });
+    it('...Then booking body contains all submitted field values', {req: {p: 'P1'}}, () => { ...
+    });
 });
 ```
 
 **Separate requests needed** → SEPARATE contexts with a SPECIFIC "When" condition:
 
 ```javascript
-context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => { ... });
-context('RestfulBooker.Booking.Create.POST: When booking with same-day checkout is provided', () => { ... });
+context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => { ...
+});
+context('RestfulBooker.Booking.Create.POST: When booking with same-day checkout is provided', () => { ...
+});
 ```
 
 ### Cleanup Pattern (mandatory)
@@ -293,9 +303,13 @@ Delete by name prefix — never by ID alone (IDs are lost between runs).
 ```javascript
 const cleanUp = () => cy.restfullBooker__bulkDelete__DELETE(authToken, testData);
 
-describe('...', { testIsolation: false }, () => {
-    before(() => { cleanUp(); /* setup... */ });
-    after(() => { cleanUp(); });
+describe('...', {testIsolation: false}, () => {
+    before(() => {
+        cleanUp(); /* setup... */
+    });
+    after(() => {
+        cleanUp();
+    });
 });
 ```
 
@@ -303,18 +317,22 @@ describe('...', { testIsolation: false }, () => {
 
 ```javascript
 // cypress/integration/api/rb.booking.api.spec.js
-import { booking_examples as testData } from '../../integration-examples/api/rb.booking.api.examples';
-import { PRICE, FIRSTNAME } from '../../constants/api/rb.booking.api.constraints';
+import {booking_examples as testData} from '../../integration-examples/api/rb.booking.api.examples';
+import {PRICE, FIRSTNAME} from '../../constants/api/rb.booking.api.constraints';
 
 let authToken;
 const cleanUp = () => cy.restfullBooker__bulkDelete__DELETE(authToken, testData);
 
-describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false }, () => {
+describe('RestfulBooker.Booking: Given no preconditions', {testIsolation: false}, () => {
     before(() => {
-        cy.commonAPI__getTokenByRole__POST(userRoles.ADMIN_API).then((token) => { authToken = token; });
+        cy.commonAPI__getTokenByRole__POST(userRoles.ADMIN_API).then((token) => {
+            authToken = token;
+        });
         cleanUp();
     });
-    after(() => { cleanUp(); });
+    after(() => {
+        cleanUp();
+    });
 
     context('RestfulBooker.Booking.Create.POST: When valid booking data with all fields is provided', () => {
         before(() => {
@@ -324,15 +342,17 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
         });
 
         it('RestfulBooker.Booking.Create.POST: Then return 200 status code and bookingid is a number',
-            { req: { p: 'P1' } },
-            () => { expect(typeof testData.validBookings.standard.bookingId).to.eq('number'); },
+            {req: {p: 'P1'}},
+            () => {
+                expect(typeof testData.validBookings.standard.bookingId).to.eq('number');
+            },
         );
     });
 
     context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
         it(
             `RestfulBooker.Booking.Create.POST: Then return 200 status code and totalprice equals ${PRICE.MIN}`,
-            { req: { p: 'P2' } },
+            {req: {p: 'P2'}},
             () => {
                 cy.restfullBooker__createBooking__POST(testData.validBookings.minimalPrice).then((res) => {
                     expect(res.status).to.eq(200);
@@ -345,12 +365,14 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
     context(`RestfulBooker.Booking.Create.POST: When firstname exceeds ${FIRSTNAME.MAX_LENGTH} characters`, () => {
         it(
             `RestfulBooker.Booking.Create.POST: Then return 400 status code`,
-            { req: { p: 'P1' } },
+            {req: {p: 'P1'}},
             () => {
                 cy.restfullBooker__createBooking__POST(
                     testData.invalidBookings.firstname__OverMaxLength,
-                    { failOnStatusCode: false },
-                ).then((res) => { expect(res.status).to.eq(400); });
+                    {failOnStatusCode: false},
+                ).then((res) => {
+                    expect(res.status).to.eq(400);
+                });
             },
         );
     });
@@ -358,12 +380,12 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
     context('RestfulBooker.Booking.Create.POST: When a required field is missing', () => {
         it(
             'RestfulBooker.Booking.Create.POST: Then return 500 status code and Internal Server Error',
-            { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } },
+            {req: {p: 'P1', bugs: ['BUG-BOOKING-002']}},
             () => {
-                const { baseBooking, requiredFields } = testData.invalidBookings.missingRequired;
+                const {baseBooking, requiredFields} = testData.invalidBookings.missingRequired;
                 const payload = utils.cloneObject(baseBooking);
                 delete payload[utils.getRandomElement(requiredFields)];
-                cy.restfullBooker__createBooking__POST(payload, { failOnStatusCode: false }).then((res) => {
+                cy.restfullBooker__createBooking__POST(payload, {failOnStatusCode: false}).then((res) => {
                     expect(res.status).to.eq(500);
                 });
             },
@@ -372,10 +394,12 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
 
     context('RestfulBooker.Booking.Delete.DELETE: When a valid booking ID is deleted with authentication', () => {
         it('RestfulBooker.Booking.Delete.DELETE: Then return 201 status code and booking no longer exists',
-            { req: { p: 'P1', state: 'booking created via POST' } },
+            {req: {p: 'P1', state: 'booking created via POST'}},
             () => {
                 cy.restfullBooker__deleteBooking__DELETE(authToken, testData.validBookings.standard.bookingId)
-                    .then((res) => { expect(res.status).to.eq(201); });
+                    .then((res) => {
+                        expect(res.status).to.eq(201);
+                    });
             },
         );
     });
@@ -408,15 +432,15 @@ missingRequired instance             →    context: "When a required field is m
 
 ## ESLint Enforcement
 
-| Rule | What it validates |
-|------|-------------------|
-| `verify-req-config` | Every `it()` has `{ req: {...} }` as second argument; `p` is P1/P2/P3; `bugs` follows `BUG-MODULE-NNN` format |
-| `verify-test-title-pattern` | Titles follow Given/When/Then pattern |
-| `standardize-test-titles` | Title formatting and casing |
-| `verify-test-title-without-forbidden-symbols` | No disallowed characters in titles |
-| `prevent-test-data-loops` | No `forEach`/`for...of` over test data in specs |
-| `do-not-allow-empty-blocks` | No empty `context`/`it` blocks without `.skip()` |
-| `prevent-duplicated-titles` | No duplicate `it` titles within a file |
+| Rule                                          | What it validates                                                                                             |
+|-----------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `verify-req-config`                           | Every `it()` has `{ req: {...} }` as second argument; `p` is P1/P2/P3; `bugs` follows `BUG-MODULE-NNN` format |
+| `verify-test-title-pattern`                   | Titles follow Given/When/Then pattern                                                                         |
+| `standardize-test-titles`                     | Title formatting and casing                                                                                   |
+| `verify-test-title-without-forbidden-symbols` | No disallowed characters in titles                                                                            |
+| `prevent-test-data-loops`                     | No `forEach`/`for...of` over test data in specs                                                               |
+| `do-not-allow-empty-blocks`                   | No empty `context`/`it` blocks without `.skip()`                                                              |
+| `prevent-duplicated-titles`                   | No duplicate `it` titles within a file                                                                        |
 
 ---
 
@@ -449,8 +473,9 @@ Reference it in `req.bugs` — no inline comment needed.
 ```javascript
 // ✅ reference in req config only
 it('...Then return 500 status code and Internal Server Error',
-    { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } },
-    () => { ... },
+    {req: {p: 'P1', bugs: ['BUG-BOOKING-002']}},
+    () => { ...
+    },
 );
 ```
 
@@ -460,20 +485,20 @@ See `docs/bug-tracking.md` for the full bug log schema and severity guidelines.
 
 ## Rules Reference
 
-| #  | Rule                                                                                                        |
-|----|-------------------------------------------------------------------------------------------------------------|
-| 1  | The spec IS the requirement — title = Given/When/Then; `req` config = metadata only                         |
-| 2  | Every `it()` has `{ req: {...} }` as second argument (even `{}` when all defaults apply)                    |
-| 3  | Constraint values come from constraint files — **never hardcoded** in specs or examples                     |
-| 4  | Context and `it` titles include constraint values: `` `...the ${USERNAME.MAX_LENGTH}-character limit` ``    |
-| 5  | Every example instance has a `// Boundary:` annotation explaining the scenario                              |
-| 6  | IDs assigned immediately after creation: `testData.instance.bookingId = res.body.bookingid`                 |
-| 7  | Cleanup runs in both `before` AND `after` — deletes by name prefix, never by ID alone                       |
-| 8  | Bug IDs go in `req.bugs: ['BUG-…']` only — no inline `// Bug:` comments                                    |
-| 9  | `req.state` documents accumulated prior state in stateful sequences                                         |
-| 10 | One `describe` per spec file, `{ testIsolation: false }`                                                    |
-| 11 | Single assertion per `it` (related assertions within one response are acceptable)                           |
-| 12 | All globals available in tests: `l10n`, `colours`, `utils`, `urls`, `userRoles`, selectors                  |
+| #  | Rule                                                                                                     |
+|----|----------------------------------------------------------------------------------------------------------|
+| 1  | The spec IS the requirement — title = Given/When/Then; `req` config = metadata only                      |
+| 2  | Every `it()` has `{ req: {...} }` as second argument (even `{}` when all defaults apply)                 |
+| 3  | Constraint values come from constraint files — **never hardcoded** in specs or examples                  |
+| 4  | Context and `it` titles include constraint values: `` `...the ${USERNAME.MAX_LENGTH}-character limit` `` |
+| 5  | Every example instance has a `// Boundary:` annotation explaining the scenario                           |
+| 6  | IDs assigned immediately after creation: `testData.instance.bookingId = res.body.bookingid`              |
+| 7  | Cleanup runs in both `before` AND `after` — deletes by name prefix, never by ID alone                    |
+| 8  | Bug IDs go in `req.bugs: ['BUG-…']` only — no inline `// Bug:` comments                                  |
+| 9  | `req.state` documents accumulated prior state in stateful sequences                                      |
+| 10 | One `describe` per spec file, `{ testIsolation: false }`                                                 |
+| 11 | Single assertion per `it` (related assertions within one response are acceptable)                        |
+| 12 | All globals available in tests: `l10n`, `colours`, `utils`, `urls`, `userRoles`, selectors               |
 
 ---
 
@@ -483,24 +508,28 @@ See `docs/bug-tracking.md` for the full bug log schema and severity guidelines.
 
 ```javascript
 // BEFORE (no config):
-it('RestfulBooker.Booking.Create.POST: Then return 500 status code and Internal Server Error', () => { ... });
+it('RestfulBooker.Booking.Create.POST: Then return 500 status code and Internal Server Error', () => { ...
+});
 
 // AFTER — P1 + bug reference:
 it('RestfulBooker.Booking.Create.POST: Then return 500 status code and Internal Server Error',
-    { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } },
-    () => { ... },
+    {req: {p: 'P1', bugs: ['BUG-BOOKING-002']}},
+    () => { ...
+    },
 );
 
 // AFTER — P2 default:
 it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created',
-    { req: {} },
-    () => { ... },
+    {req: {}},
+    () => { ...
+    },
 );
 
 // AFTER — stateful sequence:
 it('RestfulBooker.Booking.Update.PUT: Then return 200 status code and all fields are updated',
-    { req: { p: 'P1', state: 'booking created via POST' } },
-    () => { ... },
+    {req: {p: 'P1', state: 'booking created via POST'}},
+    () => { ...
+    },
 );
 ```
 

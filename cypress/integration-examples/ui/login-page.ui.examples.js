@@ -1,4 +1,4 @@
-export const examples = {
+export const loginPage__examples = {
   field: {
     emptyValue: '',
     passwordType: 'password',

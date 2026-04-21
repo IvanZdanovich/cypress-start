@@ -80,7 +80,7 @@ under test, not merely on test outcomes.
 
 When AI logs a bug, it automatically:
 
-- Adds bug reference comment: `// Bug Reference: BUG-MODULE-001 - Description`
+- Adds bug reference to req object: `{req: { bugs :['BUG-[MODULE]-XXX']}}`
 - Updates assertions to validate **actual** behavior
 - Ensures tests pass with current behavior
 - Documents expected behavior in comments

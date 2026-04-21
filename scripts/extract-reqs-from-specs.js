@@ -27,11 +27,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SPEC_DIRS = [
-  path.join(ROOT, 'cypress/integration/api'),
-  path.join(ROOT, 'cypress/integration/ui'),
-  path.join(ROOT, 'cypress/e2e/ui'),
-];
+const SPEC_DIRS = [path.join(ROOT, 'cypress/integration/api'), path.join(ROOT, 'cypress/integration/ui'), path.join(ROOT, 'cypress/e2e/ui')];
 
 // ─── CLI args ─────────────────────────────────────────────────────────────────
 
@@ -358,4 +354,3 @@ function main() {
 }
 
 main();
-

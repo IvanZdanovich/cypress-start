@@ -1,6 +1,8 @@
-const indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage + 1), reqs.inventoryPage.numberOfProductsOnThePage - 1);
+import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
 
-export const examples = {
+const indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, PRODUCT_COUNT.limit + 1), PRODUCT_COUNT.limit - 1);
+
+export const cartPage__examples = {
   indicesOfProducts: indicesOfProducts,
   randomIndex: utils.getRandomNumber(0, indicesOfProducts.length),
   chosenProducts: [],

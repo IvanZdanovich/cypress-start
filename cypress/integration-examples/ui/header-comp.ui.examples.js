@@ -1,9 +1,11 @@
+import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
+
 const getRandomProductIndices = () => {
-  const numberOfProducts = utils.getRandomNumber(1, reqs.inventoryPage.numberOfProductsOnThePage);
-  return utils.generateArrayOfRandomIndices(numberOfProducts, reqs.inventoryPage.numberOfProductsOnThePage - 1);
+  const numberOfProducts = utils.getRandomNumber(1, PRODUCT_COUNT.limit);
+  return utils.generateArrayOfRandomIndices(numberOfProducts, PRODUCT_COUNT.limit - 1);
 };
 
-export const examples = {
+export const headerComp__examples = {
   randomProductIndices: getRandomProductIndices(),
   sidebarAnimationThreshold: 30,
 };
