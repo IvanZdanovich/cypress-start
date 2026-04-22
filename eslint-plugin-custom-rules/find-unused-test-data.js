@@ -95,12 +95,27 @@ function buildFileIndex(filePath) {
   // Matches: import { originalName as alias } from '...'
   //      or: import { originalName } from '...'
   const aliases = new Map();
-  const importRegex = /import\s+\{\s*(\w+)(?:\s+as\s+(\w+))?\s*}/g;
+  // Match every `originalName as aliasName` pair anywhere in the file
+  // (covers multi-import statements like `import { a as x, b as y } from '...'`)
+  const importAliasRegex = /\b(\w+)\s+as\s+(\w+)\b/g;
+  // Also match plain named imports (no alias) inside import braces
+  const importBlockRegex = /import\s*\{([^}]+)\}/g;
   let match;
-  while ((match = importRegex.exec(content)) !== null) {
-    const originalName = match[1];
-    const aliasName = match[2] || originalName;
-    aliases.set(originalName, aliasName);
+  while ((match = importAliasRegex.exec(content)) !== null) {
+    aliases.set(match[1], match[2]);
+  }
+  while ((match = importBlockRegex.exec(content)) !== null) {
+    const block = match[1];
+    const items = block.split(',');
+    for (const item of items) {
+      const parts = item.trim().split(/\s+as\s+/);
+      if (parts.length === 1) {
+        const name = parts[0].trim();
+        if (name && !aliases.has(name)) {
+          aliases.set(name, name);
+        }
+      }
+    }
   }
 
   // --- Dotted-path reference extraction ---
