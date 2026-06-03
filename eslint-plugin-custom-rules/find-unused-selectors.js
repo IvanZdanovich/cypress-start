@@ -136,7 +136,7 @@ function extractSelectorKeys(sourceCode) {
 
       // Extract property keys (key: value or key: {)
       // Also match functions: key: (args) => ...
-      const keyMatch = trimmedLine.match(/^(\w+):\s*(?:[\['"{\w]|\.|\()/);
+      const keyMatch = trimmedLine.match(/^(\w+):\s*(?:[['"{\w]|\.|\()/);
       if (keyMatch && !trimmedLine.startsWith('//')) {
         const key = keyMatch[1];
         const fullPath = [...objectStack, key].join('.');

@@ -1,3 +1,8 @@
+// Compiled once at module scope — reused across every file and every call.
+const VALID_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+const RESOURCE_PATTERN = /^[a-z]\w*$/;
+const ACTION_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -22,42 +27,33 @@ module.exports = {
       return {};
     }
 
-    // Valid HTTP methods
-    const validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-
     // Pattern: endpointName__actionDescription__METHOD
     // - resourceName: camelCase (may include underscores for nested resources like setting_auditRound)
     // - actionDescription: camelCase
     // - METHOD: uppercase HTTP method
 
     function validateApiCommandName(commandName) {
-      // Check for double underscores
       if (!commandName.includes('__')) {
         return 'missingDoubleUnderscore';
       }
 
-      // Split by double underscores
       const parts = commandName.split('__');
 
-      // Must have exactly 3 parts: resource, action, method
       if (parts.length !== 3) {
         return 'invalidApiCommandName';
       }
 
       const [resource, action, method] = parts;
 
-      // Validate HTTP method
-      if (!validMethods.includes(method)) {
+      if (!VALID_METHODS.has(method)) {
         return 'invalidHttpMethod';
       }
 
-      // Validate resource name (must start with lowercase letter, can contain letters, numbers, underscores)
-      if (!/^[a-z]\w*$/.test(resource)) {
+      if (!RESOURCE_PATTERN.test(resource)) {
         return 'invalidCasing';
       }
 
-      // Validate action name (must start with lowercase letter, can contain letters and numbers)
-      if (!/^[a-z][a-zA-Z0-9]*$/.test(action)) {
+      if (!ACTION_PATTERN.test(action)) {
         return 'invalidCasing';
       }
 

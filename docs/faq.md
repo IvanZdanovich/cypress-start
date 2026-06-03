@@ -120,7 +120,7 @@ export const dashboardPage = {
     title: 'h1'
 };
 
-// urls.js
+// api-urls.js
 export const urls = {
     login: '/login',
 };

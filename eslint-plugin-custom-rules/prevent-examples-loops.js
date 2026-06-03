@@ -1,13 +1,13 @@
 /**
- * ESLint Rule: prevent-test-data-loops
+ * ESLint Rule: prevent-integration-examples-loops
  * // ...existing code...
  */
 
 // Patterns compiled once at module scope — reused across every file and every
 // matching AST node instead of being re-allocated inside visitor callbacks.
-const FOREACH_SUSPICIOUS_PATTERNS = [/testData/i, /examples/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
-const FOROF_SUSPICIOUS_PATTERNS = [/testData/i, /examples/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
-const FORIN_SUSPICIOUS_PATTERNS = [/testData/i, /examples/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];
+const FOREACH_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
+const FOROF_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /Array/, /items/i, /values/i, /data/i];
+const FORIN_SUSPICIOUS_PATTERNS = [/testData/i, /invalid/i, /valid/i, /items/i, /values/i, /data/i];
 
 module.exports = {
   meta: {

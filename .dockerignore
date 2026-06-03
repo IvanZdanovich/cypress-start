@@ -4,6 +4,9 @@ node_modules
 # Ignore .github directory
 .github
 
+# Ignore claude directory
+.claude
+
 # Ignore npm debug log
 npm-debug.log
 

@@ -91,7 +91,7 @@ module.exports = {
   },
 
   create(context) {
-    const filename = context.filename || (context.getFilename && context.getFilename()) || '';
+    const filename = context.filename || context.getFilename?.() || '';
     if (!filename.endsWith('.spec.js')) return {};
 
     const sourceCode = context.sourceCode || context.getSourceCode();

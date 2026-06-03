@@ -1,3 +1,7 @@
+// Compiled once at module scope — reused across every file linted.
+const keywordsPattern = /\b(?:TODO|todo|ToDo|FIXME|fixme|FixMe)\b/;
+const bugTrackingLinkPattern = /https?:\/\/[\w.-]+\/browse\/[A-Z0-9]+-\d+/;
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -9,9 +13,6 @@ module.exports = {
     schema: [],
   },
   create(context) {
-    const keywordsPattern = /\b(?:TODO|todo|ToDo|FIXME|fixme|FixMe)\b/;
-    const bugTrackingLinkPattern = /https?:\/\/[\w.-]+\/browse\/[A-Z0-9]+-\d+/;
-
     return {
       Program() {
         const sourceCode = context.sourceCode;

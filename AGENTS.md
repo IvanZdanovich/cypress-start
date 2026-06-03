@@ -1,15 +1,33 @@
 # AI Agent Guide for Cypress Test Framework
 
-## Project Architecture
+# Manifest
 
-**Core Philosophy:** No abstractions (no Page Object Models or BDD frameworks). Tests are self-descriptive using Gherkin-style syntax with strict naming conventions enforced by custom ESLint rules.
+SCOPE: every contribution honours these values; trade-offs resolve in listed priority order
 
-**Three Test Types:**
-- **Integration API** (`cypress/integration/api/*.api.spec.js`) - Module/submodule API endpoints
-- **Integration UI** (`cypress/integration/ui/*.ui.spec.js`) - Page/component behaviors
-- **E2E UI** (`cypress/e2e/ui/*.ui.spec.js`) - Complete user workflows
+COMPUTING_TIME_EFFICIENCY: functions and scripts run fast; avoid redundant work, prefer API setup over UI setup, reuse instances within file lifecycle, batch network calls, no needless loops
+READABILITY: scenarios, titles, and example variable names read as plain intent; Gherkin-style titles, semantic instance keys, no generic names
+SELF_DESCRIPTIVENESS: specs explain themselves; pre-composed examples, direct references, flat `cy.then()` chains, focused atomic `it` blocks that cover one aspect (single element's properties, single API call's response) with several related assertions allowed, avoiding over-split blocks that bloat test-run reports
+TRACEABILITY: constraints feed examples feed specs; one source of truth per concept, no duplicated content
+DETERMINISM: stable, isolated, repeatable runs; cleanup current and previous run data, randomised data via `utils`, file-independent specs
+CONSISTENCY: aligned API and UI property names, naming enforced by custom ESLint rules, conventions over ad-hoc choices
+MAINTAINABILITY: reusable commands for multi-step flows, inline simple actions in tests, no dead code
+HONESTY: tests assert real behaviour; log deviations as bugs, reference them in `req.bugs`, assert current behaviour
 
-**Test Structure Pattern** (strict):
+VALUE_PRIORITY: correctness, readability, traceability, computing time efficiency
+
+# Project architecture
+
+PROJECT: Cypress automation for UI, API, E2E specifications by defined examples and constraints
+ARCHITECTURE: self-descriptive specs, Gherkin-style titles, no page objects, no BDD abstraction layer
+STACK: Cypress, JavaScript ES6, npm
+STRUCTURE: keep existing folders and naming
+SUPPORT: `cypress/support/e2e.js`
+NAMING_ENFORCEMENT: custom ESLint rules
+TEST_TYPES: `cypress/integration/api/*.api.spec.js`, `cypress/integration/ui/*.ui.spec.js`, `cypress/e2e/ui/*.ui.spec.js`
+TEST_TYPE_MEANING: Integration API for module endpoints, Integration UI for page or component behavior, E2E UI for complete user workflows
+ISOLATION_STYLE: `describe(..., { testIsolation: false }, ...)`
+ASSERTION_STYLE: single assertion per `it` block, related checks within one parent element allowed
+
 ```javascript
 describe('Module.Submodule: Given preconditions', { testIsolation: false }, () => {
   context('Module.Submodule.Operation.METHOD: When condition', () => {
@@ -20,80 +38,110 @@ describe('Module.Submodule: Given preconditions', { testIsolation: false }, () =
 });
 ```
 
-**Global Resources** (loaded in `cypress/support/e2e.js`):
-- `global.l10n` - Localization strings from `cypress/localization/l10n.json`
-- `global.colours` - Theme colors from `cypress/colours/default-theme-colours.json`
-- `global.urls` - API/UI URLs from `cypress/support/urls/urls.js`
-- `global.utils` - Random data generators from `cypress/support/utils/utils.js`
-- `global.errors` - Expected error messages from `cypress/constants/ui/error-messages.json`
-- `global.userRoles` - User role definitions from `cypress/constants/ui/user-roles.js`
-- Page selectors (e.g., `global.loginPage`, `global.inventoryPage`) from `cypress/support/selectors/selectors.js`
+GLOBAL_SOURCE: `cypress/support/e2e.js`
+GLOBALS: `utils`, `l10n`, `colours`, `apiUrls`, `uiUrls`, `userRoles`, `companies`, `reqs`, `apiErrors`, selectors accessible via global page-name variables
+CONSTANTS: `cypress/constants/api`, `cypress/constants/ui`
+EXAMPLES: `cypress/integration-examples/api`, `cypress/integration-examples/ui`, `cypress/e2e-examples/ui`
+SPECS: `cypress/integration/api`, `cypress/integration/ui`, `cypress/e2e/ui`
+REFERENCE: `docs`, `development-data`, `bug-log/bug-log.json`
+SECRETS: `cypress/sensitive-data`, local storage
+VALIDATION: `eslint-plugin-custom-rules/app-structure`
+SCOPE_INCLUDED: functional API, UI, E2E tests
+SPECIALTY_SCOPE: accessibility, performance, security, compatibility, visual regression, native mobile, manual test management handled by dedicated frameworks
 
-## Critical Workflows
+# Critical workflows
 
-**Environment Configuration** (handled in `cypress.config.js`):
+ENVIRONMENT_CONFIG_SOURCE: `cypress.config.js`
+TEST_COMMAND: `LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test`
+PARALLEL_RUNNER_SOURCE: `scripts/parallel-cypress-runner.js`
+PARALLEL_COMMAND: `PARALLEL_STREAMS=6 npm run test:parallel`
+PARALLEL_STRATEGY: naming-pattern splits, local runner, no Cypress Cloud dependency
+PRETEST_SETUP_SOURCE: `package.json` pretest script
+PRETEST_STEPS: `node scripts/copyLocalization.js`, `node scripts/copyColours.js`
+HOOK_SETUP_SOURCE: `scripts/setup-git-hooks.js`
+ESLINT_RULES_LOCATION: `eslint-plugin-custom-rules/`
+ESLINT_RULESET_SIZE: 14 enabled custom rules
+LINT_COMMAND: `npm run lint`
+LINT_EFFECT: auto-fix formatting, fail on structural violations
+
 ```bash
-# Set environment variables before running tests
 LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
+PARALLEL_STREAMS=6 npm run test:parallel
 ```
 
-**Parallel Execution** (custom implementation in `scripts/parallel-cypress-runner.js`):
-```bash
-PARALLEL_STREAMS=6 npm run test:parallel  # Splits tests by naming patterns, not Cypress Cloud
-```
+# Project patterns
 
-**Pre-test Setup** (automated in `package.json` pretest script):
-- Copies localization files: `node scripts/copy-localization.js`
-- Copies color theme files: `node scripts/copy-colours-theme.js`
+EXAMPLES_LOCATION: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
+RANDOM_SOURCE: `utils`
+DATA_SOURCE: examples files compose instances
+SPEC_SCOPE: assign dynamic IDs, call pre-composed examples, assert expected values
+DATA_GUARDRAILS: generated dates and names, immediate ID assignment, purpose-based instance names, same-file instance reuse
+PREFERRED_DATA: explicit fields, complete instances, semantic names, same-instance IDs
+INSTANCE_LIFECYCLE: create, update, delete within one file lifecycle
+ID_FIELDS: `String` placeholders
+INSTANCE_NAME_STYLE: `{purpose}{QualifierSuffix?}` — single `lowerCamelCase` token (e.g. `missingFirstname`, `maximalPrice`, `sameDayCheckout`, `firstnameAtMaxLength`, `yesNoCompliant`); container key (`validBookings`, `invalidBookings`, `expectedResponses`) carries entity and validity;
+INSTANCE_REUSE: within file lifecycle
+NAMING_STYLE: `{context}{Purpose}`
+GROUPING: scenario or purpose
+INSTANCE_NAME_CLEANUP_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
+ID_ASSIGNMENT: `testData.validBookings.allFieldsWithAllowedPrice.bookingId = response.body.bookingid`
+API_COMPOSITION: request bodies, expected values, patch bodies, query params live in examples
+SPEC_CALLS: pass `examples.instance` fields directly without rebuilding payloads in specs
+DERIVED_VALUES: pre-calculated in examples
+CY_FLOW: flat `cy.then()` blocks
+PRECONDITIONS: direct calls per instance
+ASSERTION_SCOPE: expected result blocks
+SPEC_GUARDRAILS: pre-composed examples, direct references, pre-calculated values, flat Cypress chains, focused `it` blocks
+CLEANUP_FUNCTION: `const cleanUp = () => cy.module__deleteByNames__DELETE(token, [examples.namePrefix])`
+CLEANUP_STRATEGY: delete by name pattern through `deleteByNames`
+CLEANUP_HOOKS: `before`, `after`
+FILE_INDEPENDENCE: each spec cleans current and previous run data
+STATE_BASELINE: current and previous run data cleaned
 
-**Custom ESLint Rules** (enforced pre-commit via `scripts/setup-git-hooks.js`):
-- 11 custom rules in `eslint-plugin-custom-rules/` validate test structure, naming, and patterns
-- Run: `npm run lint` (auto-fixes formatting, errors on violations)
-
-## Project-Specific Patterns
-
-### Test Data Management
-**Location:** Test data files mirror test files in `cypress/integration-examples/{api,ui}/`
-
-**Key Rules:**
-1. Use `utils` functions for ALL dynamic data (names, dates, numbers) - never hardcode
-2. Assign IDs immediately after creation: `testData.validBookings.standard.bookingId = response.body.bookingid`
-3. Reuse instances within file lifecycle: create → update → delete (NEVER cross-reference IDs between instances)
-4. Name instances by PURPOSE not values: `missingFirstname`, `maximalPrice`, `sameDayCheckout`
-
-**Cleanup Pattern** (mandatory for test independence):
 ```javascript
 const cleanUp = () => {
-  cy.module__bulkDelete__DELETE(authToken, testData); // Delete by name patterns, not IDs
+  cy.module__deleteByNames__DELETE(token, [examples.namePrefix]);
 };
-before(() => { cleanUp(); }); // Run before AND after
-after(() => { cleanUp(); });
+
+before(() => {
+  cleanUp();
+});
+
+after(() => {
+  cleanUp();
+});
 ```
 
-### Custom Commands
-**Naming Convention** (enforced by ESLint):
-- API: `cy.moduleName__operation__METHOD()` (e.g., `cy.restfullBooker__createBooking__POST()`)
-- UI: `cy.componentName__action()` (e.g., `cy.loginPage__logIn()`)
+COMMAND_LOCATION: `cypress/commands/{api,ui}/`
+COMMAND_GROUPING: module for API, page or component for UI
+COMMAND_SCOPE: reusable multi-step flows, reusable complex assertions, shared setup or teardown
+INLINE_SCOPE: direct `.click()`, `.type()`, `.clear()`, simple assertions
+API_COMMAND_FORMAT: `cy.moduleName__operationDetails__METHOD()`
+UI_COMMAND_FORMAT: `cy.componentName__action()`
+COMMAND_EXAMPLES: `cy.templates__templateDeletionById__DELETE()`, `cy.loginPage__logIn()`
+SELECTOR_GROUPING: page and component objects
+SELECTOR_USAGE: global selector variables in specs and commands
 
-**When to Create:**
-- For multi-step interactions reused across files (e.g., login flow, form submission)
-- NOT for simple Cypress calls like `.click()` or `.type()` - use directly in tests
-
-**Location:** `cypress/commands/{api,ui}/` grouped by module/page
-
-### Selectors Organization
-Store in `cypress/support/selectors/selectors.js` grouped by page/component:
 ```javascript
 const loginPage = {
   username: '[data-test=username]',
   password: '[data-test=password]',
   login: '[data-test="login-button"]',
 };
-```
-Use global variables in tests: `cy.get(loginPage.username).type('user')`
 
-### Bug Logging
-When API/UI behavior doesn't match spec, log in `bug-log/bug-log.json`:
+cy.get(loginPage.username).type('user');
+```
+
+BUG_LOG: `bug-log/bug-log.json`
+BUG_ID: `BUG-[CONTEXT]-[NUMBER]`
+API_BUG_ID: `BUG-[MODULE]-[NUMBER]`
+E2E_BUG_ID: `BUG-[WORKFLOW]-[NUMBER]`
+UI_BUG_ID: `BUG-[PAGE/COMPONENT]-[NUMBER]`
+BUG_CRITERIA: status, validation, response shape, error message, consistency, security, performance findings
+TEST_ADAPTATION: reference bug in `req.bugs`, assert current behavior, use `failOnStatusCode: false` for error responses
+BUG_FIELDS: `id`, `module`, `submodule`, `severity`, `status`, `description`, `expectedBehavior`, `actualBehavior`, `endpoint`, `reproducible`, `dateReported`, `affectedFields`, `notes`
+BUG_MAINTENANCE: preserve original ID and date, update status, severity, notes
+
 ```json
 {
   "id": "BUG-AUTH-042",
@@ -103,58 +151,34 @@ When API/UI behavior doesn't match spec, log in `bug-log/bug-log.json`:
   "actualBehavior": "Returns 200 with {reason: 'Bad credentials'}"
 }
 ```
-Then adapt test to validate ACTUAL behavior with comment referencing bug ID.
 
-## Integration Points
+# Integration points
 
-**Test Filtering:** File-based via naming patterns, NOT tags. Example from `parallel-cypress-runner.js`:
-- Integration API: `cypress/integration/api/**/*.api.spec.js`
-- Integration UI: `cypress/integration/ui/**/*.ui.spec.js`
-- E2E UI: `cypress/e2e/**/*.ui.spec.js`
+TEST_FILTERING: file-based patterns
+FILTER_PATTERNS: `cypress/integration/api/*.api.spec.js`, `cypress/integration/ui/*.ui.spec.js`, `cypress/e2e/ui/*.ui.spec.js`
+COVERAGE_COMMAND: `npm run coverage:report`
+COVERAGE_SCOPE: compare defined requirements in `describe` or `context` or `it` blocks against implemented non-empty blocks
+COVERAGE_THRESHOLDS: `scripts/thresholds.json`
+SENSITIVE_DATA_LOCATION: `cypress/sensitive-data/{envName}-users.json`
+SENSITIVE_DATA_STORAGE: git-ignored user data files per environment
+SENSITIVE_DATA_ACCESS: `cy.common__getUserDataByRole(userRoles.STANDARD)`
 
-**Coverage Analysis:** Run `npm run coverage:report` to analyze gaps between defined requirements (describe/context/it blocks) and implemented tests (non-empty blocks). Thresholds in `scripts/thresholds.json`.
+# Guardrails
 
-**Sensitive Data:** Store in `cypress/sensitive-data/dev-users.json` (git-ignored). Load via `cy.common__getUserDataByRole(userRoles.STANDARD)`.
+DATA_VARIATION_STYLE: randomized instances via `utils`, explicit scenarios instead of collection loops
+DATA_VARIATION_RULE: `prevent-examples-loops`
+TITLE_GUARDRAILS: unique, specific, structure-aligned titles with module, page, or workflow context
+TITLE_RULES: `prevent-duplicated-titles`, `verify-test-title-against-structure`, `verify-test-title-pattern`, `verify-test-title-without-forbidden-symbols`, `standardize-test-titles`
+BLOCK_GUARDRAILS: non-empty `context` and `it` blocks, `.skip()` for manual placeholders
+BLOCK_RULE: `do-not-allow-empty-blocks`
+TODO_GUARDRAILS: linked TODO references only
+TODO_RULE: `verify-todos-have-links`
+LOCALIZATION_GUARDRAILS: `l10n` values instead of hardcoded UI text
+COLOUR_GUARDRAILS: `colours` values instead of hardcoded hex codes
 
-## Key Constraints
+# Quick reference
 
-**Prohibited:**
-- ❌ Loops over test data (`forEach`, `for...of`) - use randomization instead (enforced by `prevent-examples-loops` rule)
-- ❌ Duplicate test titles - enforced by `prevent-duplicated-titles` rule
-- ❌ Empty `context`/`it` blocks without `.skip()` - enforced by `do-not-allow-empty-blocks` rule
-- ❌ Generic test names like "Should return 401" - must include specific details
-- ❌ TODO comments without links - enforced by `verify-todos-have-links` rule
-
-**Required:**
-- ✅ ALL dynamic values via `utils` (dates, strings, numbers, booleans)
-- ✅ Cleanup in both `before` AND `after` hooks
-- ✅ Single assertion per `it` block (exception: related checks within parent element)
-- ✅ Localization via `l10n`, colors via `colours`, never hardcoded strings/hex values
-
-## Quick Reference
-
-**File Locations:**
-- Copilot instructions: `.github/copilot-instructions.md`
-- Test-type specific instructions: `.github/instructions/{e2e-ui,integration-ui,integration-api}-tests.instructions.md`
-- Naming conventions: `docs/naming-conventions.md`
-- ESLint rules docs: `docs/eslint-custom-rules.md`
-
-**Key Scripts:**
-- `npm run test` - Run all tests headless
-- `npm run test:parallel` - Parallel execution (default 3 streams)
-- `npm run lint` - Lint with auto-fix
-- `npm run coverage:report` - Generate structure coverage gap analysis
-- `npm run req:coverage` - Report requirement ID coverage from `*.reqs.js` files
-- `npm run req:coverage:check` - Fail if P1 requirement coverage drops below 90%
-- `npx cypress open` - Interactive test runner
-
-**Structure Validation Files:**
-- `eslint-plugin-custom-rules/app-structure/modules.json` - Valid API module names
-- `eslint-plugin-custom-rules/app-structure/components.json` - Valid UI component names
-- `eslint-plugin-custom-rules/app-structure/workflows.json` - Valid E2E workflow names
-
-**Requirement Files** (`cypress/constants/`):
-- `constants/api/*.constraints.js` — module boundary values and domain constants
-- `constants/ui/user-roles.js` — user role constants (exposed as `global.userRoles`)
-- `constants/ui/error-messages.json` — error message strings (exposed as `global.errors`)
+DOC_REFERENCES: `docs/naming-conventions.md`, `docs/eslint-custom-rules.md`
+SCRIPT_REFERENCES: `npm run test`, `npm run test:parallel`, `npm run lint`, `npm run coverage:report`, `npx cypress open`
+STRUCTURE_VALIDATION_FILES: `eslint-plugin-custom-rules/app-structure/modules.json`, `eslint-plugin-custom-rules/app-structure/components.json`, `eslint-plugin-custom-rules/app-structure/workflows.json`
 

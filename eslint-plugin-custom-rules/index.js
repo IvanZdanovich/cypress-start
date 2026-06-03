@@ -11,8 +11,8 @@ module.exports = {
     'standardize-test-titles': require('./standardize-test-titles.js'),
     'verify-api-command-naming': require('./verify-api-command-naming.js'),
     'verify-ui-command-naming': require('./verify-ui-command-naming.js'),
-    'verify-req-config': require('./verify-req-config.js'),
     'find-unused-selectors': require('./find-unused-selectors.js'),
-    'find-unused-test-data': require('./find-unused-test-data.js'),
+    'find-unused-examples': require('./find-unused-examples.js'),
+    'verify-req-config': require('./verify-req-config.js'),
   },
 };
