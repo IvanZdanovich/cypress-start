@@ -496,7 +496,7 @@ tests, or commands). This helps maintain a clean codebase by removing obsolete s
 
 1. **Extraction Phase:**
     - Parses selector files to extract all defined selector keys
-    - Tracks the full path of each selector (e.g., `auditsPage.list.rows`, `commonUI.spinner`)
+    - Tracks the full path of each selector (e.g., `homePage.list.rows`, `commonUI.spinner`)
     - Identifies parent objects and leaf properties
 
 2. **Usage Analysis Phase:**
