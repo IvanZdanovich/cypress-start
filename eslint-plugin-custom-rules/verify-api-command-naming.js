@@ -13,7 +13,7 @@ module.exports = {
     },
     schema: [],
     messages: {
-      invalidApiCommandName: 'API command name "{{commandName}}" does not follow the naming convention. Expected pattern: endpointName__actionDescription__METHOD (e.g., "settingAuditRound__add__POST", "templates__getById__GET")',
+      invalidApiCommandName: 'API command name "{{commandName}}" does not follow the naming convention. Expected pattern: endpointName__actionDescription__METHOD',
       missingDoubleUnderscore: 'API command name "{{commandName}}" must use double underscores (__) as separators',
       invalidHttpMethod: 'API command name "{{commandName}}" must end with a valid HTTP method: GET, POST, PUT, PATCH, DELETE',
       invalidCasing: 'API command name "{{commandName}}" must use camelCase for resource and action parts',

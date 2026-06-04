@@ -1,22 +1,24 @@
-## Branching and Merge Strategy
+# Git strategy
 
-### Branches
+## Branches
 
-- `main`: Contains stable tests ready for execution
-- `feature/<KEY>-1234-<description>`: Feature branches for developing new specifications
+| Branch                             | Purpose                                 |
+|------------------------------------|-----------------------------------------|
+| `main`                             | Stable tests ready for execution        |
+| `feature/<KEY>-1234-<description>` | Feature branches for new specifications |
 
-### Merge Requirements
+## Merge requirements
 
 - Pull requests require at least one review
-- Reviewer should run tests locally
-- Only squashed PRs are allowed
-- Code must pass pre-commit quality checks
+- Reviewer runs tests locally
+- Only squash merges allowed
+- Code passes pre-commit quality checks — see [Pre-commit check](pre-commit-check.md)
 
-## Contributing
+## Contributing workflow
 
-1. Create a feature branch from `main`
-2. Develop and test your changes
-3. Run the pre-commit checks locally
-4. Submit a pull request for review
-5. Address any review comments
-6. Once approved, squash and merge to `main`
+1. Create feature branch from `main`
+2. Develop and test changes
+3. Run pre-commit checks locally
+4. Submit pull request for review
+5. Address review comments
+6. Squash and merge to `main`

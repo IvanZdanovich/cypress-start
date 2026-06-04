@@ -1,81 +1,72 @@
-## Cypress Test Writing Guideline
+# Test writing guideline
 
-### Specification by Example
+Specification by Example: the spec IS the requirement. Test titles form Given/When/Then statements. All specifications
+are defined, even if not yet implemented.
 
-The "Specification by Example" approach uses concrete examples to illustrate and validate system behavior. This method
-ensures that all stakeholders, developers, and testers have a clear understanding of the requirements and that tests
-accurately reflect the desired functionality. The current approach aims to create live documentation, requiring all
-specifications to be defined, even if not yet implemented.
+## Test types
 
-### Rules
+| Type            | Location                   | Scope                      |
+|-----------------|----------------------------|----------------------------|
+| Integration API | `cypress/integration/api/` | Module endpoint behavior   |
+| Integration UI  | `cypress/integration/ui/`  | Page or component behavior |
+| E2E UI          | `cypress/e2e/ui/`          | Complete user workflows    |
 
-- **Do Not Automate Manual Test Cases**: Directly replicating manual test cases in automation is impractical and costly,
-  yielding minimal benefits. Instead, focus on identifying and implementing the most valuable specifications.
+## Structure
 
-- **Naming Conventions**: Follow the [Naming Conventions](naming-conventions.md).
+- **`describe`** — preconditions, initial setup common to all contexts
+- **`context`** — conditions and preparation steps for `it` blocks
+- **`it`** — single expected result (specification), contains only verification steps
 
-- **Test Type Classification**: Organize tests into three categories:
-    - E2E UI tests in `cypress/e2e/ui/`
-    - Integration UI tests in `cypress/integration/ui/`
-    - Integration API tests in `cypress/integration/api/`
+Sequential `context` blocks improve readability over a monolithic `before`.
 
-- **Test Independence**: Specifications should be properly structured and ordered within each file. Tests within a file
-  may be dependent to efficiently cover particular functionality, but specifications from different files should not
-  overlap.
+```javascript
+describe('Page.Component: Given user is authenticated', { testIsolation: false }, () => {
+  context('Page.Component.ADMIN: When item is created', () => {
+    it('Page.Component.ADMIN: Then item name is displayed', { req: {} }, () => {
+      cy.get(componentPage.itemName).should('contain', testData.validItems.item__WithAllFields.name);
+    });
+  });
+});
+```
 
-- **Test Structure**:
-    - **`it` Block**: Specifies the expected result (specification) and contains only verification steps. To keep
-      requirements unique, provide detailed descriptions. Avoid generic descriptions like "Should return 401
-      Unauthorized error." Include specific details such as error messages. Ensure a single check per `it` block. For
-      E2E UI tests, it may make sense to join
-      several checks within one parent element:
-       ```javascript
-         it('LoginPage.STANDARD: Then username field should be highlighted and contain error icon', () => {
-           cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
-           cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
-         });
-       ```
-    - **`context` Block**: Outlines the conditions and includes preparation steps common to `it` blocks. Prepare test
-      data within the context block. There is no need to prepare all data once in a `before` block; for better
-      readability, provide conditions in sequential `context` blocks.
-    - **`describe` Block**: Groups similar checks and includes initial preparation steps common for context blocks.
+Related checks within one parent element are acceptable in a single `it`:
 
-- **Sensitive Data**: Store credentials and sensitive information in `cypress/sensitive-data/`. Never commit this folder
-  to version control.
+```javascript
+it('LoginPage.STANDARD: Then username field is highlighted and contains error icon', { req: {} }, () => {
+  cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+  cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
+});
+```
 
-- **Custom Commands**: Leverage existing custom commands from `cypress/commands/` before writing inline code.
-  Create new commands for frequently used operations.
+## Data approach
 
-- **Requirements Reference**: Use project-wide requirements from `cypress/integration/` for consistent error
-  messages and configurations.
+| Layer       | Location                                                 | Role                            |
+|-------------|----------------------------------------------------------|---------------------------------|
+| Constraints | `cypress/constants/{api,ui}/`                            | Boundary values, formats, enums |
+| Examples    | `cypress/integration-examples/`, `cypress/e2e-examples/` | Named instances per context     |
+| Specs       | `cypress/integration/`, `cypress/e2e/`                   | Executable requirements         |
 
-- **Automated Enforcement**: Custom ESLint rules in `eslint-plugin-custom-rules/` automatically enforce naming
-  conventions and structure guidelines during development.
+See [Constraints → Examples → Specs](requirements-examples-approach.md) for full details.
 
-- **Store Localization in Variables**: Store localization keys in JSON files in `cypress/localization`. Use
-  localization keys in tests instead of hardcoded values. Use the global `l10n` variable to obtain values from the
-  `l10n.json` file that contains the applied localization file.
+## Rules
 
-- **Store Colour Values in Variables**: Store colour values in JSON files in `cypress/colours`. Use colour
-  values in tests instead of hardcoded values. Use the global `colours` variable to
-  obtain values from the `current-theme-colours.json` file that contains the applied colour theme file.
+- **Naming**: follow [Naming conventions](naming-conventions.md)
+- **File independence**: each spec runnable alone from clean or polluted state
+- **Cleanup**: `before` and `after` hooks using `deleteByNames` pattern
+- **Random data**: use `utils` for all randomised values, no loops over test data
+- **Selectors**: global variables grouped by page/component in `cypress/selectors/selectors.js`
+- **Localization**: global `l10n` variable, never hardcode UI text
+- **Colours**: global `colours` variable, never hardcode colour values
+- **Sensitive data**: `cypress/sensitive-data/`, never committed
+- **Commands**: leverage existing commands from `cypress/commands/{api,ui}/` before writing inline code
+- **Manual placeholders**: `context.skip` or `it.skip` with descriptive titles for unimplemented specs
+- **Filtering**: file-name-based, no tags
+- **Enforcement**: custom ESLint rules in `eslint-plugin-custom-rules/` — see [ESLint rules](eslint-custom-rules.md)
+- **Bug references**: use `req.bugs` metadata, not inline comments — see [Bug tracking](bug-tracking.md)
 
-- **Store Selectors in Variables**: Store selectors in the `cypress/support/selectors/selectors.js` file, grouped by
-  pages and components. Storing selectors in well-named, global page variables helps keep the code clean and
-  maintainable. Navigating to the selector by its variable allows you to easily find the selector and copy it for
-  debugging or refactoring. For example:
-   ```javascript
-     before(() => {
-        cy.get(headerComp.openCart).click();
-     });
-   ```
+## Related
 
-- **Test Data Isolation**: Keep test data used for tests isolated for each test file. Store test data in JavaScript
-  files in `cypress/test-data`.
-
-- **Test Data Randomization**: Use random data generation for test data. Do not use the same data for all tests.
-
-- **Provide Empty `context` and `it` Blocks**: To track test coverage, provide descriptions for non-automated checks but
-  leave them without implementation.
-
-- **Tagging Strategy**: Test file filtering is based on test file names; therefore, do not apply tags.
+- [Requirements examples approach](requirements-examples-approach.md)
+- [Naming conventions](naming-conventions.md)
+- [ESLint custom rules](eslint-custom-rules.md)
+- [Pre-commit check](pre-commit-check.md)

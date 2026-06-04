@@ -3,19 +3,22 @@
 This document describes the custom ESLint rules implemented in this project to maintain code quality and consistency in
 tests.
 
-## Table of Contents
+## Enforce Spec Blank Lines
 
-- [Do Not Allow Empty Blocks](#do-not-allow-empty-blocks)
-- [Prevent Duplicated Titles](#prevent-duplicated-titles)
-- [Prevent Test Data Loops](#prevent-examples-loops)
-- [Verify Test Title Against Structure](#verify-test-title-against-structure)
-- [Verify Test Title Pattern](#verify-test-title-pattern)
-- [Verify TODOs Have Links](#verify-todos-have-links)
-- [Verify Test Title Without Forbidden Symbols](#verify-test-title-without-forbidden-symbols)
-- [Standardize Test Titles](#standardize-test-titles)
-- [API Command Naming Rule](#api-command-naming-rule)
-- [UI Command Naming Rule](#ui-command-naming-rule)
-- [Find Unused Selectors](#find-unused-selectors)
+**Rule file:** `eslint-plugin-custom-rules/enforce-spec-blank-lines.js`
+**Fixable:** Yes — `--fix` auto-corrects violations
+
+Enforces a single consistent blank-line convention inside `*.spec.js` files:
+
+| Situation                                                                   | Rule                      |
+|-----------------------------------------------------------------------------|---------------------------|
+| Between consecutive `it` blocks                                             | ❌ No blank line           |
+| Between `it` and any hook (`before` / `beforeEach` / `after` / `afterEach`) | ❌ No blank line           |
+| Between consecutive hook blocks                                             | ❌ No blank line           |
+| Immediately before a `context` block                                        | ✅ One blank line required |
+
+The rule only activates inside the bodies of `describe` and `context` callbacks, and only in `*.spec.js` files.
+Non-test statements (variable declarations, helper constants) reset the tracker and are not checked.
 
 ## Do Not Allow Empty Blocks
 
@@ -27,18 +30,18 @@ developers either to implement the test or mark tests as skipped with `it.skip()
 ### Example
 
 ```javascript
-describe('ActionPriorityPage.Creation: Given the user navigates to the Creation component of Action Priority page', {testIsolation: false}, () => {
-    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
-        // Empty block - this will trigger the rule violation
+describe('ActionPriorityPage.Creation: Given the user navigates to the Creation component of Action Priority page', { testIsolation: false }, () => {
+  context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
+    // Empty block - this will trigger the rule violation
+  });
+  context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
+    it('ActionPriorityPage.Creation.ADMIN: Then Title is displayed', () => {
+      // Empty block - this will trigger the rule violation
     });
-    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
-        it('ActionPriorityPage.Creation.ADMIN: Then Title is displayed', () => {
-            // Empty block - this will trigger the rule violation
-        });
-        it.skip('ActionPriorityPage.Creation.ADMIN: Then Name Input field with label and placeholder is displayed', () => {
-            // Valid - skipped test without implementation is allowed
-        });
+    it.skip('ActionPriorityPage.Creation.ADMIN: Then Name Input field with label and placeholder is displayed', () => {
+      // Valid - skipped test without implementation is allowed
     });
+  });
 });
 ```
 
@@ -54,10 +57,10 @@ and `.only` variants), preventing confusion and improving clarity.
 ```javascript
 
 describe('Module.Submodule: Given preconditions', () => {
-    it('Module.Submodule.GET: Then return 200', () => {
-    }); // Valid
-    it('Module.Submodule.GET: Then return 200', () => {
-    }); // ❌ Error: duplicate title
+  it('Module.Submodule.GET: Then return 200', () => {
+  }); // Valid
+  it('Module.Submodule.GET: Then return 200', () => {
+  }); // ❌ Error: duplicate title
 });
 ```
 
@@ -68,14 +71,6 @@ describe('Module.Submodule: Given preconditions', () => {
 Prevents the use of loops (forEach, for...of, for...in) over test data arrays within test files. Enforces the use of
 randomization functions instead.
 
-### Rationale
-
-- ONE test validates ONE behavior with ONE randomly selected value
-- DIFFERENT test runs cover DIFFERENT values automatically
-- FASTER test execution (no redundant loops)
-- CLEANER test reports (no duplicate test titles)
-- CONSISTENT with Cypress best practices
-
 ### Examples
 
 **❌ Incorrect - Loop over test data:**
@@ -84,23 +79,23 @@ randomization functions instead.
 const invalidIds = [0, -1, null, 'NaN', 1.2];
 
 describe('Module.Submodule', () => {
-    // ❌ Error: Do not use .forEach() to loop over test data
-    invalidIds.forEach((id) => {
-        it(`Should reject invalid ID: ${id}`, () => {
-            cy.module__action__POST(id, {failOnStatusCode: false}).then((response) => {
-                expect(response.status).to.eq(400);
-            });
-        });
+  // ❌ Error: Do not use .forEach() to loop over test data
+  invalidIds.forEach((id) => {
+    it(`Should reject invalid ID: ${id}`, () => {
+      cy.module__action__POST(id, { failOnStatusCode: false }).then((response) => {
+        expect(response.status).to.eq(400);
+      });
     });
+  });
 
-    // ❌ Error: Do not use for...of loops over test data
-    for (const id of testData.invalidIds) {
-        context(`When ID is ${id}`, () => {
-            it('Should return error', () => {
-                // test logic
-            });
-        });
-    }
+  // ❌ Error: Do not use for...of loops over test data
+  for (const id of examples.invalidIds) {
+    context(`When ID is ${id}`, () => {
+      it('Should return error', () => {
+        // test logic
+      });
+    });
+  }
 });
 ```
 
@@ -112,27 +107,27 @@ const invalidIdsArray = [0, -1, null, 'NaN', 1.2];
 const getRandomInvalidId = () => invalidIdsArray[Math.floor(Math.random() * invalidIdsArray.length)];
 
 export const module_testData = {
-    invalidItems: {
-        invalidId: getRandomInvalidId(), // ONE random value per execution
-    },
+  invalidItems: {
+    invalidId: getRandomInvalidId(), // ONE random value per execution
+  },
 };
 
 // Test File
 describe('Module.Submodule', () => {
-    it('Module.Submodule.POST: Then return 400 status code for invalid ID', () => {
-        cy.module__action__POST(testData.invalidItems.invalidId, {failOnStatusCode: false}).then((response) => {
-            expect(response.status).to.eq(400);
-        });
+  it('Module.Submodule.POST: Then return 400 status code for invalid ID', () => {
+    cy.module__action__POST(examples.invalidItems.invalidId, { failOnStatusCode: false }).then((response) => {
+      expect(response.status).to.eq(400);
     });
+  });
 });
 
 describe('UserManagement', () => {
-    // ...
+  // ...
 });
 
 // Later in the same test suite or another file
 describe('UserManagement', () => {
-    // This will trigger the rule violation
+  // This will trigger the rule violation
 });
 ```
 
@@ -146,13 +141,50 @@ instances.
 
 ### Configuration Files
 
+**Structure files (single source of truth):**
+
 - E2E tests: `./app-structure/expected/workflows.json`
 - API tests: `./app-structure/expected/modules.json`
 - UI tests: `./app-structure/expected/components.json`
 
+These files serve two purposes:
+
+1. **Validation** — test title prefixes must match a path in the structure
+2. **Coverage tracking** — manually added paths that don't yet have tests represent planned coverage
+
 ### How It Works
 
-The rule validates that each part in the dot-separated title exists in the JSON structure hierarchy.
+1. **Extracts structure paths** from test titles (the `Module.Submodule.Operation.METHOD` part before the colon)
+2. **Validates against expected structure** — reports an error if the path is not found
+3. **Auto-adds on `--fix`** — when ESLint runs with `--fix`, valid new paths are added to `expected/` automatically
+4. **Only well-formed paths are accepted** — each segment must be PascalCase (≥ 2 chars), preventing junk accumulation
+
+### Workflow
+
+**Adding new paths (organic growth):**
+
+1. Developer writes a test with a new component/module/workflow path
+2. `npm run lint --fix` → path is auto-added to the appropriate `expected/` structure file
+3. Commit the updated `expected/` file alongside the test
+
+**Planned coverage (backlog tracking):**
+
+1. Tech lead manually adds paths to `expected/` that don't yet have tests
+2. `npm run coverage:report` reports these as missing coverage
+3. Tests are written over time to fill the gaps
+
+**Typo prevention (validation):**
+
+1. Developer writes a test with an incorrect path
+2. `npm run lint` (no fix) → error with the valid prefix and missing segment highlighted
+3. Developer fixes the typo
+
+### Benefits
+
+- Single source of truth — one folder, no intermediate artifacts
+- `--fix` is additive-only — never removes manually added paths
+- Output is always sorted alphabetically for stable diffs
+- Feeds directly into `npm run coverage:report` for gap analysis
 
 ## Verify Test Title Pattern
 
@@ -192,6 +224,12 @@ Enforces a specific pattern for test block titles, according to the naming conve
 
 Ensures that all TODO, FIXME, and similar comments include a bug tracking system ticket link for tracking purposes.
 
+In spec files (`cypress/integration/**/*.spec.js`, `cypress/e2e/**/*.spec.js`), prefer
+`req.bugs` metadata on the `describe`, `context`, or `it` config object over inline `// TODO:`
+comments — see [Bug tracking](bug-tracking.md) and the [Verify Req Config](#verify-req-config)
+rule. This linked-TODO rule remains the fallback for non-spec files (commands, examples,
+scripts) where `req.bugs` does not apply.
+
 ### Invalid Examples
 
 ```javascript
@@ -225,17 +263,17 @@ The following characters are not allowed in test titles:
 
 ```javascript
     context('LoginPage.STANDARD: When user logs in with valid credentials ', () => {
-    // ❌ Error: Trailing space
+  // ❌ Error: Trailing space
 });
 context(' LoginPage.STANDARD: When user logs in with valid credentials', () => {
-    // ❌ Error: Leading space
+  // ❌ Error: Leading space
 });
 context('LoginPage.STANDARD: When user logs in with valid credentials!', () => {
-    // ❌ Error: Special character "!"
+  // ❌ Error: Special character "!"
 });
 context('LoginPage.STANDARD: When user logs in with valid credentials', () => {
-    // ✅ Valid: No whitespace or special characters
-}); 
+  // ✅ Valid: No whitespace or special characters
+});
 ```
 
 ## Standardize Test Titles
@@ -249,6 +287,128 @@ terms. This improves clarity and uniformity across the test suite.
 
 The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for
 non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
+
+## Verify Req Config
+
+**Rule file:** `eslint-plugin-custom-rules/verify-req-config.js`
+
+Enforces that every `it()` block (including `.skip` and `.only` variants) declares a Cypress config object with a `req`
+property as its **second argument**, and validates all fields inside that object.
+
+### When It Activates
+
+The rule only fires when a `req` property is actually present inside the config object. Both the
+config object itself and the `req` property are **optional** — the rule never reports a missing `req`.
+
+### Allowed Fields
+
+| Field           | Type                       | Description                                                | Default |
+|-----------------|----------------------------|------------------------------------------------------------|---------|
+| `p`             | `'P1'` \| `'P2'` \| `'P3'` | Test priority. Omit when P2.                               | `'P2'`  |
+| `preconditions` | non-empty string array     | Extra preconditions not expressed in the `describe` block. | —       |
+| `refs`          | non-empty URL array        | Links to stories / ACs (must be valid HTTP/HTTPS URLs).    | —       |
+| `bugs`          | non-empty string array     | Bug IDs (`BUG-MODULE-NNN`) or valid HTTP/HTTPS URLs.       | —       |
+
+Any key not in the table above is reported as an **unknown field** error.
+
+### Valid Examples
+
+```javascript
+it('Module.Op.METHOD: Then return 200',
+  { req: {} },
+  () => { /* ... */
+  });
+
+it('Module.Op.METHOD: Then return 200',
+  { req: { p: 'P1' } },
+  () => { /* ... */
+  });
+
+it('Module.Op.METHOD: Then return 200',
+  { req: { p: 'P1', preconditions: ['booking created via POST'] } },
+  () => { /* ... */
+  });
+
+it('Module.Op.METHOD: Then return 200',
+  { req: { p: 'P1', refs: ['https://jira.example.com/browse/PROJ-123'] } },
+  () => { /* ... */
+  });
+
+it('Module.Op.METHOD: Then return 500',
+  { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } },
+  () => { /* ... */
+  });
+
+it('Module.Op.METHOD: Then return 500',
+  { req: { p: 'P1', bugs: ['https://jira.example.com/browse/PROJ-123'] } },
+  () => { /* ... */
+  });
+```
+
+### Invalid Examples
+
+```javascript
+// ❌ req is not an object
+it('Module.Op.METHOD: Then return 200', { req: 'P1' }, () => { /* ... */
+});
+
+// ❌ Unknown field in req
+it('Module.Op.METHOD: Then return 200', { req: { priority: 'P1' } }, () => { /* ... */
+});
+
+// ❌ Invalid priority value
+it('Module.Op.METHOD: Then return 200', { req: { p: 'P4' } }, () => { /* ... */
+});
+
+// ❌ preconditions is not an array
+it('Module.Op.METHOD: Then return 200', { req: { preconditions: 'booking created via POST' } }, () => { /* ... */
+});
+
+// ❌ preconditions is an empty array
+it('Module.Op.METHOD: Then return 200', { req: { preconditions: [] } }, () => { /* ... */
+});
+
+// ❌ preconditions contains an empty string
+it('Module.Op.METHOD: Then return 200', { req: { preconditions: [''] } }, () => { /* ... */
+});
+
+// ❌ refs is not an array
+it('Module.Op.METHOD: Then return 200', { req: { refs: 'https://jira.example.com/browse/PROJ-123' } }, () => { /* ... */
+});
+
+// ❌ refs is an empty array
+it('Module.Op.METHOD: Then return 200', { req: { refs: [] } }, () => { /* ... */
+});
+
+// ❌ refs entry is not a valid URL
+it('Module.Op.METHOD: Then return 200', { req: { refs: ['PROJ-123'] } }, () => { /* ... */
+});
+
+// ❌ bugs entry does not match BUG-MODULE-NNN format or URL
+it('Module.Op.METHOD: Then return 500', { req: { bugs: ['BUG-123'] } }, () => { /* ... */
+});
+
+// ❌ bugs is an empty array
+it('Module.Op.METHOD: Then return 500', { req: { bugs: [] } }, () => { /* ... */
+});
+```
+
+### Field Validation Details
+
+**`p`** — must be the string literal `'P1'`, `'P2'`, or `'P3'`. Any other value is an error. Omit entirely when the
+priority is P2 (the default).
+
+**`preconditions`** — must be a non-empty array of non-empty string literals. Each element describes one extra
+precondition not already captured by the `describe` block title
+(e.g. `['booking created via POST', 'user is authenticated']`).
+
+**`refs`** — must be a non-empty array of string literals. Each element must be a valid HTTP/HTTPS URL pointing to a
+story, AC, or external specification (e.g. `'https://jira.example.com/browse/PROJ-123'`).
+
+**`bugs`** — must be a non-empty array of string literals. Each element must either:
+
+- Match the pattern `BUG-[A-Z]+-NNN` (e.g. `'BUG-BOOKING-002'`, `'BUG-AUTH-042'`), **or**
+- Be a valid HTTP/HTTPS URL (e.g. `'https://jira.example.com/browse/PROJ-123'`).
 
 ## API Command Naming Rule
 
@@ -363,13 +523,13 @@ It will NOT auto-fix multi-line parent objects to avoid accidentally removing va
 **Unused Selectors:**
 
 ```javascript
-const auditsPage = {
-    header: {
-        title: '.page-title',           // ✅ Used in tests
-        subtitle: '.page-subtitle',      // ❌ Unused - will be reported
-    },
-    emptySection: {},                  // ❌ Unused - will be reported and auto-fixed
-    obsoleteButton: '.old-button',     // ❌ Unused - will be reported and auto-fixed
+const homePage = {
+  header: {
+    title: '.page-title',           // ✅ Used in tests
+    subtitle: '.page-subtitle',      // ❌ Unused - will be reported
+  },
+  emptySection: {},                  // ❌ Unused - will be reported and auto-fixed
+  obsoleteButton: '.old-button',     // ❌ Unused - will be reported and auto-fixed
 };
 ```
 
@@ -377,3 +537,107 @@ const auditsPage = {
 
 This rule is typically set to `warn` or `off` in the ESLint configuration, as it's more of a maintenance tool than a
 strict requirement.
+
+## Find Unused Test Data
+
+### Rule: `find-unused-test-data`
+
+**Location:** `eslint-plugin-custom-rules/find-unused-examples.js`
+
+**Applies to:** Files in `cypress/test-data/` ending with `*.test-data.js`
+
+### Purpose
+
+Identifies first-level instances of exported test-data objects that are never referenced in any test or command file.
+Helps maintain clean test-data files by preventing accumulation of stale or obsolete test data definitions.
+
+### How It Works
+
+1. **Extraction Phase:**
+    - Parses test-data files to extract all first-level property keys from exported objects
+    - Tracks the full path of each instance (e.g., `booking_testData.validBookings.standard`)
+    - Identifies parent objects and leaf properties using indentation-based structure detection
+
+2. **Usage Analysis Phase:**
+    - Searches through all files in `cypress/integration/`, `cypress/e2e/`, and `cypress/commands/`
+    - Resolves import aliases (e.g., `import { booking_testData as testData }`)
+    - Looks for references to each test-data instance path
+    - Marks instances as used if they appear anywhere in tests or commands
+
+3. **Reporting Phase:**
+    - Reports first-level instances that are defined but never used
+    - Excludes parent objects if any of their nested properties are used
+    - Provides auto-fix for simple cases (single-line unused instances)
+
+### Auto-Fix Capability
+
+The rule can automatically remove (with `eslint --fix`):
+
+- **Empty objects on a single line** (e.g., `emptyObject: {}`)
+- **Single-line unused leaf properties** (e.g., `obsoleteKey: 'value'`)
+
+It will **NOT** auto-fix:
+
+- **Multi-line parent objects with nested content** - these must be removed manually to prevent accidental data loss
+
+**Important:** Only single-line instances are auto-fixable. If an unused test-data instance spans multiple lines (e.g.,
+objects with nested properties), you must manually remove it to avoid accidentally deleting important data.
+
+### Example
+
+**Test Data File:**
+
+```javascript
+export const booking_testData = {
+  namePrefix: 'Booking',              // ❌ Unused - will be reported
+  validBookings: {
+    standard: { /* ... */ },          // ✅ Used in tests
+    extended: { /* ... */ },          // ❌ Unused - will be reported
+  },
+  obsoleteBooking: { /* ... */ },     // ❌ Unused - will be reported and auto-fixed
+};
+```
+
+This rule is typically set to `warn` to avoid blocking commits while still alerting developers to cleanup opportunities.
+
+**Note:** This rule is compatible with ESLint v9+ flat config system using `context.filename` and `context.sourceCode`
+properties.
+
+---
+
+## Suppressing Rules in Exceptional Cases
+
+Inline ESLint disable comments are the only accepted way to suppress a rule for a specific line or block.
+Use suppression sparingly — only when the violation is a genuine false-positive or an unavoidable technical constraint.
+
+### Syntax Reference
+
+| Scope             | Syntax                                                             |
+|-------------------|--------------------------------------------------------------------|
+| Next line only    | `// eslint-disable-next-line rule-name`                            |
+| Current line only | `code; // eslint-disable-line rule-name`                           |
+| Block of lines    | `/* eslint-disable rule-name */` … `/* eslint-enable rule-name */` |
+| Whole file        | `/* eslint-disable rule-name */` at the very top of the file       |
+
+For **custom rules** in this project always use the `custom/` prefix:
+
+```javascript
+// eslint-disable-next-line custom/find-unused-selectors
+reservedForFutureUse: '[data-test="future-element"]'
+```
+
+For **Cypress built-in rules** use the `cypress/` prefix:
+
+```javascript
+// eslint-disable-next-line cypress/no-unnecessary-waiting
+cy.wait(300); // required: animation has no deterministic end event
+
+// eslint-disable-next-line cypress/no-force
+cy.get(selector).click({ force: true }); // element obscured by overlay during transition
+```
+
+### Pre-Commit Impact
+
+Suppression comments are respected by the linter and **do not** increase the error/warning count tracked by
+`scripts/thresholds.json`. However, reviewers will flag unjustified suppressions during code review.
+Use `git commit --no-verify` only in emergencies and always follow up with a fix.

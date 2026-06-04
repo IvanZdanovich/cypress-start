@@ -1,14 +1,15 @@
-# Constraints → Examples → Specs: The Testing Approach
+# Constraints → Examples → Specs
 
 ## Core Idea
 
-**The spec IS the requirement.** There are no separate requirement files, no mapping matrices, no magic
-numbers. The Given/When/Then title structure across `describe`, `context`, and `it` blocks forms the
-complete, human-readable requirement statement — executable, verifiable, and always in sync with the code.
+**The spec IS the requirement.** Test titles (`describe` / `context` / `it`) form the complete
+Given/When/Then requirement statement. No separate requirement files, no mapping matrices.
 
-Every requirement lives in exactly one place: the spec file. Every boundary value lives in exactly one place:
-the constraint file. Every test payload lives in exactly one place: the named example instance.
-Nothing is duplicated. Nothing can drift.
+Each thing lives in exactly one place:
+
+- Boundary values → constraint file
+- Test payloads → examples file
+- Requirements → spec file (as executable tests)
 
 ```
 constraints.js           →     examples.js              →     spec.js
@@ -18,66 +19,38 @@ domain min/max,                one instance per               executable Given/W
 field lists, formats           boundary scenario              assertion + req metadata
 ```
 
----
+### Why One File for Examples and Test Data
 
-## Why This Architecture
+In each `*.examples.js` file, the **key name** is the example (what case is tested) and the
+**object value** is the test data (what payload is sent). Both roles live in one file because
+splitting them would mean importing from two places while every key still needs a complete payload.
 
-### The Problem with Separate Requirement Files
+```
+examples.js
+├── key name       →  the Example  (what boundary condition is being tested)
+│   "firstname__OverMaxLength"
+│
+└── object value   →  the Test Data (what payload makes the test executable)
+    { firstname: utils.extendString(..., MAX + 1), lastname: utils.random(8), ... }
+```
 
-Traditional approaches maintain `.reqs.js` files (or test management tools) alongside spec files:
+## Layer 1 — Constraints
 
-- **Double maintenance** — every requirement change must be applied in two places
-- **Silent drift** — specs and requirements contradict each other with no automated detection
-- **Magic numbers** — hardcoded boundary values (`50`, `100`, `'2026-01-01'`) with no traceable origin
-- **Stale requirements** — documented requirements no longer reflect what is actually tested
-- **Mapping overhead** — requirement-to-test traceability matrices become a maintenance burden of their own
-- **Progress opacity** — no reliable way to measure what percentage of requirements are covered and verified
-
-### What This Approach Delivers
-
-**Live documentation.** The requirement statement is the test title. When the test passes, the requirement
-is verified. The spec file IS the requirement document — always current, never outdated.
-
-**No magic numbers.** Every boundary value (`PRICE.MIN`, `FIRSTNAME.MAX_LENGTH`) is declared once in a
-constraint file and referenced by name everywhere — in titles, in test data, in assertions. Changing a
-boundary value is a one-line edit with full propagation.
-
-**Accurate progress measurement.** Because requirements exist only as `it()` blocks with
-metadata, coverage is computed directly from the test suite.
-
-**Single source of truth — verifiable by design.** Requirements cannot become stale because they are
-executable. A passing test suite is proof that the stated requirements hold. A failing test is an
-immediately actionable signal, not a documentation discrepancy to investigate.
-
-**Lightweight and sustainable.** No extra file type to learn. No synchronization rituals. No tooling
-beyond the ESLint rules already enforcing naming and structure. The entire approach fits inside the
-existing Cypress + JavaScript stack.
-
-> This is the most direct, maintainable, and auditable approach available in modern test automation:
-> requirements that prove themselves on every CI run.
-
----
-
-## Layer 1 — Constraints (Single Source of Truth)
-
-Boundary values shared between specs and examples live in constraint files:
+Boundary values used by both specs and examples. Declared once, imported everywhere.
 
 ```
 cypress/constants/
   api/
-    rb.booking.api.constraints.js   ← PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS
+    rb.booking.api.constraints.js   ← PRICE, DATE_FORMAT, REQUIRED_FIELDS
     {module}.api.constraints.js     ← one file per API module
   ui/
-    {page}.ui.constraints.js        ← one file per UI page (field lengths, counts, etc.)
+    {page}.ui.constraints.js        ← one file per UI page
 ```
 
 **Rules:**
 
-- Imported directly in BOTH spec files and examples files — never hardcoded
-- Represent domain boundaries (min/max values, formats, field lists)
+- Imported in both spec and examples files — never hardcoded
 - Plain ES module named exports — no global injection
-
-**Template:**
 
 ```javascript
 // cypress/constants/api/rb.booking.api.constraints.js
@@ -85,14 +58,12 @@ export const PRICE = { MIN: 1, MAX: 100_000, ZERO: 0 };
 export const FIRSTNAME = { MIN_LENGTH: 1, MAX_LENGTH: 50 };
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const REQUIRED_FIELDS = [
-    'firstname', 'lastname', 'totalprice', 'depositpaid',
-    'bookingdates.checkin', 'bookingdates.checkout',
+  'firstname', 'lastname', 'totalprice', 'depositpaid',
+  'bookingdates.checkin', 'bookingdates.checkout',
 ];
 ```
 
----
-
-## Layer 2 — Named Examples (Test Data)
+## Layer 2 — Named Examples
 
 ### File Layout
 
@@ -111,63 +82,64 @@ cypress/e2e-examples/
 
 ### Instance Naming Convention
 
-Instance names describe the **boundary condition or purpose**, not the values. Because one instance = one context, the
-name alone must make the covered case unambiguous — no supporting comments are needed.
+Names describe the **distinguishing intent** of the instance — not the values. The name alone
+must make the case unambiguous; no comments needed.
 
 ```
-{entity}__{field}__{BoundaryCondition}
+{purpose}{QualifierSuffix?}
 ```
 
-The double underscore (`__`) separates the three segments — consistent with the `__` convention used in
-Cypress command names (`entity__operation__METHOD`).
+- Single `lowerCamelCase` token for every example key (group containers and instance leaves).
+  (`module__action__METHOD`, `pageName__action`).
+- The container key (`validBookings`, `invalidBookings`, `expectedResponses`, workflow-scenario
+  nouns) carries the entity and the validity context.
+- The instance key describes the single distinguishing intent of the instance, optionally ending
+  in a PascalCase qualifier suffix drawn from the vocabulary below.
+- Regex shape: `^[a-z][a-zA-Z0-9]*$`.
 
-| Suffix                   | Meaning                                         |
-|--------------------------|-------------------------------------------------|
-| `AtMaxLength`            | Valid — exactly at the upper character limit    |
-| `OverMaxLength`          | Invalid — one step over the upper limit         |
-| `AtMinLength`            | Valid — exactly at the lower character limit    |
-| `UnderMinLength`         | Invalid — one step under the lower limit        |
-| `WithMinimalPrice`       | Boundary minimum value for a numeric field      |
-| `WithMaximalPrice`       | Boundary maximum value for a numeric field      |
-| `MissingRequiredField`   | Required field intentionally absent             |
-| `Duplicate`              | Conflicts with an existing record               |
-| `WithForbiddenChar`      | Contains a disallowed character                 |
-| `WithSameDayCheckout`    | Edge-case date scenario                         |
-| `WithAllFields`          | All optional fields present — Create context    |
-| `WithMandatoryFields`    | Only required fields present — Create context   |
-| `UpdatedToAllFields`     | Full-field replacement payload — Update context |
-| `UpdatedToMinimalFields` | Strips optional fields — Update context         |
+| Suffix                   | Meaning                                      |
+|--------------------------|----------------------------------------------|
+| `AtMaxLength`            | Valid — exactly at upper character limit     |
+| `OverMaxLength`          | Invalid — one over upper limit               |
+| `AtMinLength`            | Valid — exactly at lower character limit     |
+| `UnderMinLength`         | Invalid — one under lower limit              |
+| `WithMinimalPrice`       | Boundary minimum for a numeric field         |
+| `WithMaximalPrice`       | Boundary maximum for a numeric field         |
+| `MissingRequiredField`   | Required field intentionally absent          |
+| `Duplicate`              | Conflicts with existing record               |
+| `WithForbiddenChar`      | Contains a disallowed character              |
+| `WithSameDayCheckout`    | Edge-case date scenario                      |
+| `WithAllFields`          | All optional fields present — Create context |
+| `WithMandatoryFields`    | Only required fields — Create context        |
+| `UpdatedToAllFields`     | Full replacement payload — Update context    |
+| `UpdatedToMinimalFields` | Strips optional fields — Update context      |
 
-**❌ Avoid:** `item1`, `data1`, `test1`, `validBooking1`, `booking2`, `standard`, `default`
-
-**❌ Avoid generic "standard" names** — `standard` tells nothing about what case it covers. Use
-`allFieldsWithAllowedPrice`, `mandatoryFieldsOnly`, etc.
+**❌ Avoid:** `item1`, `data1`, `test1`, `validBooking1`, `standard`, `default`.
 
 ### Structure Rules
 
-- **One example key = one context.** Each named example key is consumed by exactly one `context` block.
-- **Named aliases instead of duplication.** If two contexts share the same data, declare one `const` for the object and
-  assign it under two descriptive keys in the export. No data is copied; the name at each key explains the context.
-- **ID cross-references are always allowed.** A context may read `examples.createAllFields.id` to target an
-  already-created resource.
-- **Names carry all meaning.** Keys must be self-describing without comments. If a key requires a comment to be
-  understood, rename it instead.
-- **Group** instances by scenario category: `validBookings`, `invalidBookings`, `edgeCases`, etc.
-- **Import** boundary values from constraint files — never hardcode them
-- **Use `utils`** for all dynamic data (strings, numbers, dates, booleans)
-- **Declare ID fields as `String`** placeholder — assign immediately after creation in spec
-- **Include `namePrefix`** at the root for cleanup identification (`Prefix.Purpose`)
+- **One example key = one context.** Each key is consumed by exactly one `context` block.
+- **Named aliases instead of duplication.** If two contexts share the same data, declare one `const`
+  and assign it under two descriptive keys. No data is copied.
+- **ID cross-references are allowed.** A context may read `examples.createAllFields.id` to target
+  an already-created resource.
+- **Names carry all meaning.** If a key needs a comment, rename it instead.
+- **Group** by scenario category: `validBookings`, `invalidBookings`, `edgeCases`, etc.
+- **Import** boundary values from constraints — never hardcode.
+- **Use `utils`** for all dynamic data (strings, numbers, dates, booleans).
+- **Declare ID fields as `String`** placeholder — assign after creation in spec.
+- **Include `namePrefix`** at root for cleanup identification.
 
 ### Full Example
 
-`allFieldsWithAllowedPrice` and `updatedToAllFields` both point to the same object — no data is copied.
-Each key is named after the context that reads it, so the spec remains self-describing.
+`allFieldsWithAllowedPrice` and `updatedToAllFields` point to the same object — each key is
+named after the context that reads it.
 
 ```javascript
 // cypress/integration-examples/api/rb.booking.api.examples.js
 import { PRICE, FIRSTNAME, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
 
-// Shared objects — referenced under multiple context-specific keys below
+// Shared object — referenced under multiple context-specific keys below
 const bookingWithAllFieldsAndAllowedPrice = {
   bookingId: String,
   firstname: `API.Booking.${utils.generateRandomString(6)}`,
@@ -248,46 +220,43 @@ export const booking_examples = {
 };
 ```
 
-#### Key Assignment Rules
+### Key Assignment Rules
 
-| Situation                                                        | Action                                                                     |
-|------------------------------------------------------------------|----------------------------------------------------------------------------|
-| Two contexts share the **same data shape and values**            | One `const`, assigned under two context-specific keys                      |
-| Two contexts need **different field values**                     | Two separate object literals, each under its own key                       |
-| A context needs only the **ID** of a previously created resource | Read `testData.validBookings.allFieldsWithAllowedPrice.bookingId` directly |
-| A context needs a **subset of fields** from a prior object       | New key pointing to an object literal with only those fields               |
+| Situation                                         | Action                                                                     |
+|---------------------------------------------------|----------------------------------------------------------------------------|
+| Two contexts share **same data**                  | One `const`, two context-specific keys                                     |
+| Two contexts need **different values**            | Two separate objects, each under its own key                               |
+| A context needs only the **ID** of a prior object | Read `testData.validBookings.allFieldsWithAllowedPrice.bookingId` directly |
+| A context needs a **subset of fields**            | New key pointing to a new object with only those fields                    |
 
-**❌ Don't do this:**
-
-```javascript
-// Passing the same key as payload to both Create AND Update — context is ambiguous at the call site
-cy.booking__create__POST(token, testData.validBookings.allFieldsWithAllowedPrice);
-cy.booking__update__PUT(token, id, testData.validBookings.allFieldsWithAllowedPrice); // unclear intent
-```
-
-**✅ Do this instead:**
+**❌ Don't reuse the same key for Create and Update — intent becomes ambiguous:**
 
 ```javascript
-cy.booking__create__POST(token, testData.validBookings.allFieldsWithAllowedPrice);
-cy.booking__update__PUT(token, id, testData.validBookings.updatedToAllFields); // intent is explicit
+cy.booking__create__POST(token, examples.validBookings.allFieldsWithAllowedPrice);
+cy.booking__update__PUT(token, id, examples.validBookings.allFieldsWithAllowedPrice); // unclear intent
 ```
 
----
+**✅ Use context-specific keys even when data is identical:**
 
-## Layer 3 — Spec Files (Tests = Live Requirements)
+```javascript
+cy.booking__create__POST(token, examples.validBookings.allFieldsWithAllowedPrice);
+cy.booking__update__PUT(token, id, examples.validBookings.updatedToAllFields); // intent is explicit
+```
+
+## Layer 3 — Spec Files (Tests = Requirements)
 
 ### Title Structure
 
-The full requirement is assembled from three title blocks:
+The requirement is assembled from three blocks:
 
-| Block               | Requirement Part  | Content                                                                                              |
-|---------------------|-------------------|------------------------------------------------------------------------------------------------------|
-| `describe`          | **Given**         | Initial state / preconditions                                                                        |
-| `context`           | **When**          | Current operation or boundary condition being exercised                                              |
-| `it` title          | **Then**          | Observable outcome — one assertion per `it`                                                          |
-| `req.preconditions` | **Given (extra)** | Additional preconditions not covered by the `describe` block (e.g. a resource that must exist first) |
+| Block               | Role              | Content                                                           |
+|---------------------|-------------------|-------------------------------------------------------------------|
+| `describe`          | **Given**         | Preconditions                                                     |
+| `context`           | **When**          | Operation or boundary condition                                   |
+| `it`                | **Then**          | Expected outcome — one assertion per `it`                         |
+| `req.preconditions` | **Given (extra)** | Preconditions not in `describe` (e.g. "booking created via POST") |
 
-Constraint values belong in titles — never hardcoded:
+Use constraint references in titles — never raw numbers:
 
 ```javascript
 // ❌ context('When booking with price of 1 is provided', ...)
@@ -296,62 +265,55 @@ Constraint values belong in titles — never hardcoded:
 
 ### `req` Config Object
 
-Every `it()` can take `{ req: {...} }` as its second argument.
+Every `it()` takes `{ req: {...} }` as its second argument. Only these fields are allowed:
 
-| Field           | Type                   | Required      | Default | Description                                                                                               |
-|-----------------|------------------------|---------------|---------|-----------------------------------------------------------------------------------------------------------|
-| `p`             | `'P1' \| 'P2' \| 'P3'` | optional      | `'P2'`  | Priority. Omit when P2.                                                                                   |
-| `preconditions` | `string`               | if applicable | —       | Additional preconditions not expressed in the `describe` "Given" block (e.g. "booking created via POST"). |
-| `ref`           | `string[]`             | if applicable | —       | External story / AC IDs: `['PROJ-123']`.                                                                  |
-| `bugs`          | `string[]`             | if applicable | —       | Defect IDs: `['BUG-BOOKING-002']`. Mirrored in `bug-log/bug-log.json`.                                    |
+- **`p`** — `'P1'` | `'P2'` | `'P3'`. Defaults to `'P2'`; omit when P2.
+- **`preconditions`** — string array. Extra preconditions beyond the `describe`: `['booking created via POST']`.
+- **`refs`** — URL array. Links to stories / ACs: `['https://jira.example.com/browse/PROJ-123']`.
+- **`bugs`** — string array. Defect IDs: `['BUG-BOOKING-002']`.
 
 ```javascript
-it('...Then return 200 and booking is created', { req: {} }, () => { ...
-});                                            // P2 default
-it('...Then return 200 and booking is created', { req: { p: 'P1' } }, () => { ...
-});                                  // P1
-it('...Then return 200 and all fields updated', {
-  req: {
-    p: 'P1',
-    preconditions: 'booking created via POST'
-  }
-}, () => { ...
-}); // additional precondition
-it('...Then return 500 Internal Server Error', { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => { ...
-});       // bug ref
-it('...Then return 200 and booking is created', { req: { p: 'P1', ref: ['PROJ-123'] } }, () => { ...
-});               // story ref
+    it('...Then return 200', { req: {} }, () => {
+});
+it('...Then return 200', { req: { p: 'P1' } }, () => {
+});
+it('...Then return 200', { req: { p: 'P1', preconditions: ['booking created'] } }, () => {
+});
+it('...Then return 500', { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => {
+});
+it('...Then return 200', { req: { p: 'P1', refs: ['https://jira.example.com/browse/PROJ-123'] } }, () => {
+});
 ```
 
 ### Context Block Rules
 
-**Same request, multiple edge-case assertions** → ONE context, multiple `it()` blocks:
+**Same request, multiple assertions** → one context, multiple `it()` blocks:
 
 ```javascript
-context('RestfulBooker.Booking.Create.POST: When valid booking data with all fields is provided', () => {
-  it('...Then return 200 status code and bookingid is a number', { req: { p: 'P1' } }, () => { ...
+    context('RestfulBooker.Booking.Create.POST: When valid booking data with all fields is provided', () => {
+  it('...Then return 200 status code and bookingid is a number', { req: { p: 'P1' } }, () => {
   });
-  it('...Then booking body contains all submitted field values', { req: { p: 'P1' } }, () => { ...
+  it('...Then booking body contains all submitted field values', { req: { p: 'P1' } }, () => {
   });
 });
 ```
 
-**Separate requests needed** → SEPARATE contexts with a SPECIFIC "When" condition:
+**Different requests** → separate contexts with specific "When" conditions:
 
 ```javascript
-context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => { ...
+    context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
 });
-context('RestfulBooker.Booking.Create.POST: When booking with same-day checkout is provided', () => { ...
+context('RestfulBooker.Booking.Create.POST: When booking with same-day checkout is provided', () => {
 });
 ```
 
-### Cleanup Pattern (mandatory)
+### Cleanup Pattern
 
-Each spec file must run independently. Cleanup prevents data pollution from current and previous runs.
+Each spec runs independently. Cleanup prevents data pollution from current and previous runs.
 Delete by name prefix — never by ID alone (IDs are lost between runs).
 
 ```javascript
-const cleanUp = () => cy.restfullBooker__bulkDelete__DELETE(authToken, testData);
+    const cleanUp = () => cy.restfullBooker__bulkDelete__DELETE(authToken, examples);
 
 describe('...', { testIsolation: false }, () => {
   before(() => {
@@ -445,7 +407,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
     it('RestfulBooker.Booking.Delete.DELETE: Then return 201 status code and booking no longer exists', {
         req: {
           p: 'P1',
-          preconditions: 'booking created via POST'
+          preconditions: ['booking created via POST']
         }
       }, () => {
         cy.restfullBooker__deleteBooking__DELETE(authToken, testData.validBookings.standard.bookingId)
@@ -458,21 +420,21 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
 });
 ```
 
----
+## Traceability Chain
 
-## The Traceability Chain
+How a boundary value flows from constraint to assertion:
 
 ```
-PRICE.MIN = 1                                        ← constraints.js — single source of truth
+PRICE.MIN = 1                                        ← constraints.js
     ↓
-validBookings.minimalPrice.totalprice = PRICE.MIN    ← examples.js — named, self-documenting instance
+examples.validBookings.minimalPrice = PRICE.MIN      ← examples.js
     ↓
-testData.validBookings.minimalPrice                  ← spec.js — live reference in test body
+examples.validBookings.minimalPrice                  ← spec.js (test body)
     ↓
-expect(totalprice).to.eq(PRICE.MIN)                  ← spec.js — assertion uses constraint directly
+expect(totalprice).to.eq(PRICE.MIN)                  ← spec.js (assertion)
 ```
 
-Each named instance maps **1-to-1** to a `context` block — strictly enforced by convention:
+Each named instance maps 1-to-1 to a `context` block:
 
 ```
 firstname__OverMaxLength    →  context: "When firstname exceeds 50 characters"      (Create.POST)
@@ -481,31 +443,27 @@ missingOneRequiredField     →  context: "When a required field is missing"    
 updatedToAllFields          →  context: "When full update payload is provided"       (Update.PUT)
 ```
 
-> `updatedToAllFields` and `allFieldsWithAllowedPrice` point to the same object — the name at each key
+> `updatedToAllFields` and `allFieldsWithAllowedPrice` point to the same object — the key name
 > describes the context, not the data.
-
----
 
 ## ESLint Enforcement
 
-| Rule                                          | What it validates                                                                                                                          |
-|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `verify-req-config`                           | Every `it()` has `{ req: {...} }` as second argument; `p` is P1/P2/P3; `preconditions` is a string; `bugs` follows `BUG-MODULE-NNN` format |
-| `verify-test-title-pattern`                   | Titles follow Given/When/Then pattern                                                                                                      |
-| `standardize-test-titles`                     | Title formatting and casing                                                                                                                |
-| `verify-test-title-without-forbidden-symbols` | No disallowed characters in titles                                                                                                         |
-| `prevent-test-data-loops`                     | No `forEach`/`for...of` over test data in specs                                                                                            |
-| `do-not-allow-empty-blocks`                   | No empty `context`/`it` blocks without `.skip()`                                                                                           |
-| `prevent-duplicated-titles`                   | No duplicate `it` titles within a file                                                                                                     |
-
----
+| Rule                                          | What it validates                                                                                                                                                                                          |
+|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `verify-req-config`                           | When `{ req: {...} }` is present in `it()`, validates `p` (P1/P2/P3), `preconditions` (non-empty string array), `refs` (non-empty URL array), `bugs` (BUG-MODULE-NNN or URL array); rejects unknown fields |
+| `verify-test-title-pattern`                   | Titles follow Given/When/Then pattern                                                                                                                                                                      |
+| `standardize-test-titles`                     | Title formatting and casing                                                                                                                                                                                |
+| `verify-test-title-without-forbidden-symbols` | No disallowed characters in titles                                                                                                                                                                         |
+| `prevent-test-data-loops`                     | No `forEach`/`for...of` over test data in specs                                                                                                                                                            |
+| `do-not-allow-empty-blocks`                   | No empty `context`/`it` blocks without `.skip()`                                                                                                                                                           |
+| `prevent-duplicated-titles`                   | No duplicate `it` titles within a file                                                                                                                                                                     |
 
 ## Scripts
 
 ```bash
 npm run req:extract          # JSON to stdout
-npm run req:extract:yaml     # YAML → reports/requirements.yaml (for stakeholders)
-npm run req:extract:md       # Markdown → reports/requirements.md (for review)
+npm run req:extract:yaml     # YAML → reports/requirements.yaml
+npm run req:extract:md       # Markdown → reports/requirements.md
 npm run req:extract:json     # JSON → reports/requirements.json
 npm run req:coverage         # P1/P2/P3 coverage counts
 npm run req:coverage:check   # Fail if P1 coverage < 90%
@@ -519,22 +477,25 @@ npm run req:coverage:check   # Fail if P1 coverage < 90%
 | 2 | PUT    | Update    | P1       | booking created via POST | full update payload         | return 200 and all fields updated | PROJ-456 |                 |
 | 3 | POST   | Create    | P1       |                          | required field missing      | return 500 Internal Server Error  |          | BUG-BOOKING-002 |
 
+---
+
 ## Rules Reference
 
-| #  | Rule                                                                                                            |
-|----|-----------------------------------------------------------------------------------------------------------------|
-| 1  | The spec IS the requirement — title = Given/When/Then                                                           |
-| 2  | Optional config `req` contains metadata only, `{ req: {...} }` as second argument to `it()`                     |
-| 3  | Constraint values come from constraint files — **never hardcoded** in specs or examples                         |
-| 4  | Context and `it` titles include constraint values: `` `...the ${USERNAME.MAX_LENGTH}-character limit` ``        |
-| 5  | One example key = one context — each named example key in the export is consumed by exactly one `context` block |
-| 5a | Named aliases over duplication — one `const`, assigned under two context-specific keys; no object is copied     |
-| 5b | ID cross-references are always allowed — reading `examples.x.id` in another context is fine                     |
-| 5c | Names carry all meaning — no comments needed; rename the key if its purpose is unclear                          |
-| 6  | IDs assigned immediately after creation: `examples.instance.bookingId = response.body.bookingid`                |
-| 7  | Cleanup runs in both `before` AND `after` — deletes by name prefix, never by ID alone                           |
-| 8  | Bug IDs go in `req.bugs: ['BUG-…']` only — no inline `// Bug:` comments                                         |
-| 9  | `req.preconditions` documents additional preconditions not expressed in the `describe` "Given" block            |
-| 10 | One `describe` per spec file, `{ testIsolation: false }`                                                        |
-| 11 | Single assertion per `it` (related assertions within one response are acceptable)                               |
-| 12 | All globals available in tests: `l10n`, `colours`, `utils`, `urls`, `userRoles`, selectors                      |
+| #  | Rule                                                                                                  |
+|----|-------------------------------------------------------------------------------------------------------|
+| 1  | The spec IS the requirement — title = Given/When/Then                                                 |
+| 2  | `{ req: {...} }` as second argument to `it()` — contains metadata only                                |
+| 3  | Boundary values come from constraint files — **never hardcoded** in specs or examples                 |
+| 4  | Titles include constraint values: `` `...the ${USERNAME.MAX_LENGTH}-character limit` ``               |
+| 5  | One example key = one context                                                                         |
+| 5a | Named aliases over duplication — one `const`, two context-specific keys; no object is copied          |
+| 5b | ID cross-references between contexts are allowed                                                      |
+| 5c | Names carry all meaning — rename instead of commenting                                                |
+| 6  | IDs assigned immediately after creation: `examples.instance.bookingId = response.body.bookingid`      |
+| 7  | Cleanup in both `before` AND `after` — delete by name prefix, never by ID alone                       |
+| 8  | Bug IDs go in `req.bugs` only — no inline `// Bug:` comments                                          |
+| 9  | `req.preconditions` for preconditions not expressed in the `describe` block                           |
+| 10 | One `describe` per spec file, `{ testIsolation: false }`                                              |
+| 11 | Single assertion per `it` (related assertions within one response are acceptable)                     |
+| 12 | Globals available: `l10n`, `colours`, `utils`, `urls`, `userRoles`, selectors                         |
+| 13 | Examples and test data share one file — key = example (spec role), value = test data (execution role) |

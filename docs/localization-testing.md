@@ -1,28 +1,29 @@
-# Localization Testing in Cypress
+# Localization testing
 
-## Overview
+## Configuration
 
-The project manages localizations using environment variable and file copying to support multiple color configurations.
+| Variable   | Purpose                                       | Example |
+|------------|-----------------------------------------------|---------|
+| `LANGUAGE` | Language code for localization file selection | `en`    |
 
-## Implementation Details
+## How it works
 
-### Environment Variables
-
-- `LANGUAGE`: Specifies the language code.
-
-### JSON Localization Files
-
-Localization strings are stored in JSON files, organized by language.
-
-### Pretest Script
-
-A pretest script copies the appropriate localization file to a common file (`l10n.json`).
-Run the pretest script during implementation to update it.
+1. Pretest script copies the appropriate localization file to `l10n.json`
+2. Tests access localization strings via global `l10n` variable
 
 ```bash
-  LANGUAGE=en npm run pretest
+LANGUAGE=en npm run pretest
 ```
 
-### Accessing Localization Strings
+## Usage in tests
 
-In your tests, you can access the localization strings using global variable `l10n`.
+Use `l10n` global variable instead of hardcoded text:
+
+```javascript
+cy.get(loginPage.title).should('have.text', l10n.loginPage.title);
+```
+
+## Related
+
+- [Colour theme testing](colour-theme-testing.md)
+- [Test writing guideline](test-writing-guideline.md)

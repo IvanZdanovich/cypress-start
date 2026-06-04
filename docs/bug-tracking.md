@@ -1,60 +1,25 @@
-# Bug Tracking
+# Bug tracking
 
-## Overview
+## Dual-approach system
 
-This project uses a **dual-approach bug tracking system**:
+| Channel      | Discovery                         | Location               | Test adaptation                          |
+|--------------|-----------------------------------|------------------------|------------------------------------------|
+| AI-automated | During test development           | `bug-log/bug-log.json` | `req.bugs` metadata in specs             |
+| Manual       | During manual/exploratory testing | Issue tracker          | `req.bugs` metadata (issue tracker link) |
 
-1. **AI-Automated Logging** => Bugs discovered during test development are logged to
-   `${WORKSPACE_ROOT}/bug-log/bug-log.json`
-2. **Manual Reporting** => Bugs found during manual testing are reported directly to the issue tracking system
+## AI-automated bug logging
 
----
+### Triggers
 
-## AI-Automated Bug Logging
+- Incorrect HTTP status codes
+- Missing or improper error messages
+- Unexpected response formats
+- Inconsistent behavior vs documentation
+- Security or validation issues
+- UI rendering problems
+- Broken user flows
 
-### How It Works
-
-The AI assistant automatically identifies and documents bugs in `${WORKSPACE_ROOT}/bug-log/bug-log.json` during test
-development, creating a staging area for review before migration to the issue tracker.
-
-### What Triggers AI Logging
-
-**Core Principle**: Log bugs when the application exhibits mistakes, inconsistencies, or harmful practices - **even if
-tests pass**. The analysis focuses on identifying whether the observed behavior poses a risk or harm to the application
-under test, not merely on test outcomes.
-
-**Trigger Categories**:
-
-**Harmful Practices** (Application Design/Implementation):
-
-- Security vulnerabilities (weak validation, exposed sensitive data, insecure defaults)
-- Data integrity risks (missing constraints, inconsistent state management)
-- Poor error handling (silent failures, misleading error messages)
-- Resource management issues (memory leaks, unclosed connections, excessive resource consumption)
-- Accessibility violations (missing ARIA labels, keyboard navigation issues)
-- Performance anti-patterns (N+1 queries, inefficient algorithms, blocking operations)
-
-**Inconsistencies** (Behavior vs Expectations):
-
-- Deviation from API specification/documentation
-- Inconsistent behavior across similar operations
-- Breaking REST/HTTP conventions without justification
-- Contradictory responses for equivalent requests
-- Mismatched data formats between related endpoints
-
-**Implementation Mistakes** (Incorrect Functionality):
-
-- Incorrect HTTP status codes (200 for failures, 500 for validation errors)
-- Missing/improper validation on required fields
-- Unexpected response formats or data types
-- Broken functionality (404s, runtime errors, null reference exceptions)
-- State corruption (data loss, incomplete updates, orphaned records)
-- UI rendering defects (broken layouts, missing elements, incorrect displays)
-
-**Note**: Tests may pass while validating current (incorrect) behavior. Bug logging captures the discrepancy between
-**what the application does** vs **what it should do**.
-
-### Bug Entry Structure
+### Bug entry structure
 
 ```json
 {
@@ -76,52 +41,98 @@ under test, not merely on test outcomes.
 }
 ```
 
-### Test Adaptation
+### Bug ID format
 
-When AI logs a bug, it automatically:
+| Test type | Pattern                         | Example            |
+|-----------|---------------------------------|--------------------|
+| API       | `BUG-[MODULE]-[NUMBER]`         | `BUG-BOOKING-002`  |
+| UI        | `BUG-[PAGE/COMPONENT]-[NUMBER]` | `BUG-LOGIN-001`    |
+| E2E       | `BUG-[WORKFLOW]-[NUMBER]`       | `BUG-CHECKOUT-003` |
 
-- Adds bug reference to req object: `{req: { bugs :['BUG-[MODULE]-XXX']}}`
-- Updates assertions to validate **actual** behavior
-- Ensures tests pass with current behavior
-- Documents expected behavior in comments
+### Test adaptation
 
-### Review & Migration Process
+When a bug is logged, the spec references it via `req.bugs` metadata:
 
-1. **Review** `${WORKSPACE_ROOT}/bug-log/bug-log.json` regularly (weekly or after major test development)
-2. **Validate** logged issues are legitimate bugs (not test code issues)
-3. **Create** issues in tracking system using this template:
-4. **Update** `${WORKSPACE_ROOT}/bug-log/bug-log.json` with issue tracker URL in `notes` field
+```javascript
+it('Module.Op.METHOD: Then return 500 status code', {
+  req: { p: 'P1', bugs: ['BUG-BOOKING-002'] }
+}, () => {
+  cy.module__create__POST(payload, { failOnStatusCode: false }).then((res) => {
+    expect(res.status).to.eq(500);
+  });
+});
+```
 
-### Bug Status Lifecycle
+Tests assert **actual** (current) behavior and pass. Expected behavior is documented in `bug-log.json`.
 
-| Status       | Description                  |
-|--------------|------------------------------|
-| **Open**     | Logged by AI, pending review |
-| **Resolved** | Fixed in codebase            |
-| **Closed**   | Verified and test updated    |
+### Status lifecycle
 
----
+| Status   | Description               |
+|----------|---------------------------|
+| Open     | Logged, pending review    |
+| Resolved | Fixed in codebase         |
+| Closed   | Verified and test updated |
 
-### Severity Classification
+### Review process
 
-| Severity     | Criteria                                                          |
-|--------------|-------------------------------------------------------------------|
-| **Critical** | App crashes, data loss, security issues, complete feature failure |
-| **High**     | Major feature broken, significant UX impact, no workaround        |
-| **Medium**   | Feature works with issues, workaround available                   |
-| **Low**      | Cosmetic issues, minor inconveniences, edge cases                 |
+1. Review `bug-log/bug-log.json` weekly
+2. Validate logged issues are legitimate bugs
+3. Create issues in tracking system
+4. Update `bug-log.json` notes with tracker URL
 
----
+## Manual bug reporting
 
-## Best Practices
+### When to report manually
 
-**Review Regularly** - Check `bug-log.json` weekly  
-**Validate First** - Confirm bugs aren't test code issues  
-**Maintain References** - Keep bug comments in test files  
-**Update Tests** - Remove workarounds when bugs are fixed  
-**Preserve History** - Never delete original bug entries
+- Bugs found during manual or exploratory testing
+- Issues discovered during UI review or code review
+- Stakeholder or end-user reports
 
----
+### Linking to tests
 
-**Note**: `${WORKSPACE_ROOT}/bug-log/bug-log.json` is a **staging area**, not a replacement for your issue tracking
-system. All bugs should ultimately be tracked in the central system.
+Reference the issue tracker URL in `req.bugs` on the affected `it` block. Do not add inline
+`// TODO:` comments — bug references belong in `req` metadata.
+
+```javascript
+it.skip(
+  'CartPage.STANDARD: Then Checkout button is displayed and enabled',
+  { req: { bugs: ['https://github.com/org/repo/issues/123'] } },
+  () => {
+    // ...
+  },
+);
+```
+
+When the bug affects every `it` in a suite (e.g. a shared workaround in `before`), declare
+`req.bugs` on the `describe` config object instead:
+
+```javascript
+describe(
+  'CartPage: Given user is authenticated',
+  { testIsolation: false, req: { bugs: ['https://github.com/org/repo/issues/123'] } },
+  () => {
+    // ...
+  },
+);
+```
+
+### Severity classification
+
+| Severity | Criteria                                                          |
+|----------|-------------------------------------------------------------------|
+| Critical | App crashes, data loss, security issues, complete feature failure |
+| High     | Major feature broken, significant UX impact, no workaround        |
+| Medium   | Feature works with issues, workaround available                   |
+| Low      | Cosmetic issues, minor inconveniences, edge cases                 |
+
+## Best practices
+
+- Validate bugs are not test code issues
+- Update tests when bugs are fixed (remove bug ref, assert correct behavior)
+- Preserve original bug entries — never delete, only update status
+
+## Related
+
+- [Requirements examples approach](requirements-examples-approach.md)
+- [Test writing guideline](test-writing-guideline.md)
+- [ESLint custom rules](eslint-custom-rules.md) — `verify-req-config` rule

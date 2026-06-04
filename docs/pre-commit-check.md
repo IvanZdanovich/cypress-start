@@ -1,45 +1,76 @@
-# Pre-commit Code Quality Check
+# Pre-Commit Check
 
-This document describes the automated code quality verification process that runs before each commit in the repository.
+The pre-commit hook runs automatically on every `git commit`. It executes `scripts/pre-commit-lint.js` in a single pass:
 
-## Overview
+1. **ESLint auto-fix** — fixable issues are corrected, written to disk, and re-staged automatically
+2. **Full stylish output** — file paths, line numbers, clickable `file:line:col` references
+3. **Ratio check** — remaining warning/error counts compared against `scripts/thresholds.json`
+4. **Auto-tighten thresholds** — thresholds update automatically when quality improves
 
-Pre-commit checks are **automatically installed** during `npm install` via the `postinstall` script. These checks ensure code quality standards by measuring ESLint warning and error ratios against predefined thresholds.
+> **Auto-fix always runs.** You do not need to trigger it manually before committing.
+> Remaining issues after the auto-fix step are ones ESLint cannot fix automatically (e.g. structural validation errors
+> like `verify-test-title-against-structure`). Those must be resolved manually.
 
-## Installation
+Merge and rebase commits are skipped automatically (`.git/MERGE_HEAD`, `rebase-merge`, `rebase-apply`).
 
-Hooks are installed automatically when you run:
+## Commands
+
+| Command                   | Description                                                 |
+|---------------------------|-------------------------------------------------------------|
+| `npm run precommit:check` | Run manually before committing (same as the git hook)       |
+| `npm run lint:check`      | Alias — identical to the above                              |
+| `npm run lint`            | Auto-fix + full output on all project files, no ratio check |
+
+## Workflow
+
+### Normal path
 
 ```bash
-npm install
+git add .
+git commit -m "your message"
+# Hook runs automatically:
+#   → ESLint auto-fix applied to staged files
+#   → Fixed files re-staged
+#   → Remaining ratio checked against thresholds
+#   → ✅ Commit proceeds if ratios are within thresholds
 ```
 
-The `postinstall` script creates a native git pre-commit hook in `.git/hooks/` that runs automatically before every commit.
+### When the hook fails (ratios exceed thresholds)
 
-### Manual Reinstallation
+The hook output will tell you exactly what to do:
 
-If hooks were accidentally removed or need to be reinstalled, run:
+```
+❌ Lint ratios exceed thresholds:
+   Warning ratio too high: 7.55% > 0%
 
-```bash
-npm run hooks:setup
+💡 Auto-fix was already applied — remaining issues need manual attention:
+   1. Fix the issue(s) shown above in the file(s) listed.
+   2. Run:  npm run lint      → re-apply auto-fix and review
+   3. Run:  git add .  &&  git commit -m "your message"
+
+   ⚠️  Emergency bypass (fix afterward): git commit --no-verify -m "your message"
 ```
 
-### CI Environment Behavior
+Common manual fixes:
 
-The setup script automatically detects CI environments (GitHub Actions, GitLab CI, CircleCI, Jenkins, Travis, etc.) and skips hook installation. This prevents unnecessary setup in automated pipelines.
+- **`verify-test-title-against-structure` errors** — run `npm run lint --fix` to auto-add valid paths to
+  `eslint-plugin-custom-rules/app-structure/expected/` (components.json / modules.json / workflows.json)
+- **`verify-test-title-pattern` warnings** — rename the `describe`/`context`/`it` block to match the required format
 
-## How It Works
+## Ratio Calculation
 
-1. During `npm install`, the `postinstall` script executes `scripts/setup-git-hooks.js`
-2. The script detects if running in CI (skips installation) or if `.git` directory exists
-3. If in a development environment, it creates a native git pre-commit hook in `.git/hooks/pre-commit`
-4. When you attempt to commit, the hook executes `scripts/check-eslint.js`
-5. The script validates code quality against thresholds in `scripts/thresholds.json`
-6. Commits that exceed thresholds are blocked
+```
+ratio = (remaining issues ÷ total lines in staged files) × 100
+```
 
-## Configuration
+- Computed over **staged files only**, not the full repository.
+- Line counts and issue counts are both taken **after auto-fix** — they are consistent.
+- Example: 4 warnings in a 53-line staged file → `4 / 53 × 100 = 7.55%`
+- With threshold `0%`, **any remaining issue** will block the commit.
 
-Thresholds are stored in `scripts/thresholds.json` with the following structure:
+## Thresholds
+
+Stored in `scripts/thresholds.json`:
 
 ```json
 {
@@ -48,65 +79,13 @@ Thresholds are stored in `scripts/thresholds.json` with the following structure:
 }
 ```
 
-Thresholds set to 0% mean no warnings or errors are allowed.
+`0%` means no warnings or errors are allowed after auto-fix. Thresholds tighten automatically as quality improves — they
+never loosen automatically.
 
-## Troubleshooting
+## Bypass
 
-If your commit is rejected:
-
-1. Review the error message showing which threshold was exceeded
-2. To identify specific issues run eslint manually via script defined in `package.json`:
-    ```bash
-    npm run lint
-    ```
-3. Fix the problems and try committing again
-
-### Verification
-
-Check if hooks are installed:
+For emergencies only — fix issues afterward:
 
 ```bash
-# Linux/macOS
-cat .git/hooks/pre-commit
-
-# Windows
-type .git\hooks\pre-commit
+git commit --no-verify -m "your message"
 ```
-
-You should see a pre-commit hook that references `scripts/check-eslint.js`.
-
-## Testing the Hook
-
-To test if the pre-commit hook is functioning correctly:
-
-```bash
-# Stage some JavaScript files
-git add path/to/file.js
-
-# Run the hook manually
-sh .git/hooks/pre-commit
-```
-
-## Bypassing the Check (Emergency Only)
-
-In exceptional cases, you can bypass the check with:
-
-```bash
-git commit --no-verify -m "Your commit message"
-```
-
-⚠️ Use sparingly - bypassing checks degrades code quality.
-
-## Auto-tightening Thresholds
-
-As code quality improves (fewer warnings/errors), the script automatically updates thresholds to more stringent values, promoting continuous improvement.
-
-## Developer Override
-
-If you need to skip hook installation locally (not recommended):
-
-```bash
-SKIP_HOOKS=true npm install
-```
-
-This environment variable prevents the `postinstall` script from setting up git hooks.

@@ -1,46 +1,36 @@
-# Parallel Test Execution Guide
+# Parallel execution
 
-## Overview
-
-The parallel test runner executes Cypress tests in parallel streams within a single container for faster test execution.
-
-**Key Features:**
-
-- Pre-setup tests run first sequentially (global setup)
-- Main tests execute in parallel with buffered output
-- Output displayed sequentially after completion (no interleaving)
-- Stream-specific folders prevent artifact overwrites
-- Configurable parallel streams (default: 3)
+Executes Cypress tests in parallel streams within a single container. Pre-setup runs sequentially first; main tests run in parallel with buffered output displayed sequentially after completion. Configurable via `PARALLEL_STREAMS` (default: 3).
 
 ## Execution Flow
 
 ```
 1. Pre-Setup Phase (Sequential)
    └─ Run: cypress/support/00-global-before.hook.spec.js
-   
+
 2. Discovery Phase
    └─ Find all test files matching pattern(s)
    └─ Filter out pre-setup files (already executed)
-   
+
 3. Chunking Phase (based on CHUNK_STRATEGY)
-   
+
    A. Unified Strategy (default):
       └─ Combine all discovered tests (mixed domains)
       └─ Split into N chunks using round-robin distribution
-   
+
    B. Domain-Separated Strategy:
       └─ Split each domain independently into chunks
       └─ Keeps domain tests isolated
-   
+
 4. Parallel Execution Phase (Buffered Output)
    ├─ Stream 1 → test chunk
    ├─ Stream 2 → test chunk
    ├─ Stream 3 → test chunk
    └─ (up to PARALLEL_STREAMS concurrent)
-   
+
 5. Sequential Output Display
    └─ Show each stream's complete output in order
-   
+
 6. Execution Summary
    └─ Duration, pass/fail stats
 ```
@@ -137,9 +127,11 @@ docker run cypress-tests npm run test
 
 ### Custom Pattern (when SPEC_PATTERN is set)
 
-Discovers all files matching the provided glob pattern. Files are classified by domain for reporting, then combined into unified chunks.
+Discovers all files matching the provided glob pattern. Files are classified by domain for reporting, then combined into
+unified chunks.
 
-**Note:** Pre-setup tests (`00-global-before.hook.spec.js`) are automatically detected and run first, regardless of SPEC_PATTERN.
+**Note:** Pre-setup tests (`00-global-before.hook.spec.js`) are automatically detected and run first, regardless of
+SPEC_PATTERN.
 
 ## Configuration
 
@@ -197,12 +189,14 @@ The runner supports two chunking strategies controlled by `CHUNK_STRATEGY`:
 - Each chunk contains a mix of tests from different domains
 
 **When to use:**
+
 - Fastest overall execution time
 - Maximum parallelization
 - Simple reporting structure
 - Tests are fully independent
 
 **Example output:**
+
 ```
 Unified Chunking Strategy (no domain separation):
   Total files: 24
@@ -223,12 +217,14 @@ Stream 3: [api-test-3.js, ui-test-5.js, e2e-test-4.js, ...]
 - Total tasks can exceed PARALLEL_STREAMS (limited by concurrency control)
 
 **When to use:**
+
 - Domain isolation is required
 - Different domains have different characteristics
 - Better organization in reporting
 - Debugging specific domain issues
 
 **Example output:**
+
 ```
 Domain-Separated Chunking Strategy:
   Integration API Tests:
@@ -250,7 +246,8 @@ Stream names: integrationApi-1, integrationApi-2, integrationApi-3,
               e2eUi-1, e2eUi-2
 ```
 
-**Note:** With domain-separated strategy, total tasks can exceed PARALLEL_STREAMS, but only PARALLEL_STREAMS will run concurrently. Remaining tasks will queue and execute as streams become available.
+**Note:** With domain-separated strategy, total tasks can exceed PARALLEL_STREAMS, but only PARALLEL_STREAMS will run
+concurrently. Remaining tasks will queue and execute as streams become available.
 
 ### 4. Parallel Execution
 
@@ -325,10 +322,10 @@ the latest version of `parallel-cypress-runner.js`.
 
 ## Best Practices
 
-✅ **Run pre-setup tests first** - Ensures proper environment setup  
-✅ **Use appropriate stream count** - Match available resources  
-✅ **Keep tests independent** - No shared state or dependencies  
-✅ **Use unique test data** - Random names/IDs prevent conflicts  
-✅ **Monitor resource usage** - Optimize stream count based on metrics  
-✅ **Check stream-specific artifacts** - Each stream has its own folders
+- **Run pre-setup tests first** — ensures proper environment setup
+- **Use appropriate stream count** — match available resources
+- **Keep tests independent** — no shared state or dependencies
+- **Use unique test data** — random names/IDs prevent conflicts
+- **Monitor resource usage** — optimize stream count based on metrics
+- **Check stream-specific artifacts** — each stream has its own folders
 

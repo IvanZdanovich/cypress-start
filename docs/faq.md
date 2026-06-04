@@ -3,9 +3,9 @@
 ## 1. Why is automating manual test cases ineffective?
 
 Automating manual test cases is not recommended because manual tests are designed for human execution structured in
-straight-forward way. often containing ambiguous duplicated steps and lacking the suite structure needed for reliable
+straight-forward way, often containing ambiguous duplicated steps and lacking the suite structure needed for reliable
 automation. Attempting to automate them leads to unclear logic, superficial coverage, high maintenance costs and broken
-CI/CD processes due slow execution because of duplicated steps.
+CI/CD processes due slow execution because of duplicated steps and assertions
 Keeping both manual and automated tests have no benefits, since requires a lot of resources and provides no benefits,
 because creates two sources of truth. Alignment with manual cases requires constant updates in both places, increasing
 the risk of inconsistencies and wasted effort. Metrics based on the number of automated manual cases are misleading,

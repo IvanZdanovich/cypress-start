@@ -1,11 +1,6 @@
 # Swagger Schema Management
 
-This document describes how to manage and update Swagger/OpenAPI schema files used for API testing reference.
-
-## Overview
-
-The project maintains local copies of Swagger JSON schemas from various API environments. These schemas are stored in
-`${WORKSPACE_ROOT}/development-data/swagger/` and serve as reference documentation for API testing.
+Local copies of Swagger JSON schemas from API environments, stored in `development-data/swagger/`.
 
 ## Updating Schemas
 

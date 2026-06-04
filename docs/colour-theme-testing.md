@@ -1,31 +1,29 @@
-# Color Theme Testing in Cypress
+# Colour theme testing
 
-## Overview
+## Configuration
 
-The project manages color themes using environment variable and file copying to support multiple color configurations.
+| Variable       | Purpose                              | Default   |
+|----------------|--------------------------------------|-----------|
+| `COLOUR_THEME` | Theme code for colour file selection | `default` |
 
-## Implementation Details
+## How it works
 
-### Environment Variables
-
-- `COLOUR_THEME`: Specifies the theme code to use (defaults to "default" if not set)
-
-### JSON Theme Files
-
-Colour values are stored in JSON files, organized by themes.
-
-### Pretest Script
-
-A pretest script copies the appropriate colour theme file to a common file (`current-theme-colours.json`) before tests
-run.
-
-Run the pretest script to update the current theme:
+1. Pretest script copies the appropriate colour theme file to `current-theme-colours.json`
+2. Tests access colour values via global `colours` variable
 
 ```bash
-  COLOUR_THEME=default npm run pretest
+COLOUR_THEME=default npm run pretest
 ```
 
-### Accessing Theme Colors
+## Usage in tests
 
-In your tests, you can access the colour values using global variable `colours`.
+Use `colours` global variable instead of hardcoded hex values:
 
+```javascript
+cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+```
+
+## Related
+
+- [Localization testing](localization-testing.md)
+- [Test writing guideline](test-writing-guideline.md)
