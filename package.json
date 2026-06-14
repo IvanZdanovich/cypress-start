@@ -7,7 +7,6 @@
     "url": "git+https://github.com/IvanZdanovich/cypress-start.git"
   },
   "bin": {
-    "cypress-start": "bin/cypress-start.js",
     "create-cypress-start": "bin/cypress-start.js"
   },
   "files": [
@@ -52,10 +51,7 @@
     "coverage:check:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80",
     "coverage:check:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80",
     "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80",
-    "req:extract": "node scripts/extract-reqs-from-specs.js",
-    "req:extract:yaml": "node scripts/extract-reqs-from-specs.js --format=yaml --output=reports/requirements.yaml",
-    "req:extract:md": "node scripts/extract-reqs-from-specs.js --format=markdown --output=reports/requirements.md",
-    "req:extract:json": "node scripts/extract-reqs-from-specs.js --output=reports/requirements.json"
+    "req:extract": "node scripts/extract-reqs-from-specs.js --output=reports/requirements.md"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -84,18 +80,18 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.2.1",
+    "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.0",
-    "eslint-plugin-cypress": "^6.3.1",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-cypress": "^6.4.1",
+    "eslint-plugin-prettier": "^5.5.6",
     "glob": "^13.0.6",
     "prettier": "^3.8.3"
   },
   "dependencies": {
-    "cypress": "^15.14.0"
+    "cypress": "^15.16.0"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24"
   }
 }

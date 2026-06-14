@@ -1,6 +1,6 @@
 ---
 name: create-skill
-description: Use when creating or updating a skill file in `.claude/skills/`. Produces compact, tag-based instruction files that follow the project ruleset.
+description: Use to create or update a compact, tag-based skill file in .claude/skills/
 ---
 
 # Principles

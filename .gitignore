@@ -6,6 +6,9 @@ dist
 !cypress/reports/screenshots/.gitkeep
 cypress/reports/**
 
+# generated coverage / requirements reports
+reports/**
+
 # asset folders
 cypress/downloads
 cypress/fixtures/assets

@@ -4,7 +4,7 @@
  * Extract Requirements from Spec Files
  *
  * Parses spec files for it() blocks with { req: { p, desc, bugs, example } }
- * config objects and generates structured requirements in JSON, YAML, or Markdown.
+ * config objects and generates a structured requirements report in Markdown.
  *
  * The spec IS the requirement — no separate .reqs.js files needed.
  *
@@ -14,12 +14,8 @@
  *                                         └── linked via req.example ──────────┘
  *
  * Usage:
- *   node scripts/extract-reqs-from-specs.js                          # JSON to stdout
- *   node scripts/extract-reqs-from-specs.js --format=yaml            # YAML to stdout
- *   node scripts/extract-reqs-from-specs.js --format=markdown        # Markdown to stdout
- *   node scripts/extract-reqs-from-specs.js --output=reports/reqs.json
- *   node scripts/extract-reqs-from-specs.js --format=yaml --output=reports/requirements.yaml
- *   node scripts/extract-reqs-from-specs.js --format=markdown --output=reports/requirements.md
+ *   node scripts/extract-reqs-from-specs.js                          # Markdown to stdout
+ *   node scripts/extract-reqs-from-specs.js --output=reports/requirements.md
  *   node scripts/extract-reqs-from-specs.js --priority=P1            # filter by priority
  */
 
@@ -33,10 +29,9 @@ const SPEC_DIRS = [path.join(ROOT, 'cypress/integration/api'), path.join(ROOT, '
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const parsed = { format: 'json', output: null, priority: null };
+  const parsed = { output: null, priority: null };
   for (const arg of args) {
     const [key, val] = arg.replace(/^--/, '').split('=');
-    if (key === 'format') parsed.format = val;
     if (key === 'output') parsed.output = val;
     if (key === 'priority') parsed.priority = val;
   }
@@ -195,75 +190,6 @@ function extractFromFile(filePath) {
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
-function toJson(reqs) {
-  const grouped = {};
-  for (const req of reqs) {
-    const key = [req.module, req.submodule].filter(Boolean).join('.');
-    if (!grouped[key]) grouped[key] = { precondition: req.precondition, requirements: [] };
-    grouped[key].requirements.push({
-      operation: req.operation,
-      method: req.method,
-      priority: req.priority,
-      rule: req.rule,
-      description: req.description !== req.rule ? req.description : undefined,
-      when: req.when,
-      example: req.example || undefined,
-      bugs: req.bugs.length > 0 ? req.bugs : undefined,
-      preconditions: req.preconditions.length > 0 ? req.preconditions : undefined,
-      skipped: req.skipped || undefined,
-    });
-  }
-  return JSON.stringify(grouped, null, 2);
-}
-
-function toYaml(reqs) {
-  const grouped = {};
-  for (const req of reqs) {
-    const key = [req.module, req.submodule].filter(Boolean).join('.');
-    if (!grouped[key]) grouped[key] = { precondition: req.precondition, requirements: [] };
-    grouped[key].requirements.push(req);
-  }
-
-  let yaml = '# Requirements — auto-generated from spec files\n';
-  yaml += `# Generated: ${new Date().toISOString().slice(0, 10)}\n\n`;
-
-  for (const [group, data] of Object.entries(grouped)) {
-    yaml += `${group}:\n`;
-    yaml += `  precondition: "${data.precondition}"\n`;
-    yaml += `  requirements:\n`;
-    for (const req of data.requirements) {
-      yaml += `    - operation: ${req.operation || 'N/A'}\n`;
-      yaml += `      method: ${req.method || 'N/A'}\n`;
-      yaml += `      priority: ${req.priority}\n`;
-      yaml += `      when: "${req.when}"\n`;
-      yaml += `      rule: "${req.rule}"\n`;
-      if (req.description !== req.rule) {
-        yaml += `      description: "${req.description}"\n`;
-      }
-      if (req.example) {
-        yaml += `      example: "${req.example}"\n`;
-      }
-      if (req.bugs.length > 0) {
-        yaml += `      bugs:\n`;
-        for (const bug of req.bugs) {
-          yaml += `        - ${bug}\n`;
-        }
-      }
-      if (req.preconditions.length > 0) {
-        yaml += `      preconditions:\n`;
-        for (const pre of req.preconditions) {
-          yaml += `        - "${pre}"\n`;
-        }
-      }
-      if (req.skipped) {
-        yaml += `      skipped: true\n`;
-      }
-    }
-    yaml += '\n';
-  }
-  return yaml;
-}
-
 function toMarkdown(reqs) {
   const now = new Date().toISOString().slice(0, 10);
   let md = `# Requirements\n\n> Auto-generated from spec files — ${now}\n\n`;
@@ -330,18 +256,7 @@ function main() {
     allReqs = allReqs.filter((r) => order[r.priority] && order[r.priority] <= order[args.priority]);
   }
 
-  let output;
-  switch (args.format) {
-    case 'yaml':
-      output = toYaml(allReqs);
-      break;
-    case 'markdown':
-    case 'md':
-      output = toMarkdown(allReqs);
-      break;
-    default:
-      output = toJson(allReqs);
-  }
+  const output = toMarkdown(allReqs);
 
   if (args.output) {
     const outPath = path.resolve(ROOT, args.output);

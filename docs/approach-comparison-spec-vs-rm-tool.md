@@ -111,7 +111,7 @@ automatically on every continuous integration run. No manual export or reconcili
 | 4 | **Constraint value changed** (MAX_LENGTH 50 → 100, shared by N tests) | 1 (`constraints.js`)                           | version control                        | 1 + N (constraint file + N requirement record texts)                                                                  | consolidated platform + version control                          | **+N** (N=5 → **+5**) |
 | 5 | **Bug discovered**                                                    | 2 (bug record in tracker + `req.bugs` in spec) | version control + external bug tracker | 3 (Bug record + link to Requirement + link to Test Case — all within one platform)                                    | consolidated platform                                            | **+1**                |
 | 8 | **Coverage or gap report**                                            | 0 (`npm run req:coverage`)                     | command line                           | 0 (reporter plugin, auto-push)                                                                                        | continuous integration plugin                                    | **0**                 |
-| 9 | **Audit or export**                                                   | 0 (`npm run req:extract:json`)                 | command line                           | 0 (reporter plugin, auto-push)                                                                                        | continuous integration plugin                                    | **0**                 |
+| 9 | **Audit or export**                                                   | 0 (`npm run req:extract`)                      | command line                           | 0 (reporter plugin, auto-push)                                                                                        | continuous integration plugin                                    | **0**                 |
 
 **Arithmetic check (N = 5):**
 
@@ -181,7 +181,7 @@ platform read-only via a continuous integration pipeline.
 ```
 spec.js  (single editable surface)
    │
-   ├── npm run req:extract:json ──► continuous integration job
+   ├── npm run req:extract ──► continuous integration job
    │                                    └──► requirements platform (read-only mirror)
    │
    ├── req.refs: ['https://jira.example.com/browse/PROJ-123']  ← only manual link, points OUT
@@ -243,7 +243,7 @@ engineers own authoring but product managers or stakeholders need dashboards.
 
 - Approach B is modelled as Integrated only (Xray / Zephyr Scale / TestRail with Cypress plugin).
 - `N` = number of tests sharing a constraint; N=5 is used throughout. Real values can be
-  obtained via `npm run req:extract:json` grouped by constraint identifier.
+  obtained via `npm run req:extract` grouped by constraint identifier.
 - Per-requirement node counts exclude shared infrastructure for both approaches (see §2).
 - Runtime performance, flakiness, and test execution time are out of scope.
 
@@ -288,7 +288,7 @@ Each component is a **new failure surface independent of test quality**:
 | Test case identifier mapping stale (test was renamed)            | Results posted to wrong record silently        | No — but traceability breaks silently            |
 | Platform schema changed                                          | Results rejected by the platform API           | No                                               |
 
-Approach A's continuous integration export (`npm run req:extract:json`) is a
+Approach A's continuous integration export (`npm run req:extract`) is a
 **read-only, offline operation** — it reads spec files and writes a JSON artifact. It makes no
 external API calls, requires no authentication tokens, and cannot be broken by platform changes.
 Its only failure mode is a broken spec file, which is always also a test failure.

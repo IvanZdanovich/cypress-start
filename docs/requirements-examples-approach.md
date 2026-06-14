@@ -461,12 +461,9 @@ updatedToAllFields          →  context: "When full update payload is provided"
 ## Scripts
 
 ```bash
-npm run req:extract          # JSON to stdout
-npm run req:extract:yaml     # YAML → reports/requirements.yaml
-npm run req:extract:md       # Markdown → reports/requirements.md
-npm run req:extract:json     # JSON → reports/requirements.json
-npm run req:coverage         # P1/P2/P3 coverage counts
-npm run req:coverage:check   # Fail if P1 coverage < 90%
+npm run req:extract          # Markdown → reports/requirements.md
+npm run coverage:report      # Coverage gap report → reports/coverage-gaps.md
+npm run coverage:check       # Fail if coverage < threshold
 ```
 
 ### Generated Markdown Table

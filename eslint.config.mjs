@@ -11,6 +11,20 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
+// Enable every custom rule registered in the plugin's index.js so the config
+// can never drift out of sync with the registered rule set. Rules default to
+// 'error'; list only the exceptions here.
+const customRuleSeverityOverrides = {
+  'find-unused-examples': 'warn',
+  'verify-req-config': 'warn',
+};
+const customRules = Object.fromEntries(
+  Object.keys(customPlugin.rules).map((name) => [
+    `custom/${name}`,
+    customRuleSeverityOverrides[name] ?? 'error',
+  ]),
+);
+
 export default [
   {
     ignores: ['**/node_modules', '**/dist', '**/cypress/reports'],
@@ -37,20 +51,7 @@ export default [
       'cypress/unsafe-to-chain-command': 'error',
       'no-unused-expressions': 'warn',
       'chai-friendly/no-unused-expressions': 'error',
-      'custom/do-not-allow-empty-blocks': 'error',
-      'custom/prevent-duplicated-titles': 'error',
-      'custom/prevent-examples-loops': 'error',
-      'custom/verify-test-title-without-forbidden-symbols': 'error',
-      'custom/verify-test-title-pattern': 'error',
-      'custom/verify-test-title-against-structure': 'error',
-      'custom/verify-todos-have-links': 'error',
-      'custom/standardize-test-titles': 'error',
-      'custom/verify-api-command-naming': 'error',
-      'custom/verify-ui-command-naming': 'error',
-      'custom/enforce-spec-blank-lines': 'error',
-      'custom/find-unused-selectors': 'error',
-      'custom/find-unused-test-data': 'warn',
-      'custom/verify-req-config': 'warn',
+      ...customRules,
     },
   },
 ];
