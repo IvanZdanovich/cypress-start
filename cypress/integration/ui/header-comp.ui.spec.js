@@ -73,8 +73,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
   context('Header.STANDARD: When user adds products to cart', () => {
     before(() => {
       cy.get(inventoryPage.cards).then(($cards) => {
-        const selectedIndex = examples.randomProductIndices[0];
-        cy.wrap($cards[selectedIndex]).find(inventoryPage.card.add).click();
+        cy.wrap($cards[examples.randomProductIndices[0]]).find(inventoryPage.card.add).click();
       });
     });
     it('Header.STANDARD: Then Cart badge displays count of added products', () => {
@@ -95,11 +94,9 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
     it('Header.STANDARD: Then Sidebar is displayed', () => {
       cy.get(headerComp.sidebar.container).should('be.visible');
     });
-    // Bug Reference: BUG-HEADER-001 - Reset App State does not reset product Add/Remove button states
-    it('Header.STANDARD: Then Remove buttons remain unchanged', () => {
+    it('Header.STANDARD: Then Remove buttons remain unchanged', { req: { bugs: ['BUG-HEADER-001'] } }, () => {
       cy.get(inventoryPage.cards).then(($cards) => {
-        const selectedIndex = examples.randomProductIndices[0];
-        cy.wrap($cards[selectedIndex]).find(inventoryPage.card.remove).should('be.visible');
+        cy.wrap($cards[examples.randomProductIndices[0]]).find(inventoryPage.card.remove).should('be.visible');
       });
     });
   });

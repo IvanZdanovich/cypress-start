@@ -3,69 +3,46 @@ name: constraints-examples-specs-approach
 description: Use when designing or reviewing executable requirements (specifications) to follow the project constraints to examples to specs traceability model
 ---
 
-# Constraints examples specs approach
+# Principles
 
-PURPOSE: enforce executable requirements through constraints, named examples, and testable specs
-SCOPE: `cypress/constants/api/*.constraints.js`, `cypress/constants/ui/*.constraints.js`,
-`cypress/e2e-examples/ui/*.examples.js`, `cypress/integration-examples/api/*.examples.js`,
-`cypress/integration-examples/ui/*.examples.js`, `cypress/integration/api/*.spec.js`,
-`cypress/integration/ui/*.spec.js`,`cypress/e2e/ui/*.spec.js`
+PURPOSE: cross-file traceability orchestration for constraints → examples → specs chain
+SCOPE: `cypress/constants/`, `cypress/integration-examples/`, `cypress/e2e-examples/`, `cypress/integration/`, `cypress/e2e/`
 CORE_IDEA: spec titles are requirements, examples are executable data, constraints are boundary sources
+SINGLE_OWNER: every data value has exactly one authoritative source; consumers import, never duplicate
+LAYER_SEPARATION: constraints own boundaries, examples own composition, specs own assertions
+
+# Traceability chain
+
+DIRECTION: constraint value → example field → spec title → assertion
+BOUNDARY_TO_EXAMPLE: examples import constraint constants and compose fields from them
+EXAMPLE_TO_SPEC: specs import examples and reference instances directly
+SPEC_TO_ASSERTION: `it` title names the business outcome; assertion verifies example value or constraint boundary
+BROKEN_CHAIN_SIGNAL: literal in spec that could trace to a constraint → extract
 
 # Ownership
 
-CONSTRAINTS: boundary values, formats, required fields, enums, durations, display options
-EXAMPLES: named instances and payloads, one key per tested state of instance, pre-calculated derived values
-SPECS: Given/When/Then requirement titles, setup, execution, assertions, req metadata
-COMMANDS: reusable steps, complex interactions, and multi-step flows
+CONSTRAINTS_SKILL: `define-constraints` — boundary value authoring
+EXAMPLES_SKILL: `define-examples` — instance composition authoring
+SPEC_SKILLS: `write-integration-api-specs`, `write-integration-ui-specs`, `write-e2e-ui-specs`
 GLOBALS: `utils`, `l10n`, `colours`, `apiUrls`, `uiUrls`, `userRoles`, `companies`, `reqs`, `apiErrors`, selectors
 
-# Traceability
+# Decomposition
 
-CHAIN: constraint value to example field or instance to spec title to assertion
-BOUNDARY_SOURCE: import constraints in examples and specs
-DATA_SOURCE: spec uses examples directly
-ASSERTION_SOURCE: expected values from constraints, examples, globals, or pre-calculated derived values
-REQ_METADATA: every `it()` can include metadata object `{ req: {} }`; fields `p`, `preconditions`, `refs`, `bugs`
+REQUIREMENT_TO_LAYERS: one business requirement → constraint (boundary) + example (instance) + spec (assertion)
+BOUNDARY_SPLIT: separate constraints per domain concept
+INSTANCE_SPLIT: one example key per distinct tested state
+SPEC_SPLIT: one `it` per verified outcome; related property checks on same element allowed
+MULTI_MODULE: each module's constraints and examples remain in own files; spec imports from all
 
-# Data lifecycle
+# Conflict resolution
 
-RANDOM_SOURCE: `utils` for generated names, dates, numbers, booleans, random selections
-ID_FIELDS: `String` placeholders in examples
-ID_ASSIGNMENT: immediate assignment after resource creation to same instance owner
-INSTANCE_REUSE: within file lifecycle, same-instance IDs, context-specific keys
-DERIVED_VALUES: pre-calculated in examples
-CLEANUP: `const cleanUp = () => cy.module__deleteByNames__DELETE(token, [examples.namePrefix])` plus `before` and
-`after`
-DELETE_STRATEGY: name patterns and `deleteByNames` style commands
-FILE_INDEPENDENCE: each spec runnable alone from clean or polluted environment
+API_UI_DIVERGENCE: examples mirror API field name; specs use `l10n` for UI text
+CONSTRAINT_OVERLAP: shared boundary → `cypress/constants/api/shared.api.constraints.js`
+EXAMPLE_COUPLING: spec creates own instance via API command — never import another spec's examples
 
-# Testability
+# Validation
 
-SPEC_STRUCTURE: single `describe` defining the scenario, with sequential `context` blocks grouping setup conditions, and
-`it` blocks asserting specifications
-ISOLATION: `{ testIsolation: false }` on `describe`
-FLOW: explicit state per context, efficient context order, flat `cy.then()` blocks
-ASSERTION_SCOPE: expected result blocks, single-value `it` blocks where practical
-ERROR_RESPONSES: pass `{ failOnStatusCode: false }` for expected non-2xx responses
-BUG_HANDLING: bug IDs in `req.bugs`, current behavior asserted until fixed
-
-# Naming
-
-EXAMPLE_FORMAT: `{purpose}{QualifierSuffix?}` — single `lowerCamelCase` token; group container carries entity + validity, instance key describes the single distinguishing intent;
-COMMAND_FORMAT_API: `moduleName__operationDetails__METHOD`
-COMMAND_FORMAT_UI: `pageName__operation`, `componentName__operation`
-TITLE_DESCRIBE: `Module.Submodule: Given 'preconditions', 'created data'`
-TITLE_CONTEXT: `Module.Submodule.Operation.METHOD: When 'condition'`
-TITLE_IT: `Module.Submodule.Operation.METHOD: Then 'expected result'`
-TITLE_UNIQUENESS: unique describe, context, and `it` titles within `context`
-TITLE_IT_SPECIFICITY: verified assumed outcome of example or business rule
-NAME_STYLE: semantic purpose, context intent, stable business wording
-
-# Readability
-
-SPEC_GUARDRAILS: pre-composed examples, direct references, pre-calculated values, flat Cypress chains
-DATA_GUARDRAILS: generated dates and names, semantic keys, same-instance IDs, useful comments
-MAINTENANCE_GUARDRAILS: compact setup, visible data ownership, one context per example key
-REVIEW_CHECK: boundary trace, ID lifecycle, cleanup hooks, req metadata, title uniqueness
-
+TRACE_CHECK: constraint → example field → spec title → assertion
+PLACEMENT_CHECK: no boundary literal in examples, no payload reconstruction in specs
+SINGLE_OWNER_CHECK: no duplicated definitions across layers
+CHAIN_COMPLETENESS: every constraint consumed by example; every example consumed by spec

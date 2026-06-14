@@ -3,9 +3,12 @@ name: git-strategy
 description: Use when creating branches, writing commits, or opening pull requests in this repository. Enforces branch naming, Conventional Commits style, squash-merge PRs, and the contributing workflow.
 ---
 
-# Git strategy
+# Principles
 
 PURPOSE: apply the project's branching, commit, and PR conventions consistently
+SCOPE: git operations — branches, commits, pull requests
+MERGE_STRATEGY: squash merge only — no merge commits, no rebase merges
+BASE_BRANCH: `main`
 
 # Commits
 
@@ -17,8 +20,6 @@ BODY: optional; explain *why*, not *what*
 # Pull requests
 
 TITLE: mirrors the squash-commit message — `<type>(<scope>): <imperative summary>`
-BASE_BRANCH: `main`
-MERGE_STRATEGY: squash merge only
 REVIEW: at least one approval required before merge
 CHECKS: pre-commit quality checks must pass
 
@@ -31,7 +32,7 @@ PR_TARGET: `main`
 REVIEW_UPDATES: follow-up commits on the same branch
 MERGE: squash and merge once approved
 
-# Guards
+# Validation
 
-BRANCH_CHECK: branch name matches `feature/<TICKET_KEY>-<short-kebab-description>` before any push
-PRE_COMMIT: pre-commit checks pass before suggesting a PR
+BRANCH_CHECK: branch name matches `feature/<TICKET_KEY>-<short-kebab-description>`
+PRE_COMMIT_CHECK: pre-commit checks pass before suggesting a PR

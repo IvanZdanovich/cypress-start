@@ -31,8 +31,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it('InventoryPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
     });
-    // Bug Reference: BUG-FOOTER-001 - Twitter link uses outdated twitter.com URL
-    it('InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed', () => {
+    it('InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
       cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('InventoryPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
@@ -41,25 +40,17 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it('InventoryPage.Footer.STANDARD: Then the Copyright notice with actual year should be displayed', () => {
       cy.footerComp__verifyCopyright();
     });
-    // Bug Reference: BUG-FOOTER-002 - Terms of Service link is missing
-    it.skip('InventoryPage.Footer.STANDARD: Then Terms Of Service link should be displayed', () => {
-      // Test skipped: Terms of Service link element does not exist in the footer
-    });
-    // Bug Reference: BUG-FOOTER-003 - Privacy Policy link is missing
-    it.skip('InventoryPage.Footer.STANDARD: Then Privacy Policy link should be displayed', () => {
-      // Test skipped: Privacy Policy link element does not exist in the footer
-    });
+    it.skip('InventoryPage.Footer.STANDARD: Then Terms Of Service link should be displayed', { req: { bugs: ['BUG-FOOTER-002'] } }, () => {});
+    it.skip('InventoryPage.Footer.STANDARD: Then Privacy Policy link should be displayed', { req: { bugs: ['BUG-FOOTER-003'] } }, () => {});
     it('InventoryPage.STANDARD: Then default number of product cards should be displayed', () => {
       cy.get(inventoryPage.cards).should('have.length', PRODUCT_COUNT.limit);
     });
-    // Bug Reference: BUG-INVENTORY-001 - Product title displays incorrect value
-    it('InventoryPage.Card.STANDARD: Then each product card Title should be displayed', () => {
+    it('InventoryPage.Card.STANDARD: Then each product card Title should be displayed', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
       cy.get(inventoryPage.card.title).each(($title) => {
         cy.wrap($title).should('not.be.empty').and('be.visible');
       });
     });
-    // Bug Reference: BUG-INVENTORY-002 - Product description displays incorrect value
-    it('InventoryPage.Card.STANDARD: Then each product card Description should be displayed', () => {
+    it('InventoryPage.Card.STANDARD: Then each product card Description should be displayed', { req: { bugs: ['BUG-INVENTORY-002'] } }, () => {
       cy.get(inventoryPage.card.description).each(($description) => {
         cy.wrap($description).should('not.be.empty').and('be.visible');
       });
@@ -212,8 +203,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.url().should('eq', urls.pages.cart);
       cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
     });
-    // Bug Reference: BUG-INVENTORY-001 - Product title displays incorrect value
-    it('InventoryPage.Card.STANDARD: Then appropriate products are presented in the table', () => {
+    it('InventoryPage.Card.STANDARD: Then appropriate products are presented in the table', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
       cy.get(cartPage.item.title).each(($title) => {
         cy.wrap($title)
           .invoke('text')
@@ -276,7 +266,6 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     });
   });
 
-  // Bug Reference: BUG-INVENTORY-001 - Product title displays incorrect value
   context('InventoryPage.STANDARD: When user clicks on Title of product card that was not added to cart', () => {
     let productForReview;
 
@@ -296,8 +285,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it('InventoryPage.STANDARD: Then user should be redirected to the Product page', () => {
       cy.url().should('contain', urls.pages.item);
     });
-    // Bug Reference: BUG-INVENTORY-001 - Product title displays incorrect value
-    it('InventoryPage.STANDARD: Then Product title should be displayed', () => {
+    it('InventoryPage.STANDARD: Then Product title should be displayed', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
       cy.get(productPage.title)
         .invoke('text')
         .then((text) => {

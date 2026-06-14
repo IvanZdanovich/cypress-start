@@ -30,15 +30,10 @@ describe('Footer: Given STANDARD user on Inventory page', { testIsolation: false
   });
 
   context('Footer.STANDARD: When user reviews Twitter icon', () => {
-    it('Footer.STANDARD: Then Twitter icon should have correct href attribute', () => {
+    it('Footer.STANDARD: Then Twitter icon should have correct href attribute', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
       cy.get(footerComp.twitter)
         .should('have.attr', 'href')
-        .and('satisfy', (href) => {
-          // Bug Reference: BUG-FOOTER-001 - Twitter link uses outdated twitter.com URL
-          // Actual: https://twitter.com/saucelabs
-          // Expected: https://x.com/saucelabs
-          return href === 'https://twitter.com/saucelabs' || href === examples.socialLinks.twitter.url;
-        });
+        .and('satisfy', (href) => href === 'https://twitter.com/saucelabs' || href === examples.socialLinks.twitter.url);
     });
     it('Footer.STANDARD: Then Twitter icon should open in new tab', () => {
       cy.get(footerComp.twitter).should('have.attr', 'target', '_blank');

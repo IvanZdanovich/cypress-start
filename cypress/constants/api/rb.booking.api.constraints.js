@@ -11,11 +11,11 @@
  */
 
 /** Price constraints for totalprice validation. */
-export const PRICE = {
+export const PRICE = Object.freeze({
   MIN: 1,
   MAX: 100_000,
   ZERO: 0,
-};
+});
 
 /** Minimum contiguous stay length (days) for the "long stay" edge case. */
 export const LONG_STAY_MIN_DAYS = 90;
@@ -27,4 +27,4 @@ export const DATE_FORMAT = 'YYYY-MM-DD';
  * Fields required for a valid booking payload.
  * Used by missing-field, invalid-type, and empty-string tests.
  */
-export const REQUIRED_FIELDS = ['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout'];
+export const REQUIRED_FIELDS = Object.freeze(['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout']);

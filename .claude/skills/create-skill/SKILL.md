@@ -3,33 +3,23 @@ name: create-skill
 description: Use when creating or updating a skill file in `.claude/skills/`. Produces compact, tag-based instruction files that follow the project ruleset.
 ---
 
-# Create skill
-
-PURPOSE: produce SKILL.md that guides code generation with minimal tokens
+# Principles
+PURPOSE: guide production of token-efficient self-contained SKILL.md
+SEGMENTATION: one skill per responsibility, one section per concept, one tag per rule
 SCOPE: `.claude/skills/<skill-name>/SKILL.md`
-
-# File conventions
-
-LOCATION: `.claude/skills/<kebab-case-name>/SKILL.md`
+SECTIONS: frontmatter, principles, custom sections, validation
 FRONTMATTER: `name` (kebab-case), `description` (one-line trigger sentence)
-HEADING_LEVELS: H1 skill title, H2 major sections
+HEADING_LEVELS: H1 major sections
 TAG_FORMAT: `UPPER_SNAKE_CASE: value`
-TAG_COUNT: one rule per line
+TAG_STYLE: desired pattern as noun tag, positive framing, stable vocabulary
 LIST_STYLE: comma-separated inline for compact sets
-CODE_STYLE: fenced blocks for structural examples only
+THE_OTHER_WAY_AROUND: define what the skill prevents, not just what it produces — use REVERSE_BRAINSTORM tags
+REVERSE_BRAINSTORM: prevent restated content across skills, narrative prose, generic tag names and values, mix of tag responsibilities
 
-# Guardrails
-
-TAG_STYLE: noun tags, positive framing, stable vocabulary
-FRAMING: desired pattern as tag value, not forbidden pattern
-SCOPE_SPECIFICITY: one skill per responsibility, no overlapping scopes
-EXAMPLE_DENSITY: one code block max, only when structure is non-obvious
-REFERENCE_LINKS: point to instruction files, not inline prose copies
-
-# Review checks
-
+# Validation
 TAG_CHECK: UPPER_SNAKE_CASE, one rule per line, noun-led
 FRAMING_CHECK: positive guidance and desired patterns throughout
-TOKEN_CHECK: no filler phrases, no narrative prose
+TOKEN_CHECK: no filler phrases, no narrative prose, meaningful signals only
 SCOPE_CHECK: frontmatter `description` matches the skill's actual trigger
 PATH_CHECK: declared paths exist in the workspace
+SECTION_CHECK: mandatory sections present — Principles, Validation

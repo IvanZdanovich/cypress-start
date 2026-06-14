@@ -8,22 +8,22 @@
  */
 
 /** Total number of product cards rendered on the Inventory page. */
-export const PRODUCT_COUNT = {
+export const PRODUCT_COUNT = Object.freeze({
   limit: 6,
-};
+});
 
 /**
  * HTML <select> option values for the sort dropdown.
  * Keys match l10n.inventoryPage.sort.options keys.
  */
-export const SORT_OPTIONS = {
+export const SORT_OPTIONS = Object.freeze({
   nameAscending: 'az',
   nameDescending: 'za',
   priceAscending: 'lohi',
   priceDescending: 'hilo',
-};
+});
 
 /** Default sort option applied when the page first loads. */
-export const DEFAULT_SORT = {
+export const DEFAULT_SORT = Object.freeze({
   defaultValue: SORT_OPTIONS.nameAscending,
-};
+});

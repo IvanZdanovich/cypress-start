@@ -1,9 +1,9 @@
 ---
 name: write-integration-api-specs
-description: Use when writing or updating Cypress Integration API specs that must be executable requirements backed by constraints, examples, API commands, cleanup, and req metadata.
+description: Use when writing or updating Integration API specs that must be executable requirements backed by constraints, named examples.
 ---
 
-# Write integration API specs
+# Principles
 
 PURPOSE: create testable API requirements from named examples and constraints
 SPEC: `cypress/integration/api/module-name.submodule-name.api.spec.js`
@@ -12,86 +12,69 @@ CONSTRAINTS: `cypress/constants/api/module-name.api.constraints.js`
 COMMANDS: `cypress/commands/api/`
 URLS: `cypress/urls/api-urls.js`
 REGISTRY: `eslint-plugin-custom-rules/app-structure/modules.json`
+REVERSE_BRAINSTORM: "What would guarantee this spec gives false confidence, is unmaintainable, or misleads?"
 
 # Structure
 
-STRUCTURE: single `describe` defining the scenario, with sequential `context` blocks grouping setup conditions, and `it` blocks asserting specifications
+HIERARCHY: single `describe` → sequential `context` blocks → `it` blocks
 ISOLATION: `{ testIsolation: false }` on `describe`
-DESCRIBE_SETUP: `before`
-CONTEXT_SETUP: `before` for shared request or created context data
+DESCRIBE_SETUP: `before` for token, cleanup
+CONTEXT_SETUP: `before` for shared request or created data
 FLOW: related contexts in efficient order, explicit state per context
-MANUAL: `context.skip` or `it.skip` with clear description
-FILTERING: file names
-ERROR_RESPONSES: `{ failOnStatusCode: false }` for expected error responses
+SKIP: `context.skip` or `it.skip` with clear description
+ERROR_RESPONSES: `{ failOnStatusCode: false }` for expected non-2xx
 
 # Titles
 
-TITLE_DESCRIBE: `Module.Submodule: Given 'preconditions', 'created data'`
-TITLE_CONTEXT: `Module.Submodule.Operation.METHOD: When 'condition'`
-TITLE_IT: `Module.Submodule.Operation.METHOD: Then 'expected result'`
-TITLE_UNIQUENESS: unique describe, context, and `it` titles within `context`
-TITLE_IT_SPECIFICITY: verified assumed outcome of example or business rule
-REQ_METADATA: every `it()` can include metadata object `{ req: {} }`; fields `p`, `preconditions`, `refs`, `bugs`
-REQ_PRIORITY: omit `p` for default P2, set `P1` or `P3` when needed
+TITLE_DESCRIBE: `Module.Submodule: Given preconditions, created data`
+TITLE_CONTEXT: `Module.Submodule.Operation.METHOD: When condition`
+TITLE_IT: `Module.Submodule.Operation.METHOD: Then expected result`
+UNIQUENESS: unique titles within `context`
+SPECIFICITY: verified assumed outcome of example or business rule
+PLAIN: no parentheses, no square brackets
+VALUE_MEANING: "minimal price" not "price 1"
+REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`; omit when empty
+REQ_PRIORITY: omit `p` for default P2
 
 # Data
 
-DATA_SOURCE: examples file
 INSTANCE_REUSE: create, update, delete within file lifecycle
-STATE: explicit per context
-ID_FIELDS: `String` placeholders in examples
-ID_ASSIGNMENT: immediate, same instance owner
-RANDOM_SOURCE: examples use `utils`
-CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [testData.namePrefix])` in `before` and `after`
-DELETE_STRATEGY: name patterns with `deleteByNames`
-INSTANCE_NAME_CLEANUP_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-SPEC_CALLS: pass pre-composed examples directly
-DERIVED_VALUES: pre-calculated in examples
+ID_FIELDS: `String` placeholders in examples, assigned immediately after creation on same instance
+CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
+NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
+SPEC_CALLS: pass pre-composed examples directly, never reconstruct payloads
 
 # Commands
 
-COMMAND_FORMAT: `moduleName__operationDetails__METHOD`
-COMMAND_SCOPE: execution, setup, teardown, reusable API flows
-PARAMETERS: decomposed token, body, context headers, request overrides
-AUTH: token first parameter when required
-GLOBALS: `utils`, `l10n`, `apiUrls`, `userRoles`, `companies`, `reqs`, `apiErrors`
-SWAGGER: `development-data/swagger`
+FORMAT: `moduleName__operationDetails__METHOD`
+PARAMETERS: token first, then body, context headers, request overrides
 OPERATIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
-
-# Bugs
-
-BUG_TYPES: status codes, errors, response shape, validation, consistency
-BUG_LOG: `bug-log/bug-log.json`
-BUG_ID: `BUG-[MODULE]-[NUMBER]`
-BUG_REF: `req.bugs`
-TEST_ADAPTATION: assert current behavior and use error-response request overrides
+SWAGGER: `development-data/swagger`
 
 # Readability
 
-SPEC_GUARDRAILS: direct example references, constraint-backed titles, flat Cypress chains
-ASSERTION_SCOPE: expected result blocks, one core outcome per `it`
-PRECONDITIONS: direct API calls per instance and `req.preconditions` for extra Given details
-MAINTENANCE: visible token lifecycle, cleanup before and after, no hidden cross-file state
+DIRECT_REFERENCE: `examples.group.instance` inline, never shadow with local `const`
+ID_ASSIGN: `examples.group.instance.id = response.body.id`
+ASSERTION_SCOPE: one core outcome per `it`, related fields in one `.then()` when practical
+CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
+TRIM: only comments that add meaning, necessary setup, used tokens
 
 ```javascript
-import { module_examples as testData } from '../../integration-examples/api/module-name.submodule-name.api.examples';
-import { PRICE } from '../../constants/api/module-name.api.constraints';
-
+import { module_examples as examples } from '../../integration-examples/api/module-name.submodule-name.api.examples';
 
 describe('Module.Submodule: Given no preconditions', { testIsolation: false }, () => {
   let tokenUser;
-  const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [testData.namePrefix]);
+  const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
   before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
-      tokenUser = accessToken;
-    });
+    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
     cy.then(cleanUp);
   });
 
-  context(`Module.Submodule.Create.POST: When item with price ${PRICE.MIN} is provided`, () => {
-    it('Module.Submodule.Create.POST: Then item is created with the minimal allowed price', { req: {} }, () => {
-      cy.moduleName__create__POST(tokenUser, testData.validItems.item__WithMinimalPrice).then((response) => {
+  context('Module.Submodule.Create.POST: When item with minimal allowed price is provided', () => {
+    it('Module.Submodule.Create.POST: Then item is created', () => {
+      cy.moduleName__create__POST(tokenUser, examples.validItems.minimalPrice).then((response) => {
         expect(response.status).to.eq(201);
+        examples.validItems.minimalPrice.id = response.body.id;
       });
     });
   });
@@ -100,3 +83,10 @@ describe('Module.Submodule: Given no preconditions', { testIsolation: false }, (
 });
 ```
 
+# Validation
+
+STRUCTURE_CHECK: describe/context/it with `{ testIsolation: false }`
+SEGMENTATION_CHECK: one outcome per `it`
+TITLE_CHECK: unique, constraint-backed Given/When/Then
+CLEANUP_CHECK: `before` + `after`, name pattern, file independence
+TRACE_CHECK: assertion values trace through examples to constraints

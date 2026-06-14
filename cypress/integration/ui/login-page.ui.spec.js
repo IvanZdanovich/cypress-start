@@ -109,8 +109,7 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
-    // Bug Reference: BUG-LOGIN-001 - Username field incorrectly highlighted when only password is missing
-    it('LoginPage.STANDARD: Then username field should be highlighted and contain error icon', () => {
+    it('LoginPage.STANDARD: Then username field should be highlighted and contain error icon', { req: { bugs: ['BUG-LOGIN-001'] } }, () => {
       cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
@@ -139,8 +138,7 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
-    // Bug Reference: BUG-LOGIN-002 - Password field incorrectly highlighted when only username is missing
-    it('LoginPage.STANDARD: Then password field should be highlighted and contain error icon', () => {
+    it('LoginPage.STANDARD: Then password field should be highlighted and contain error icon', { req: { bugs: ['BUG-LOGIN-002'] } }, () => {
       cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
