@@ -26,7 +26,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title);
     });
     it('InventoryPage.STANDARD: Then default sorting dropdown with default value', () => {
-      cy.inventoryPage__verifySortingDropdown(DEFAULT_SORT.defaultValue);
+      cy.inventoryPage__verifySortingDropdown(DEFAULT_SORT);
     });
     it('InventoryPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
@@ -43,7 +43,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it.skip('InventoryPage.Footer.STANDARD: Then Terms Of Service link should be displayed', { req: { bugs: ['BUG-FOOTER-002'] } }, () => {});
     it.skip('InventoryPage.Footer.STANDARD: Then Privacy Policy link should be displayed', { req: { bugs: ['BUG-FOOTER-003'] } }, () => {});
     it('InventoryPage.STANDARD: Then default number of product cards should be displayed', () => {
-      cy.get(inventoryPage.cards).should('have.length', PRODUCT_COUNT.limit);
+      cy.get(inventoryPage.cards).should('have.length', PRODUCT_COUNT.total);
     });
     it('InventoryPage.Card.STANDARD: Then each product card Title should be displayed', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
       cy.get(inventoryPage.card.title).each(($title) => {
@@ -323,7 +323,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.empty);
     });
     it('InventoryPage.Card.STANDARD: Then the all the product cards have add to cart buttons', () => {
-      cy.get(inventoryPage.card.add).should('have.length', PRODUCT_COUNT.limit);
+      cy.get(inventoryPage.card.add).should('have.length', PRODUCT_COUNT.total);
     });
   });
 });

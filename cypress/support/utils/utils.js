@@ -1,4 +1,4 @@
-import { TEXT } from '../../../integration-requirements/ui/shared-ui.reqs';
+import { TEXT } from '../../constants/ui/common.ui.constraints';
 
 const getRandomIndex = (arrayLength) => {
   if (typeof arrayLength !== 'number' || arrayLength <= 0 || !Number.isInteger(arrayLength)) {

@@ -39,7 +39,7 @@ REQ_PRIORITY: omit `p` for default P2
 # Data
 
 INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: `String` placeholders in examples, assigned immediately after creation on same instance
+ID_FIELDS: `String` placeholder on source instance only; assigned after creation; dependent instances derive source IDs via ES getters defined in examples
 CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
 SPEC_CALLS: pass pre-composed examples directly, never reconstruct payloads

@@ -20,20 +20,28 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
       cy.wrap(examples.indicesOfProducts).each((index) => {
-        cy.get(inventoryPage.cards).eq(index).within(() => {
-          cy.get(inventoryPage.card.title).invoke('text').then((title) => {
-            cy.get(inventoryPage.card.description).invoke('text').then((description) => {
-              cy.get(inventoryPage.card.price).invoke('text').then((priceText) => {
-                examples.chosenProducts.push({
-                  title: title === examples.buggyProductData.wrongTitle ? examples.buggyProductData.correctTitle : title,
-                  description: description === examples.buggyProductData.wrongDescription ? undefined : description,
-                  price: parseFloat(priceText.replace('$', '')),
-                });
-                cy.get(inventoryPage.card.add).click();
+        cy.get(inventoryPage.cards)
+          .eq(index)
+          .within(() => {
+            cy.get(inventoryPage.card.title)
+              .invoke('text')
+              .then((title) => {
+                cy.get(inventoryPage.card.description)
+                  .invoke('text')
+                  .then((description) => {
+                    cy.get(inventoryPage.card.price)
+                      .invoke('text')
+                      .then((priceText) => {
+                        examples.chosenProducts.push({
+                          title: title === examples.buggyProductData.wrongTitle ? examples.buggyProductData.correctTitle : title,
+                          description: description === examples.buggyProductData.wrongDescription ? undefined : description,
+                          price: parseFloat(priceText.replace('$', '')),
+                        });
+                        cy.get(inventoryPage.card.add).click();
+                      });
+                  });
               });
-            });
           });
-        });
       });
       cy.get(headerComp.openCart).click();
     });

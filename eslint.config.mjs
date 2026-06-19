@@ -18,12 +18,7 @@ const customRuleSeverityOverrides = {
   'find-unused-examples': 'warn',
   'verify-req-config': 'warn',
 };
-const customRules = Object.fromEntries(
-  Object.keys(customPlugin.rules).map((name) => [
-    `custom/${name}`,
-    customRuleSeverityOverrides[name] ?? 'error',
-  ]),
-);
+const customRules = Object.fromEntries(Object.keys(customPlugin.rules).map((name) => [`custom/${name}`, customRuleSeverityOverrides[name] ?? 'error']));
 
 export default [
   {
@@ -52,6 +47,12 @@ export default [
       'no-unused-expressions': 'warn',
       'chai-friendly/no-unused-expressions': 'error',
       ...customRules,
+    },
+  },
+  {
+    files: ['cypress/integration/**/*.spec.js', 'cypress/e2e/**/*.spec.js'],
+    rules: {
+      'no-magic-numbers': ['warn', { ignore: [0, 1, -1], ignoreArrayIndexes: true }],
     },
   },
 ];
