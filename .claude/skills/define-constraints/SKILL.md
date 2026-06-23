@@ -8,7 +8,7 @@ description: Use when creating or updating Cypress API or UI constraint files th
 PURPOSE: centralize boundary values consumed by examples and specs
 SCOPE: `cypress/constants/api/*.api.constraints.js`, `cypress/constants/ui/*.ui.constraints.js`
 ACCESS: direct named imports — never exposed as globals
-SEGMENTATION: one domain concept per constant, one module/page per file
+SEGMENTATION: one domain concept per constant, one module/page per file, one domain concept per domain file when the same rule spans multiple modules or pages
 SINGLE_OWNER: constraints are the authoritative source for all boundary values
 
 # Constraint kinds
@@ -29,6 +29,20 @@ targets that value; derive inline in examples (e.g. `-PRICE.MAX`) for ad-hoc inv
 ZERO_AS_BELOW_MIN: when `ZERO < MIN`, `ZERO` serves as `BELOW_MIN` — do not add a separate `BELOW_MIN` key
 SCALAR_VS_OBJECT: use a scalar export for a single standalone boundary; use a frozen object only when two or more
 related keys belong together
+
+# File tiers
+
+Three tiers apply to both API and UI constraints. Assign the tier before naming the file.
+
+| Tier | When to use | File pattern |
+|---|---|---|
+| Module / page | Boundary owned by one module or page | `module-name.api.constraints.js`, `page-name.ui.constraints.js` |
+| Domain | Same business rule independently enforced on multiple modules or pages | `domain-name.api.constraints.js`, `domain-name.ui.constraints.js` |
+| Common | Protocol-level, no domain specificity | `common.api.constraints.js`, `common.ui.constraints.js` |
+
+TIER_DECISION: ask "which module or page owns this rule?" → if none, ask "which domain concept does it describe?" → if none, common
+DOMAIN_SIGNAL: same business rule independently enforced on two or more pages or modules — the constraint is not borrowed from one page by another; each page enforces it on its own
+NOT_DOMAIN: a constant defined on one page and imported by another spec for that page's data — that remains a page constraint
 
 # API constraints
 

@@ -39,7 +39,7 @@ REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `
 
 WORKFLOW_DATA: setup, execution, verification values in E2E examples file
 INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: `String` placeholder on source instance only; assigned after setup; dependent instances derive source IDs via ES getters defined in examples
+ID_FIELDS: placeholder on source instance only; set once on source after setup; dependent instances read source IDs via ES getters defined in examples — never manually assign the same ID to multiple instances in setup
 CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
 CONSISTENCY: API setup values and UI verification values aligned

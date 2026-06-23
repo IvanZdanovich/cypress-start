@@ -11,3 +11,9 @@ export const TEXT = Object.freeze({
   /** Printable ASCII characters accepted by standard text inputs (letters, digits, space). */
   allowedSymbols: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
 });
+
+/** Animation thresholds used in Cypress click options. */
+export const ANIMATION = Object.freeze({
+  /** Pixel distance below which Cypress treats an element as not animating (sidebar open button). */
+  sidebarThreshold: 30,
+});

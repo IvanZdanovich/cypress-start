@@ -29,8 +29,8 @@ NO_GENERIC: never `item1`, `data1`, `test1`, `standard`, `default`
 
 # Composition
 
-DERIVED_GETTERS: ES getter syntax for all derived values — inter-instance ID references and computed aggregates
-DERIVE_AGGREGATES: compute from structure (`Object.keys(...).length`), never hardcode
+DERIVED_GETTERS: dependent instances reference source IDs via ES getter — source holds placeholder; getter reads source property at access time; spec sets the placeholder once on source only, never re-assigns to dependents
+DERIVE_AGGREGATES: compute aggregates from structure (`Object.keys(...).length`), never hardcode
 COMPOSED_NESTING: each nested instance holds every field including dynamic placeholders
 NO_WRAPPER_CONSTS: compose inline, extract const only when genuinely shared by multiple siblings
 BOUNDARIES: imported constraints for boundary values
@@ -39,7 +39,7 @@ RANDOM_SOURCE: `utils` for generated names, dates, numbers
 # Data rules
 
 CLEANUP_PREFIX: spec-specific root `namePrefix`
-ID_FIELDS: `String` placeholder on source instance; dependent instances reference source IDs via ES getter
+ID_FIELDS: placeholder on source instance only; dependent instances reference source IDs via ES getter — never duplicate the assignment across sibling instances
 INSTANCE_COMPLETENESS: all fields needed for setup and assertion
 SPEC_CALLS: pass `examples.instance` directly without rebuilding
 NO_REASSIGNMENT: no renaming fields between examples and specs

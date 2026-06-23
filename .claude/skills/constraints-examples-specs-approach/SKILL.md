@@ -37,7 +37,7 @@ MULTI_MODULE: each module's constraints and examples remain in own files; spec i
 # Conflict resolution
 
 API_UI_DIVERGENCE: examples mirror API field name; specs use `l10n` for UI text
-CONSTRAINT_OVERLAP: shared boundary → `cypress/constants/api/shared.api.constraints.js`
+CONSTRAINT_OVERLAP: boundary independently enforced on multiple modules or pages → domain-tier file (`domain-name.api.constraints.js` or `domain-name.ui.constraints.js`) named after the domain concept, not after any consumer
 EXAMPLE_COUPLING: spec creates own instance via API command — never import another spec's examples
 
 # Validation
