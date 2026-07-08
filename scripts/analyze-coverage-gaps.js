@@ -8,12 +8,12 @@
  * it blocks, skipped tests, and calculate real test coverage.
  *
  * Usage:
- *   node scripts/analyze-coverage-gaps.js --type=integration-requirements-ui
+ *   node scripts/analyze-coverage-gaps.js --type=integration-ui
  *   node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=report.md
- *   node scripts/analyze-coverage-gaps.js --type=integration-requirements-api --threshold=80
+ *   node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80
  *
  * Options:
- *   --type=<type>         Test type: integration-requirements-ui, integration-requirements-api, e2e-requirements-ui, all (default: all)
+ *   --type=<type>         Test type: integration-ui, integration-api, e2e-ui, all (default: all)
  *   --format=<format>     Output format: cli, markdown, both (default: both)
  *   --output=<path>       Save markdown report to file
  *   --threshold=<number>  Fail if coverage below percentage (0-100)
@@ -26,26 +26,20 @@ const path = require('path');
 const CONFIG = {
   'integration-ui': {
     expectedFile: 'expected/components.json',
-    actualFile: 'actual/components.json',
-    fallbackFile: 'components.json',
     name: 'Integration UI',
-    testDir: 'cypress/integration-requirements/ui',
+    testDir: 'cypress/integration/ui',
     testPattern: /\.ui\.spec\.js$/,
   },
   'integration-api': {
     expectedFile: 'expected/modules.json',
-    actualFile: 'actual/modules.json',
-    fallbackFile: 'modules.json',
     name: 'Integration API',
-    testDir: 'cypress/integration-requirements/api',
+    testDir: 'cypress/integration/api',
     testPattern: /\.api\.spec\.js$/,
   },
   'e2e-ui': {
     expectedFile: 'expected/workflows.json',
-    actualFile: 'actual/workflows.json',
-    fallbackFile: 'workflows.json',
     name: 'E2E UI',
-    testDir: 'cypress/e2e-requirements/ui',
+    testDir: 'cypress/e2e/ui',
     testPattern: /\.spec\.js$/,
   },
 };
@@ -67,6 +61,18 @@ function colorize(text, color) {
   return `${colors[color]}${text}${colors.reset}`;
 }
 
+function getCoverageColor(percent) {
+  if (percent >= 80) return 'green';
+  if (percent >= 60) return 'yellow';
+  return 'red';
+}
+
+function getCoverageLabel(percent) {
+  if (percent >= 90) return 'Excellent';
+  if (percent >= 70) return 'Good';
+  return 'Critical';
+}
+
 /**
  * Parse command line arguments
  */
@@ -81,13 +87,13 @@ function parseArgs() {
 
   for (const arg of args) {
     if (arg.startsWith('--type=')) {
-      parsed.type = arg.split('=')[1];
+      parsed.type = arg.slice(arg.indexOf('=') + 1);
     } else if (arg.startsWith('--format=')) {
-      parsed.format = arg.split('=')[1];
+      parsed.format = arg.slice(arg.indexOf('=') + 1);
     } else if (arg.startsWith('--output=')) {
-      parsed.output = arg.split('=')[1];
+      parsed.output = arg.slice(arg.indexOf('=') + 1);
     } else if (arg.startsWith('--threshold=')) {
-      parsed.threshold = parseInt(arg.split('=')[1], 10);
+      parsed.threshold = parseInt(arg.slice(arg.indexOf('=') + 1), 10);
     }
   }
 
@@ -177,23 +183,20 @@ function buildStructureWithCounts(testBlocks) {
 
   // Count total and skipped tests for each path
   for (const block of testBlocks) {
-    const path = block.structurePath;
+    const structurePath = block.structurePath;
 
-    if (!pathCounts[path]) {
-      pathCounts[path] = { total: 0, skipped: 0, active: 0 };
-    }
-
-    pathCounts[path].total++;
+    pathCounts[structurePath] ??= { total: 0, skipped: 0, active: 0 };
+    pathCounts[structurePath].total++;
     if (block.isSkipped) {
-      pathCounts[path].skipped++;
+      pathCounts[structurePath].skipped++;
     } else {
-      pathCounts[path].active++;
+      pathCounts[structurePath].active++;
     }
   }
 
   // Build nested structure
-  for (const [path, counts] of Object.entries(pathCounts)) {
-    const parts = path.split('.');
+  for (const [dotPath, counts] of Object.entries(pathCounts)) {
+    const parts = dotPath.split('.');
     let current = structure;
 
     for (let i = 0; i < parts.length; i++) {
@@ -236,12 +239,12 @@ function parseAllTestFiles(testDir, testPattern) {
 /**
  * Count leaf nodes in structure
  */
-function countLeafNodes(obj) {
+function countLeafNodes(obj, isRoot = false) {
   let count = 0;
   const keys = Object.keys(obj).filter((k) => k !== '__counts');
 
   if (keys.length === 0) {
-    return 1;
+    return isRoot ? 0 : 1;
   }
 
   for (const key of keys) {
@@ -262,7 +265,7 @@ function countTestBlocks(obj, pathCounts, pathPrefix = '') {
 
     if (keys.length === 0) {
       // Leaf node - get counts from pathCounts
-      if (pathCounts && pathCounts[currentPath]) {
+      if (pathCounts?.[currentPath]) {
         counts.total += pathCounts[currentPath].total;
         counts.skipped += pathCounts[currentPath].skipped;
         counts.active += pathCounts[currentPath].active;
@@ -288,7 +291,7 @@ function getAllPaths(obj, prefix = '') {
   const keys = Object.keys(obj).filter((k) => k !== '__counts');
 
   if (keys.length === 0) {
-    return [prefix];
+    return prefix ? [prefix] : [];
   }
 
   for (const key of keys) {
@@ -301,42 +304,15 @@ function getAllPaths(obj, prefix = '') {
 }
 
 /**
- * Deep compare structures and find gaps
+ * Compare structures and find gaps using path sets
  */
-function compareStructures(expected, actual, pathPrefix = '') {
-  const missing = [];
-  const extra = [];
-
-  // Find missing (in expected but not in actual)
-  for (const key in expected) {
-    if (key === '__counts') continue;
-
-    const currentPath = pathPrefix ? `${pathPrefix}.${key}` : key;
-
-    if (!(key in actual)) {
-      // Entire branch is missing
-      const missingPaths = getAllPaths(expected[key], currentPath);
-      missing.push(...missingPaths);
-    } else if (Object.keys(expected[key]).filter((k) => k !== '__counts').length > 0) {
-      // Recurse into nested structure
-      const subComparison = compareStructures(expected[key], actual[key], currentPath);
-      missing.push(...subComparison.missing);
-      extra.push(...subComparison.extra);
-    }
-  }
-
-  // Find extra (in actual but not in expected)
-  for (const key in actual) {
-    if (key === '__counts') continue;
-
-    if (!(key in expected)) {
-      const currentPath = pathPrefix ? `${pathPrefix}.${key}` : key;
-      const extraPaths = getAllPaths(actual[key], currentPath);
-      extra.push(...extraPaths);
-    }
-  }
-
-  return { missing, extra };
+function compareStructures(expected, actual) {
+  const expectedPaths = new Set(getAllPaths(expected));
+  const actualPaths = new Set(getAllPaths(actual));
+  return {
+    missing: [...expectedPaths].filter((p) => !actualPaths.has(p)),
+    extra: [...actualPaths].filter((p) => !expectedPaths.has(p)),
+  };
 }
 
 /**
@@ -354,10 +330,11 @@ function detectInconsistencies(expected, actual, pathPrefix = '') {
     if (key in actual) {
       const expectedKeys = Object.keys(expected[key])
         .filter((k) => k !== '__counts')
-        .sort();
+        .sort((a, b) => a.localeCompare(b));
+
       const actualKeys = Object.keys(actual[key])
         .filter((k) => k !== '__counts')
-        .sort();
+        .sort((a, b) => a.localeCompare(b));
 
       // Check if both are leaf nodes or both are branches
       const expectedIsLeaf = expectedKeys.length === 0;
@@ -411,9 +388,8 @@ function formatMarkdownTable(rows) {
   // Helper function to calculate visual width (excluding markdown formatting)
   const getVisualWidth = (str) => {
     return String(str || '')
-      .replace(/\*\*/g, '') // Remove bold markers
-      .replace(/`/g, '') // Remove code markers
-      .replace(/[🟢🟡🔴✅❌⚠️]/g, '').length; // Remove emojis (they take more visual space but we treat as 1 char)
+      .replace(/\*\*/g, '')
+      .replace(/`/g, '').length;
   };
 
   // Calculate max visual width for each column
@@ -485,19 +461,15 @@ function calculateCoverageByComponent(expected, actualWithCounts, pathCounts) {
     const actualPathCount = key in actualWithCounts ? countLeafNodes(actualWithCounts[key]) : 0;
     const actualTestCounts = key in actualWithCounts ? countTestBlocks(actualWithCounts[key], pathCounts, key) : { total: 0, skipped: 0, active: 0 };
 
-    // Coverage is the number of expected paths that are covered
-    // Cap at 100% - extra coverage is shown separately
-    const covered = Math.min(expectedCount, actualPathCount);
+    const { missing: componentMissing, extra: componentExtra } = compareStructures(key in expected ? expected[key] : {}, key in actualWithCounts ? actualWithCounts[key] : {});
+    const covered = expectedCount - componentMissing.length;
     let percent;
 
     if (expectedCount === 0 && actualPathCount > 0) {
-      // No expected paths, but we have actual tests (all extra)
-      percent = 100; // Show as 100% but mark as extra
+      percent = 100;
     } else if (expectedCount === 0) {
-      // No expected, no actual
       percent = 0;
     } else {
-      // Normal case: calculate coverage of expected paths
       percent = (covered / expectedCount) * 100;
     }
 
@@ -509,7 +481,7 @@ function calculateCoverageByComponent(expected, actualWithCounts, pathCounts) {
       actualPaths: actualPathCount,
       covered: covered,
       percent: Math.round(percent * 10) / 10,
-      extra: Math.max(0, actualPathCount - expectedCount),
+      extra: componentExtra.length,
       status: expectedCount === 0 && actualPathCount > 0 ? 'extra-only' : 'normal',
       tests: {
         total: actualTestCounts.total,
@@ -544,9 +516,8 @@ function calculateCoverageByComponent(expected, actualWithCounts, pathCounts) {
  * Generate progress bar
  */
 function generateProgressBar(percent, width = 10) {
-  const filled = Math.max(0, Math.min(width, Math.round((percent / 100) * width)));
-  const empty = Math.max(0, width - filled);
-  return '[' + '█'.repeat(filled) + '░'.repeat(empty) + ']';
+  const filled = Math.min(width, Math.max(0, Math.round((percent / 100) * width)));
+  return '[' + '█'.repeat(filled) + '░'.repeat(width - filled) + ']';
 }
 
 /**
@@ -570,8 +541,9 @@ function generateCLIReport(result) {
   console.log(`  Missing paths:         ${colorize(summary.missing, summary.missing > 0 ? 'red' : 'green')}`);
   console.log(`  Extra paths:           ${colorize(summary.extra, summary.extra > 0 ? 'yellow' : 'green')}`);
 
-  const coverageColor = summary.coveragePercent >= 80 ? 'green' : summary.coveragePercent >= 60 ? 'yellow' : 'red';
-  console.log(`  ${colorize('→ Path Coverage:', 'bright')}     ${colorize(`${summary.coveragePercent}%`, coverageColor)}`);
+  const coverageColor = getCoverageColor(summary.coveragePercent);
+  const coverageText = `${summary.coveragePercent}%`;
+  console.log(`  ${colorize('→ Path Coverage:', 'bright')}     ${colorize(coverageText, coverageColor)}`);
 
   console.log(colorize('\nTest Implementation (active vs total tests):', 'cyan'));
   console.log(`  Total tests:           ${summary.totalTests || 0}`);
@@ -579,8 +551,9 @@ function generateCLIReport(result) {
   console.log(`  Skipped tests:         ${summary.skippedTests || 0}`);
 
   if (summary.testCoveragePercent !== undefined) {
-    const testCoverageColor = summary.testCoveragePercent >= 80 ? 'green' : summary.testCoveragePercent >= 60 ? 'yellow' : 'red';
-    console.log(`  ${colorize('→ Test Coverage:', 'bright')}     ${colorize(`${summary.testCoveragePercent}%`, testCoverageColor)}`);
+    const testCoverageColor = getCoverageColor(summary.testCoveragePercent);
+    const testCoverageText = `${summary.testCoveragePercent}%`;
+    console.log(`  ${colorize('→ Test Coverage:', 'bright')}     ${colorize(testCoverageText, testCoverageColor)}`);
   }
 
   // Missing coverage
@@ -594,7 +567,7 @@ function generateCLIReport(result) {
     for (const [component, paths] of sortedGroups.slice(0, 10)) {
       console.log(colorize(`\n${component} (${paths.length} missing)`, 'yellow'));
       paths.slice(0, 5).forEach((p) => {
-        console.log(`  ${colorize('✗', 'red')} ${p}`);
+        console.log(`  ${colorize('-', 'red')} ${p}`);
       });
       if (paths.length > 5) {
         console.log(colorize(`  ... and ${paths.length - 5} more`, 'dim'));
@@ -605,7 +578,7 @@ function generateCLIReport(result) {
       console.log(colorize(`\n... and ${sortedGroups.length - 10} more components with missing coverage`, 'dim'));
     }
   } else {
-    console.log(colorize('\n✓ No missing coverage!', 'green'));
+    console.log(colorize('\nNo missing coverage.', 'green'));
   }
 
   // Extra coverage
@@ -628,7 +601,7 @@ function generateCLIReport(result) {
     console.log(colorize('These paths exist in both expected and actual structures but have different sub-structures:\n', 'dim'));
 
     result.inconsistencies.slice(0, 10).forEach((item) => {
-      console.log(`  ${colorize('⚠', 'magenta')} ${colorize(item.path, 'yellow')}`);
+      console.log(`  ${colorize('!', 'magenta')} ${colorize(item.path, 'yellow')}`);
       console.log(`     ${colorize(item.issue, 'dim')}`);
       if (item.onlyInExpected && item.onlyInExpected.length > 0) {
         console.log(`     ${colorize('Only in expected:', 'dim')} ${item.onlyInExpected.join(', ')}`);
@@ -657,22 +630,24 @@ function generateCLIReport(result) {
 
     if (stats.status === 'extra-only') {
       // Component exists only in actual, not in expected (all extra coverage)
-      const marker = colorize('➕', 'yellow');
+      const marker = colorize('+', 'yellow');
       const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total} tests` : `${stats.actualPaths} paths`;
-      console.log(`  ${paddedName} ${marker} ${colorize('Not in expected', 'yellow')} ${colorize(`(${testInfo})`, 'dim')}`);
+      const testInfoLabel = `(${testInfo})`;
+      console.log(`  ${paddedName} ${marker} ${colorize('Not in expected', 'yellow')} ${colorize(testInfoLabel, 'dim')}`);
     } else {
       // Normal component with expected coverage
       const pathBar = generateProgressBar(Math.min(stats.percent, 100)); // Cap bar at 100%
-      const pathColor = stats.percent >= 80 ? 'green' : stats.percent >= 60 ? 'yellow' : 'red';
+      const pathColor = getCoverageColor(stats.percent);
       const pathPercent = `${stats.percent}%`.padStart(6);
 
       // Generate test coverage bar
       let testDisplay = '';
       if (stats.tests.total > 0) {
         const testBar = generateProgressBar(stats.tests.coveragePercent);
-        const testColor = stats.tests.coveragePercent >= 80 ? 'green' : stats.tests.coveragePercent >= 60 ? 'yellow' : 'red';
+        const testColor = getCoverageColor(stats.tests.coveragePercent);
         const testPercent = `${stats.tests.coveragePercent}%`.padStart(6);
-        testDisplay = ` ${colorize(testBar, testColor)} ${colorize(testPercent, testColor)} ${colorize(`(${stats.tests.active}/${stats.tests.total})`, 'dim')}`;
+        const testCountLabel = `(${stats.tests.active}/${stats.tests.total})`;
+        testDisplay = ` ${colorize(testBar, testColor)} ${colorize(testPercent, testColor)} ${colorize(testCountLabel, 'dim')}`;
       }
 
       console.log(`  ${paddedName} ${colorize(pathBar, pathColor)} ${colorize(pathPercent, pathColor)}${testDisplay}`);
@@ -722,16 +697,16 @@ function generateMarkdownReport(result) {
 
   md += formatMarkdownTable(summaryRows) + '\n\n';
 
-  // Status emoji
-  const statusEmoji = summary.coveragePercent >= 80 ? '🟢' : summary.coveragePercent >= 60 ? '🟡' : '🔴';
-  md += `**Status**: ${statusEmoji} `;
-  if (summary.coveragePercent >= 80) {
-    md += `Excellent coverage!\n\n`;
-  } else if (summary.coveragePercent >= 60) {
-    md += `Good coverage, but room for improvement.\n\n`;
+  const statusLabel = getCoverageLabel(summary.coveragePercent);
+  let statusMessage;
+  if (summary.coveragePercent >= 90) {
+    statusMessage = 'All critical paths are well covered.';
+  } else if (summary.coveragePercent >= 70) {
+    statusMessage = 'Core paths are covered, but gaps exist.';
   } else {
-    md += `Coverage needs significant improvement.\n\n`;
+    statusMessage = 'Major gaps in coverage must be addressed.';
   }
+  md += `**Status**: ${statusLabel}. ${statusMessage}\n\n`;
 
   // Missing coverage
   if (gaps.missing.length > 0) {
@@ -743,13 +718,13 @@ function generateMarkdownReport(result) {
     for (const [component, paths] of sortedGroups) {
       md += `### ${component} (${paths.length} missing)\n\n`;
       paths.forEach((p) => {
-        md += `- ❌ \`${p}\`\n`;
+        md += `- Missing: \`${p}\`\n`;
       });
       md += `\n`;
     }
   } else {
     md += `## Missing Coverage\n\n`;
-    md += `✅ **No missing coverage!** All expected paths are covered.\n\n`;
+    md += `No missing coverage. All expected paths are covered.\n\n`;
   }
 
   // Extra coverage
@@ -757,7 +732,7 @@ function generateMarkdownReport(result) {
     md += `## Extra Coverage (${gaps.extra.length} paths)\n\n`;
     md += `These paths exist in actual tests but are not in the expected structure:\n\n`;
     gaps.extra.forEach((p) => {
-      md += `- ⚠️ \`${p}\`\n`;
+      md += `- Extra: \`${p}\`\n`;
     });
     md += `\n`;
   }
@@ -768,23 +743,27 @@ function generateMarkdownReport(result) {
     md += `These paths exist in both expected and actual structures but have different sub-structures:\n\n`;
 
     result.inconsistencies.forEach((item) => {
-      md += `### ⚠️ \`${item.path}\`\n\n`;
+      md += `### Inconsistency: \`${item.path}\`\n\n`;
       md += `**Issue**: ${item.issue}\n\n`;
 
       if (item.onlyInExpected && item.onlyInExpected.length > 0) {
-        md += `**Only in expected**: ${item.onlyInExpected.map((k) => `\`${k}\``).join(', ')}\n\n`;
+        const expectedList = item.onlyInExpected.map((k) => '`' + k + '`').join(', ');
+        md += `**Only in expected**: ${expectedList}\n\n`;
       }
 
       if (item.onlyInActual && item.onlyInActual.length > 0) {
-        md += `**Only in actual**: ${item.onlyInActual.map((k) => `\`${k}\``).join(', ')}\n\n`;
+        const actualList = item.onlyInActual.map((k) => '`' + k + '`').join(', ');
+        md += `**Only in actual**: ${actualList}\n\n`;
       }
 
       if (item.expectedChildren) {
-        md += `**Expected children**: ${item.expectedChildren.length > 0 ? item.expectedChildren.map((k) => `\`${k}\``).join(', ') : 'none (leaf node)'}\n\n`;
+        const childrenList = item.expectedChildren.length > 0 ? item.expectedChildren.map((k) => '`' + k + '`').join(', ') : 'none (leaf node)';
+        md += `**Expected children**: ${childrenList}\n\n`;
       }
 
       if (item.actualChildren) {
-        md += `**Actual children**: ${item.actualChildren.length > 0 ? item.actualChildren.map((k) => `\`${k}\``).join(', ') : 'none (leaf node)'}\n\n`;
+        const childrenList = item.actualChildren.length > 0 ? item.actualChildren.map((k) => '`' + k + '`').join(', ') : 'none (leaf node)';
+        md += `**Actual children**: ${childrenList}\n\n`;
       }
     });
 
@@ -801,9 +780,9 @@ function generateMarkdownReport(result) {
       // Component not in expected structure
       const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
-      componentRows.push([component, '0', String(stats.actualPaths), 'N/A', testInfo, testCov, '⚠️ Extra']);
+      componentRows.push([component, '0', String(stats.actualPaths), 'N/A', testInfo, testCov, 'Extra']);
     } else {
-      const status = stats.percent >= 80 ? '🟢' : stats.percent >= 60 ? '🟡' : '🔴';
+      const status = getCoverageLabel(stats.percent);
       const actualDisplay = stats.extra > 0 ? `${stats.actualPaths} (+${stats.extra} extra)` : String(stats.actualPaths);
       const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
@@ -832,7 +811,7 @@ function generateMarkdownReport(result) {
     md += `3. Update expected structure if some paths are no longer needed\n`;
     md += `4. Re-run analysis after adding tests\n\n`;
   } else {
-    md += `✅ Coverage is complete! Consider:\n\n`;
+    md += `Coverage is complete. Consider:\n\n`;
     md += `1. Maintaining this coverage level as features evolve\n`;
     md += `2. Reviewing and updating expected structure for new features\n`;
     md += `3. Ensuring test quality matches coverage quantity\n\n`;
@@ -851,7 +830,7 @@ function analyzeTestType(type, config) {
   // Load expected structure
   const expectedPath = path.join(structureDir, config.expectedFile);
   if (!fs.existsSync(expectedPath)) {
-    console.log(colorize(`⚠ Expected structure not found: ${config.expectedFile}`, 'yellow'));
+    console.log(colorize(`Expected structure not found: ${config.expectedFile}`, 'yellow'));
     console.log(colorize(`  Skipping ${type} analysis`, 'dim'));
     return null;
   }
@@ -859,20 +838,7 @@ function analyzeTestType(type, config) {
   const expected = JSON.parse(fs.readFileSync(expectedPath, 'utf-8'));
 
   // Parse actual test files to get structure with counts
-  const { structure: actualWithCounts, pathCounts } = parseAllTestFiles(config.testDir, config.testPattern);
-
-  // Also load the actual structure file for comparison (if exists)
-  let actualStructureFile = null;
-  let actualPath = path.join(structureDir, config.actualFile);
-  if (!fs.existsSync(actualPath)) {
-    actualPath = path.join(structureDir, config.fallbackFile);
-  }
-  if (fs.existsSync(actualPath)) {
-    actualStructureFile = JSON.parse(fs.readFileSync(actualPath, 'utf-8'));
-  }
-
-  // Use parsed structure with counts as primary, fall back to file if no tests parsed
-  const actual = Object.keys(actualWithCounts).length > 0 ? actualWithCounts : actualStructureFile || {};
+  const { structure: actual, pathCounts } = parseAllTestFiles(config.testDir, config.testPattern);
 
   // Compare structures
   const gaps = compareStructures(expected, actual);
@@ -881,8 +847,8 @@ function analyzeTestType(type, config) {
   const inconsistencies = detectInconsistencies(expected, actual);
 
   // Calculate metrics
-  const totalExpected = countLeafNodes(expected);
-  const totalActual = countLeafNodes(actual);
+  const totalExpected = countLeafNodes(expected, true);
+  const totalActual = countLeafNodes(actual, true);
   const covered = totalExpected - gaps.missing.length;
   const coveragePercent = totalExpected > 0 ? Math.round((covered / totalExpected) * 100 * 10) / 10 : 0;
 
@@ -905,7 +871,7 @@ function analyzeTestType(type, config) {
   };
 
   // Calculate coverage by component
-  const coverageByComponent = calculateCoverageByComponent(expected, actualWithCounts, pathCounts);
+  const coverageByComponent = calculateCoverageByComponent(expected, actual, pathCounts);
 
   return {
     type,
@@ -928,7 +894,7 @@ function main() {
 
   for (const type of types) {
     if (!CONFIG[type]) {
-      console.log(colorize(`\n✗ Unknown test type: ${type}`, 'red'));
+      console.log(colorize(`\nUnknown test type: ${type}`, 'red'));
       console.log(colorize(`  Valid types: integration-ui, integration-api, e2e-ui, all`, 'dim'));
       continue;
     }
@@ -940,7 +906,7 @@ function main() {
   }
 
   if (results.length === 0) {
-    console.log(colorize('\n✗ No coverage analysis performed', 'red'));
+    console.log(colorize('\nNo coverage analysis performed', 'red'));
     console.log(colorize('  Ensure expected structure files exist', 'dim'));
     process.exit(1);
   }
@@ -960,7 +926,7 @@ function main() {
       const summaryRows = [['Type', 'Expected Paths', 'Actual Paths', 'Path Coverage', 'Tests (Active/Total)', 'Test Coverage', 'Missing', 'Extra']];
 
       results.forEach((result) => {
-        const status = result.summary.coveragePercent >= 80 ? '🟢' : result.summary.coveragePercent >= 60 ? '🟡' : '🔴';
+        const status = getCoverageLabel(result.summary.coveragePercent);
         const testInfo = result.summary.totalTests > 0 ? `${result.summary.activeTests}/${result.summary.totalTests}` : 'N/A';
         const testCov = result.summary.totalTests > 0 ? `${result.summary.testCoveragePercent}%` : 'N/A';
         summaryRows.push([
@@ -992,7 +958,7 @@ function main() {
       }
 
       fs.writeFileSync(outputPath, combinedMd, 'utf-8');
-      console.log(colorize(`\n✓ Combined markdown report written to: ${outputPath}`, 'green'));
+      console.log(colorize(`\nCombined markdown report written to: ${outputPath}`, 'green'));
     } else {
       // Single type or no output file - generate individual reports
       results.forEach((result) => {
@@ -1007,7 +973,7 @@ function main() {
           }
 
           fs.writeFileSync(outputPath, md, 'utf-8');
-          console.log(colorize(`\n✓ Markdown report written to: ${outputPath}`, 'green'));
+          console.log(colorize(`\nMarkdown report written to: ${outputPath}`, 'green'));
         } else if (args.format === 'markdown') {
           // Output to stdout if no file specified
           console.log(md);
@@ -1023,10 +989,10 @@ function main() {
     console.log(colorize(`\nThreshold check: ${lowestCoverage}% >= ${args.threshold}%`, 'bright'));
 
     if (lowestCoverage < args.threshold) {
-      console.log(colorize(`✗ Coverage below threshold!`, 'red'));
+      console.log(colorize(`Coverage below threshold.`, 'red'));
       process.exit(1);
     } else {
-      console.log(colorize(`✓ Coverage meets threshold`, 'green'));
+      console.log(colorize(`Coverage meets threshold.`, 'green'));
     }
   }
 }

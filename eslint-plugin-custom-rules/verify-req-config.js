@@ -12,8 +12,9 @@
  *   - preconditions — non-empty array of non-empty strings.
  *   - refs          — non-empty array of valid HTTP/HTTPS URLs.
  *   - bugs          — non-empty array of BUG-MODULE-NNN strings or valid URLs.
+ *   - note          — non-empty string comment about the checks in this it block.
  *
- * Any field name other than the four above is reported as unknown.
+ * Any field name other than the five above is reported as unknown.
  *
  * Valid examples:
  *   it('title', { req: {} }, () => {})
@@ -22,6 +23,7 @@
  *   it('title', { req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => {})
  *   it('title', { req: { p: 'P1', bugs: ['https://jira.example.com/browse/PROJ-123'] } }, () => {})
  *   it('title', { req: { p: 'P1', refs: ['https://jira.example.com/browse/PROJ-123'] } }, () => {})
+ *   it('title', { req: { note: 'asserts current behaviour pending BUG-BOOKING-002 fix' } }, () => {})
  */
 module.exports = {
   meta: {
@@ -35,7 +37,7 @@ module.exports = {
   },
   create(context) {
     const VALID_PRIORITIES = ['P1', 'P2', 'P3'];
-    const KNOWN_FIELDS = ['p', 'preconditions', 'refs', 'bugs'];
+    const KNOWN_FIELDS = ['p', 'preconditions', 'refs', 'bugs', 'note'];
     const BUG_ID_PATTERN = /^BUG-[A-Z]+-\d{3}$/;
     const URL_PATTERN = /^https?:\/\/.+/;
 
@@ -183,6 +185,22 @@ module.exports = {
               });
             }
           }
+        }
+      }
+
+      // ── Validate note (non-empty string literal) ────────────────────────────
+      if (reqProps.note) {
+        const noteVal = getStaticValue(reqProps.note.value);
+        if (reqProps.note.value.type !== 'Literal' || typeof noteVal !== 'string') {
+          context.report({
+            node: reqProps.note,
+            message: "req.note must be a string literal, e.g. note: 'asserts current behaviour pending fix'.",
+          });
+        } else if (noteVal.trim() === '') {
+          context.report({
+            node: reqProps.note,
+            message: 'req.note must not be an empty string.',
+          });
         }
       }
     }

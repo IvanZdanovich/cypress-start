@@ -1,29 +1,31 @@
-# Localization testing
+# Localization
 
-## Configuration
+Tests assert localized UI text through the global `l10n` map, never hardcoded strings. Keys are flat, dot-namespaced,
+and shared byte-for-byte with the frontend — the key string is the contract.
 
-| Variable   | Purpose                                       | Example |
-|------------|-----------------------------------------------|---------|
-| `LANGUAGE` | Language code for localization file selection | `en`    |
+```javascript
+cy.get(auditType.creation.title).should('have.text', l10n['auditType.create.title']);
+```
 
 ## How it works
 
-1. Pretest script copies the appropriate localization file to `l10n.json`
-2. Tests access localization strings via global `l10n` variable
+- One flat JSON per language at `cypress/localization/{lang}-localization.json` (`"dotted.key": "Translated text"`, no
+  nesting). These are the source files you edit.
+- `pretest` copies the `LANGUAGE`-selected file to the generated `cypress/localization/l10n.json` (the global `l10n`
+  map) and regenerates `cypress/support/l10n.d.ts`, which types keys so a missing or renamed key is a dev-time error.
 
 ```bash
-LANGUAGE=en npm run pretest
+LANGUAGE=en npm run pretest      # select language + regenerate types
+npm run gen:l10n-types           # regenerate types on demand
 ```
 
-## Usage in tests
+## Source of truth
 
-Use `l10n` global variable instead of hardcoded text:
-
-```javascript
-cy.get(loginPage.title).should('have.text', l10n.loginPage.title);
-```
+The **[localization-testing skill](../.claude/skills/localization-testing/SKILL.md)** governs key grammar, feature
+scopes, `common.*` reuse rules, normalization, and the add/rename/remove/dedupe procedures. Follow it when touching
+keys — this page is only a human orientation.
 
 ## Related
 
 - [Colour theme testing](colour-theme-testing.md)
-- [Test writing guideline](test-writing-guideline.md)
+- [Constraints → Examples → Specs](requirements-examples-approach.md)

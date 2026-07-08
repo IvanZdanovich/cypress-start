@@ -2,6 +2,8 @@
 
 Local copies of Swagger JSON schemas from API environments, stored in `development-data/swagger/`.
 
+The entire `development-data/` folder is git-ignored and local-only. It is created on demand by scripts (and agents) and never committed — run `npm run update-swagger` to populate it.
+
 ## Updating Schemas
 
 ### Manual Update
@@ -95,7 +97,8 @@ Schema files follow this naming pattern:
 
 ## Notes
 
-- Schemas are NOT committed to version control if they are too large
+- The whole `development-data/` folder is git-ignored — schemas are never committed to version control
+- The update script creates `development-data/swagger/` automatically if it is missing
 - Update schemas locally as needed for development reference
 - The script downloads schemas sequentially with a 500ms delay between requests
 - All downloaded JSON is automatically formatted with 2-space indentation

@@ -5,22 +5,25 @@ description: Use when designing or reviewing non-functional test approaches for 
 
 # Principles
 
-PURPOSE: identify non-functional quality attributes within functional test automation scope
-SCOPE_INCLUDES: response time assertions, payload size checks, auth validation, input sanitization, error handling, component alignment, accessibility checks, and reliability monitoring
-SCOPE_EXCLUDES: dedicated load testing, penetration testing, visual regression
-CORE_TECHNIQUE: "What guarantees this system is insecure, slow, unreliable?" → check what we're NOT testing
-INTEGRATION: non-functional checks embedded as dynamic assertions in commands (always-on) or as dedicated spec contexts (scenario-specific)
+INVERSION: ask "what guarantees this system is slow, insecure, unreliable?" then check what we are NOT testing — otherwise forward coverage silently misses the attribute nobody asserted
+EMBEDDING: non-functional checks ride inside functional automation as dynamic assertions, not a separate suite — otherwise the quality attribute drifts once it lives outside the flow that exercises it
+ISOLATION: a non-functional assertion lives in its own `it` block — otherwise a slow response fails the same verdict as a wrong response and breaks the functional flow
+FLAKINESS_CONTAINMENT: timing and environment-sensitive checks stay off by default and run in a dedicated CI stage — otherwise always-on latency assertions turn green suites red on noise
+LOCAL_QUALITY: threshold and rigor track the operation — otherwise a read is held to a write's latency and a happy path is probed as hard as a boundary, mispricing both
 
-# Command integration
+# Method
 
-ACTIVATION: env variable `NFR_CHECKS=true` from CI — disabled by default to avoid flakiness and slowdown
-GUARD: `if (Cypress.env('NFR_CHECKS'))` wraps non-functional context inside command
-STRUCTURE: command contains `context` → `it` blocks for non-functional assertions, skipped when env is off
-DURATION_CHECK: assert `response.duration < threshold`
-SENSITIVE_FIELDS_CHECK: assert response body excludes password, token, secret fields
-PAYLOAD_SIZE_CHECK: assert `JSON.stringify(response.body).length < MAX_PAYLOAD_BYTES`
-THRESHOLD_SOURCE: import from constraints
-FAILURE_MODE: Cypress assertion failure with descriptive message
+## Activation
+
+ENV_GATE: `NFR_CHECKS=true` from CI enables the checks, disabled by default
+GUARD: `if (Cypress.env('NFR_CHECKS'))` wraps the non-functional context inside a command; reusable assertion commands guard internally so callers never manage the flag
+CI_USAGE: `NFR_CHECKS=true LANGUAGE=en COLOUR_THEME=default TARGET_ENV=qa npm run test`
+THRESHOLD_SOURCE: import limits from constraints, never hardcode
+
+## Inline command integration
+
+STRUCTURE: command holds `context` → `it` blocks for non-functional assertions, skipped when the env is off
+FAILURE_MODE: Cypress assertion failure carrying a descriptive message
 
 ```javascript
 // Inside a command — env-gated non-functional checks with context/it structure
@@ -42,17 +45,13 @@ Cypress.Commands.add('moduleName__retrieve__GET', (token, id, restOptions = {}) 
 });
 ```
 
-CI_USAGE: `NFR_CHECKS=true LANGUAGE=en COLOUR_THEME=default TARGET_ENV=qa npm run test`
-ISOLATION: non-functional failures isolated in own `it` blocks, do not break functional flow
-FLAKINESS_MITIGATION: disabled by default, enabled only in dedicated CI pipeline stage
+## Reusable assertion commands
 
-# Reusable assertion commands
-
-PURPOSE: shared non-functional assertion commands callable from any spec or command
+NAMING: `nfr__` prefix marks a shared non-functional assertion command callable from any spec or command
 LOCATION: `cypress/commands/api/` for API checks, `cypress/commands/ui/` for UI checks
-GUARD: each command checks `Cypress.env('NFR_CHECKS')` internally — callers don't manage the flag
 API_SCOPE: response duration, payload size, sensitive fields, status code ranges, header presence
 UI_SCOPE: element alignment, colour contrast, focus visibility, aria attributes, render timing
+COMPOSABILITY: chain assertion commands for layered checks — `cy.nfr__assertResponsePerformance(response)` inside any API command, `cy.get(selector).nfr__assertElementAccessibility()` on any UI element
 
 ```javascript
 // API assertion command — reusable across any endpoint command
@@ -82,41 +81,49 @@ Cypress.Commands.add('nfr__assertColourContrast', { prevSubject: 'element' }, (s
 });
 ```
 
-USAGE_IN_COMMANDS: call `cy.nfr__assertResponsePerformance(response)` inside any API command after response
-USAGE_IN_SPECS: call `cy.get(selector).nfr__assertElementAccessibility()` for any UI element
-COMPOSABILITY: chain multiple assertion commands for layered checks
-NAMING: `nfr__` prefix identifies non-functional commands
+## Performance
 
-# Applied principles
+RESPONSE_TIME: assert `response.duration < threshold` per endpoint, measured separately so a slow one is pinned
+PAYLOAD_SIZE: assert `JSON.stringify(response.body).length < MAX_PAYLOAD_BYTES`
+PAGINATION: check list-response efficiency against its own list threshold
 
-SEGMENTATION: measure individual endpoint response times separately
-EXTRACTION: auth validation in dedicated contexts per role
-LOCAL_QUALITY: different thresholds per operation type (read vs write)
-ASYMMETRY: test aggressively at boundaries — auth, input, file upload
-INVERSION: prove unauthorized fails, prove invalid rejected
-PRELIMINARY_ACTION: verify auth required before testing features
-CUSHIONING: verify no stack traces in error responses
-DYNAMICS: thresholds from constraints, not hardcoded
-MEDIATOR: `cy.intercept()` to observe without modifying
-NESTING: auth at transport → resource → field level
+## Security
 
-# Constraints template
+AUTH_ENFORCEMENT: prove unauthorized fails and role-based access is denied — assert the negative, not only the happy path
+LAYERED_AUTH: probe auth at transport → resource → field level
+PRELIMINARY_CHECK: verify auth is required before testing the feature behind it
+SENSITIVE_FIELDS: assert response body excludes password, token, secret fields
+INPUT_SANITIZATION: prove invalid and boundary input is rejected — probe aggressively at auth, input, and file-upload boundaries
+LEAKAGE: verify error responses carry no stack traces
+
+## Reliability
+
+ERROR_HANDLING: assert malformed input is rejected and state stays consistent after a failure
+DATA_INTEGRITY: verify concurrent-modification handling and idempotency
+MEDIATOR: `cy.intercept()` observes network behaviour without modifying it
+
+## Accessibility
+
+ARIA: assert `aria-label` or `aria-labelledby` presence on interactive elements
+CONTRAST: assert `color` css against the expected colour
+FOCUS: assert focus visibility and element alignment
+
+## Scope
+
+INCLUDES: response-time assertions, payload-size checks, auth validation, input sanitization, error handling, component alignment, accessibility checks, reliability monitoring
+EXCLUDES: dedicated load testing, penetration testing, visual regression
+
+## Constraints template
 
 ```javascript
 export const PERF = Object.freeze({ MAX_RESPONSE_MS: 2000, MAX_LIST_RESPONSE_MS: 3000, MAX_PAYLOAD_BYTES: 1_000_000 });
 export const SECURITY = Object.freeze({ UNAUTHORIZED_STATUS: 401, FORBIDDEN_STATUS: 403, SENSITIVE_FIELDS: ['password', 'token', 'secret'] });
 ```
 
-# Categories
-
-PERFORMANCE: response duration, payload size, list pagination efficiency
-SECURITY: auth enforcement, role-based access, input sanitization, error information leakage
-RELIABILITY: error handling, malformed input rejection, state consistency after failures
-DATA_INTEGRITY: concurrent modification handling, idempotency verification
-
 # Validation
 
-COVERAGE_CHECK: security and performance contexts for critical endpoints
-THRESHOLD_CHECK: thresholds from constraints, not hardcoded
-AUTH_CHECK: every protected endpoint tested with invalid/missing tokens
-SCOPE_CHECK: within functional automation scope, no load/pen-test overlap
+COVERAGE_CHECK: security and performance contexts exist for critical endpoints
+THRESHOLD_CHECK: thresholds sourced from constraints, not hardcoded
+AUTH_CHECK: every protected endpoint tested with invalid and missing tokens
+ISOLATION_CHECK: non-functional assertions live in own `it` blocks, functional flow unaffected
+SCOPE_CHECK: within functional automation scope, no load or pen-test overlap

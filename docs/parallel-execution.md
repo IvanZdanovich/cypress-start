@@ -119,11 +119,9 @@ docker run cypress-tests npm run test
 
 ### Default Patterns (when SPEC_PATTERN not set)
 
-| Domain                | Pattern                                    |
-|-----------------------|--------------------------------------------|
-| Integration API Tests | `cypress/integration/api/**/*.api.spec.js` |
-| Integration UI Tests  | `cypress/integration/ui/**/*.ui.spec.js`   |
-| E2E UI Tests          | `cypress/e2e/**/*.ui.spec.js`              |
+- **Integration API tests** — `cypress/integration/api/**/*.api.spec.js`
+- **Integration UI tests** — `cypress/integration/ui/**/*.ui.spec.js`
+- **E2E UI tests** — `cypress/e2e/**/*.ui.spec.js`
 
 ### Custom Pattern (when SPEC_PATTERN is set)
 
@@ -137,22 +135,18 @@ SPEC_PATTERN.
 
 ### Environment Variables
 
-| Variable           | Description                            | Default         | Example                            |
-|--------------------|----------------------------------------|-----------------|------------------------------------|
-| `PARALLEL_STREAMS` | Number of parallel execution streams   | `3`             | `6`                                |
-| `CHUNK_STRATEGY`   | Chunking strategy (unified or domain)  | `unified`       | `domain`                           |
-| `SPEC_PATTERN`     | Custom glob pattern for test discovery | _(all domains)_ | `cypress/integration/**/*.spec.js` |
-| `BROWSER`          | Browser to use for test execution      | `electron`      | `chrome`, `firefox`, `edge`        |
-| `WORKSPACE_ROOT`   | Project root directory                 | `process.cwd()` | `/tests`                           |
-| `CI`               | CI environment flag (enables Xvfb)     | `false`         | `true`                             |
+- **`PARALLEL_STREAMS`** — number of parallel execution streams. Default `3`, e.g. `6`.
+- **`CHUNK_STRATEGY`** — chunking strategy (unified or domain). Default `unified`, e.g. `domain`.
+- **`SPEC_PATTERN`** — custom glob pattern for test discovery. Default all domains, e.g. `cypress/integration/**/*.spec.js`.
+- **`BROWSER`** — browser for test execution. Default `electron`, e.g. `chrome`, `firefox`, `edge`.
+- **`WORKSPACE_ROOT`** — project root directory. Default `process.cwd()`, e.g. `/tests`.
+- **`CI`** — CI environment flag (enables Xvfb). Default `false`, e.g. `true`.
 
 ### Recommended Stream Counts
 
-| Streams | Use Case                         | CPU Cores | Memory  |
-|---------|----------------------------------|-----------|---------|
-| 2-3     | Local development, basic CI      | 2-4       | 4-8 GB  |
-| 4-6     | Standard CI/CD pipelines         | 4-8       | 8-16 GB |
-| 8+      | High-performance CI environments | 8+        | 16+ GB  |
+- **2–3 streams** — local development, basic CI. 2–4 CPU cores, 4–8 GB memory.
+- **4–6 streams** — standard CI/CD pipelines. 4–8 CPU cores, 8–16 GB memory.
+- **8+ streams** — high-performance CI environments. 8+ CPU cores, 16+ GB memory.
 
 **Warning:** Too many streams can cause:
 
@@ -264,11 +258,8 @@ concurrently. Remaining tasks will queue and execute as streams become available
 
 ## Exit Codes
 
-| Exit Code | Meaning                           |
-|-----------|-----------------------------------|
-| `0`       | All tests passed                  |
-| `1`       | Pre-setup tests failed            |
-| `1`       | One or more parallel tasks failed |
+- **`0`** — all tests passed.
+- **`1`** — pre-setup tests failed, or one or more parallel tasks failed.
 
 ## Troubleshooting
 

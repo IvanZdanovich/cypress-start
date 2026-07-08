@@ -5,26 +5,40 @@ description: Use when writing or updating Integration API specs that must be exe
 
 # Principles
 
-PURPOSE: create testable API requirements from named examples and constraints
-SPEC: `cypress/integration/api/module-name.submodule-name.api.spec.js`
+EXECUTABLE_REQUIREMENT: a spec asserts the assumed outcome of a named example or business rule — otherwise a failing assertion signals a brittle test rather than a real contradiction
+TRACEABILITY: every asserted value traces through examples to constraints — otherwise a literal inlined in the spec drifts from its source and hides which rule it verifies
+COMPUTING_EFFICIENCY: set up via API and reuse one instance across its create-update-delete lifecycle within a file — otherwise per-`it` recreation multiplies calls without adding coverage
+DETERMINISM: cleanup by name prefix before and after, and keep each file independent of order — otherwise a leftover from a prior run passes or poisons a later spec
+INVERSION: name what gives false confidence — untraced literals, shadowed examples, reconstructed payloads, order dependence — otherwise positive rules alone let these slip through
+
+# Method
+
+## Paths
+
+SPEC: `cypress/integration/api/module-name.submodule-name.api.spec.js` — kebab-case, e.g. `restful-booker.booking.api.spec.js`
 EXAMPLES: `cypress/integration-examples/api/module-name.submodule-name.api.examples.js`
 CONSTRAINTS: `cypress/constants/api/module-name.api.constraints.js`
 COMMANDS: `cypress/commands/api/`
 URLS: `cypress/urls/api-urls.js`
 REGISTRY: `eslint-plugin-custom-rules/app-structure/modules.json`
-REVERSE_BRAINSTORM: "What would guarantee this spec gives false confidence, is unmaintainable, or misleads?"
+SWAGGER: `development-data/swagger` — git-ignored, local-only; run `npm run update-swagger` to populate (auto-created if missing)
 
-# Structure
+## Reverse brainstorming
+
+SABOTAGE: name what would make this spec give false confidence, become unmaintainable, or mislead
+REALITY_CHECK: for each, ask "are we already doing this?" — matches are the defects to fix before writing
+
+## Structure
 
 HIERARCHY: single `describe` → sequential `context` blocks → `it` blocks
-ISOLATION: `{ testIsolation: false }` on `describe`
+ISOLATION: `{ testIsolation: false }` on `describe` — shared token and created data persist across contexts
 DESCRIBE_SETUP: `before` for token, cleanup
 CONTEXT_SETUP: `before` for shared request or created data
-FLOW: related contexts in efficient order, explicit state per context
+FLOW: order contexts by dependency, state explicit per context
 SKIP: `context.skip` or `it.skip` with clear description
 ERROR_RESPONSES: `{ failOnStatusCode: false }` for expected non-2xx
 
-# Titles
+## Titles
 
 TITLE_DESCRIBE: `Module.Submodule: Given preconditions, created data`
 TITLE_CONTEXT: `Module.Submodule.Operation.METHOD: When condition`
@@ -32,28 +46,26 @@ TITLE_IT: `Module.Submodule.Operation.METHOD: Then expected result`
 UNIQUENESS: unique titles within `context`
 SPECIFICITY: verified assumed outcome of example or business rule
 PLAIN: no parentheses, no square brackets
-VALUE_MEANING: "minimal price" not "price 1"
-REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`; omit when empty
-REQ_PRIORITY: omit `p` for default P2
+VALUE_MEANING: "minimal price" not "price 1" — a named value survives constraint changes that a literal does not
+REQ_METADATA: optional `{ req: {} }` fields `p` (omit for default P2), `preconditions`, `refs`, `bugs`, `note` (non-empty string comment about the checks); omit when empty
 
-# Data
+## Data
 
 INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: placeholder on source instance only; set once on source after creation; dependent instances read source IDs via ES getters defined in examples — never manually assign the same ID to multiple instances in setup
+ID_FIELDS: placeholder on source instance only → set once on source after creation → dependent instances read source IDs via ES getters defined in examples — assigning the same ID to multiple instances in setup breaks single-source traceability
 CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-SPEC_CALLS: pass pre-composed examples directly, never reconstruct payloads
+SPEC_CALLS: pass pre-composed examples directly — reconstructing a payload in the spec forks it from its constraint-backed source
 
-# Commands
+## Commands
 
 FORMAT: `moduleName__operationDetails__METHOD`
 PARAMETERS: token first, then body, context headers, request overrides
 OPERATIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
-SWAGGER: `development-data/swagger`
 
-# Readability
+## Readability
 
-DIRECT_REFERENCE: `examples.group.instance` inline, never shadow with local `const`
+DIRECT_REFERENCE: `examples.group.instance` inline — a local `const` shadow hides which example is asserted
 ID_ASSIGN: `examples.group.instance.id = response.body.id`
 ASSERTION_SCOPE: one core outcome per `it`, related fields in one `.then()` when practical
 CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level

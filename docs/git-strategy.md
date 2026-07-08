@@ -1,24 +1,18 @@
 # Git strategy
 
-## Branches
+Feature branches off `main`, Conventional Commits, and squash-merge only. Every change threads a ticket key through
+its branch, commit scope, and PR title.
 
-| Branch                             | Purpose                                 |
-|------------------------------------|-----------------------------------------|
-| `main`                             | Stable tests ready for execution        |
-| `feature/<KEY>-1234-<description>` | Feature branches for new specifications |
+- Branch from current `main`: `feature/<TICKET_KEY>-<short-kebab-description>`.
+- One approval required; the reviewer runs tests locally.
+- Pre-commit checks must pass before opening a PR — see [Pre-commit check](pre-commit-check.md).
+- Merge with squash only, so `main` keeps a linear one-commit-per-change history.
 
-## Merge requirements
+## Source of truth
 
-- Pull requests require at least one review
-- Reviewer runs tests locally
-- Only squash merges allowed
-- Code passes pre-commit quality checks — see [Pre-commit check](pre-commit-check.md)
+The **[git-strategy skill](../.claude/skills/git-strategy/SKILL.md)** governs branching, commit style, and pull-request
+rules. Follow it when branching, committing, or opening PRs — this page is only a human orientation.
 
-## Contributing workflow
+## Related
 
-1. Create feature branch from `main`
-2. Develop and test changes
-3. Run pre-commit checks locally
-4. Submit pull request for review
-5. Address review comments
-6. Squash and merge to `main`
+- [Pre-commit check](pre-commit-check.md)

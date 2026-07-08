@@ -5,61 +5,76 @@ description: Use when writing or updating Integration UI specs that must be exec
 
 # Principles
 
-PURPOSE: create testable UI page/component requirements from named examples
-SPEC: `cypress/integration/ui/page-name.component-name.ui.spec.js`
+TRACEABILITY: every asserted value traces to a named example or a constraint — inline literals break the constraints→examples→specs chain and drift silently
+API_SETUP: build preconditions through API commands, drive only the behavior under test through the UI — otherwise slow UI setup fails for reasons unrelated to what the spec verifies
+SEGMENTATION: one visible UI outcome per `it` — otherwise a block asserting several outcomes cannot name which one regressed
+INVERSION: name what would make the spec give false confidence, be unmaintainable, or mislead, then check which you already do — otherwise forward writing misses these failures
+
+# Method
+
+## Paths
+
+SPEC: `cypress/integration/ui/page-name.component-name.ui.spec.js` — kebab-case, e.g. `inventory-page.ui.spec.js`
 EXAMPLES: `cypress/integration-examples/ui/page-name.component-name.ui.examples.js`
 SELECTORS: `cypress/selectors/selectors.js`
 UI_COMMANDS: `cypress/commands/ui/`
 API_COMMANDS: `cypress/commands/api/`
-REVERSE_BRAINSTORM: "What would guarantee this spec gives false confidence, is unmaintainable, or misleads?"
+CONSTRAINTS: import directly from `cypress/constants/{api,ui}/`
 
-# Structure
+## Structure
 
 HIERARCHY: single `describe` → sequential `context` blocks → `it` blocks
-ISOLATION: `{ testIsolation: false }` on `describe`
+ISOLATION: `{ testIsolation: false }` on `describe` — shared setup persists across contexts within the file
 DESCRIBE_SETUP: `before` for token, cleanup, session
 CONTEXT_SETUP: `before` for navigation or shared UI state
 FLOW: related contexts in efficient order, explicit state per context
 SKIP: `context.skip` or `it.skip` with clear description
 
-# Titles
+## Titles
 
 TITLE_DESCRIBE: `Page.Component: Given preconditions, created data`
 TITLE_CONTEXT: `Page.Component.USER_ROLE: When condition`
 TITLE_IT: `Page.Component.USER_ROLE: Then expected result`
 UNIQUENESS: unique titles within `context`
-SPECIFICITY: verified assumed outcome of example or business rule
+SPECIFICITY: title names the verified outcome of a constraint boundary or an example instance — not implementation mechanics
 PLAIN: no parentheses, no square brackets
-VALUE_MEANING: "minimal price" not "price 1"
-REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`; omit when empty
+VALUE_MEANING: "minimal price" over "price 1" — the intent, not the literal
+REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`, `note` (non-empty string comment about the checks); omit when empty
 
-# Data
+## Data and cleanup
 
-INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: placeholder on source instance only; set once on source after API setup; dependent instances read source IDs via ES getters defined in examples — never manually assign the same ID to multiple instances in setup
-CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
+INSTANCE_REUSE: create, update, delete one instance across the file lifecycle — reruns stay deterministic
+ID_FIELDS: placeholder on source instance only; set once on source after API setup; dependent instances read source IDs via ES getters defined in examples — manually assigning the same ID to multiple instances desyncs them
+ID_ASSIGN: `examples.group.instance.id = response.body.id`
+CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after` — clears current and prior data so a crashed run leaves nothing behind
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
 CONSISTENCY: API and UI property names aligned
 
-# UI behavior
+## Asserted value sources
 
-SELECTOR_ACCESS: global variables — `commonUI`, `templatesPage`
-LOCALIZATION: global `l10n`
-THEME: global `colours`
-CONSTRAINTS: import directly from `cypress/constants/{api,ui}/` — never via global
+CONSTRAINT: boundary values (`PRICE.MAX`, `TEXT_CAPACITY.MAX_LENGTH`, enum members) imported from `cypress/constants/{api,ui}/` — assert boundary enforcement
+EXAMPLE: composed named instances from `cypress/integration-examples/ui/` — assert data display and CRUD outcomes
+L10N: UI-visible text via global `l10n` — assert labels, buttons, messages match the current locale
+COLOURS: theme-dependent hex values via global `colours` — assert visual styling
+INLINE_LITERAL: only for structural expectations not owned by any layer (e.g. `'be.visible'`, `'be.disabled'`, attribute names)
+
+## UI behavior
+
+SELECTOR_ACCESS: global variables — `commonUI`, `templatesPage` — no hardcoded CSS strings
+SELECTOR_NAMING: camelCase, purpose-driven, pattern `elementPurposeElementType` — static-text elements as nouns (`errorMessage`, `userNameInput`), action elements as verbs (`submitForm`, `openListingTab`)
+LOCALIZATION: UI text via global `l10n`
+THEME: hex colours via global `colours`
 UI_COMMAND_FORMAT: `pageName__operation`, `componentName__operation`
 UI_COMMAND_SCOPE: reused multi-step interactions
 INLINE_SCOPE: direct `.click()`, `.type()`, `.clear()`, simple assertions
-PAGE_REF: `development-data/pages`
 
-# Readability
+## Readability
 
-DIRECT_REFERENCE: `examples.group.instance` inline, never shadow with local `const`
-ID_ASSIGN: `examples.group.instance.id = response.body.id`
-ASSERTION_SCOPE: one visible UI outcome per `it`, related checks within parent element when practical
+DIRECT_REFERENCE: `examples.group.instance` inline, never shadowed by a local `const`
+ASSERTION_SCOPE: one visible UI outcome per `it`, related checks scoped within the parent element when practical
 IT_BODY: 5 lines target — assertion plus direct setup only
 CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
-TRIM: only comments that add meaning, necessary setup, used tokens
+TRIM: only meaningful comments, necessary setup, used tokens
 
 ```javascript
 import { list_examples as examples } from '../../integration-examples/ui/page-name.component-name.ui.examples';
@@ -93,3 +108,4 @@ TITLE_CHECK: unique, page/component-prefixed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, API-backed, name pattern
 SELECTOR_CHECK: global variables, no hardcoded CSS strings
 L10N_CHECK: UI text via `l10n`, not hardcoded strings
+TRACEABILITY_CHECK: every asserted value resolves to one of — constraint import, named example field, `l10n` key, `colours` key; no orphan literals

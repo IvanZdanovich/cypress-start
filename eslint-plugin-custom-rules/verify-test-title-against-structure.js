@@ -337,12 +337,14 @@ module.exports = {
 
       if (staleInCurrent.length > 0) {
         const preview = staleInCurrent.slice(0, 3).join(', ');
-        msg += `Stale paths to remove: ${preview}${staleInCurrent.length > 3 ? ` (+${staleInCurrent.length - 3} more)` : ''}. `;
+        const more = staleInCurrent.length > 3 ? ` (+${staleInCurrent.length - 3} more)` : '';
+        msg += `Stale paths to remove: ${preview}${more}. `;
       }
 
       if (missingInCurrent.length > 0) {
         const preview = missingInCurrent.slice(0, 3).join(', ');
-        msg += `Missing paths to add: ${preview}${missingInCurrent.length > 3 ? ` (+${missingInCurrent.length - 3} more)` : ''}. `;
+        const more = missingInCurrent.length > 3 ? ` (+${missingInCurrent.length - 3} more)` : '';
+        msg += `Missing paths to add: ${preview}${more}. `;
       }
 
       msg += 'Run with --fix to regenerate.';

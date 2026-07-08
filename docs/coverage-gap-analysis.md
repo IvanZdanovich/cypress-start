@@ -8,12 +8,10 @@ health.
 
 ## Metrics
 
-| Metric        | Description                                  |
-|---------------|----------------------------------------------|
-| Path coverage | Expected paths implemented (%)               |
-| Test coverage | Active (non-skipped) tests / total tests (%) |
-| Missing paths | Expected but not implemented                 |
-| Extra paths   | Implemented but not in expected structure    |
+- **Path coverage** — expected paths implemented (%).
+- **Test coverage** — active (non-skipped) tests / total tests (%).
+- **Missing paths** — expected but not implemented.
+- **Extra paths** — implemented but not in expected structure.
 
 ## Usage
 
@@ -37,12 +35,10 @@ npm run coverage:check      # Fail if below threshold
 
 ## Options
 
-| Option        | Default | Values                                               |
-|---------------|---------|------------------------------------------------------|
-| `--type`      | `all`   | `integration-ui`, `integration-api`, `e2e-ui`, `all` |
-| `--format`    | `both`  | `cli`, `markdown`, `both`                            |
-| `--output`    | —       | File path for markdown report                        |
-| `--threshold` | —       | Minimum coverage % (exits 1 if below)                |
+- **`--type`** — test type to analyze. Default `all`; values `integration-ui`, `integration-api`, `e2e-ui`, `all`.
+- **`--format`** — output format. Default `both`; values `cli`, `markdown`, `both`.
+- **`--output`** — file path for the markdown report. No default.
+- **`--threshold`** — minimum coverage %; exits 1 if below. No default.
 
 ## How it works
 
@@ -59,14 +55,12 @@ npm run coverage:check      # Fail if below threshold
 
 ## Report sections
 
-| Section                    | Content                                                |
-|----------------------------|--------------------------------------------------------|
-| Summary                    | Overall coverage percentages                           |
-| Missing coverage           | Paths in expected but not tested, grouped by component |
-| Extra coverage             | Paths implemented but not in expected structure        |
-| Structural inconsistencies | Paths with different child structures                  |
-| Coverage by component      | Per-component breakdown with status indicators         |
-| Recommendations            | Priority actions based on results                      |
+- **Summary** — overall coverage percentages.
+- **Missing coverage** — paths in expected but not tested, grouped by component.
+- **Extra coverage** — paths implemented but not in expected structure.
+- **Structural inconsistencies** — paths with different child structures.
+- **Coverage by component** — per-component breakdown with status indicators.
+- **Recommendations** — priority actions based on results.
 
 ## Path coverage vs test coverage
 
@@ -77,14 +71,11 @@ Example: 85% path coverage + 70% test coverage = 3 scenarios missing + 15 tests 
 
 ## Troubleshooting
 
-| Issue                        | Cause                                                          | Fix                                       |
-|------------------------------|----------------------------------------------------------------|-------------------------------------------|
-| 0 actual paths               | Files not matching pattern or titles not following conventions | Verify file location and title format     |
-| Expected structure not found | Missing JSON file                                              | Check `app-structure/expected/`           |
-| Inconsistent results         | Stale files or title formatting                                | Run `npm run lint --fix`, verify patterns |
+- **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and title format.
+- **Expected structure not found** — missing JSON file. Check `app-structure/expected/`.
+- **Inconsistent results** — stale files or title formatting. Run `npm run lint --fix` and verify patterns.
 
 ## Related
 
-- [Naming conventions](naming-conventions.md) — title patterns
-- [ESLint custom rules](eslint-custom-rules.md) — `verify-test-title-against-structure`
-- [Test writing guideline](test-writing-guideline.md) — spec structure
+- [ESLint custom rules](eslint-custom-rules.md) — `verify-test-title-against-structure`, title-pattern enforcement
+- [Constraints → Examples → Specs](requirements-examples-approach.md) — spec structure

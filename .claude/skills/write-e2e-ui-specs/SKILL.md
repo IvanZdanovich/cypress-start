@@ -5,63 +5,67 @@ description: Use when writing or updating E2E UI workflow specs that must be exe
 
 # Principles
 
-PURPOSE: create testable end-to-end workflow requirements from named workflow examples
-SPEC: `cypress/e2e/ui/workflow-name.ui.spec.js`
+CONTINUITY: reuse entities created in earlier steps across the workflow (create → modify → verify → complete) — otherwise a journey that re-seeds fresh data per step tests isolated actions, not the end-to-end flow
+BUSINESS_ORDER: sequence contexts in the order a real user lives the journey with explicit state per context — otherwise a spec reordered for test convenience stops mirroring the requirement it documents
+EXECUTABLE_REQUIREMENT: title, example, and assertion state one verified business outcome — otherwise a spec that asserts less than its title claims gives false confidence
+INVERSION: name what would make this spec give false confidence, be unmaintainable, or mislead — otherwise purely positive rules leave those failure modes unguarded and the spec ships them undetected
+
+# Method
+
+## Paths
+
+SPEC: `cypress/e2e/ui/workflow-name.ui.spec.js` — kebab-case business-flow title, e.g. `complete-purchase.ui.spec.js`
 EXAMPLES: `cypress/e2e-examples/ui/workflow-name.ui.examples.js`
 SELECTORS: `cypress/selectors/selectors.js`
 UI_COMMANDS: `cypress/commands/ui/`
 API_COMMANDS: `cypress/commands/api/`
+CONSTRAINTS: import directly from `cypress/constants/{api,ui}/` — never via global
 REGISTRY: `eslint-plugin-custom-rules/app-structure/workflows.json`
-CONTINUITY: reuse created entities across workflow steps (create → modify → verify → complete)
-REVERSE_BRAINSTORM: "What would guarantee this spec gives false confidence, is unmaintainable, or misleads?"
 
-# Structure
+## Structure
 
-HIERARCHY: single `describe` → sequential `context` blocks per workflow step → `it` blocks
-ISOLATION: `{ testIsolation: false }` on `describe`
+HIERARCHY: single `describe` → sequential `context` per workflow step → `it` blocks
+ISOLATION: `{ testIsolation: false }` on `describe` — steps share state across the journey
 DESCRIBE_SETUP: `before` for token, cleanup, session
 CONTEXT_SETUP: `before` for workflow step setup or navigation
-FLOW: complete user journey in business order with explicit state per context
 SKIP: `context.skip` or `it.skip` with clear description
 
-# Titles
+## Titles
 
 TITLE_DESCRIBE: `Flow.SubFlow: Given 'preconditions', 'created data'`
 TITLE_CONTEXT: `Flow.SubFlow.USER_ROLE: When 'condition'`
 TITLE_IT: `Flow.SubFlow.USER_ROLE: Then 'expected result'`
 UNIQUENESS: unique titles within `context`
-SPECIFICITY: verified assumed outcome of example or business rule
+SPECIFICITY: state the verified outcome of an example or business rule
+VALUE_MEANING: describe a value's meaning, not its literal
 PLAIN: no parentheses, no square brackets
-VALUE_MEANING: describe value's meaning, not literal
-REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`; omit when empty
+REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`, `note` (non-empty string comment about the checks); omit when empty
 
-# Data
+## Data
 
-WORKFLOW_DATA: setup, execution, verification values in E2E examples file
-INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: placeholder on source instance only; set once on source after setup; dependent instances read source IDs via ES getters defined in examples — never manually assign the same ID to multiple instances in setup
-CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
+WORKFLOW_DATA: setup, execution, and verification values live in the E2E examples file
+ID_FIELDS: placeholder on source instance only → set once on source after setup → dependent instances read source IDs via ES getters in examples — never assign the same ID to multiple instances in setup
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-CONSISTENCY: API setup values and UI verification values aligned
+CONSISTENCY: API setup values and UI verification values aligned — a mismatch verifies a state the setup never produced
+CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
 
-# UI behavior
+## UI behavior
 
 SELECTOR_ACCESS: global variables — `commonUI`, `workflowPage`
+SELECTOR_NAMING: camelCase, purpose-driven, pattern `elementPurposeElementType` — static-text elements as nouns (`errorMessage`, `userNameInput`), action elements as verbs (`submitForm`, `openListingTab`)
 LOCALIZATION: global `l10n`
 THEME: global `colours`
-CONSTRAINTS: import directly from `cypress/constants/{api,ui}/` — never via global
 UI_COMMAND_FORMAT: `pageName__operation`, `componentName__operation`
-UI_COMMAND_SCOPE: reused multi-step workflow actions
+UI_COMMAND_SCOPE: reused multi-step workflow actions in business terminology
 INLINE_SCOPE: direct `.click()`, `.type()`, `.clear()`, simple assertions
-WORKFLOW_SCOPE: business terminology and complete user outcomes
 
-# Readability
+## Readability
 
-DIRECT_REFERENCE: `examples.group.instance` inline, never shadow with local `const`
+DIRECT_REFERENCE: `examples.group.instance` inline, never shadowed by a local `const`
 ID_ASSIGN: `examples.group.instance.id = response.body.id`
 ASSERTION_SCOPE: one user-visible workflow outcome per `it`
 IT_BODY: 5 lines target — assertion plus direct setup only
-CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
+CYPRESS_CHAIN: flat `cy.then()` blocks, nesting no deeper than one level
 TRIM: only comments that add meaning, necessary setup, used tokens
 
 ```javascript
@@ -88,10 +92,15 @@ describe('Workflow.SubFlow: Given user is authenticated, workflow data exists', 
 });
 ```
 
+## Reverse brainstorming
+
+SABOTAGE: list strategies that would make the spec give false confidence, become unmaintainable, or mislead
+REALITY_CHECK: for each, ask "are we already doing this?" — matches are defects to fix before writing the spec
+
 # Validation
 
 STRUCTURE_CHECK: describe/context/it with `{ testIsolation: false }`
 SEGMENTATION_CHECK: one workflow outcome per `it`
 TITLE_CHECK: unique, flow-prefixed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, API-backed, name pattern
-FLOW_CHECK: contexts follow business order of user journey
+FLOW_CHECK: contexts follow business order of the user journey

@@ -7,6 +7,9 @@
  *
  * This script downloads the latest Swagger/OpenAPI schemas from development and QA environments
  * and saves them to the development-data/swagger directory for reference and testing purposes.
+ *
+ * The development-data/ folder is git-ignored and local-only. It is created on demand here
+ * (see mkdirSync below) and is never committed to version control.
  */
 
 const https = require('https');
@@ -26,12 +29,98 @@ if (!fs.existsSync(SWAGGER_DIR)) {
  * Format: { url: string, filename: string, description: string }
  */
 const SCHEMA_SOURCES = [
+  // Audit65 DEV env
   {
-    url: 'https://swagger-url.com/swagger.json',
-    filename: 'swagger-file-name.json',
-    description: 'Swagger Schema',
+    url: 'https://audit65apidev.foodalert.com/swagger/v1-global/swagger.json',
+    filename: 'audit65apidev.foodalert.com.v1-global.json',
+    description: 'Alert65.Audit65.Api Global Settings',
+  },
+  {
+    url: 'https://audit65apidev.foodalert.com/swagger/v1-group/swagger.json',
+    filename: 'audit65apidev.foodalert.com.v1-group.json',
+    description: 'Alert65.Audit65.Api Group Settings',
+  },
+  {
+    url: 'https://audit65apidev.foodalert.com/swagger/audits/swagger.json',
+    filename: 'audit65apidev.foodalert.com.audits.json',
+    description: 'Alert65.Audit65.Api Audits functionality',
+  },
+
+  // Dynamic Forms DEV env
+  {
+    url: 'https://dformsapidev.foodalert.com/swagger/v2-group-template/swagger.json',
+    filename: 'dformsapidev.foodalert.com.v2-group-template.json',
+    description: 'Template Group Endpoints',
+  },
+  {
+    url: 'https://dformsapidev.foodalert.com/swagger/v2-global/swagger.json',
+    filename: 'dformsapidev.foodalert.com.v2-global.json',
+    description: 'Global Endpoints',
+  },
+  {
+    url: 'https://dformsapidev.foodalert.com/swagger/dforms/swagger.json',
+    filename: 'dformsapidev.foodalert.com.dforms.json',
+    description: 'Dynamic Forms Endpoints',
+  },
+
+  // Audit65 Reports DEV env
+  {
+    url: 'https://reportsapidev.foodalert.com/swagger/reports/swagger.json',
+    filename: 'reportsapidev.foodalert.com.reports.json',
+    description: 'Alert65.Reports Endpoints',
+  },
+
+  // Audit65 Gateway QA env
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/v1-userManagement/swagger.json',
+    filename: 'audit65qa.foodalert.com.v1-userManagement.json',
+    description: 'User Management Endpoints',
+  },
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/settings/swagger.json',
+    filename: 'audit65qa.foodalert.com.settings.json',
+    description: 'Settings Endpoints',
+  },
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/templates/swagger.json',
+    filename: 'audit65qa.foodalert.com.templates.json',
+    description: 'Template Endpoints',
+  },
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/dforms/swagger.json',
+    filename: 'audit65qa.foodalert.com.dforms.json',
+    description: 'Dynamic Forms Endpoints',
+  },
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/audits/swagger.json',
+    filename: 'audit65qa.foodalert.com.audits.json',
+    description: 'Audit Endpoints',
+  },
+  {
+    url: 'https://audit65qa.foodalert.com/swagger/mocks/swagger.json',
+    filename: 'audit65qa.foodalert.com.mocks.json',
+    description: 'Mocks',
+  },
+
+  // Unity Document Management
+  {
+    url: 'https://unitydocapiqa.azurewebsites.net/swagger/v1/swagger.json',
+    filename: 'unitydocapiqa.azurewebsites.net.v1.json',
+    description: 'Unity.Doc.Management.API',
   },
 ];
+
+const RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000;
+
+/**
+ * Wait for a given number of milliseconds
+ * @param {number} ms - Milliseconds to wait
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Download a file from a URL
@@ -78,6 +167,29 @@ function downloadFile(url) {
 }
 
 /**
+ * Download a file with retry logic and exponential backoff
+ * @param {string} url - The URL to download from
+ * @param {number} attempts - Maximum number of attempts
+ * @returns {Promise<string>} - The downloaded content as a string
+ */
+async function downloadFileWithRetry(url, attempts = RETRY_ATTEMPTS) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await downloadFile(url);
+    } catch (err) {
+      const isLastAttempt = attempt === attempts;
+      if (isLastAttempt) {
+        throw err;
+      }
+      const delayMs = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      console.log(`   Attempt ${attempt}/${attempts} failed: ${err.message}`);
+      console.log(`   Retrying in ${delayMs}ms...`);
+      await sleep(delayMs);
+    }
+  }
+}
+
+/**
  * Format JSON with proper indentation
  * @param {string} jsonString - The JSON string to format
  * @returns {string} - Formatted JSON string
@@ -96,15 +208,15 @@ async function downloadSchema(source) {
   const filePath = path.join(SWAGGER_DIR, source.filename);
 
   try {
-    console.log(`📥 Downloading: ${source.description}`);
+    console.log(`Downloading: ${source.description} (up to ${RETRY_ATTEMPTS} attempts)`);
     console.log(`   URL: ${source.url}`);
 
-    const content = await downloadFile(source.url);
+    const content = await downloadFileWithRetry(source.url);
     const formattedContent = formatJson(content);
 
     fs.writeFileSync(filePath, formattedContent, 'utf8');
 
-    console.log(`✅ Saved: ${source.filename}\n`);
+    console.log(`Saved: ${source.filename}\n`);
 
     return {
       success: true,
@@ -112,7 +224,7 @@ async function downloadSchema(source) {
       description: source.description,
     };
   } catch (error) {
-    console.error(`❌ Failed: ${source.description}`);
+    console.error(`FAIL after ${RETRY_ATTEMPTS} attempts: ${source.description}`);
     console.error(`   Error: ${error.message}\n`);
 
     return {
@@ -128,9 +240,9 @@ async function downloadSchema(source) {
  * Main execution function
  */
 async function main() {
-  console.log('🚀 Starting Swagger schema update...\n');
-  console.log(`📁 Target directory: ${SWAGGER_DIR}\n`);
-  console.log(`📊 Total schemas to download: ${SCHEMA_SOURCES.length}\n`);
+  console.log('Starting Swagger schema update...\n');
+  console.log(`Target directory: ${SWAGGER_DIR}\n`);
+  console.log(`Total schemas to download: ${SCHEMA_SOURCES.length}\n`);
   console.log('═'.repeat(80));
   console.log('\n');
 
@@ -146,17 +258,17 @@ async function main() {
   }
 
   console.log('═'.repeat(80));
-  console.log('\n📋 Summary:\n');
+  console.log('\nSummary:\n');
 
   const successful = results.filter((r) => r.success);
   const failed = results.filter((r) => !r.success);
 
-  console.log(`✅ Successful: ${successful.length}`);
-  console.log(`❌ Failed: ${failed.length}`);
-  console.log(`📊 Total: ${results.length}\n`);
+  console.log(`Successful: ${successful.length}`);
+  console.log(`Failed:     ${failed.length}`);
+  console.log(`Total:      ${results.length}\n`);
 
   if (failed.length > 0) {
-    console.log('⚠️  Failed downloads:');
+    console.log('Failed downloads:');
     failed.forEach((f) => {
       console.log(`   - ${f.description} (${f.filename})`);
       console.log(`     Error: ${f.error}`);
@@ -164,13 +276,13 @@ async function main() {
     console.log('');
     process.exit(1);
   } else {
-    console.log('🎉 All schemas updated successfully!\n');
+    console.log('All schemas updated successfully.\n');
     process.exit(0);
   }
 }
 
 // Run the script
 main().catch((error) => {
-  console.error('💥 Unexpected error:', error);
+  console.error('FAIL Unexpected error:', error);
   process.exit(1);
 });

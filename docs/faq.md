@@ -1,577 +1,164 @@
 # FAQ
 
-## 1. Why is automating manual test cases ineffective?
+## 1. Why not automate manual test cases?
 
-Automating manual test cases is not recommended because manual tests are designed for human execution structured in
-straight-forward way, often containing ambiguous duplicated steps and lacking the suite structure needed for reliable
-automation. Attempting to automate them leads to unclear logic, superficial coverage, high maintenance costs and broken
-CI/CD processes due slow execution because of duplicated steps and assertions
-Keeping both manual and automated tests have no benefits, since requires a lot of resources and provides no benefits,
-because creates two sources of truth. Alignment with manual cases requires constant updates in both places, increasing
-the risk of inconsistencies and wasted effort. Metrics based on the number of automated manual cases are misleading,
-cause number of verified requirements is different from test to test, and integrating these tests with management tools
-adds unnecessary complexity.
-Instead, automation should focus on directly validating requirements, resulting in more stable, precise, and
-maintainable tests that truly reflect the application's intended behavior.
+Manual tests are designed for human execution — ambiguous, duplicated steps, lacking structure for reliable automation.
+Automating them leads to superficial coverage, high maintenance, and slow CI/CD. Two parallel sources of truth require
+constant synchronization with no added benefit.
 
-## 2. Why is using Page Object considered an anti-pattern?
+Instead: validate requirements directly. Result: stable, precise, maintainable tests reflecting intended behavior.
 
-The Page Object Model (POM) is tightly coupled with object-oriented programming (OOP): each page becomes a class, each
-element a field, and every action a method wrapping a simple operation. At first glance, this seems elegant:
+## 2. Why is Page Object an anti-pattern?
 
-**Test using POM (anti-pattern):**
+POM wraps simple framework operations in class methods — duplicating functionality, adding layers, increasing cognitive
+load.
 
-```javascript
-// loginPage.js
-class LoginPage {
-    usernameInput = '#username';
-    passwordInput = '#password';
-    loginButton = '#login';
+- **Selectors** — POM puts them in class fields; here, global page objects.
+- **Actions** — POM wraps `.click()` in class methods; here, Cypress custom commands.
+- **Navigation** — POM uses a method per page; here, `cy.visit(urls.page)`.
+- **Complexity** — POM builds an OOP hierarchy; here, a flat file structure.
 
-    navigate() {
-        cy.visit('/login');
-    }
-
-    enterUsername(username) {
-        cy.get(this.usernameInput).type(username);
-    }
-
-    enterPassword(password) {
-        cy.get(this.passwordInput).type(password);
-    }
-
-    clickLogin() {
-        cy.get(this.loginButton).click();
-    }
-}
-
-export default new LoginPage();
-
-// dashboardPage.js
-class DashboardPage {
-    title = 'h1';
-
-    getTitle() {
-        return cy.get(this.title);
-    }
-}
-
-export default new DashboardPage();
-
-// login-page.ui.spec.js
-import loginPage from './loginPage';
-import dashboardPage from './dashboardPage';
-
-context('LoginPage: When user logins with valid credentials', () => {
-    before(() => {
-        loginPage.navigate();
-        loginPage.enterUsername('user');
-        loginPage.enterPassword('pass');
-        loginPage.clickLogin();
-    });
-
-    it('LoginPage: Then user should be navigated to the Dashboard', () => {
-        dashboardPage.getTitle().should('contain', 'Dashboard');
-    });
-});
-```
-
-**Pros:**
-
-- Organized structure through OOP principles
-    - Reusable page methods across tests
-    - Encapsulation of page-specific logic
-    - Standardized interface for page interactions
-
-**Cons:**
-
-- Unnecessary abstraction:
-    - Duplicates framework functionality
-    - Wraps logic and simple operations in class methods
-    - Adds complexity to basic actions
-
-- Maintenance challenges:
-    - Multiple files to update for UI changes
-    - Complex dependencies between classes
-
-- Poor developer experience:
-    - High cognitive load from OOP complexity
-    - Difficult to trace test flow
-    - Steep learning curve for new team members
-
-- Technical limitations:
-    - Reduced test performance
-
-- Documentation and visibility:
-    - Hidden implementation details
-    - Requires additional logging
-    - Hard to understand for non-developers
-
-**Recommended approach:**
+Recommended: selectors in `cypress/selectors/selectors.js`, reusable flows in `cypress/commands/{api,ui}/`, tests import
+directly. This "no abstraction a fresh solver wouldn't need" rule is enforced by the
+[produce-solution](../.claude/skills/produce-solution/SKILL.md) and
+[validate-solution](../.claude/skills/validate-solution/SKILL.md) skills.
 
 ```javascript
-// selectors.js
+// selectors.js — global page objects
 export const loginPage = {
-    usernameInput: '#username',
-    passwordInput: '#password',
-    loginButton: '#login'
-};
-export const dashboardPage = {
-    title: 'h1'
+  usernameInput: '#username',
+  passwordInput: '#password',
+  loginButton: '#login',
 };
 
-// api-urls.js
-export const urls = {
-    login: '/login',
-};
-
-// login-page.ui.commands.js
-Cypress.Commands.add('loginPage_Login', (user) => {
-    const {username, password} = user;
-    cy.get(loginPage.username).type(username, {delay: 0});
-    cy.get(loginPage.password).type(password, {log: false, delay: 0});
-    cy.get(loginPage.login).click();
+// login-page.ui.commands.js — multi-step reusable flow
+Cypress.Commands.add('loginPage__logIn', (user) => {
+  cy.get(loginPage.usernameInput).type(user.username, { delay: 0 });
+  cy.get(loginPage.passwordInput).type(user.password, { log: false, delay: 0 });
+  cy.get(loginPage.loginButton).click();
 });
 
-// login-page.ui.spec.js
-import {loginPage} from './selectors';
-import {dashboardPage} from './selectors';
-import {urls} from './urls';
-
-context('LoginPage: When user logins with valid credentials', () => {
-    before(() => {
-        cy.visit(urls.login);
-        cy.loginPage_Login('user', 'pass');
-    });
-
-    it('LoginPage: Then user should be navigated to the Dashboard', () => {
-        cy.get(dashboardPage.title).should('contain', 'Dashboard');
-    });
+// spec — direct, transparent
+context('LoginPage.STANDARD: When user logs in with valid credentials', () => {
+  before(() => {
+    cy.loginPage__logIn(standardUser);
+  });
+  it('LoginPage.STANDARD: Then user is navigated to Inventory page', { req: {} }, () => {
+    cy.url().should('eq', urls.pages.inventory);
+  });
 });
 ```
 
-**Pros:**
+## 3. Why not use BDD frameworks?
 
-- Simplified architecture:
-    - No unnecessary abstraction layers
-    - Clear separation of selectors, commands and tests
-    - Direct access to framework functionality
-- Improved maintainability:
-    - Changes only require updates in relevant files
-    - Centralized selector management
-    - Focused test logic
-- Better developer experience:
-    - Easy onboarding with clear file structure
-    - No OOP complexity to learn
-    - Self-documenting test flow
-- Single source of truth:
-    - Atomic and focused tests
-    - Clear test intentions
-    - Direct mapping to requirements
+BDD frameworks (Cucumber, Gherkin) add step-mapping abstraction without real collaboration benefit. The same
+Given/When/Then language is used directly in test titles — no extra layer needed.
 
-**Cons:**
+Where BDD adds a layer, this project collapses it:
 
-- More verbose than POM but provides better clarity
-- Non-trivial approach requires some time to get used to, but once understood, it is more efficient
+- `.feature` + step definitions + test code → a single spec file.
+- Step matching, regex, and mapping overhead → direct assertions.
+- Multiple files per scenario → one `context` block.
+- Slow execution and poor debugging → native Cypress speed.
 
-Why not just use selectors directly? Selectors are simple strings that identify elements in the UI. Wrapping them in
-classes or unnecessary abstractions adds complexity without real benefit. The Page Object Model (POM) introduces extra
-layers that duplicate framework functionality and obscure test logic. This makes tests harder to maintain and
-understand. POM is considered an anti-pattern because it prioritizes object-oriented structure over clear, maintainable,
-and focused test code. Direct use of selectors keeps tests simple, transparent, and easier to update.
+## 4. Why atomic (small, focused) tests?
 
-## 3. Why is using BDD frameworks counterproductive?
-
-BDD frameworks introduce an extra layer of abstraction, which can make tests harder to maintain and slower to execute.
-They are primarily aimed at automating manual test cases - a flawed approach that leads to unclear logic, superficial
-coverage, and high maintenance costs (see above for details). While BDD frameworks intend to improve collaboration by
-using human-readable language (like Gherkin), in practice, this rarely delivers real benefits. The added complexity of
-step definitions and mapping to code often outweighs any advantages.
-Importantly, you can use BDD keywords and natural human language directly in your test descriptions and
-structure—without BDD frameworks or extra abstractions. This keeps tests readable and maintainable, while avoiding
-unnecessary indirection. Writing tests with clear structure, descriptive names, and straightforward logic is more
-effective for both communication and maintenance.
-
-**1. BDD framework approach: Gherkin feature file and step definitions**
-
-This example uses a BDD framework (like Cucumber) with a `.feature` file and step definitions in code.
-
-*login.feature*:
-
-```gherkin
-Feature: Login
-
-  Scenario: User logs in with valid credentials
-    Given the user is on the login page
-    When the user enters valid credentials
-    And clicks the login button
-    Then the user should be navigated to the Inventory page
-```
-
-*login.steps.js*:
+- **Precise failure identification** — one assertion = one failure reason.
+- **Accurate metrics** — each `it` = one requirement = one coverage point.
+- **Easy maintenance** — changing one assertion doesn't break others.
+- **Manual coverage mapping** — pending `it.skip` blocks show unimplemented scope.
 
 ```javascript
-const {Given, When, Then} = require('@cucumber/cucumber');
-
-Given('the user is on the login page', () => {
-    cy.visit('/');
-});
-
-When('the user enters valid credentials', () => {
-    cy.get('#username').type('standardUser');
-    cy.get('#password').type('password');
-});
-
-When('clicks the login button', () => {
-    cy.get('#login').click();
-});
-
-Then('the user should be navigated to the Inventory page', () => {
-    cy.url().should('eq', '/inventory');
-    cy.get('h1').should('have.text', 'Inventory').and('be.visible');
-});
-```
-
-**Pros:**
-
-- Business-readable specifications
-- Structured documentation
-- Reusable step definitions
-- Built-in reporting
-
-**Cons:**
-
-- Technical:
-    - Complex setup and configuration
-    - Slower test execution
-    - Difficult debugging
-    - Poor IDE support
-    - Parallel execution challenges
-
-- Maintenance:
-    - Multiple files to maintain
-    - Step definition overhead
-    - Fragile step matching
-    - Complex dependency management
-
-- Development:
-    - Steep learning curve
-    - Extra abstraction layer
-    - Code duplication in step definitions and assertions
-    - Reduced code reuse
-    - Slower feedback cycle
-
-**2. Recommended approach: No BDD framework, just clear structure and naming**
-
-This example uses Cypress with descriptive `context` and `it` blocks, following Gherkin-style language. No extra
-abstraction or step mapping is needed.
-
-```javascript
-context('LoginPage.STANDARD: When user logins with valid credentials', () => {
-    before(() => {
-        cy.loginPage_Login(standardUser);
-    });
-    it('LoginPage.STANDARD: Then user should be navigated to the Inventory page', () => {
-        cy.url().should('eq', urls.pages.inventory);
-        cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title).and('be.visible');
-    });
-});
-```
-
-**Pros:**
-
-- Technical:
-    - Business-readable specifications
-    - Structured documentation
-    - Reusable step definitions
-    - Built-in reporting
-    - Fast test execution
-    - Simple debugging
-
-- Development:
-    - Clear file structure
-    - Single source of truth
-    - Straightforward test flow
-    - Easy maintenance
-    - Quick feedback cycle
-
-- Documentation:
-    - Self-documenting tests
-    - Human-readable titles and reports
-    - No mapping complexity
-    - Transparent and precise coverage
-
-- Implementation:
-    - No configuration overhead
-    - Direct assertions
-    - Native framework features
-    - Clear test organization
-
-**Cons:**
-
-- Technical:
-    - More verbose test descriptions
-
----
-
-**Summary:**  
-You can achieve clear, human-readable tests using Gherkin-style language and naming conventions directly in your code,
-without the complexity of BDD frameworks or step mapping. This keeps tests simple, maintainable, and easy to understand.
-
-## 4. Why should tests be atomic (small and focused)? Why is it important to separate setup of preconditions and particular state under the test?
-
-Atomic tests verify only one specific thing, making them faster, more reliable, and easier to maintain. They provide
-precise feedback when failures occur, simplifying debugging and improving the accuracy of test metrics. Small, focused
-tests are also easier to update and less likely to break when unrelated parts of the application change.
-
-Here are two examples to illustrate the importance of small, focused tests:
-
-**1. Bad Example: One generic test with many hidden steps**
-
-This test has a vague title and multiple checks inside, making it hard to maintain and debug:
-
-```javascript
-it('Should display correct cart page', () => {
+// Each check is a separate requirement
+context('CartPage.STANDARD: When user visits the page', () => {
+  before(() => {
     cy.get(headerComp.openCart).click();
+  });
+  it('CartPage.STANDARD: Then Cart page URL is displayed', { req: {} }, () => {
     cy.url().should('eq', urls.pages.cart);
-    cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
+  });
+  it('CartPage.STANDARD: Then Cart page title is displayed', { req: {} }, () => {
+    cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
+  });
+  it('CartPage.STANDARD: Then no items are displayed', { req: {} }, () => {
     cy.get(cartPage.items).should('not.exist');
-    cy.get(cartPage.continueShopping).should('have.text', l10n.cartPage.continueShopping).and('be.visible').and('be.enabled');
-    cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
-    cy.get(cartPage.quantityLabel).should('have.text', l10n.cartPage.quantity).and('be.visible');
-    cy.get(cartPage.descriptionLabel).should('have.text', l10n.cartPage.description).and('be.visible');
-    cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
-    cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
-    cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
-    cy.get(footerComp.copyRight).should('have.text', l10n.footer.copyRight.replace('yearPlaceholder', new Date().getUTCFullYear())).and('be.visible');
+  });
 });
 ```
 
-**2. Good Example: Small, focused, atomic tests with descriptive titles**
+## 6. Why are naming conventions crucial?
 
-Each test checks a single thing, and the title clearly describes what is being verified:
+- Enable ESLint automation of structural validation
+- Map test titles to app structure for coverage tracking
+- Streamline onboarding — predictable patterns
+- Generate meaningful reports from test titles alone
+
+The naming rules live in the spec-writing skills ([API](../.claude/skills/write-integration-api-specs/SKILL.md), [integration UI](../.claude/skills/write-integration-ui-specs/SKILL.md), [E2E UI](../.claude/skills/write-e2e-ui-specs/SKILL.md)) and the [eslint-custom-rules skill](../.claude/skills/eslint-custom-rules/SKILL.md), which enforces them.
+
+## 7. Why store constants in variables?
+
+Single source of truth: change once, applied everywhere. Constraint files hold boundary values; examples reference them.
+Specs interpolate constraint values in titles for traceability.
 
 ```javascript
-context('CartPage.STANDARD: When user visits the page', () => {
-    before(() => {
-        cy.get(headerComp.openCart).click();
-    });
-    it('CartPage.STANDARD: Then Cart page URL should be displayed', () => {
-        cy.url().should('eq', urls.pages.cart);
-    });
-    it('CartPage.STANDARD: Then Cart page title should be displayed', () => {
-        cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
-    });
-    it('CartPage.STANDARD: Then no items should be displayed', () => {
-        cy.get(cartPage.items).should('not.exist');
-    });
-    it('CartPage.STANDARD: Then Continue Shopping button is displayed', () => {
-        cy.get(cartPage.continueShopping).should('have.text', l10n.cartPage.continueShopping).and('be.visible').and('be.enabled');
-    });
-    it('CartPage.STANDARD: Then Checkout button is displayed', () => {
-        cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
-    });
-    it('CartPage.STANDARD: Then Quantity table header should be displayed', () => {
-        cy.get(cartPage.quantityLabel).should('have.text', l10n.cartPage.quantity).and('be.visible');
-    });
-    it('CartPage.STANDARD: Then Description table header should be displayed', () => {
-        cy.get(cartPage.descriptionLabel).should('have.text', l10n.cartPage.description).and('be.visible');
-    });
-    it('CartPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
-        cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
-    });
-    it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', () => {
-        cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
-    });
-    it('CartPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
-        cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
-    });
-    it('CartPage.Footer.STANDARD: Then the Copyright notice with actual year should be displayed', () => {
-        cy.get(footerComp.copyRight).should('have.text', l10n.footer.copyRight.replace('yearPlaceholder', new Date().getUTCFullYear())).and('be.visible');
-    });
-})
+// constraints
+export const PRICE = { MIN: 1, MAX: 10000 };
+
+// spec title uses constraint
+context(`Module.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
+});
 ```
 
-**Summary:**  
-Concise, focused tests make it straightforward to trace failures, maintain the suite, and ensure every requirement is
-covered. Descriptive test names and structure act as built-in documentation, removing the need for extra logging or
-reporting. This leads to a more efficient, reliable suite with minimal redundancy and clear identification of coverage
-gaps. The method is accessible to both technical and non-technical team members, enhancing collaboration and
-communication. Tests are self-explanatory, allowing anyone to quickly grasp their intent and scope without reading the
-code. This clarity streamlines onboarding and supports a shared understanding of coverage and objectives. Test reports
-are more meaningful, accurately reflecting the application's state. Additionally, small, atomic tests—together with
-clearly described, skipped tests for unimplemented scenarios - offer transparent coverage metrics and assist in planning
-manual regression checks. The test suite becomes a single source of truth, documenting requirements and use cases, so
-everyone can easily see what is automated, what needs manual testing, and what is yet to be implemented.
+## 9. Why are tags discouraged?
 
-## 6. Why are naming conventions crucial in test automation?
+File-name patterns and folder structure provide the same filtering with zero ambiguity. Tags (`@smoke`, `@regression`)
+lack clear ownership and consistent definitions across teams.
 
-Consistent naming conventions ensure that tests are well-structured, maintainable, and easy to understand. They enable
-automation of internal checks, streamline onboarding for new team members, minimize logical mistakes, and improve
-communication. Clear naming also makes it easier to track coverage, identify issues, and generate meaningful metrics.
+Filtering relies on file-name patterns (`*.api.spec.js`, `*.ui.spec.js`), folder structure
+(`cypress/integration/api/`, `cypress/integration/ui/`, `cypress/e2e/ui/`), and the `SPEC_PATTERN` env var for parallel
+scoping. Add `@cypress/grep` only if custom filtering is genuinely needed.
 
-## 7. Why should all constants in tests be stored in variables?
+## 10. Why is test execution speed important?
 
-Storing constants in variables improves readability and maintainability. It makes updating values easier and reduces the
-risk of errors from hardcoded values. This approach also increases test flexibility, as changes to constants only need
-to be made in one place, rather than throughout the test code.
+- Fast CI/CD feedback loops
+- More frequent full-suite runs
+- Lower infrastructure costs
+- Developer productivity (no long waits)
 
-## 9. Why is using tags in tests discouraged?
+Achieved by: no loops over test data, randomized single-value instances, no BDD overhead, parallel execution.
 
-Tags can create confusion and complicate test management, especially when used inconsistently. Generic tags like
-`@smoke` or `@regression` are often unclear and inconsistently defined and applied, leading to confusion. They often
-lack clear definitions and can lead to ambiguity in test selection and reporting. Instead, use structured file
-organization and meaningful test names to group and filter tests. This approach is more transparent and easier to
-maintain.
+## 11. Why one page/component per test file?
 
-## 10. Why is test execution speed extremely important?
+- Shared `context` within a file = shared state boundary
+- Failures trace directly to specific functionality
+- Updates to one area don't affect unrelated tests
+- Enables parallel execution without conflicts
+- Coverage maps naturally to application architecture
 
-Fast test execution is critical for efficient development and product release cycles. Slow tests create bottlenecks in
-CI/CD pipelines, delay feedback for developers, and increase the time needed to identify and fix issues. Fast tests
-enable rapid iteration, better resource utilization, and a smoother development process. They also reduce infrastructure
-costs and allow for more frequent, comprehensive test runs.
+## 12. Why avoid test management tools?
 
-**Key arguments:**
+They fragment documentation across systems, create artificial mapping, generate misleading count-based metrics, and add
+integration complexity. Instead: specs under version control as single source of truth, with clear structure providing
+natural documentation and metrics.
 
-- Fast feedback: Developers receive results quickly and can address issues sooner.
-- Increased productivity: Less time is spent waiting for test results, allowing more focus on development.
-- CI/CD optimization: Faster builds and releases improve delivery timelines.
-- Cost reduction: Shorter test runs lower infrastructure expenses, especially at scale.
-- Improved scalability: Quick tests make it feasible to run the entire suite more often, ensuring thorough coverage.
+See [Approach comparison](approach-comparison-spec-vs-rm-tool.md).
 
-Here's a clearer and more detailed explanation of why UI tests should be tied to one page or component:
-
-## 11. Why should UI tests be scoped to a single page or component?
-
-Prioritize integration tests for individual pages and components rather than E2E scenarios spanning multiple pages.
-Keeping UI tests isolated to one page or component is essential because all tests within a file share the same execution
-context. When tests are organized by specific functional areas, you avoid unintended state contamination and make it
-much easier to identify which part of the application caused a failure.
-Scoping each test file to a single page or component ensures that changes in one area do not cascade into unrelated
-tests. This creates well‑defined boundaries, improves test reliability, and enables safe parallel execution.
-A modular structure also simplifies maintenance and debugging. It naturally mirrors the application’s architecture,
-making test coverage transparent and aligned with real feature boundaries. As the application grows, this organization
-allows the test suite to scale cleanly and predictably.
-
-**Example: Bad approach (mixing pages)**
+## 13. Why describe and skip non-implemented tests?
 
 ```javascript
-// checkout.ui.spec.js
-context('When user completes purchase', () => {
-    it('Then order confirmation is displayed', () => {
-        // Cart page actions
-        cy.visit(urls.cart);
-        cy.get(cartPage.checkoutButton).click();
-
-        // Checkout page actions
-        cy.get(checkoutPage.firstName).type('John');
-        cy.get(checkoutPage.lastName).type('Doe');
-        cy.get(checkoutPage.continueButton).click();
-
-        // Confirmation page checks
-        cy.get(confirmationPage.title).should('be.visible');
-    });
+it.skip('CartPage.STANDARD: Then error message is displayed for unauthorized user', () => {
 });
 ```
 
-**Example: Good approach (page-specific)**
+Benefits:
 
-```javascript
-// cart-page.ui.spec.js
-describe('CartPage: No preconditions ', () => {
-    context('CartPage.STANDARD: When user navigates to the page', () => {
-        before(() => {
-            cy.visit(urls.cart);
-        });
-        it('CartPage.STANDARD: Then checkout button is displayed and enabled', () => {
-            cy.get(cartPage.checkoutButton).should('be.displayed').and('be.enabled');
-        });
-    });
-});
+- Transparent automation coverage metrics
+- Manual testers see what needs manual checking
+- Planning visibility — pending scope is explicit
+- `npm run coverage:report` counts skipped as unimplemented
 
-// checkout-page.ui.spec.js
-describe('CheckoutPage: There are random items in the cart', () => {
-    before(() => {
-        // Could be done via API, but for better readability, we will do it via UI
-        cy.visit(urls.cart);
-        cy.cartPage__addRandomItemsToCart();
-        cy.get(cartPage.checkoutButton).click()
-    });
+## Related
 
-    context('CheckoutPage.STANDARD: When user submits valid details', () => {
-        before(() => {
-            cy.visit(urls.checkout);
-            cy.get(checkoutPage.firstName).type('John');
-            cy.get(checkoutPage.lastName).type('Doe');
-        });
-        it('CheckoutPage.STANDARD: Then user proceeds to confirmation', () => {
-            cy.get(checkoutPage.continueButton).click();
-            cy.url().should('eq', urls.confirmation);
-        });
-    });
-});
-```
-
-## 12. What are the risks of relying on test management tools for automation?
-
-Test management tools often create more problems than they solve. They require complex integrations, increase
-maintenance overhead, and introduce external dependencies. The metrics they provide are typically misleading - focusing
-on raw test counts rather than actual requirement coverage or defect prevention.
-
-These tools tend to:
-
-- Fragment test documentation across multiple systems
-- Create artificial mapping between manual and automated tests
-- Generate unreliable metrics based on test counts
-- Add integration complexity to CI/CD pipelines
-- Increase maintenance costs without clear benefits
-- Distract from writing robust, requirement-focused tests
-
-Instead, use auto-tests under version control as the single source of truth, with clear test structure and descriptive
-names providing natural documentation and metrics.
-
-## 13. Why should you describe and skip non-implemented tests?
-
-Clearly describing and skipping non-implemented tests turns your repository into a transparent source of truth for all
-use cases. This approach provides accurate automation coverage metrics and clearly outlines the intended scope. It
-enables everyone—including manual testers—to see what is automated, what requires manual checks, and what is still
-pending. The test suite serves as a unified reference for both automated and manual verification, enhancing team
-transparency and planning.
-
-**Example:**
-
-```javascript
-// cart-page.ui.spec.js
-
-context('CartPage.STANDARD: When user visits the page', () => {
-    before(() => {
-        cy.visit(urls.pages.cart);
-    });
-    it('CartPage.STANDARD: Then direct URL should be open', () => {
-        // implemented test
-        cy.url().should('eq', urls.pages.cart);
-    });
-
-    it.skip('CartPage.STANDARD: Then error message is shown for unauthorized user', () => {
-        // Not implemented yet
-    });
-
-    it.skip('CartPage.STANDARD: Then cart items are restored after reload', () => {
-        // Not implemented yet
-    });
-});
-```
-
-and here is the output of the test run:
-
-```
-       Spec                                              Tests  Passing  Failing  Pending  Skipped
-
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ ✔ integration/ui/cart-page.ui.spec.js         00:01      3       1        -        2        -  │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ✖ 0 of 1 failed (0%)                          00:01      3       1        -        2        -
-  
-```
-
-This makes the scope and current coverage explicit, even before all tests are implemented.
+- [Constraints → Examples → Specs](requirements-examples-approach.md)
+- [Approach comparison](approach-comparison-spec-vs-rm-tool.md)
+- [Requirements examples approach](requirements-examples-approach.md)

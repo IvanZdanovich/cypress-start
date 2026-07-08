@@ -1,12 +1,12 @@
 // Skip if explicitly disabled
 if (process.env.SKIP_HOOKS === 'true') {
-  console.log('⚠️  SKIP_HOOKS=true detected. Skipping git hooks setup.');
+  console.log('SKIP_HOOKS=true detected. Skipping git hooks setup.');
   process.exit(0);
 }
 
 // Skip in CI environments automatically
 if (process.env.CI || process.env.GITHUB_ACTIONS || process.env.GITLAB_CI || process.env.CIRCLECI || process.env.JENKINS_HOME || process.env.TRAVIS) {
-  console.log('⚠️  CI environment detected. Skipping git hooks setup.');
+  console.log('CI environment detected. Skipping git hooks setup.');
   process.exit(0);
 }
 
@@ -15,11 +15,11 @@ const path = require('path');
 
 const hooksDir = path.join(__dirname, '..', '.git', 'hooks');
 const preCommitHook = path.join(hooksDir, 'pre-commit');
-const checkScriptPath = path.join(__dirname, 'check-eslint.js');
+const checkScriptPath = path.join(__dirname, 'pre-commit-lint.js');
 
 // Check if .git directory exists (skip in CI or template creation)
 if (!fs.existsSync(path.join(__dirname, '..', '.git'))) {
-  console.log('⚠️  No .git directory found. Skipping git hooks setup.');
+  console.log('No .git directory found. Skipping git hooks setup.');
   process.exit(0);
 }
 
@@ -35,7 +35,7 @@ const hookContent = `#!/bin/sh
 
 # Skip hook during merge or rebase
 if [ -f .git/MERGE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
-  echo "⚠️  Merge/rebase in progress. Skipping ESLint check."
+  echo "Merge/rebase in progress. Skipping ESLint check."
   exit 0
 fi
 
@@ -46,8 +46,8 @@ node "${checkScriptPath}"
 
 try {
   fs.writeFileSync(preCommitHook, hookContent, { mode: 0o755 });
-  console.log('✅ Pre-commit hooks installed successfully');
+  console.log('Pre-commit hooks installed successfully');
 } catch (error) {
-  console.error('❌ Failed to install pre-commit hooks:', error.message);
+  console.error('FAIL Failed to install pre-commit hooks:', error.message);
   process.exit(1);
 }
