@@ -36,10 +36,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "pretest": "node scripts/copy-localization.js && node scripts/copy-colours-theme.js",
+    "pretest": "node scripts/copy-localization.js && node scripts/copy-colours.js && node scripts/gen-l10n-types.js && node scripts/gen-colours-types.js",
     "test": "cypress run --headless",
     "test:parallel": "node scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
+    "gen:l10n-types": "node scripts/gen-l10n-types.js",
+    "gen:colours-types": "node scripts/gen-colours-types.js",
     "hooks:setup": "node scripts/setup-git-hooks.js",
     "postinstall": "node scripts/setup-git-hooks.js",
     "update-swagger": "node scripts/update-swagger-schemas.js",
@@ -50,13 +52,7 @@
     "coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "coverage:check:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80",
     "coverage:check:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80",
-    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80",
-    "req:extract": "node scripts/extract-reqs-from-specs.js --output=reports/requirements.md"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "node scripts/check-eslint.js"
-    ]
+    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80"
   },
   "private": false,
   "keywords": [

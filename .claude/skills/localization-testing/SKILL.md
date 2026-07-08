@@ -16,7 +16,7 @@ NORMALIZATION: inconsistent source spellings resolve to one form per concept —
 ## File model
 
 LOCALE_FILES: one flat JSON per language at `cypress/localization/{lang}-localization.json`, entries `"dotted.key": "value"`, no nested objects — these are the hand-edited source of truth
-ACTIVE_MAP: pretest copies the `LANGUAGE`-selected locale file to the generated `cypress/localization/l10n.json`, exposed as the global `l10n` — never hand-edit `l10n.json`, it is overwritten by `scripts/sync-localization.js`
+ACTIVE_MAP: pretest copies the `LANGUAGE`-selected locale file to the generated `cypress/localization/l10n.json`, exposed as the global `l10n` — never hand-edit `l10n.json`, it is overwritten by `scripts/copy-localization.js`
 TYPED_UNION: `cypress/support/l10n.d.ts` types `l10n` as `Record<L10nKey, string>`, generated from the active map by REGEN
 
 ## Signals to operation
