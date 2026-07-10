@@ -19,10 +19,6 @@ npm-debug.log
 .DS_Store
 .idea
 
-# Ignore Cypress screenshots and videos
-cypress/reports/screenshots/**
-cypress/reports/videos/**
-
 # Ignore Cypress reports
 cypress/reports/**
 

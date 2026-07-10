@@ -52,7 +52,9 @@
     "coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "coverage:check:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80",
     "coverage:check:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80",
-    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80"
+    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80",
+    "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage/coverage-gaps.md",
+    "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky/flaky-tests.md"
   },
   "private": false,
   "keywords": [

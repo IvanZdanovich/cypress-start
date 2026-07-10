@@ -1,5 +1,9 @@
 # Git
 .git/
+.github/
+
+# Husky
+.husky/
 
 # IDE
 .idea/
@@ -13,7 +17,24 @@ Thumbs.db
 # Dependencies
 node_modules/
 
-# Development files
+# Local environment
 .env
 .env.local
 *.log
+certs/local/**
+target
+dist
+
+# Auto-generated files
+cypress/localization/l10n.json
+cypress/colours/colours.json
+cypress/support/l10n.d.ts
+cypress/support/colours.d.ts
+
+# Generated output
+cypress/reports/**
+cypress/downloads/
+**/preconditions/temp/**
+
+# Sensitive data
+cypress/sensitive-data/**

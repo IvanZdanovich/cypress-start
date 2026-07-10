@@ -8,9 +8,9 @@ cypress/support/colours.d.ts
 dist
 
 # separate reports
+cypress/reports/**
 !cypress/reports/mochawesome/.gitkeep
 !cypress/reports/screenshots/.gitkeep
-cypress/reports/**
 
 # generated coverage / requirements reports
 reports/**

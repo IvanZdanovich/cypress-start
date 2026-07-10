@@ -65,6 +65,16 @@ on:
           - all
           - api
           - ui
+      generate_coverage_report:
+        description: 'Generate coverage report after tests'
+        required: false
+        default: false
+        type: boolean
+      generate_flaky_report:
+        description: 'Generate flaky tests report after tests'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   cypress-tests:
@@ -84,41 +94,31 @@ jobs:
         run: |
           TEST_SCOPE="${{ inputs.test_scope || 'all' }}"
           TEST_TYPE="${{ inputs.test_type || 'all' }}"
-          
+
           # Build spec pattern based on scope and type
           if [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "all" ]; then
-            # All tests (only within cypress directory)
             SPEC_PATTERN="cypress/**/*.spec.js"
           elif [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "api" ]; then
-            # All API tests
             SPEC_PATTERN="cypress/integration/api/**/*.api.spec.js"
           elif [ "$TEST_SCOPE" = "all" ] && [ "$TEST_TYPE" = "ui" ]; then
-            # All UI tests (integration + e2e)
             SPEC_PATTERN="cypress/{integration/ui,e2e}/**/*.ui.spec.js"
           elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "all" ]; then
-            # All integration tests (api + ui)
             SPEC_PATTERN="cypress/integration/**/*.spec.js"
           elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "api" ]; then
-            # Integration API tests
             SPEC_PATTERN="cypress/integration/api/**/*.api.spec.js"
           elif [ "$TEST_SCOPE" = "integration" ] && [ "$TEST_TYPE" = "ui" ]; then
-            # Integration UI tests
             SPEC_PATTERN="cypress/integration/ui/**/*.ui.spec.js"
           elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "all" ]; then
-            # All E2E tests
             SPEC_PATTERN="cypress/e2e/**/*.spec.js"
           elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "ui" ]; then
-            # E2E UI tests
             SPEC_PATTERN="cypress/e2e/**/*.ui.spec.js"
           elif [ "$TEST_SCOPE" = "e2e" ] && [ "$TEST_TYPE" = "api" ]; then
-            # E2E doesn't have API tests, fallback to all e2e
             SPEC_PATTERN="cypress/e2e/**/*.spec.js"
             echo "::warning::E2E scope doesn't have API tests. Running all E2E tests."
           else
-            # Default fallback (only within cypress directory)
             SPEC_PATTERN="cypress/**/*.spec.js"
           fi
-          
+
           echo "SPEC_PATTERN=${SPEC_PATTERN}" >> $GITHUB_OUTPUT
           echo "Selected spec pattern: ${SPEC_PATTERN}"
 
@@ -141,11 +141,18 @@ jobs:
             -e SPEC_PATTERN="${{ steps.spec-pattern.outputs.SPEC_PATTERN }}" \
             cypress-tests
 
+      - name: Register flaky tests
+        if: always()
+        env:
+          RESULTS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          TARGET_ENV: ${{ inputs.target_env || 'dev' }}
+          CI: 'true'
+        run: node scripts/collect-test-results.js --reports-dir cypress/reports/separate-reports
+
       - name: Clean up sensitive files
         if: always()
         run: |
           rm -rf cypress/sensitive-data
-
 
       - name: Upload test results
         if: always()
@@ -156,4 +163,72 @@ jobs:
             cypress/reports/
             cypress/screenshots/
             cypress/videos/
+          retention-days: 30
+
+  generate-coverage-report:
+    runs-on: ubuntu-latest
+    needs: cypress-tests
+    if: ${{ inputs.generate_coverage_report == true }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: cypress-results-${{ github.run_number }}
+          path: cypress/reports
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate coverage report
+        run: npm run report:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_number }}
+          path: reports/coverage/coverage-gaps.md
+          retention-days: 30
+
+  generate-flaky-report:
+    runs-on: ubuntu-latest
+    needs: cypress-tests
+    if: ${{ inputs.generate_flaky_report == true }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: cypress-results-${{ github.run_number }}
+          path: cypress/reports
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate flaky tests report
+        run: npm run report:flaky
+
+      - name: Upload flaky report
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-report-${{ github.run_number }}
+          path: reports/flaky/flaky-tests.md
           retention-days: 30
