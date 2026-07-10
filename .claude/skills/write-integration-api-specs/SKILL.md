@@ -21,7 +21,6 @@ CONSTRAINTS: `cypress/constants/api/module-name.api.constraints.js`
 COMMANDS: `cypress/commands/api/`
 URLS: `cypress/urls/api-urls.js`
 REGISTRY: `eslint-plugin-custom-rules/app-structure/modules.json`
-SWAGGER: `development-data/swagger` — git-ignored, local-only; run `npm run update-swagger` to populate (auto-created if missing)
 
 ## Reverse brainstorming
 
