@@ -25,22 +25,22 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       cy.url().should('eq', urls.pages.cart);
     });
     it('CartPage.STANDARD: Then Cart page title should be displayed', () => {
-      cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
+      cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('CartPage.STANDARD: Then no items should be displayed', () => {
       cy.get(cartPage.items).should('not.exist');
     });
     it('CartPage.STANDARD: Then Continue Shopping button is displayed', () => {
-      cy.get(cartPage.continueShopping).should('have.text', l10n.cartPage.continueShopping).and('be.visible').and('be.enabled');
+      cy.get(cartPage.continueShopping).should('have.text', l10n['cartPage.continueShopping']).and('be.visible').and('be.enabled');
     });
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
-      cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
+      cy.get(cartPage.checkout).should('have.text', l10n['cartPage.checkout']).and('be.visible').and('be.enabled');
     });
     it('CartPage.STANDARD: Then Quantity table header should be displayed', () => {
-      cy.get(cartPage.quantityLabel).should('have.text', l10n.cartPage.quantity).and('be.visible');
+      cy.get(cartPage.quantityLabel).should('have.text', l10n['cartPage.quantity']).and('be.visible');
     });
     it('CartPage.STANDARD: Then Description table header should be displayed', () => {
-      cy.get(cartPage.descriptionLabel).should('have.text', l10n.cartPage.description).and('be.visible');
+      cy.get(cartPage.descriptionLabel).should('have.text', l10n['cartPage.description']).and('be.visible');
     });
   });
 
@@ -50,7 +50,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it('CartPage.STANDARD: Then user should be redirected to the Inventory page', () => {
       cy.url().should('eq', urls.pages.inventory);
-      cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title);
+      cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
   });
 
@@ -76,7 +76,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it('CartPage.STANDARD: Then user should be redirected to the Cart page', () => {
       cy.url().should('eq', urls.pages.cart);
-      cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
+      cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('CartPage.STANDARD: Then number of items should correspond to the number of chosen products', () => {
       cy.get(cartPage.items).should('have.length', examples.indicesOfProducts.length);
@@ -85,20 +85,20 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       cy.get(headerComp.cartBadge).should('have.text', examples.indicesOfProducts.length).and('be.visible');
     });
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
-      cy.get(cartPage.checkout).should('have.text', l10n.cartPage.checkout).and('be.visible').and('be.enabled');
+      cy.get(cartPage.checkout).should('have.text', l10n['cartPage.checkout']).and('be.visible').and('be.enabled');
     });
     it('CartPage.STANDARD: Then Continue Shopping button is displayed', () => {
-      cy.get(cartPage.continueShopping).should('have.text', l10n.cartPage.continueShopping).and('be.visible').and('be.enabled');
+      cy.get(cartPage.continueShopping).should('have.text', l10n['cartPage.continueShopping']).and('be.visible').and('be.enabled');
     });
     it('CartPage.STANDARD: Then Quantity table header should be displayed', () => {
-      cy.get(cartPage.quantityLabel).should('have.text', l10n.cartPage.quantity).and('be.visible');
+      cy.get(cartPage.quantityLabel).should('have.text', l10n['cartPage.quantity']).and('be.visible');
     });
     it('CartPage.STANDARD: Then Description table header should be displayed', () => {
-      cy.get(cartPage.descriptionLabel).should('have.text', l10n.cartPage.description).and('be.visible');
+      cy.get(cartPage.descriptionLabel).should('have.text', l10n['cartPage.description']).and('be.visible');
     });
     it('CartPage.STANDARD: Then on each item delete button should be displayed', () => {
       cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).find(cartPage.item.remove).should('have.text', l10n.cartPage.remove).and('be.visible').and('be.enabled');
+        cy.wrap($item).find(cartPage.item.remove).should('have.text', l10n['cartPage.remove']).and('be.visible').and('be.enabled');
       });
     });
     it('CartPage.STANDARD: Then on each item should have appropriate title, description and price', () => {
@@ -149,7 +149,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     });
     it('CartPage.STANDARD: Then user should be redirected to the Checkout page', () => {
       cy.url().should('eq', urls.pages.checkout);
-      cy.get(checkoutPage.title).should('have.text', l10n.checkoutPage.title);
+      cy.get(checkoutPage.title).should('have.text', l10n['checkoutPage.title']);
     });
   });
 });

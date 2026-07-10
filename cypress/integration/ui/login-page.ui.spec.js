@@ -15,16 +15,16 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
 
   context('LoginPage.STANDARD: When user reviews the page', () => {
     it('LoginPage.STANDARD: Then user should see Title', () => {
-      cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
+      cy.get(loginPage.title).should('have.text', l10n['loginPage.title']).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
-      cy.get(loginPage.login).should('have.value', l10n.loginPage.form.login).and('be.visible').and('be.enabled');
+      cy.get(loginPage.login).should('have.value', l10n['loginPage.form.login']).and('be.visible').and('be.enabled');
     });
   });
 
@@ -34,7 +34,7 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
     });
     it('LoginPage.STANDARD: Then user should be navigated to the Inventory page', () => {
       cy.url().should('eq', urls.pages.inventory);
-      cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title).and('be.visible');
+      cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']).and('be.visible');
     });
   });
 
@@ -43,16 +43,16 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.headerComp__logOut();
     });
     it('LoginPage.STANDARD: Then user should see Title', () => {
-      cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
+      cy.get(loginPage.title).should('have.text', l10n['loginPage.title']).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n.loginPage.form.username).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n.loginPage.form.password).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
-      cy.get(loginPage.login).should('have.value', l10n.loginPage.form.login).and('be.visible').and('be.enabled');
+      cy.get(loginPage.login).should('have.value', l10n['loginPage.form.login']).and('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then fail notification should not be displayed', () => {
       cy.get(loginPage.errorMessage).should('not.exist');
@@ -64,18 +64,18 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.login).click();
     });
     it('LoginPage.STANDARD: Then colored fail notification about missing username should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.usernameIsRequired).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.usernameIsRequired']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
   });
@@ -88,11 +88,11 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.errorMessage).should('not.exist');
     });
     it('LoginPage.STANDARD: Then username field should not be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('not.have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('not.have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('not.exist');
     });
     it('LoginPage.STANDARD: Then password field should not be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('not.have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('not.have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('not.exist');
     });
   });
@@ -103,18 +103,18 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.login).click();
     });
     it('LoginPage.STANDARD: Then colored fail notification about missing password should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.passwordIsRequired).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.passwordIsRequired']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain error icon', { req: { bugs: ['BUG-LOGIN-001'] } }, () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
     after(() => {
@@ -128,18 +128,18 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.login).click();
     });
     it('LoginPage.STANDARD: Then colored fail notification about missing username should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.usernameIsRequired).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.usernameIsRequired']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain error icon', { req: { bugs: ['BUG-LOGIN-002'] } }, () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
     after(() => {
@@ -152,18 +152,18 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.loginPage__logIn({ username: standardUser.username, password: examples.invalidCredentials.password });
     });
     it('LoginPage.STANDARD: Then colored fail notification about credentials do not match any existing user should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.userNotFound).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.userNotFound']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
     after(() => {
@@ -177,43 +177,43 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.loginPage__logIn(lockedUser);
     });
     it('LoginPage.STANDARD: Then colored fail notification about locked user should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.userIsLockedOut).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.userIsLockedOut']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
   });
 
-  context('LoginPage.STANDARD: When user tries to navigate to Inventory page without authenticate', () => {
+  context('LoginPage.STANDARD: When user tries to navigate to Inventory page without authentication', () => {
     before(() => {
       cy.visit(urls.pages.inventory, { failOnStatusCode: false });
     });
     it('LoginPage.STANDARD: Then user should be navigated to the authenticate page', () => {
       cy.url().should('eq', urls.pages.login);
-      cy.get(loginPage.title).should('have.text', l10n.loginPage.title).and('be.visible');
+      cy.get(loginPage.title).should('have.text', l10n['loginPage.title']).and('be.visible');
     });
     it('LoginPage.STANDARD: Then colored fail notification about access denied should be shown', () => {
-      cy.get(loginPage.errorMessage).should('have.text', l10n.loginPage.errors.accessToPageDenied).and('be.visible');
-      cy.get(loginPage.error).should('have.css', 'background-color', colours.ERROR);
+      cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.accessToPageDenied']).and('be.visible');
+      cy.get(loginPage.error).should('have.css', 'background-color', colours['error']);
     });
     it('LoginPage.STANDARD: Then fail collapse button should be shown', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
     it('LoginPage.STANDARD: Then username field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
     it('LoginPage.STANDARD: Then password field should be highlighted and contain fail icon', () => {
-      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours.ERROR);
+      cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['error']);
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
     after(() => {

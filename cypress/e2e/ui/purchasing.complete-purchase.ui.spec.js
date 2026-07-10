@@ -72,18 +72,18 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.get(checkoutOverviewPage.itemsTotal)
         .invoke('text')
         .then((itemsTotalText) => {
-          expect(itemsTotalText).to.equal(`${l10n.checkoutOverviewPage.itemTotal}: $${totalPriceCorrect}`);
+          expect(itemsTotalText).to.equal(`${l10n['checkoutOverviewPage.itemTotal']}: $${totalPriceCorrect}`);
         });
 
       cy.get(checkoutOverviewPage.tax)
         .invoke('text')
         .then((taxText) => {
-          const taxValue = parseFloat(taxText.replace(`${l10n.checkoutOverviewPage.tax}: $`, ''));
+          const taxValue = parseFloat(taxText.replace(`${l10n['checkoutOverviewPage.tax']}: $`, ''));
 
           cy.get(checkoutOverviewPage.priceTotal)
             .invoke('text')
             .then((totalText) => {
-              const totalDisplayed = parseFloat(totalText.replace(`${l10n.checkoutOverviewPage.total}: $`, ''));
+              const totalDisplayed = parseFloat(totalText.replace(`${l10n['checkoutOverviewPage.total']}: $`, ''));
               const expectedTotal = parseFloat((totalPriceCorrect + taxValue).toFixed(2));
               expect(totalDisplayed).to.equal(expectedTotal);
             });
@@ -96,8 +96,8 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.get(checkoutOverviewPage.finish).click();
     });
     it('CompletePurchase.STANDARD: Then user should see a thank you notification and order confirmation', () => {
-      cy.get(checkoutCompletePage.confirmation.title).should('have.text', l10n.checkoutCompletePage.messageTitle);
-      cy.get(checkoutCompletePage.confirmation.message).should('have.text', l10n.checkoutCompletePage.message);
+      cy.get(checkoutCompletePage.confirmation.title).should('have.text', l10n['checkoutCompletePage.messageTitle']);
+      cy.get(checkoutCompletePage.confirmation.message).should('have.text', l10n['checkoutCompletePage.message']);
     });
   });
 
@@ -107,7 +107,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     });
     it('CompletePurchase.STANDARD: Then user should be redirected to the inventory page with product catalog and reset shopping cart', () => {
       cy.url().should('eq', urls.pages.inventory);
-      cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title);
+      cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
       cy.get(headerComp.cartBadge).should('not.exist');
     });
   });

@@ -15,7 +15,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
 
   context('Header.STANDARD: When user reviews the Component', () => {
     it('Header.STANDARD: Then Title is displayed', () => {
-      cy.get(headerComp.title).should('have.text', l10n.header.title).and('be.visible');
+      cy.get(headerComp.title).should('have.text', l10n['header.title']).and('be.visible');
     });
     it('Header.STANDARD: Then Cart button is displayed', () => {
       cy.get(headerComp.openCart).should('be.visible');
@@ -42,16 +42,16 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
       cy.get(headerComp.sidebar.close).should('be.visible');
     });
     it('Header.STANDARD: Then Inventory option is displayed', () => {
-      cy.get(headerComp.sidebar.openInventory).should('have.text', l10n.header.sidebar.inventory).and('be.visible');
+      cy.get(headerComp.sidebar.openInventory).should('have.text', l10n['header.sidebar.inventory']).and('be.visible');
     });
     it('Header.STANDARD: Then About option is displayed with external link', () => {
-      cy.get(headerComp.sidebar.openAbout).should('have.text', l10n.header.sidebar.about).and('have.attr', 'href', urls.external.about).and('be.visible');
+      cy.get(headerComp.sidebar.openAbout).should('have.text', l10n['header.sidebar.about']).and('have.attr', 'href', urls.external.about).and('be.visible');
     });
     it('Header.STANDARD: Then Reset App State option is displayed', () => {
-      cy.get(headerComp.sidebar.resetAppState).should('have.text', l10n.header.sidebar.resetAppState).and('be.visible');
+      cy.get(headerComp.sidebar.resetAppState).should('have.text', l10n['header.sidebar.resetAppState']).and('be.visible');
     });
     it('Header.STANDARD: Then Logout option is displayed', () => {
-      cy.get(headerComp.sidebar.logout).should('have.text', l10n.header.sidebar.logout).and('be.visible');
+      cy.get(headerComp.sidebar.logout).should('have.text', l10n['header.sidebar.logout']).and('be.visible');
     });
   });
 
@@ -107,7 +107,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
     });
     it('Header.STANDARD: Then user is redirected to the Cart page', () => {
       cy.url().should('eq', urls.pages.cart);
-      cy.get(cartPage.title).should('have.text', l10n.cartPage.title);
+      cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('Header.STANDARD: Then Cart button is displayed', () => {
       cy.get(headerComp.openCart).should('be.visible');
@@ -127,7 +127,7 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
     });
     it('Header.STANDARD: Then user is redirected to the Inventory page', () => {
       cy.url().should('eq', urls.pages.inventory);
-      cy.get(inventoryPage.title).should('have.text', l10n.inventoryPage.title);
+      cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('Header.STANDARD: Then Cart button is displayed', () => {
       cy.get(headerComp.openCart).should('be.visible');
@@ -145,8 +145,8 @@ describe('Header: Given STANDARD user on Inventory page', { testIsolation: false
       cy.headerComp__logOut();
     });
     it('Header.STANDARD: Then user is redirected to the Login page', () => {
-      cy.url().should('eq', `${Cypress.env('baseUrl')}/`);
-      cy.get(loginPage.title).should('have.text', l10n.loginPage.title);
+      cy.url().should('eq', `${Cypress.expose('baseUrl')}/`);
+      cy.get(loginPage.title).should('have.text', l10n['loginPage.title']);
     });
   });
 });

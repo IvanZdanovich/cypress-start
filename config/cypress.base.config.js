@@ -60,6 +60,7 @@ function setupScreenshotOrdering(on) {
  */
 const baseConfig = {
   watchForFileChanges: false,
+  allowCypressEnv: false,
   e2e: {
     // testIsolation: false,
     trashAssetsBeforeRuns: false,

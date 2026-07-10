@@ -19,6 +19,9 @@ reports/**
 cypress/downloads
 cypress/fixtures/assets
 
+#development data
+development-data
+
 # dependencies
 node_modules
 

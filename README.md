@@ -29,7 +29,7 @@ Create a new project from this template in seconds! The CLI offers two setup mod
 
 ### Prerequisites
 
-- Node.js (latest LTS version)
+- Node.js >= 24
 - npm or yarn
 - Git
 
@@ -37,67 +37,44 @@ Create a new project from this template in seconds! The CLI offers two setup mod
 
 ```bash
 # Using npx (no installation required)
-npx cypress-start my-project
+npx create-cypress-start my-project
 
 # Or install globally first
 npm install -g cypress-start
-cypress-start my-project
+create-cypress-start my-project
 ```
 
-The CLI guides you through two setup modes:
+**Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Best for
+new standalone projects.
 
-#### 🎯 Mode 1: Full Setup (Recommended)
-
-Complete framework with all features, tests, and data. Git initialized, dependencies auto-installed.  
-**Best for:** New standalone projects.
-
-#### 📦 Mode 2: Specific Files
-
-Cherry-pick modules (ESLint, Docs, Copilot, Parallel Runner, GitHub Actions, Docker) for existing projects.  
-Package.json updated automatically. Manual `npm install` required.  
-**Best for:** Adding features to existing projects.
+**Mode 2 — Specific Files** cherry-picks modules (ESLint, Docs, Claude Skills, Parallel Runner, GitHub Actions, Docker)
+into an existing project directory. `package.json` is created or merged automatically; run `npm install` manually after.
 
 ```bash
 cd my-project
-npm run test              # Run all tests
-npm run test:parallel     # Run tests in parallel
-npm run lint              # Run ESLint checks
-npx cypress open          # Open Cypress UI
+npm run test              # run all tests headless
+npm run test:parallel     # run tests in parallel
+npm run lint              # run ESLint checks
+npx cypress open          # open Cypress UI
 ```
 
-### Alternative Setup Methods
+### Alternative setup
 
-**GitHub Template:**
+**GitHub Template:** click **"Use this template"** → create repository → clone it.
 
-1. Click **"Use this template"** → "Create a new repository"
-2. Clone: `git clone https://github.com/YOUR-USERNAME/your-repo-name.git`
-
-**Direct Clone:**
+**Direct clone:**
 
 ```bash
 git clone https://github.com/IvanZdanovich/cypress-start.git my-project
 cd my-project
-```
-
-**Post-Setup:**
-
-```bash
-npm install  # Installs dependencies and sets up pre-commit hooks
+npm install
 ```
 
 Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.
 
 ---
 
-### Mode Comparison
-
-**Full Setup** targets new standalone projects. It includes all test files and test data, initializes Git, runs
-`npm install` automatically, and is ready to use immediately.
-
-**Specific Files** targets existing projects where you want to add individual modules. Test files and test data are not
-included — you choose which modules to add and run `npm install` manually after setup.
-
-Both modes produce a complete `package.json` (created or merged).
+> **Open Source** — MIT licensed. Use it, fork it, contribute back.
 
 ---
 
@@ -127,13 +104,14 @@ This framework includes examples of tests:
 - **Scalability**: Proper test organization and file isolation avoid manual test case structures. Straightforward
   test‑data organization and custom static code analysis rules enforce naming conventions and test structure. The
   framework aligns the entire team around well‑defined requirements and scales effortlessly with the project.
-- **Type-Safe Localization and Color Themes**: Locale and theme files are compiled into typed maps at pretest time.
-  Missing or misspelled keys are caught by the linter before a test ever runs.
 - **Maintainability**: A clear project structure and comprehensive documentation ensure easy onboarding, effortless
   maintenance, and smooth test creation.
 - **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
 - **Lightweight and Easy Startup**: Quick setup with minimal configuration. A minimal number of third‑party dependencies
   helps avoid conflicts and ensures fast build times.
+- **AI-Ready**: Ships a full set of [Claude Code](https://claude.ai/code) skills under `.claude/skills/` — covering
+  spec writing, constraint and example authoring, command creation, ESLint rules, bug tracking, localization, colour
+  themes, git strategy, and more. The AI follows project conventions automatically, without prompting.
 
 ---
 
@@ -152,6 +130,10 @@ This framework includes examples of tests:
 - **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
 - **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
 - **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
+- **Claude Code Skills:** 18 project-specific skills covering the full development workflow — spec writing, data
+  authoring, command creation, linting, bug tracking, localization, colour themes, git strategy, and solution
+  validation. Invoked automatically by [Claude Code](https://claude.ai/code) when the task matches, or explicitly via
+  `/skill-name`.
 
 ---
 

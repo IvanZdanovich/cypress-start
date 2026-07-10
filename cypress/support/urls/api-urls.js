@@ -1,15 +1,15 @@
 const api = {
-  auth: `${Cypress.env('baseAPIUrl')}/auth`,
-  booking: `${Cypress.env('baseAPIUrl')}/booking`,
-  ping: `${Cypress.env('baseAPIUrl')}/ping`,
+  auth: `${Cypress.expose('baseAPIUrl')}/auth`,
+  booking: `${Cypress.expose('baseAPIUrl')}/booking`,
+  ping: `${Cypress.expose('baseAPIUrl')}/ping`,
 };
 
 const pages = {
-  login: `${Cypress.env('baseUrl')}/`,
-  inventory: `${Cypress.env('baseUrl')}/inventory.html`,
-  cart: `${Cypress.env('baseUrl')}/cart.html`,
-  item: `${Cypress.env('baseUrl')}/inventory-item.html`,
-  checkout: `${Cypress.env('baseUrl')}/checkout-step-one.html`,
+  login: `${Cypress.expose('baseUrl')}/`,
+  inventory: `${Cypress.expose('baseUrl')}/inventory.html`,
+  cart: `${Cypress.expose('baseUrl')}/cart.html`,
+  item: `${Cypress.expose('baseUrl')}/inventory-item.html`,
+  checkout: `${Cypress.expose('baseUrl')}/checkout-step-one.html`,
 };
 
 const external = {

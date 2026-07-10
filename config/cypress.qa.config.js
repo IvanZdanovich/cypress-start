@@ -14,6 +14,7 @@ module.exports = defineConfig({
     },
     expose: {
       envName: 'qa',
+      baseUrl: 'https://www.saucedemo.com',
       baseAPIUrl: 'https://restful-booker.herokuapp.com',
     },
   },
