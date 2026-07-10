@@ -34,10 +34,10 @@ const OPTIONAL_MODULES = {
     description: 'Comprehensive testing guidelines, conventions, best practices, and bug logging system',
     files: ['docs/'],
   },
-  copilotInstructions: {
-    name: 'Copilot Instructions',
-    description: 'GitHub Copilot configuration and test-specific instructions',
-    files: ['.github/copilot-instructions.md', '.github/instructions/'],
+  claudeSkills: {
+    name: 'Claude Skills',
+    description: 'Claude Code skill files for AI-assisted test writing, constraints, examples, and documentation workflows',
+    files: ['.claude/'],
   },
   parallelRunner: {
     name: 'Parallel Test Execution',

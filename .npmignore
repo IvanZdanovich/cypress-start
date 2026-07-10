@@ -1,6 +1,5 @@
 # Git
 .git/
-.github/
 
 # Husky
 .husky/
@@ -35,6 +34,3 @@ cypress/support/colours.d.ts
 cypress/reports/**
 cypress/downloads/
 **/preconditions/temp/**
-
-# Sensitive data
-cypress/sensitive-data/**
