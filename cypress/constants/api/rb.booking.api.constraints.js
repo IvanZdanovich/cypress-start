@@ -28,3 +28,12 @@ export const DATE_FORMAT = 'YYYY-MM-DD';
  * Used by missing-field, invalid-type, and empty-string tests.
  */
 export const REQUIRED_FIELDS = Object.freeze(['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout']);
+
+/** Maps camelCase JS example keys to their lowercase API response field names. */
+export const FIELD_MAP = Object.freeze({
+  firstname: 'firstname',
+  lastname: 'lastname',
+  totalPrice: 'totalprice',
+  depositPaid: 'depositpaid',
+  additionalNeeds: 'additionalneeds',
+});

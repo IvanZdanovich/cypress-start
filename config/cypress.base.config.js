@@ -33,9 +33,7 @@ function setupScreenshotOrdering(on) {
     // Reserve space for: counter digits (up to 4) + "." separator + ext + optional ".N" collision suffix (up to 6).
     const MAX_FILENAME = 255;
     const reserved = String(screenshotCounter).length + 1 + ext.length + 6;
-    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME
-      ? baseName.slice(0, MAX_FILENAME - reserved)
-      : baseName;
+    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME ? baseName.slice(0, MAX_FILENAME - reserved) : baseName;
 
     // Resolve a conflict-free target path
     let newPath = path.join(dir, `${screenshotCounter}.${truncatedBaseName}${ext}`);
@@ -102,4 +100,5 @@ module.exports = {
   defineConfig,
   baseConfig,
   getSpecPattern,
+  setupScreenshotOrdering,
 };

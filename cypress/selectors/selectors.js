@@ -67,6 +67,13 @@ const checkoutPage = {
   continue: '[data-test="continue"]',
 };
 
+const checkoutOverviewPage = {
+  itemsTotal: '[data-test="subtotal-label"]',
+  tax: '[data-test="tax-label"]',
+  priceTotal: '[data-test="total-label"]',
+  finish: '[data-test="finish"]',
+};
+
 const checkoutCompletePage = {
   confirmation: {
     title: '[data-test="complete-header"]',
@@ -96,7 +103,7 @@ export default {
   cartPage,
   productPage,
   checkoutPage,
-  checkoutOverview,
+  checkoutOverviewPage,
   checkoutCompletePage,
   headerComp,
   footerComp,

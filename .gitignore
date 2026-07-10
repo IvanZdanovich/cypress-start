@@ -1,3 +1,9 @@
+# auto-generated files (do not edit by hand)
+cypress/localization/l10n.json
+cypress/colours/colours.json
+cypress/support/l10n.d.ts
+cypress/support/colours.d.ts
+
 # compiled output
 dist
 

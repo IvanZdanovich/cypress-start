@@ -1,84 +1,54 @@
 {
-  "loginPage": {
-    "title": "Swag Labs",
-    "form": {
-      "login": "Login",
-      "username": "Username",
-      "password": "Password"
-    },
-    "errors": {
-      "usernameIsRequired": "Epic sadface: Username is required",
-      "passwordIsRequired": "Epic sadface: Password is required",
-      "userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
-      "accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in.",
-      "userNotFound": "Epic sadface: Username and password do not match any user in this service"
-    }
-  },
-  "header": {
-    "title": "Swag Labs",
-    "sidebar": {
-      "inventory": "All Items",
-      "about": "About",
-      "logout": "Logout",
-      "resetAppState": "Reset App State"
-    }
-  },
-  "footer": {
-    "copyRight": "© yearPlaceholder Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy"
-  },
-  "cartPage": {
-    "title": "Your Cart",
-    "continueShopping": "Continue Shopping",
-    "checkout": "Checkout",
-    "quantity": "QTY",
-    "description": "Description",
-    "remove": "Remove"
-  },
-  "inventoryPage": {
-    "title": "Products",
-    "addToCart": "Add to cart",
-    "remove": "Remove",
-    "sort": {
-      "label": "Sort",
-      "options": {
-        "nameAscending": "Name (A to Z)",
-        "nameDescending": "Name (Z to A)",
-        "priceAscending": "Price (low to high)",
-        "priceDescending": "Price (high to low)"
-      }
-    },
-    "errors": {
-      "usernameIsRequired": "Epic sadface: Username is required",
-      "passwordIsRequired": "Epic sadface: Password is required",
-      "userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
-      "accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in"
-    }
-  },
-  "checkoutPage": {
-    "title": "Checkout: Your Information",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "postalCode": "Postal Code",
-    "continue": "Continue",
-    "cancel": "Cancel",
-    "errors": {
-      "firstNameIsRequired": "Error: First Name is required",
-      "lastNameIsRequired": "Error: Last Name is required",
-      "postalCodeIsRequired": "Error: Postal Code is required"
-    }
-  },
-  "checkoutOverviewPage": {
-    "title": "Checkout: Overview",
-    "finish": "Finish",
-    "cancel": "Cancel",
-    "itemTotal": "Item total",
-    "tax": "Tax",
-    "total": "Total"
-  },
-  "checkoutCompletePage": {
-    "title": "Checkout: Complete!",
-    "messageTitle": "Thank you for your order!",
-    "message": "Your order has been dispatched, and will arrive just as fast as the pony can get there!",
-    "backHome": "Back Home"
-  }
+  "cartPage.checkout": "Checkout",
+  "cartPage.continueShopping": "Continue Shopping",
+  "cartPage.description": "Description",
+  "cartPage.quantity": "QTY",
+  "cartPage.remove": "Remove",
+  "cartPage.title": "Your Cart",
+  "checkoutCompletePage.backHome": "Back Home",
+  "checkoutCompletePage.message": "Your order has been dispatched, and will arrive just as fast as the pony can get there!",
+  "checkoutCompletePage.messageTitle": "Thank you for your order!",
+  "checkoutCompletePage.title": "Checkout: Complete!",
+  "checkoutOverviewPage.cancel": "Cancel",
+  "checkoutOverviewPage.finish": "Finish",
+  "checkoutOverviewPage.itemTotal": "Item total",
+  "checkoutOverviewPage.tax": "Tax",
+  "checkoutOverviewPage.title": "Checkout: Overview",
+  "checkoutOverviewPage.total": "Total",
+  "checkoutPage.cancel": "Cancel",
+  "checkoutPage.continue": "Continue",
+  "checkoutPage.errors.firstNameIsRequired": "Error: First Name is required",
+  "checkoutPage.errors.lastNameIsRequired": "Error: Last Name is required",
+  "checkoutPage.errors.postalCodeIsRequired": "Error: Postal Code is required",
+  "checkoutPage.firstName": "First Name",
+  "checkoutPage.lastName": "Last Name",
+  "checkoutPage.postalCode": "Postal Code",
+  "checkoutPage.title": "Checkout: Your Information",
+  "footer.copyRight": "© yearPlaceholder Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy",
+  "header.sidebar.about": "About",
+  "header.sidebar.inventory": "All Items",
+  "header.sidebar.logout": "Logout",
+  "header.sidebar.resetAppState": "Reset App State",
+  "header.title": "Swag Labs",
+  "inventoryPage.addToCart": "Add to cart",
+  "inventoryPage.errors.accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in",
+  "inventoryPage.errors.passwordIsRequired": "Epic sadface: Password is required",
+  "inventoryPage.errors.userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
+  "inventoryPage.errors.usernameIsRequired": "Epic sadface: Username is required",
+  "inventoryPage.remove": "Remove",
+  "inventoryPage.sort.label": "Sort",
+  "inventoryPage.sort.options.nameAscending": "Name (A to Z)",
+  "inventoryPage.sort.options.nameDescending": "Name (Z to A)",
+  "inventoryPage.sort.options.priceAscending": "Price (low to high)",
+  "inventoryPage.sort.options.priceDescending": "Price (high to low)",
+  "inventoryPage.title": "Products",
+  "loginPage.errors.accessToPageDenied": "Epic sadface: You can only access '/inventory.html' when you are logged in.",
+  "loginPage.errors.passwordIsRequired": "Epic sadface: Password is required",
+  "loginPage.errors.userIsLockedOut": "Epic sadface: Sorry, this user has been locked out.",
+  "loginPage.errors.usernameIsRequired": "Epic sadface: Username is required",
+  "loginPage.errors.userNotFound": "Epic sadface: Username and password do not match any user in this service",
+  "loginPage.form.login": "Login",
+  "loginPage.form.password": "Password",
+  "loginPage.form.username": "Username",
+  "loginPage.title": "Swag Labs"
 }
