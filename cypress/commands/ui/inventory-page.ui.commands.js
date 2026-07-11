@@ -38,3 +38,24 @@ Cypress.Commands.add('inventoryPage__verifyProductImages', () => {
     cy.wrap($image).should('be.visible').and('have.attr', 'src').and('not.be.empty');
   });
 });
+
+Cypress.Commands.add('inventoryPage__collectAndAddProductsToCart', (indices, chosenProducts, buggyProductData) => {
+  cy.wrap(indices).each((index) => {
+    cy.get(inventoryPage.cards).eq(index).within(() => {
+      cy.get(inventoryPage.card.title).invoke('text').as('title');
+      cy.get(inventoryPage.card.description).invoke('text').as('description');
+      cy.get(inventoryPage.card.price).invoke('text').as('priceText');
+
+      cy.then(function () {
+        const isBuggy = this.title === buggyProductData.wrongTitle;
+        chosenProducts.push({
+          title: isBuggy ? buggyProductData.correctTitle : this.title,
+          description: isBuggy ? undefined : this.description,
+          price: parseFloat(this.priceText.replace('$', '')),
+        });
+      });
+
+      cy.get(inventoryPage.card.add).click();
+    });
+  });
+});

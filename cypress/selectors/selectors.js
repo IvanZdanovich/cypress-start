@@ -2,7 +2,7 @@ const loginPage = {
   title: '.login_logo',
   username: '[data-test=username]',
   password: '[data-test=password]',
-  errorIcon: '[data-icon="times-circle"]',
+  errorIcon: '.error_icon',
   login: '[data-test="login-button"]',
   error: '.error-message-container',
   errorMessage: '[data-test="error"]',

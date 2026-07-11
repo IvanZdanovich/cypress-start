@@ -1,12 +1,11 @@
 import { completePurchase__examples as examples } from '../../e2e-examples/ui/purchasing.complete-purchase.ui.examples';
+import { PRICE_DECIMAL_PLACES } from '../../constants/ui/common.ui.constraints';
 
 describe('CompletePurchase: Given No preconditions', { testIsolation: false }, () => {
   let standardUser;
 
   before(() => {
-    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
-      standardUser = user;
-    });
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => { standardUser = user; });
     cy.then(() => {
       cy.visit('/');
       cy.loginPage__logIn(standardUser);
@@ -19,30 +18,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      cy.wrap(examples.indicesOfProducts).each((index) => {
-        cy.get(inventoryPage.cards)
-          .eq(index)
-          .within(() => {
-            cy.get(inventoryPage.card.title)
-              .invoke('text')
-              .then((title) => {
-                cy.get(inventoryPage.card.description)
-                  .invoke('text')
-                  .then((description) => {
-                    cy.get(inventoryPage.card.price)
-                      .invoke('text')
-                      .then((priceText) => {
-                        examples.chosenProducts.push({
-                          title: title === examples.buggyProductData.wrongTitle ? examples.buggyProductData.correctTitle : title,
-                          description: description === examples.buggyProductData.wrongDescription ? undefined : description,
-                          price: parseFloat(priceText.replace('$', '')),
-                        });
-                        cy.get(inventoryPage.card.add).click();
-                      });
-                  });
-              });
-          });
-      });
+      cy.inventoryPage__collectAndAddProductsToCart(examples.indicesOfProducts, examples.chosenProducts, examples.buggyProductData);
       cy.get(headerComp.openCart).click();
     });
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
@@ -60,34 +36,7 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
     });
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
-      const totalPrice = examples.chosenProducts.reduce((acc, product) => acc + product.price, 0);
-      const totalPriceRaw = parseFloat(totalPrice);
-      const totalPriceCorrect = parseFloat(totalPrice.toFixed(2));
-
-      if (totalPriceRaw !== totalPriceCorrect) {
-        cy.log('Skipping test due to floating-point precision bug (BUG-PURCHASE-001)');
-        return;
-      }
-
-      cy.get(checkoutOverviewPage.itemsTotal)
-        .invoke('text')
-        .then((itemsTotalText) => {
-          expect(itemsTotalText).to.equal(`${l10n['checkoutOverviewPage.itemTotal']}: $${totalPriceCorrect}`);
-        });
-
-      cy.get(checkoutOverviewPage.tax)
-        .invoke('text')
-        .then((taxText) => {
-          const taxValue = parseFloat(taxText.replace(`${l10n['checkoutOverviewPage.tax']}: $`, ''));
-
-          cy.get(checkoutOverviewPage.priceTotal)
-            .invoke('text')
-            .then((totalText) => {
-              const totalDisplayed = parseFloat(totalText.replace(`${l10n['checkoutOverviewPage.total']}: $`, ''));
-              const expectedTotal = parseFloat((totalPriceCorrect + taxValue).toFixed(2));
-              expect(totalDisplayed).to.equal(expectedTotal);
-            });
-        });
+      cy.checkoutOverviewPage__validatePriceSummary(examples.chosenProducts, PRICE_DECIMAL_PLACES);
     });
   });
 

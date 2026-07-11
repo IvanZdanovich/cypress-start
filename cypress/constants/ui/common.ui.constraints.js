@@ -12,6 +12,9 @@ export const TEXT = Object.freeze({
   allowedSymbols: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
 });
 
+/** Number of decimal places used when rounding/displaying currency prices. */
+export const PRICE_DECIMAL_PLACES = 2;
+
 /** Animation thresholds used in Cypress click options. */
 export const ANIMATION = Object.freeze({
   /** Pixel distance below which Cypress treats an element as not animating (sidebar open button). */

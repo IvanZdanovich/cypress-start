@@ -36,6 +36,20 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
       cy.get(cartPage.checkout).should('have.text', l10n['cartPage.checkout']).and('be.visible').and('be.enabled');
     });
+    it('CartPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
+      cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
+    });
+    it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
+      cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
+    });
+    it('CartPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
+      cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
+    });
+    it('CartPage.Footer.STANDARD: Then the Copyright notice with actual year should be displayed', () => {
+      cy.footerComp__verifyCopyright();
+    });
+    it.skip('CartPage.Footer.STANDARD: Then Terms Of Service link should be displayed', { req: { bugs: ['BUG-FOOTER-002'] } }, () => {});
+    it.skip('CartPage.Footer.STANDARD: Then Privacy Policy link should be displayed', { req: { bugs: ['BUG-FOOTER-003'] } }, () => {});
     it('CartPage.STANDARD: Then Quantity table header should be displayed', () => {
       cy.get(cartPage.quantityLabel).should('have.text', l10n['cartPage.quantity']).and('be.visible');
     });

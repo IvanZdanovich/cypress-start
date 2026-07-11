@@ -2,6 +2,49 @@ import { PRICE, LONG_STAY_MIN_DAYS, REQUIRED_FIELDS } from '../../constants/api/
 
 const namePrefix = `RbBk_${utils.generateRandomString(6)}_`;
 
+// Shared date values extracted so partial-update payloads can reference maximalPrice dates.
+const _maximalPriceDates = { checkin: utils.getFutureDate(10), checkout: utils.getFutureDate(12) };
+const _partialCheckinDate = utils.getFutureDate(15);
+const _partialCheckoutDate = utils.getFutureDate(30);
+
+// Pre-selected non-existing ID so all tests targeting a missing booking use the same consistent value.
+const _nonExistingIds = [999999, 888888, 777777];
+const _nonExistingId = utils.getRandomElement(_nonExistingIds);
+
+// Pre-computed single-field partial update so the spec needs no inline random selection.
+const _partialFieldChoices = {
+  firstname: `${namePrefix}${utils.generateRandomString(4)}`,
+  lastname: `${namePrefix}${utils.generateRandomString(6)}`,
+  totalPrice: utils.getRandomNumber(300, 700),
+  additionalNeeds: 'Partial update test',
+};
+const [_partialFieldName, _partialFieldValue] = utils.getRandomEntry(_partialFieldChoices);
+
+// Pre-computed missing-required-field booking so the spec needs no inline clone/delete logic.
+const _missingRequiredBase = {
+  firstname: `${namePrefix}${utils.generateRandomString(4)}`,
+  lastname: `${namePrefix}${utils.generateRandomString(6)}`,
+  totalPrice: utils.getRandomNumber(100, 500),
+  depositPaid: true,
+  bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
+  additionalNeeds: null,
+};
+const _missingRequiredFieldName = utils.getRandomElement(REQUIRED_FIELDS);
+// removeProperty clones internally and handles dotted paths (e.g. 'bookingDates.checkin').
+const _missingRequiredTestData = utils.removeProperty(_missingRequiredBase, _missingRequiredFieldName);
+
+// Pre-computed empty-string booking so the spec needs no inline random selection.const _emptyStringFieldChoices = ['firstname', 'lastname', 'additionalNeeds'];
+const _emptyStringBase = {
+  firstname: `${namePrefix}${utils.generateRandomString(4)}`,
+  lastname: `${namePrefix}${utils.generateRandomString(6)}`,
+  totalPrice: utils.getRandomNumber(100, 500),
+  depositPaid: true,
+  bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
+  additionalNeeds: null,
+};
+const _emptyStringFieldName = utils.getRandomElement(_emptyStringFieldChoices);
+const _emptyStringTestData = { ..._emptyStringBase, [_emptyStringFieldName]: '' };
+
 export const booking__examples = {
   namePrefix,
 
@@ -38,7 +81,7 @@ export const booking__examples = {
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: PRICE.MAX,
       depositPaid: true,
-      bookingDates: { checkin: utils.getFutureDate(10), checkout: utils.getFutureDate(12) },
+      bookingDates: _maximalPriceDates,
       additionalNeeds: 'VIP Suite',
     },
     sameDayCheckout: {
@@ -85,15 +128,13 @@ export const booking__examples = {
 
   invalidBookings: {
     // Base payload used to derive missing-required-field permutations.
-    missingRequiredBase: {
-      firstname: `${namePrefix}${utils.generateRandomString(4)}`,
-      lastname: `${namePrefix}${utils.generateRandomString(6)}`,
-      totalPrice: utils.getRandomNumber(100, 500),
-      depositPaid: true,
-      bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
-      additionalNeeds: null,
-    },
+    missingRequiredBase: _missingRequiredBase,
     requiredFieldChoices: REQUIRED_FIELDS,
+    // Pre-selected required field removed + full payload ready to POST directly.
+    missingRequiredField: {
+      name: _missingRequiredFieldName,
+      data: _missingRequiredTestData,
+    },
 
     priceAsString: {
       bookingId: String,
@@ -158,15 +199,13 @@ export const booking__examples = {
     },
 
     // Base payload used to derive empty-string-field permutations.
-    emptyStringBase: {
-      firstname: `${namePrefix}${utils.generateRandomString(4)}`,
-      lastname: `${namePrefix}${utils.generateRandomString(6)}`,
-      totalPrice: utils.getRandomNumber(100, 500),
-      depositPaid: true,
-      bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
-      additionalNeeds: null,
+    emptyStringBase: _emptyStringBase,
+    emptyStringFieldChoices: _emptyStringFieldChoices,
+    // Pre-selected empty-string field + full booking payload ready to POST directly.
+    emptyStringField: {
+      name: _emptyStringFieldName,
+      data: _emptyStringTestData,
     },
-    emptyStringFieldChoices: ['firstname', 'lastname', 'additionalNeeds'],
   },
 
   invalidCredentials: {
@@ -190,17 +229,18 @@ export const booking__examples = {
       additionalNeeds: 'Multiple fields update',
     },
     partialCheckinOnly: {
-      bookingDates: { checkin: utils.getFutureDate(15) },
+      bookingDates: { checkin: _partialCheckinDate, checkout: _maximalPriceDates.checkout },
     },
     partialCheckoutOnly: {
-      bookingDates: { checkout: utils.getFutureDate(30) },
+      bookingDates: { checkin: _partialCheckinDate, checkout: _partialCheckoutDate },
     },
     // Pool of single-field changes; spec picks one at random.
-    partialFieldChoices: {
-      firstname: `${namePrefix}${utils.generateRandomString(4)}`,
-      lastname: `${namePrefix}${utils.generateRandomString(6)}`,
-      totalPrice: utils.getRandomNumber(300, 700),
-      additionalNeeds: 'Partial update test',
+    partialFieldChoices: _partialFieldChoices,
+    // Pre-selected single-field change ready to pass directly to PATCH.
+    partialField: {
+      name: _partialFieldName,
+      value: _partialFieldValue,
+      updateData: { [_partialFieldName]: _partialFieldValue },
     },
   },
 
@@ -212,7 +252,7 @@ export const booking__examples = {
     },
   },
 
-  nonExistingIds: [999999, 888888, 777777],
+  nonExistingId: _nonExistingId,
   invalidIds: {
     stringId: 'not_a_number',
     negativeId: -1,
