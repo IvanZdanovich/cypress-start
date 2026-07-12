@@ -10,29 +10,7 @@
     "create-cypress-start": "bin/cypress-start.js"
   },
   "files": [
-    "bin/",
-    "cypress/e2e/",
-    "cypress/integration/",
-    "cypress/support/",
-    "cypress/integration-examples/",
-    "cypress/sensitive-data/env-users.example.json",
-    "cypress/reports/mochawesome/.gitkeep",
-    "cypress/reports/screenshots/.gitkeep",
-    "docs/",
-    "bug-log/",
-    "development-data/",
-    "eslint-plugin-custom-rules/",
-    "scripts/",
-    ".github/FUNDING.yml",
-    ".claude/",
-    "assets/",
-    "config/",
-    "cypress.config.js",
-    "eslint.config.mjs",
-    "Dockerfile",
-    ".gitignore",
-    "README.md",
-    "LICENSE"
+    "bin/"
   ],
   "scripts": {
     "pretest": "node scripts/copy-localization.js && node scripts/copy-colours.js && node scripts/gen-l10n-types.js && node scripts/gen-colours-types.js",
@@ -42,7 +20,6 @@
     "gen:l10n-types": "node scripts/gen-l10n-types.js",
     "gen:colours-types": "node scripts/gen-colours-types.js",
     "hooks:setup": "node scripts/setup-git-hooks.js",
-    "postinstall": "node scripts/setup-git-hooks.js",
 "coverage:report": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "coverage:report:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
     "coverage:report:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",

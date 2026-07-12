@@ -135,7 +135,7 @@ async function selectSetupMode() {
 ${COLORS.bright}${COLORS.cyan}Setup Mode Selection:${COLORS.reset}
 
   ${COLORS.green}1.${COLORS.reset} ${COLORS.bright}Full Setup${COLORS.reset} - Install complete framework with all features
-     └─ Includes: Complete test suite, ESLint rules, documentation, Copilot instructions,
+     └─ Includes: Complete test suite, ESLint rules, documentation, Claude Skills,
         GitHub workflows, parallel runner, Docker support
 
   ${COLORS.yellow}2.${COLORS.reset} ${COLORS.bright}Specific Files${COLORS.reset} - Choose which modules to include
