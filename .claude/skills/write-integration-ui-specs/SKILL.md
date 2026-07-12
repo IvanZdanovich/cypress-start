@@ -1,6 +1,6 @@
 ---
 name: write-integration-ui-specs
-description: Use when writing or updating Integration UI specs that must be executable requirements backed by constraints, named examples.
+description: Use when writing, updating, or reviewing any single-page UI test — asserting one page's visible behavior, elements, validation messages, or state after an action. Triggers on editing any `*.ui.spec.js` under `cypress/integration/ui/`, adding a page-level test (login, inventory, cart, etc.), asserting UI text/elements/errors, driving one page while seeding preconditions via API, or a spec whose asserted values must trace to constraints and named examples.
 ---
 
 # Principles

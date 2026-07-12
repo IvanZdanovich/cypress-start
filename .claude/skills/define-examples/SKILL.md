@@ -1,6 +1,6 @@
 ---
 name: define-examples
-description: Use when creating or updating example files that compose named test-data from constraints
+description: Use when creating, updating, or referencing named test-data — the fixtures, payloads, entities, or valid/invalid instances a spec sets up or asserts against. Triggers on editing any `*.examples.js` file under `cypress/integration-examples/` or `cypress/e2e-examples/`, a spec building its own test data inline instead of importing an example, "add a test case/fixture", "a valid/invalid booking (or user/cart/...)", needing a named instance for a spec, or test data duplicated across specs that needs one owner.
 ---
 
 # Principles

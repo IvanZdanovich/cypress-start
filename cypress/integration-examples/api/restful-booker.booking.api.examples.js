@@ -4,7 +4,7 @@ const namePrefix = `RbBk_${utils.generateRandomString(6)}_`;
 
 // Shared date values extracted so partial-update payloads can reference maximalPrice dates.
 const _maximalPriceDates = { checkin: utils.getFutureDate(10), checkout: utils.getFutureDate(12) };
-const _partialCheckinDate = utils.getFutureDate(15);
+const _partialCheckinDate = utils.getFutureDate(8);
 const _partialCheckoutDate = utils.getFutureDate(30);
 
 // Pre-selected non-existing ID so all tests targeting a missing booking use the same consistent value.
@@ -33,7 +33,8 @@ const _missingRequiredFieldName = utils.getRandomElement(REQUIRED_FIELDS);
 // removeProperty clones internally and handles dotted paths (e.g. 'bookingDates.checkin').
 const _missingRequiredTestData = utils.removeProperty(_missingRequiredBase, _missingRequiredFieldName);
 
-// Pre-computed empty-string booking so the spec needs no inline random selection.const _emptyStringFieldChoices = ['firstname', 'lastname', 'additionalNeeds'];
+// Pre-computed empty-string booking so the spec needs no inline random selection.
+const _emptyStringFieldChoices = ['firstname', 'lastname', 'additionalNeeds'];
 const _emptyStringBase = {
   firstname: `${namePrefix}${utils.generateRandomString(4)}`,
   lastname: `${namePrefix}${utils.generateRandomString(6)}`,
@@ -50,7 +51,7 @@ export const booking__examples = {
 
   validBookings: {
     withAllFields: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 1000),
@@ -59,7 +60,7 @@ export const booking__examples = {
       additionalNeeds: 'Breakfast',
     },
     withoutAdditionalNeeds: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 1000),
@@ -67,7 +68,7 @@ export const booking__examples = {
       bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
     },
     minimalPrice: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: PRICE.MIN,
@@ -76,7 +77,7 @@ export const booking__examples = {
       additionalNeeds: 'None',
     },
     maximalPrice: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: PRICE.MAX,
@@ -85,7 +86,7 @@ export const booking__examples = {
       additionalNeeds: 'VIP Suite',
     },
     sameDayCheckout: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(50, 200),
@@ -94,7 +95,7 @@ export const booking__examples = {
       additionalNeeds: 'Day use only',
     },
     longStay: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(5000, 10000),
@@ -106,7 +107,7 @@ export const booking__examples = {
       additionalNeeds: 'Extended stay discount',
     },
     depositNotPaid: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 500),
@@ -116,7 +117,7 @@ export const booking__examples = {
     },
     // API accepts zero price as valid (promotional bookings) — see BUG-BOOKING-004
     zeroPrice: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: PRICE.ZERO,
@@ -137,7 +138,7 @@ export const booking__examples = {
     },
 
     priceAsString: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: 'not_a_number',
@@ -146,7 +147,7 @@ export const booking__examples = {
       additionalNeeds: null,
     },
     depositAsString: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 500),
@@ -179,17 +180,17 @@ export const booking__examples = {
       additionalNeeds: null,
     },
     invalidDateFormat: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 500),
       depositPaid: true,
       // DD-MM-YYYY rather than DATE_FORMAT (YYYY-MM-DD)
-      bookingDates: { checkin: '01-12-2025', checkout: '15-12-2025' },
+      bookingDates: { checkin: '01-12-2027', checkout: '15-12-2027' },
       additionalNeeds: null,
     },
     checkoutBeforeCheckin: {
-      bookingId: String,
+      bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
       lastname: `${namePrefix}${utils.generateRandomString(6)}`,
       totalPrice: utils.getRandomNumber(100, 500),

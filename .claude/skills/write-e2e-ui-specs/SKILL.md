@@ -1,6 +1,6 @@
 ---
 name: write-e2e-ui-specs
-description: Use when writing or updating E2E UI workflow specs that must be executable requirements backed by constraints, named examples.
+description: Use when writing, updating, or reviewing any end-to-end UI journey that spans multiple pages or steps (create → modify → verify → complete) — checkout, purchase, signup, or other multi-page user flows. Triggers on editing any `*.spec.js` under `cypress/e2e/`, adding a new e2e/journey test, a `describe`/`it` chaining several pages together, "test the whole flow / user journey", reusing an entity created earlier in the flow, or a workflow spec that must trace to constraints and named examples.
 ---
 
 # Principles

@@ -1,6 +1,6 @@
 ---
 name: define-constraints
-description: Use when creating or updating Cypress API or UI constraint files that define reusable boundaries, formats, enums, required fields, durations, or display options.
+description: Use when defining or changing any reusable test boundary — min/max lengths, ranges, formats, regex, enums, allowed/required fields, status codes, durations, timeouts, display options, or valid/invalid value sets. Triggers on new constraint files, editing any `*.constraints.js` file under `cypress/constants/`, a hardcoded boundary/enum/format literal appearing in a spec or example, "add a validation rule", "what are the valid values", boundary or edge-case values, or duplicated limits that need one owner.
 ---
 
 # Principles

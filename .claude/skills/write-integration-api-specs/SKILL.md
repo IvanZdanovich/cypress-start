@@ -1,6 +1,6 @@
 ---
 name: write-integration-api-specs
-description: Use when writing or updating Integration API specs that must be executable requirements backed by constraints, named examples.
+description: Use when writing, updating, or reviewing any API-level test — asserting responses, status codes, payloads, headers, or CRUD lifecycle behavior of an endpoint. Triggers on editing any `*.api.spec.js` under `cypress/integration/api/`, adding a request-based test (cy.request/api command), asserting an endpoint's contract or error case, create-update-delete against an API, or a spec whose asserted values must trace to constraints and named examples.
 ---
 
 # Principles

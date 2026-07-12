@@ -15,7 +15,18 @@ Cypress.Commands.add('commonAPI__getTokenByRole__POST', (role) => {
         cacheAcrossSpecs: true,
         validate() {
           token = window.localStorage.getItem(`${role}-token`);
-          return Boolean(token);
+          if (!token) return false;
+          // restful-booker rotates/expires tokens on dyno restart, so confirm the server still accepts it — otherwise
+          // a stale cached session (cacheAcrossSpecs) would be reused and every authenticated write would 403.
+          return cy
+            .request({
+              method: 'PUT',
+              url: `${urls.api.booking}/1`,
+              failOnStatusCode: false,
+              headers: { 'Content-Type': 'application/json', Cookie: `token=${token}` },
+              body: {},
+            })
+            .then((res) => res.status !== 403);
         },
       },
     );
