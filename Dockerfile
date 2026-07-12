@@ -41,6 +41,8 @@ RUN npm ci
 # Copy remaining project files
 COPY . .
 
+# Generate localization and colour files that are not committed to the repo
+RUN npm run pretest
 
 # Default command: run tests in parallel
 CMD ["npm", "run", "test:parallel"]
