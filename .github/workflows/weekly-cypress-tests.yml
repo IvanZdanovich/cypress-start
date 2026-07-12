@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create sensitive data from secrets
         run: |
@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cypress-results-${{ github.run_number }}
           path: |
@@ -184,10 +184,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -199,10 +199,10 @@ jobs:
         run: npm run report:coverage
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report-${{ github.run_number }}
-          path: reports/coverage/coverage-gaps.md
+          path: reports/coverage-gaps.md
           retention-days: 30
 
   generate-flaky-report:
@@ -213,10 +213,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'npm'
@@ -228,8 +228,8 @@ jobs:
         run: npm run report:flaky
 
       - name: Upload flaky report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: flaky-report-${{ github.run_number }}
-          path: reports/flaky/flaky-tests.md
+          path: reports/flaky-tests.md
           retention-days: 30
