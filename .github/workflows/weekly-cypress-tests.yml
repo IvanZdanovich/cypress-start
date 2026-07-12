@@ -30,7 +30,7 @@ on:
       parallel_streams:
         description: 'Number of parallel test streams'
         required: false
-        default: '3'
+        default: '2'
         type: choice
         options:
           - '1'
