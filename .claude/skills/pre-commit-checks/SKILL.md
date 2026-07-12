@@ -50,7 +50,7 @@ DIRECTION: values only move down via AUTO_TIGHTEN, never up automatically — a 
 ## Manual fixes
 
 REMAINING_ARE_UNFIXABLE: issues surviving auto-fix are ones ESLint cannot fix, chiefly structural custom rules — resolve them by editing source, not by re-running auto-fix
-TITLE_STRUCTURE: `verify-test-title-against-structure` errors resolve by running `npm run lint --fix`, which appends valid paths to `eslint-plugin-custom-rules/app-structure/expected/` (`components.json`, `modules.json`, `workflows.json`)
+TITLE_STRUCTURE: `verify-test-title-against-structure` errors resolve by running `npm run lint --fix`, which appends valid paths to `eslint-plugin-custom-rules/app-structure/` (`components.json`, `modules.json`, `workflows.json`)
 TITLE_PATTERN: `verify-test-title-pattern` warnings resolve by renaming the `describe`/`context`/`it` block to the required title format
 RECOVERY: fix the flagged file → `npm run lint` to re-apply auto-fix and review → `git add .` → `git commit -m "message"`
 

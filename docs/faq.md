@@ -155,7 +155,7 @@ Benefits:
 - Transparent automation coverage metrics
 - Manual testers see what needs manual checking
 - Planning visibility — pending scope is explicit
-- `npm run coverage:report` counts skipped as unimplemented
+- `npm run report:coverage` counts skipped as unimplemented
 
 ## Related
 

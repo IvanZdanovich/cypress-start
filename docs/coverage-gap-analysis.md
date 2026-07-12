@@ -3,7 +3,7 @@
 Script: `scripts/analyze-coverage-gaps.js`
 
 Compares actual test implementation against expected structure definitions (
-`eslint-plugin-custom-rules/app-structure/expected/`), reporting missing coverage, structural inconsistencies, and test
+`eslint-plugin-custom-rules/app-structure/`), reporting missing coverage, structural inconsistencies, and test
 health.
 
 ## Metrics
@@ -29,7 +29,7 @@ node scripts/analyze-coverage-gaps.js --type=all --threshold=80 || exit 1
 ### NPM scripts
 
 ```bash
-npm run coverage:report     # Markdown report for all types
+npm run report:coverage     # Markdown report for all types
 npm run coverage:check      # Fail if below threshold
 ```
 
@@ -43,9 +43,9 @@ npm run coverage:check      # Fail if below threshold
 ## How it works
 
 1. **Load expected structure** from JSON files:
-    - `app-structure/expected/components.json` (Integration UI)
-    - `app-structure/expected/modules.json` (Integration API)
-    - `app-structure/expected/workflows.json` (E2E UI)
+    - `app-structure/components.json` (Integration UI)
+    - `app-structure/modules.json` (Integration API)
+    - `app-structure/workflows.json` (E2E UI)
 
 2. **Parse test files** — extract structure paths from test titles, count total and skipped tests
 
@@ -72,7 +72,7 @@ Example: 85% path coverage + 70% test coverage = 3 scenarios missing + 15 tests 
 ## Troubleshooting
 
 - **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and title format.
-- **Expected structure not found** — missing JSON file. Check `app-structure/expected/`.
+- **Expected structure not found** — missing JSON file. Check `app-structure/`.
 - **Inconsistent results** — stale files or title formatting. Run `npm run lint --fix` and verify patterns.
 
 ## Related
