@@ -25,19 +25,19 @@ const path = require('path');
 // Configuration
 const CONFIG = {
   'integration-ui': {
-    expectedFile: 'expected/components.json',
+    expectedFile: 'components.json',
     name: 'Integration UI',
     testDir: 'cypress/integration/ui',
     testPattern: /\.ui\.spec\.js$/,
   },
   'integration-api': {
-    expectedFile: 'expected/modules.json',
+    expectedFile: 'modules.json',
     name: 'Integration API',
     testDir: 'cypress/integration/api',
     testPattern: /\.api\.spec\.js$/,
   },
   'e2e-ui': {
-    expectedFile: 'expected/workflows.json',
+    expectedFile: 'workflows.json',
     name: 'E2E UI',
     testDir: 'cypress/e2e/ui',
     testPattern: /\.spec\.js$/,
@@ -367,7 +367,7 @@ function detectInconsistencies(expected, actual, pathPrefix = '') {
         // Recurse into common children
         const commonKeys = expectedKeys.filter((k) => actualSet.has(k));
         for (const commonKey of commonKeys) {
-          const subInconsistencies = detectInconsistencies(expected[commonKey], actual[commonKey], `${currentPath}.${commonKey}`);
+          const subInconsistencies = detectInconsistencies(expected[key][commonKey], actual[key][commonKey], `${currentPath}.${commonKey}`);
           inconsistencies.push(...subInconsistencies);
         }
       }
@@ -375,57 +375,6 @@ function detectInconsistencies(expected, actual, pathPrefix = '') {
   }
 
   return inconsistencies;
-}
-
-/**
- * Format a markdown table with proper column alignment
- * @param {Array<Array<string>>} rows - Array of rows, where each row is an array of cell values
- * @returns {string} Formatted markdown table
- */
-function formatMarkdownTable(rows) {
-  if (rows.length === 0) return '';
-
-  // Helper function to calculate visual width (excluding markdown formatting)
-  const getVisualWidth = (str) => {
-    return String(str || '')
-      .replace(/\*\*/g, '')
-      .replace(/`/g, '').length;
-  };
-
-  // Calculate max visual width for each column
-  const columnWidths = [];
-  const numColumns = rows[0].length;
-
-  for (let col = 0; col < numColumns; col++) {
-    let maxWidth = 0;
-    for (const row of rows) {
-      const visualWidth = getVisualWidth(row[col]);
-      maxWidth = Math.max(maxWidth, visualWidth);
-    }
-    columnWidths.push(maxWidth);
-  }
-
-  // Format rows
-  const formattedRows = [];
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const cells = row.map((cell, colIndex) => {
-      const cellStr = String(cell || '');
-      const visualWidth = getVisualWidth(cellStr);
-      const padding = columnWidths[colIndex] - visualWidth;
-      return cellStr + ' '.repeat(Math.max(0, padding));
-    });
-
-    formattedRows.push(`| ${cells.join(' | ')} |`);
-
-    // Add separator row after header
-    if (i === 0) {
-      const separator = columnWidths.map((width) => '-'.repeat(width)).join('-|-');
-      formattedRows.push(`|-${separator}-|`);
-    }
-  }
-
-  return formattedRows.join('\n');
 }
 
 /**
@@ -674,28 +623,23 @@ function generateMarkdownReport(result) {
 
   // Summary
   md += `## Summary\n\n`;
-  const summaryRows = [
-    ['Metric', 'Value'],
-    ['Total Expected', String(summary.totalExpected)],
-    ['Total Actual', String(summary.totalActual)],
-  ];
+  md += `- **Total Expected**: ${summary.totalExpected}\n`;
+  md += `- **Total Actual**: ${summary.totalActual}\n`;
 
   if (summary.totalTests !== undefined) {
-    summaryRows.push(['Total Tests', String(summary.totalTests)]);
-    summaryRows.push(['Active Tests', String(summary.activeTests)]);
-    summaryRows.push(['Skipped Tests', String(summary.skippedTests)]);
+    md += `- **Total Tests**: ${summary.totalTests}\n`;
+    md += `- **Active Tests**: ${summary.activeTests}\n`;
+    md += `- **Skipped Tests**: ${summary.skippedTests}\n`;
   }
 
-  summaryRows.push(['Path Coverage', `**${summary.coveragePercent}%**`]);
+  md += `- **Path Coverage**: ${summary.coveragePercent}%\n`;
 
   if (summary.testCoveragePercent !== undefined) {
-    summaryRows.push(['Test Coverage', `**${summary.testCoveragePercent}%** (active/total)`]);
+    md += `- **Test Coverage**: ${summary.testCoveragePercent}% (active/total)\n`;
   }
 
-  summaryRows.push(['Missing', String(summary.missing)]);
-  summaryRows.push(['Extra', String(summary.extra)]);
-
-  md += formatMarkdownTable(summaryRows) + '\n\n';
+  md += `- **Missing**: ${summary.missing}\n`;
+  md += `- **Extra**: ${summary.extra}\n\n`;
 
   const statusLabel = getCoverageLabel(summary.coveragePercent);
   let statusMessage;
@@ -773,24 +717,30 @@ function generateMarkdownReport(result) {
   // Coverage by component
   md += `## Coverage by Component\n\n`;
 
-  const componentRows = [['Component', 'Expected Paths', 'Actual Paths', 'Path Coverage', 'Tests (Active/Total)', 'Test Coverage', 'Status']];
-
   for (const [component, stats] of Object.entries(coverageByComponent)) {
     if (stats.status === 'extra-only') {
       // Component not in expected structure
       const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
-      componentRows.push([component, '0', String(stats.actualPaths), 'N/A', testInfo, testCov, 'Extra']);
+      md += `### ${component} — Extra\n\n`;
+      md += `- **Expected Paths**: 0\n`;
+      md += `- **Actual Paths**: ${stats.actualPaths}\n`;
+      md += `- **Path Coverage**: N/A\n`;
+      md += `- **Tests (Active/Total)**: ${testInfo}\n`;
+      md += `- **Test Coverage**: ${testCov}\n\n`;
     } else {
       const status = getCoverageLabel(stats.percent);
       const actualDisplay = stats.extra > 0 ? `${stats.actualPaths} (+${stats.extra} extra)` : String(stats.actualPaths);
       const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
-      componentRows.push([component, String(stats.expected), actualDisplay, `${stats.percent}%`, testInfo, testCov, status]);
+      md += `### ${component} — ${status}\n\n`;
+      md += `- **Expected Paths**: ${stats.expected}\n`;
+      md += `- **Actual Paths**: ${actualDisplay}\n`;
+      md += `- **Path Coverage**: ${stats.percent}%\n`;
+      md += `- **Tests (Active/Total)**: ${testInfo}\n`;
+      md += `- **Test Coverage**: ${testCov}\n\n`;
     }
   }
-
-  md += formatMarkdownTable(componentRows) + '\n\n';
 
   // Recommendations
   md += `## Recommendations\n\n`;
@@ -923,25 +873,20 @@ function main() {
       combinedMd += `**Generated**: ${new Date().toISOString().replace('T', ' ').substring(0, 19)}\n\n`;
       combinedMd += `## Summary Across All Test Types\n\n`;
 
-      const summaryRows = [['Type', 'Expected Paths', 'Actual Paths', 'Path Coverage', 'Tests (Active/Total)', 'Test Coverage', 'Missing', 'Extra']];
-
       results.forEach((result) => {
         const status = getCoverageLabel(result.summary.coveragePercent);
         const testInfo = result.summary.totalTests > 0 ? `${result.summary.activeTests}/${result.summary.totalTests}` : 'N/A';
         const testCov = result.summary.totalTests > 0 ? `${result.summary.testCoveragePercent}%` : 'N/A';
-        summaryRows.push([
-          `${result.name} ${status}`,
-          String(result.summary.totalExpected),
-          String(result.summary.totalActual),
-          `**${result.summary.coveragePercent}%**`,
-          testInfo,
-          testCov,
-          String(result.summary.missing),
-          String(result.summary.extra),
-        ]);
+        combinedMd += `### ${result.name} — ${status}\n\n`;
+        combinedMd += `- **Expected Paths**: ${result.summary.totalExpected}\n`;
+        combinedMd += `- **Actual Paths**: ${result.summary.totalActual}\n`;
+        combinedMd += `- **Path Coverage**: ${result.summary.coveragePercent}%\n`;
+        combinedMd += `- **Tests (Active/Total)**: ${testInfo}\n`;
+        combinedMd += `- **Test Coverage**: ${testCov}\n`;
+        combinedMd += `- **Missing**: ${result.summary.missing}\n`;
+        combinedMd += `- **Extra**: ${result.summary.extra}\n\n`;
       });
 
-      combinedMd += formatMarkdownTable(summaryRows) + '\n\n';
       combinedMd += `---\n\n`;
 
       // Add individual reports

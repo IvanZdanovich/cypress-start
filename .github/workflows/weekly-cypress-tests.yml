@@ -76,6 +76,11 @@ on:
         default: false
         type: boolean
 
+# The results-collection step pushes the test-run ledger to the orphan
+# `test-results` branch, which requires write access to repo contents.
+permissions:
+  contents: write
+
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
@@ -147,6 +152,12 @@ jobs:
           RESULTS_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           TARGET_ENV: ${{ inputs.target_env || 'dev' }}
           CI: 'true'
+          # git commit-tree needs an author/committer identity; actions/checkout
+          # does not set one, so provide it here for the ledger push.
+          GIT_AUTHOR_NAME: 'github-actions[bot]'
+          GIT_AUTHOR_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+          GIT_COMMITTER_NAME: 'github-actions[bot]'
+          GIT_COMMITTER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
         run: node scripts/collect-test-results.js --reports-dir cypress/reports/separate-reports
 
       - name: Clean up sensitive files
@@ -178,7 +189,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -207,7 +218,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies

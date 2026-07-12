@@ -1,15 +1,12 @@
 {
-  "CartPage": {
-    "STANDARD": {}
-  },
-  "Footer": {
-    "STANDARD": {}
-  },
-  "Header": {
-    "STANDARD": {}
-  },
   "LoginPage": {
     "STANDARD": {}
+  },
+  "CartPage": {
+    "STANDARD": {},
+    "Footer": {
+      "STANDARD": {}
+    }
   },
   "InventoryPage": {
     "STANDARD": {},

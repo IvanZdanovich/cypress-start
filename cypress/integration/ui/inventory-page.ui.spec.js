@@ -480,4 +480,3 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
     });
   });
 });
-

@@ -80,7 +80,26 @@ const baseConfig = {
     responseTimeout: 25000,
     language: process.env.LANGUAGE || 'en',
     colourTheme: process.env.COLOUR_THEME || 'default',
-    reporter: 'spec',
+    // mochawesome emits one report per spec into separate-reports/.
+    //   json:true  — REQUIRED: scripts/collect-test-results.js parses the per-spec
+    //                JSON to build the flaky ledger; without it nothing is recorded.
+    //   html:true  — human-readable per-spec report bundled in the CI artifact.
+    //   [name] in reportFilename keys each file on its spec, so parallel streams
+    //                never overwrite one another; overwrite:false is belt-and-braces.
+    reporter: 'mochawesome',
+    reporterOptions: {
+      reportDir: 'cypress/reports/separate-reports',
+      reportFilename: '[status]_[datetime]-[name]-report',
+      overwrite: false,
+      json: true,
+      html: false,
+      charts: true,
+      reportPageTitle: 'Cypress Test Report',
+      showHooks: 'always',
+      embeddedScreenshots: true,
+      inlineAssets: true,
+      timestamp: 'longDate',
+    },
   },
 };
 

@@ -5,7 +5,9 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
   let standardUser;
 
   before(() => {
-    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => { standardUser = user; });
+    cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
+      standardUser = user;
+    });
     cy.then(() => {
       cy.visit('/');
       cy.loginPage__logIn(standardUser);
