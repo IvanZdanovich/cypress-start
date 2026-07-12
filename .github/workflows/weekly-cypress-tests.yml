@@ -167,18 +167,13 @@ jobs:
 
   generate-coverage-report:
     runs-on: ubuntu-latest
-    needs: cypress-tests
+    # Coverage is derived from static sources (expected/*.json and spec files), not test-run results,
+    # so it has no dependency on cypress-tests and runs in parallel.
     if: ${{ inputs.generate_coverage_report == true }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: cypress-results-${{ github.run_number }}
-          path: cypress/reports
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -202,17 +197,12 @@ jobs:
   generate-flaky-report:
     runs-on: ubuntu-latest
     needs: cypress-tests
-    if: ${{ inputs.generate_flaky_report == true }}
+    # Run after cypress-tests completes even if it failed (to capture latest results), but not if the workflow was cancelled
+    if: ${{ !cancelled() && inputs.generate_flaky_report == true }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          name: cypress-results-${{ github.run_number }}
-          path: cypress/reports
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
