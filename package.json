@@ -21,15 +21,15 @@
     "gen:colours-types": "node scripts/gen-colours-types.js",
     "hooks:setup": "node scripts/setup-git-hooks.js",
     "postinstall": "node scripts/setup-git-hooks.js",
-    "coverage:report:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
-    "coverage:report:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",
-    "coverage:report:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown --output=reports/coverage-e2e-ui.md",
-    "coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
-    "coverage:check:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --threshold=80",
-    "coverage:check:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --threshold=80",
-    "coverage:check:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --threshold=80",
+    "report:coverage:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
+    "report:coverage:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",
+    "report:coverage:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown --output=reports/coverage-e2e-ui.md",
+    "check:coverage": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
-    "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md"
+    "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
+    "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
+    "report:unsuppress": "node scripts/manage-flaky-suppressions.js --remove",
+    "report:review": "node scripts/manage-flaky-suppressions.js --review"
   },
   "private": false,
   "keywords": [

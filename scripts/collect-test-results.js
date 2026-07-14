@@ -21,7 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync, execFileSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const WORKSPACE = process.cwd();
 const RESULTS_BRANCH = 'test-results';
@@ -295,10 +295,11 @@ function appendToLedger(newEntryLine, message) {
       if (!blobSha) throw new Error('Failed to create blob');
 
       const treeInput = `100644 blob ${blobSha}\t${LEDGER_FILENAME}\n`;
-      const treeSha = execSync('git mktree', {
+      const treeSha = execFileSync('git', ['mktree'], {
         cwd: WORKSPACE,
         encoding: 'utf8',
         input: treeInput,
+        stdio: ['pipe', 'pipe', 'pipe'],
       }).trim();
 
       const parentSha = git(['rev-parse', `origin/${RESULTS_BRANCH}`]);

@@ -119,14 +119,65 @@ fields, not in git history.
 - **Consistent** (≥ 80%) — fails in most runs; likely broken, not flaky.
 - **Rare** (< 10%) — failed once or twice; may be environment noise.
 
+## Suppressions
+
+Known or reviewed failures can be suppressed from the actionable report sections so the report stays focused on real
+regressions. Suppressed tests move to a dedicated section at the bottom of `reports/flaky-tests.md`.
+
+**Why suppress** — a failure linked to a tracked ticket (backend bug, environment instability, pending feature) clutters
+the "Action Required" and "Flaky" sections. Suppressing it signals "reviewed, not actionable right now" without losing
+visibility.
+
+**File** — `scripts/flaky-suppressions.json`. Each entry identifies a test by `file` + `it` (+ optional `context`) and
+carries `reason`, `ticket`, optional `expiresAt`.
+
+**Auto-expiry** — entries with an `expiresAt` date resurface in the main report after that date passes. Use this to
+force a re-check (e.g. 30 days after a backend fix is expected).
+
+**Bypass** — `node scripts/analyze-flaky-tests.js --no-suppress` shows the full unfiltered report.
+
+### Interactive CLI
+
+```bash
+# Add suppressions — shows unsuppressed failures, multi-select, prompts for ticket/reason/expiry
+npm run results:suppress
+
+# Remove suppressions — shows current entries, multi-select to unsuppress
+npm run results:unsuppress
+
+# Review — cleans expired entries, shows status summary, offers add/remove
+npm run results:review
+```
+
+Select tests that share a common reason and ticket in one session. Run again for a different group.
+
+### Manual editing
+
+Add entries directly to `scripts/flaky-suppressions.json`:
+
+```json
+{
+  "file": "audit.scoring-question-categories.api.spec.js",
+  "it": "Scoring.QuestionCategories.GET: Then return a 200 status code and audit score data",
+  "reason": "Backend scoring endpoint intermittent 500",
+  "ticket": "BUG-API-12",
+  "suppressedAt": "2026-07-14",
+  "expiresAt": "2026-08-14"
+}
+```
+
+The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
+
 ## Report sections
 
 - **Summary** — run count, period, overall pass rate, failure counts.
+- **Action Required** — recent regressions: streak or majority of recent window failing.
 - **Flaky tests** — intermittent failures sorted by frequency.
 - **Consistently failing** — tests broken in most runs.
 - **Rare failures** — one-off failures.
 - **Error patterns** — recurring error messages across multiple tests.
 - **Run history** — last 20 runs with per-run stats.
+- **Suppressed** — known issues with linked ticket, shown for reference only.
 
 ## CI integration
 

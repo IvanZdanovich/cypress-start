@@ -15,18 +15,21 @@
  * Outputs a markdown report to reports/flaky-tests.md.
  *
  * Usage:
- *   node scripts/analyze-flaky-tests.js [--output <path>] [--last <N>] [--recent <N>] [--streak <N>]
+ *   node scripts/analyze-flaky-tests.js [--output <path>] [--last <N>] [--recent <N>] [--streak <N>] [--no-suppress]
  *
  * Defaults:
  *   --output  reports/flaky-tests.md
  *   --last    0 (all runs; set a number to limit to the N most recent runs)
  *   --recent  5 (size of the recent-run window that defines "latest issues")
  *   --streak  3 (consecutive trailing failures that flag a regression)
+ *
+ * Flags:
+ *   --no-suppress  Ignore flaky-suppressions.json and show all failures unsuppressed
  */
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const WORKSPACE = process.cwd();
 const RESULTS_BRANCH = 'test-results';
@@ -45,6 +48,9 @@ const LAST_N = parseInt(argValue('--last', '0'), 10);
 const RECENT_WINDOW = parseInt(argValue('--recent', '5'), 10);
 // A trailing streak of this many consecutive failures signals a likely regression.
 const STREAK_THRESHOLD = parseInt(argValue('--streak', '3'), 10);
+// Suppression: known/reviewed failures are moved to a separate section.
+const SUPPRESSIONS_PATH = path.resolve(__dirname, 'flaky-suppressions.json');
+const NO_SUPPRESS = args.includes('--no-suppress');
 
 /**
  * Read and parse the JSONL ledger from the orphan branch.
@@ -52,7 +58,7 @@ const STREAK_THRESHOLD = parseInt(argValue('--streak', '3'), 10);
  */
 function readLedger() {
   try {
-    execSync(`git fetch origin ${RESULTS_BRANCH}`, { cwd: WORKSPACE, stdio: 'pipe' });
+    execFileSync('git', ['fetch', 'origin', RESULTS_BRANCH], { cwd: WORKSPACE, stdio: 'pipe' });
   } catch (err) {
     // Distinguish an authentication/transport failure from a genuinely missing
     // branch: the catch-all previously reported every fetch failure as "branch
@@ -72,7 +78,7 @@ function readLedger() {
 
   let content;
   try {
-    content = execSync(`git show origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`, {
+    content = execFileSync('git', ['show', `origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`], {
       cwd: WORKSPACE,
       encoding: 'utf8',
     });
@@ -107,6 +113,54 @@ function readLedger() {
 function failureKey(failure) {
   const ctx = Array.isArray(failure.context) ? failure.context.join(' > ') : '';
   return `${failure.file || ''}::${ctx}::${failure.it || failure.title || ''}`;
+}
+
+/**
+ * Load suppression rules from flaky-suppressions.json.
+ * Returns an array of active (non-expired) suppression entries.
+ */
+function loadSuppressions() {
+  if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return [];
+
+  try {
+    const data = JSON.parse(fs.readFileSync(SUPPRESSIONS_PATH, 'utf8'));
+    const today = new Date().toISOString().slice(0, 10);
+
+    return (data.suppressions || []).filter((s) => !s.expiresAt || s.expiresAt >= today);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Check whether a failure data object matches a suppression rule.
+ * Matches on file (substring), it (exact), and optional context (substring).
+ */
+function matchesSuppression(data, rule) {
+  return data.file.includes(rule.file) && data.it === rule.it && (!rule.context || data.context.join(' > ').includes(rule.context));
+}
+
+/**
+ * Partition failMap into active and suppressed entries in a single pass.
+ * Returns empty suppressedMap immediately when no suppressions are active.
+ * @returns {{ activeMap: Map, suppressedMap: Map<string, {data, rule}> }}
+ */
+function partitionBySuppressions(failMap, suppressions) {
+  if (suppressions.length === 0) return { activeMap: failMap, suppressedMap: new Map() };
+
+  const activeMap = new Map();
+  const suppressedMap = new Map();
+
+  for (const [key, data] of failMap) {
+    const rule = suppressions.find((s) => matchesSuppression(data, s));
+    if (rule) {
+      suppressedMap.set(key, { data, rule });
+    } else {
+      activeMap.set(key, data);
+    }
+  }
+
+  return { activeMap, suppressedMap };
 }
 
 /**
@@ -243,7 +297,7 @@ function truncate(str, maxLen) {
 /**
  * Generate the markdown report.
  */
-function generateReport(runs, failMap) {
+function generateReport(runs, failMap, suppressedMap = new Map()) {
   const totalRuns = runs.length;
   const firstRun = runs[0]?.timestamp || 'N/A';
   const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
@@ -290,6 +344,9 @@ function generateReport(runs, failMap) {
   lines.push(`- **Consistently failing (>=80%):** ${consistent.length}`);
   lines.push(`- **Rare failures (<10%):** ${rare.length}`);
   lines.push(`- **⚠️ Action required (recent regressions):** ${actionable.length}`);
+  if (suppressedMap.size > 0) {
+    lines.push(`- **🔇 Suppressed (known issues):** ${suppressedMap.size}`);
+  }
   lines.push('');
   lines.push('> Note: only the **first failure per spec file** is tracked — specs run with');
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
@@ -436,6 +493,33 @@ function generateReport(runs, failMap) {
   }
   lines.push('');
 
+  // --- Suppressed known issues (collapsed at the bottom) ---
+  if (suppressedMap.size > 0) {
+    lines.push('## 🔇 Suppressed — Known Issues');
+    lines.push('');
+    lines.push('These failures are suppressed from actionable sections because they have been');
+    lines.push('reviewed and linked to a tracked ticket. Edit `scripts/flaky-suppressions.json`');
+    lines.push('to add, remove, or expire suppressions.');
+    lines.push('');
+
+    const sortedSuppressed = [...suppressedMap.entries()].sort((a, b) => b[1].data.count - a[1].data.count);
+
+    for (const [, { data, rule }] of sortedSuppressed) {
+      const rate = ((data.count / totalRuns) * 100).toFixed(1);
+      const ctx = clean(data.context.join(' > '));
+      lines.push(`### ${clean(data.file)}`);
+      lines.push('');
+      if (ctx) lines.push(`- **Context:** ${ctx}`);
+      lines.push(`- **it:** ${clean(data.it)}`);
+      lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
+      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+      lines.push(`- **Reason:** ${rule.reason}`);
+      lines.push(`- **Ticket:** ${rule.ticket}`);
+      if (rule.expiresAt) lines.push(`- **Expires:** ${rule.expiresAt}`);
+      lines.push('');
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -451,8 +535,10 @@ function main() {
     runs = runs.slice(-LAST_N);
   }
 
-  const failMap = aggregateFailures(runs);
-  const report = generateReport(runs, failMap);
+  const fullFailMap = aggregateFailures(runs);
+  const suppressions = loadSuppressions();
+  const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, suppressions);
+  const report = generateReport(runs, failMap, suppressedMap);
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, report);
@@ -466,10 +552,13 @@ function main() {
   console.log(`  Unique failures:   ${failMap.size}`);
   console.log(`  Flaky tests:       ${flaky.length}`);
   console.log(`  Action required:   ${actionable.length}`);
+  if (suppressedMap.size > 0) {
+    console.log(`  Suppressed:        ${suppressedMap.size}`);
+  }
   console.log('');
   console.log(`Report written to ${OUTPUT_PATH}`);
 }
 
-module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify };
+module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions };
 
 if (require.main === module) main();

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flaky Test Suppressions",
+  "description": "Declares known/reviewed test failures to exclude from the actionable flaky-test report sections.",
+  "type": "object",
+  "required": ["suppressions"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "$comment": { "type": "string" },
+    "suppressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "it", "reason", "ticket"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Spec file path (relative to cypress/, as it appears in the report)"
+          },
+          "context": {
+            "type": "string",
+            "description": "Optional context path joined with ' > '. Omit to match any context within the file."
+          },
+          "it": {
+            "type": "string",
+            "description": "The it-block title that fails"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this failure is suppressed (e.g., 'Known env instability', 'Backend bug under fix')"
+          },
+          "ticket": {
+            "type": "string",
+            "description": "Linked ticket or bug ID (e.g., 'BUG-API-12', 'A65-4321')"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Optional ISO date (YYYY-MM-DD) after which suppression auto-expires and the test resurfaces in the report"
+          },
+          "suppressedAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when suppression was added"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+
