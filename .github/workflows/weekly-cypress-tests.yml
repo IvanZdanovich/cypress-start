@@ -48,14 +48,14 @@ on:
           - firefox
           - edge
       test_scope:
-        description: 'Test scope filter (empty=all, integration-requirements, e2e-requirements)'
+        description: 'Test scope filter (all, integration, e2e)'
         required: false
         default: all
         type: choice
         options:
           - all
-          - integration-requirements
-          - e2e-requirements
+          - integration
+          - e2e
       test_type:
         description: 'Test type filter (empty=all, api, ui)'
         required: false

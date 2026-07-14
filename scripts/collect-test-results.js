@@ -251,6 +251,52 @@ function applyRetention(lines) {
 }
 
 /**
+ * Builds a git blob → tree → orphan commit and pushes it to RESULTS_BRANCH.
+ * Extracted so that the throws propagate up to the retry-loop catch in
+ * appendToLedger rather than being caught in the same try block (which would
+ * trigger an "exception caught locally" IDE warning).
+ *
+ * @param {string} tmpFile   - Path to the file whose content becomes the ledger blob.
+ * @param {string} message   - Commit message for the orphan commit.
+ * @returns {string} The full SHA of the newly created commit.
+ */
+function buildAndPushCommit(tmpFile, message) {
+  const blobSha = git(['hash-object', '-w', tmpFile]);
+  if (!blobSha) throw new Error('Failed to create blob');
+
+  const treeInput = `100644 blob ${blobSha}\t${LEDGER_FILENAME}\n`;
+  const treeSha = execFileSync('git', ['mktree'], {
+    cwd: WORKSPACE,
+    encoding: 'utf8',
+    input: treeInput,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }).trim();
+
+  const parentSha = git(['rev-parse', `origin/${RESULTS_BRANCH}`]);
+
+  // Orphan commit (no -p parent) keeps the branch at a single commit.
+  const commitSha = git(['commit-tree', treeSha, '-m', message]);
+  if (!commitSha) throw new Error('Failed to create commit');
+
+  // Replace the branch tip with the new orphan commit. force-with-lease is a
+  // compare-and-swap against the fetched tip, so concurrent pushes are
+  // rejected (then retried) instead of silently overwritten. The lease is
+  // only needed when the branch already exists.
+  const pushArgs = ['push', 'origin', `${commitSha}:refs/heads/${RESULTS_BRANCH}`];
+  if (parentSha) {
+    pushArgs.push(`--force-with-lease=refs/heads/${RESULTS_BRANCH}:${parentSha}`);
+  }
+
+  execFileSync('git', pushArgs, {
+    cwd: WORKSPACE,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+
+  return commitSha;
+}
+
+/**
  * Append newEntryLine to the orphan ledger branch.
  *
  * The branch is kept as a SINGLE rolling orphan commit (no parent chain), so
@@ -291,38 +337,7 @@ function appendToLedger(newEntryLine, message) {
     fs.writeFileSync(tmpFile, updatedContent);
 
     try {
-      const blobSha = git(['hash-object', '-w', tmpFile]);
-      if (!blobSha) throw new Error('Failed to create blob');
-
-      const treeInput = `100644 blob ${blobSha}\t${LEDGER_FILENAME}\n`;
-      const treeSha = execFileSync('git', ['mktree'], {
-        cwd: WORKSPACE,
-        encoding: 'utf8',
-        input: treeInput,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }).trim();
-
-      const parentSha = git(['rev-parse', `origin/${RESULTS_BRANCH}`]);
-
-      // Orphan commit (no -p parent) keeps the branch at a single commit.
-      const commitSha = git(['commit-tree', treeSha, '-m', message]);
-      if (!commitSha) throw new Error('Failed to create commit');
-
-      // Replace the branch tip with the new orphan commit. force-with-lease is a
-      // compare-and-swap against the fetched tip, so concurrent pushes are
-      // rejected (then retried) instead of silently overwritten. The lease is
-      // only needed when the branch already exists.
-      const pushArgs = ['push', 'origin', `${commitSha}:refs/heads/${RESULTS_BRANCH}`];
-      if (parentSha) {
-        pushArgs.push(`--force-with-lease=refs/heads/${RESULTS_BRANCH}:${parentSha}`);
-      }
-
-      execFileSync('git', pushArgs, {
-        cwd: WORKSPACE,
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
+      const commitSha = buildAndPushCommit(tmpFile, message);
       console.log(`  Pushed to ${RESULTS_BRANCH} (${commitSha.slice(0, 7)}, single-commit, attempt ${attempt})`);
       return true;
     } catch (err) {
