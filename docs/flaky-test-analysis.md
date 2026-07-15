@@ -1,6 +1,6 @@
 # Flaky test analysis
 
-Scripts: `scripts/collect-test-results.js`, `scripts/analyze-flaky-tests.js`
+Scripts: `scripts/collect-test-results.js`, `scripts/analyze-flaky-tests.js`, `scripts/manage-flaky-suppressions.js`
 
 Persists CI test outcomes across runs in a JSONL ledger on a dedicated orphan branch (`test-results`), then identifies
 tests that fail intermittently. Collection is CI-only (`CI=true` guard) — local runs are excluded to keep the ledger
@@ -9,10 +9,10 @@ protected branches.
 
 ## How it works
 
-1. **Collect** (`results:collect`, CI-only) reads mochawesome JSON reports from `cypress/reports/separate-reports/`,
+1. **Collect** (`scripts/collect-test-results.js`, CI-only) reads mochawesome JSON reports from `cypress/reports/separate-reports/`,
    extracts stats and failures, and commits a new ledger line to the `test-results` orphan branch using git plumbing
    (no working-tree changes)
-2. **Analyze** (`results:analyze`, local or CI) fetches `origin/test-results`, reads the ledger via
+2. **Analyze** (`report:flaky`, local or CI) fetches `origin/test-results`, reads the ledger via
    `git show`, groups failures by test title, classifies each as flaky / consistent / rare, and writes
    `reports/flaky-tests.md`
 
@@ -22,7 +22,7 @@ Collection runs automatically in CI. Analysis can be run locally against the com
 
 ```bash
 # Generate the flaky test report from accumulated CI data
-npm run results:analyze
+npm run report:flaky
 
 # Analyze only the last 30 runs
 node scripts/analyze-flaky-tests.js --last 30
@@ -38,7 +38,7 @@ The ledger (`test-run-history.jsonl`) lives on the orphan `test-results` branch 
 - **No branch protection conflicts** — CI pushes to an unprotected branch
 - **Clean separation** — test history doesn't pollute code commit history
 - **No merge conflicts** — the ledger never intersects with feature work
-- **Local access** — `git fetch origin test-results` then `npm run results:analyze`
+- **Local access** — `git fetch origin test-results` then `npm run report:flaky`
 
 ## Ledger format
 
@@ -97,7 +97,7 @@ atomic push. This bounds the ledger file size and keeps `git show` / analysis fa
 node scripts/collect-test-results.js --max-runs 50
 
 # Equivalent via env
-RESULTS_MAX_RUNS=50 npm run results:collect
+RESULTS_MAX_RUNS=50 node scripts/collect-test-results.js
 ```
 
 ## Commit history
@@ -122,47 +122,74 @@ fields, not in git history.
 ## Suppressions
 
 Known or reviewed failures can be suppressed from the actionable report sections so the report stays focused on real
-regressions. Suppressed tests move to a dedicated section at the bottom of `reports/flaky-tests.md`.
+regressions. Test suppressions move matching failures to a dedicated section at the bottom of
+`reports/flaky-tests.md`. Run suppressions exclude compromised CI runs from all analysis stats.
 
 **Why suppress** — a failure linked to a tracked ticket (backend bug, environment instability, pending feature) clutters
 the "Action Required" and "Flaky" sections. Suppressing it signals "reviewed, not actionable right now" without losing
 visibility.
 
-**File** — `scripts/flaky-suppressions.json`. Each entry identifies a test by `file` + `it` (+ optional `context`) and
-carries `reason`, `ticket`, optional `expiresAt`.
+**File** — `scripts/flaky-suppressions.json`. Test entries live in `suppressions`; run entries live in
+`runSuppressions`.
 
-**Auto-expiry** — entries with an `expiresAt` date resurface in the main report after that date passes. Use this to
-force a re-check (e.g. 30 days after a backend fix is expected).
+**Test suppression** — identifies a failure by `file` + `it` (+ optional `context`) and carries `reason`, `ticket`,
+optional `expiresAt`.
+
+**Run suppression** — identifies a compromised ledger run by `commit` and carries `reason`, `ticket`, `suppressedAt`.
+Analysis removes matching runs before aggregating failures, pass rate, run history, action-required signals, and flaky
+classification. Use this for whole-run incidents such as CI outages or environment failures, not for individual test
+bugs.
+
+**Auto-expiry** — test entries with an `expiresAt` date resurface in the main report after that date passes. Use this
+to force a re-check (e.g. 30 days after a backend fix is expected).
 
 **Bypass** — `node scripts/analyze-flaky-tests.js --no-suppress` shows the full unfiltered report.
 
 ### Interactive CLI
 
 ```bash
-# Add suppressions — shows unsuppressed failures, multi-select, prompts for ticket/reason/expiry
-npm run results:suppress
+# Add test suppressions — shows unsuppressed failures, multi-select, prompts for ticket/reason/expiry
+npm run report:suppress
 
-# Remove suppressions — shows current entries, multi-select to unsuppress
-npm run results:unsuppress
+# Remove test suppressions — shows current entries, multi-select to unsuppress
+npm run report:unsuppress
 
-# Review — cleans expired entries, shows status summary, offers add/remove
-npm run results:review
+# Add run suppressions — shows recent ledger runs, multi-select, prompts for incident/reason
+npm run report:suppress-run
+
+# Remove run suppressions — shows current run entries, multi-select to restore
+npm run report:unsuppress-run
+
+# Review — cleans expired test entries, shows status summary, offers test/run add/remove
+npm run report:review
 ```
 
-Select tests that share a common reason and ticket in one session. Run again for a different group.
+Select tests or runs that share a common reason and ticket in one session. Run again for a different group.
 
 ### Manual editing
 
-Add entries directly to `scripts/flaky-suppressions.json`:
+Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
 
 ```json
 {
-  "file": "audit.scoring-question-categories.api.spec.js",
-  "it": "Scoring.QuestionCategories.GET: Then return a 200 status code and audit score data",
-  "reason": "Backend scoring endpoint intermittent 500",
-  "ticket": "BUG-API-12",
-  "suppressedAt": "2026-07-14",
-  "expiresAt": "2026-08-14"
+  "suppressions": [
+    {
+      "file": "audit.scoring-question-categories.api.spec.js",
+      "it": "Scoring.QuestionCategories.GET: Then return a 200 status code and audit score data",
+      "reason": "Backend scoring endpoint intermittent 500",
+      "ticket": "BUG-API-12",
+      "suppressedAt": "2026-07-14",
+      "expiresAt": "2026-08-14"
+    }
+  ],
+  "runSuppressions": [
+    {
+      "commit": "f24924d",
+      "reason": "CI environment outage — run not representative",
+      "ticket": "OPS-42",
+      "suppressedAt": "2026-07-15"
+    }
+  ]
 }
 ```
 
@@ -177,7 +204,8 @@ The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
 - **Rare failures** — one-off failures.
 - **Error patterns** — recurring error messages across multiple tests.
 - **Run history** — last 20 runs with per-run stats.
-- **Suppressed** — known issues with linked ticket, shown for reference only.
+- **Suppressed** — known test issues with linked ticket, shown for reference only. Run suppressions are excluded before
+  report sections are generated.
 
 ## CI integration
 
@@ -186,7 +214,7 @@ committing, and pushing to `test-results` internally via git plumbing.
 
 ```yaml
 - script: |
-    CI=true npm run results:collect
+    CI=true node scripts/collect-test-results.js
   displayName: 'Collect Test Results'
   condition: always()
 ```

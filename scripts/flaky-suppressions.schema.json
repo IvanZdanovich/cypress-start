@@ -46,8 +46,35 @@
         },
         "additionalProperties": false
       }
+    },
+    "runSuppressions": {
+      "type": "array",
+      "description": "Entire CI runs to exclude from all stats and failure aggregation (e.g. environment outages that compromised the whole run).",
+      "items": {
+        "type": "object",
+        "required": ["commit", "reason", "ticket"],
+        "properties": {
+          "commit": {
+            "type": "string",
+            "description": "Short SHA of the CI commit whose run was compromised (must match the value stored in the ledger)"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the entire run is excluded (e.g., 'CI environment outage — all tests timed out')"
+          },
+          "ticket": {
+            "type": "string",
+            "description": "Linked ticket or incident ID"
+          },
+          "suppressedAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the run suppression was added"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false
 }
-

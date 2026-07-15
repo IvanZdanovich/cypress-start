@@ -120,15 +120,18 @@ function failureKey(failure) {
  * Returns an array of active (non-expired) suppression entries.
  */
 function loadSuppressions() {
-  if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return [];
+  if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return { testSuppressions: [], runCommits: new Set() };
 
   try {
     const data = JSON.parse(fs.readFileSync(SUPPRESSIONS_PATH, 'utf8'));
     const today = new Date().toISOString().slice(0, 10);
 
-    return (data.suppressions || []).filter((s) => !s.expiresAt || s.expiresAt >= today);
+    const testSuppressions = (data.suppressions || []).filter((s) => !s.expiresAt || s.expiresAt >= today);
+    const runCommits = new Set((data.runSuppressions || []).map((r) => r.commit));
+
+    return { testSuppressions, runCommits };
   } catch {
-    return [];
+    return { testSuppressions: [], runCommits: new Set() };
   }
 }
 
@@ -536,8 +539,8 @@ function main() {
   }
 
   const fullFailMap = aggregateFailures(runs);
-  const suppressions = loadSuppressions();
-  const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, suppressions);
+  const { testSuppressions } = loadSuppressions();
+  const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, testSuppressions);
   const report = generateReport(runs, failMap, suppressedMap);
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });

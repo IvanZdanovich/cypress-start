@@ -1,33 +1,6 @@
 {
   "$schema": "./flaky-suppressions.schema.json",
-  "$comment": "Suppress known/reviewed failures from the flaky-test report. Each entry silences a specific test identified by file + context + it title. Suppressed tests appear in a collapsed section at the bottom of the report instead of polluting the actionable sections.",
-  "suppressions": [
-    {
-      "file": "cypress/integration/api/audits.filters.api.spec.js",
-      "it": "Audits.Filters.RetrieveAllAudits.GET: Then returns only audits scheduled for today",
-      "reason": "gfdgfdgd",
-      "ticket": "dfgfd",
-      "suppressedAt": "2026-07-14",
-      "context": "Audits.Filters: Given Audit Types, Audit Rounds, Templates and Audits are created > Audits.Filters.RetrieveAllAudits.GET: When filtering with fromDate and toDate both set to today",
-      "expiresAt": "2026-08-23"
-    },
-    {
-      "file": "cypress/integration/api/setting-action-priority.api.spec.js",
-      "it": "SettingActionPriority.Group.Get.GET: Then return all Action Priorities with 200 status code",
-      "reason": "gfdgfdgd",
-      "ticket": "dfgfd",
-      "suppressedAt": "2026-07-14",
-      "context": "SettingActionPriority: Given the user needs to manage action priorities > SettingActionPriority.Group.Get.GET: When group user gets all Action Priorities",
-      "expiresAt": "2026-08-23"
-    },
-    {
-      "file": "cypress/integration/api/audit.scoring-basic.api.spec.js",
-      "it": "Scoring.Basic.GET: Then return a 200 status code and audit score data in body",
-      "reason": "gfdgfdgd",
-      "ticket": "dfgfd",
-      "suppressedAt": "2026-07-14",
-      "context": "Scoring: Given Audit round, Audit type, Template with Basic scoring, Sections, Questions, Audit are created > Scoring.Basic.GET: When the audit has NA answer for Checkbox question",
-      "expiresAt": "2026-08-23"
-    }
-  ]
+  "$comment": "Suppress known/reviewed failures from the flaky-test report. `suppressions` silences a specific test (file + context + it). `runSuppressions` excludes an entire CI run by commit SHA — use when an environment outage compromises all stats for a run.",
+  "suppressions": [],
+  "runSuppressions": []
 }

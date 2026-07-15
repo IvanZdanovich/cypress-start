@@ -17,6 +17,8 @@
     "test": "cypress run --headless",
     "test:parallel": "node scripts/parallel-cypress-runner.js",
     "lint": "eslint . --format stylish --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "gen:l10n-types": "node scripts/gen-l10n-types.js",
     "gen:colours-types": "node scripts/gen-colours-types.js",
     "hooks:setup": "node scripts/setup-git-hooks.js",
@@ -29,6 +31,8 @@
     "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
     "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
     "report:unsuppress": "node scripts/manage-flaky-suppressions.js --remove",
+    "report:suppress-run": "node scripts/manage-flaky-suppressions.js --add-runs",
+    "report:unsuppress-run": "node scripts/manage-flaky-suppressions.js --remove-runs",
     "report:review": "node scripts/manage-flaky-suppressions.js --review"
   },
   "private": false,
