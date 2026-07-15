@@ -1,0 +1,7 @@
+node_modules
+dist
+cypress/reports
+cypress/localization/l10n.json
+cypress/colours/colours.json
+cypress/support/l10n.d.ts
+cypress/support/colours.d.ts
