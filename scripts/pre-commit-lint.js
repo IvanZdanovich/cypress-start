@@ -105,27 +105,28 @@ function getStagedJsFiles(repoRoot) {
 }
 
 /**
- * Run a sync script (colours or localization) in --check mode.
+ * Run a sync check (colours or localization) in --check mode.
+ * `checkArgs` are the args that run the check; `fixCommand` is shown on failure.
  * Prints its output inline and returns true if it passed.
  */
-function runSyncCheck(scriptPath, label) {
+function runSyncCheck(scriptPath, checkArgs, fixCommand, label) {
   console.log(`\nRunning ${label} sync check...`);
-  const result = spawnSync(nodeExecutable, [scriptPath, '--check'], { encoding: 'utf8', cwd: process.cwd(), env: sanitizedEnv });
+  const result = spawnSync(nodeExecutable, [scriptPath, ...checkArgs], { encoding: 'utf8', cwd: process.cwd(), env: sanitizedEnv });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   const passed = result.status === 0;
   if (!passed) {
-    console.error(`\nFAIL ${label} sync check failed — run \`node ${path.relative(process.cwd(), scriptPath)}\` to auto-fix.\n`);
+    console.error(`\nFAIL ${label} sync check failed — run \`${fixCommand}\` to auto-fix.\n`);
   }
   return passed;
 }
 
 async function run() {
   // ── Step 0: File-sync checks (colours & localization) ────────────────────
-  const coloursScript = path.join(__dirname, 'sync-colours.js');
-  const l10nScript = path.join(__dirname, 'sync-localization.js');
-  const coloursPassed = runSyncCheck(coloursScript, 'Colours');
-  const l10nPassed = runSyncCheck(l10nScript, 'Localization');
+  const coloursScript = path.join(__dirname, 'colours.js');
+  const l10nScript = path.join(__dirname, 'l10n.js');
+  const coloursPassed = runSyncCheck(coloursScript, ['sync', '--check'], `node ${path.relative(process.cwd(), coloursScript)} sync`, 'Colours');
+  const l10nPassed = runSyncCheck(l10nScript, ['sync', '--check'], `node ${path.relative(process.cwd(), l10nScript)} sync`, 'Localization');
   if (!coloursPassed || !l10nPassed) process.exit(1);
 
   // ── Step 1: Collect staged files only ────────────────────────────────────

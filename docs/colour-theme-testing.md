@@ -17,8 +17,13 @@ cy.get(auditPerformPage.questionList.compliantButton).should('have.css', 'backgr
 
 ```bash
 COLOUR_THEME=default npm run pretest      # select theme + regenerate types
-npm run gen:colours-types                  # regenerate types on demand
+npm run colours:gen-types                  # regenerate types on demand
+npm run colours add <key> <value>          # add a key to every theme file (interactive if no args)
+npm run colours remove <key>               # remove a key from every theme file
+npm run colours sync                       # align theme files (add missing, sort)
 ```
+
+All colour operations run through the single `scripts/colours.js` CLI (`node scripts/colours.js help`).
 
 ## Source of truth
 

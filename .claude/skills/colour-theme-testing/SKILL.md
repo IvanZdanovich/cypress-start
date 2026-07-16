@@ -15,7 +15,7 @@ TRACEABILITY: every rename maps exactly one old key to one new key with all usag
 ## File model
 
 THEME_FILES: one flat JSON per theme at `cypress/colours/{theme}-theme-colours.json`, entries `"dotted.key": "rgb(…)"`, no nested objects — these are the hand-edited source of truth
-ACTIVE_MAP: pretest copies the `COLOUR_THEME`-selected theme file to the generated `cypress/colours/colours.json`, exposed as the global `colours` — never hand-edit `colours.json`, it is overwritten by `scripts/copy-colours.js`
+ACTIVE_MAP: pretest copies the `COLOUR_THEME`-selected theme file to the generated `cypress/colours/colours.json`, exposed as the global `colours` — never hand-edit `colours.json`, it is overwritten by `node scripts/colours.js activate`
 TYPED_UNION: `cypress/support/colours.d.ts` types `colours` as `Record<ColourKey, string>`, generated from the active map by REGEN
 
 ## Signals to operation
@@ -40,12 +40,24 @@ STATE_SUFFIXES: visual state of the component — `compliant`, `nonCompliant`, `
 
 ## Maintenance operations
 
-ADD_KEY: name per grammar under the owning component scope → insert into every `cypress/colours/*-theme-colours.json` in sorted position → REGEN → USAGES
-RENAME_KEY: pick the new key per grammar → rename the entry in every theme file, keeping sort order → update all `colours['old']` to `colours['new']` in one pass → REGEN
-REMOVE_KEY: confirm no usage in specs, commands, or frontend → delete from every theme file → REGEN
-DEDUPE: keep one key per visual concept → point all usages at the survivor → delete the redundant keys → REGEN
-REGEN: run `npm run gen:colours-types` (also runs in `pretest`) to refresh `cypress/support/colours.d.ts` — the `ColourKey` union that gives autocomplete and turns a bad key into a type error
+ADD_KEY: name per grammar under the owning component scope → run CLI_ADD so every theme file receives the key in sorted position → REGEN → USAGES
+RENAME_KEY: pick the new key per grammar → run CLI_RENAME so every theme file changes consistently → update all `colours['old']` to `colours['new']` in one pass → REGEN
+REMOVE_KEY: confirm no usage in specs, commands, or frontend → run CLI_REMOVE so every theme file loses the key consistently → REGEN
+DEDUPE: keep one key per visual concept → point all usages at the survivor → run CLI_REMOVE for redundant keys → REGEN
+REGEN: run `npm run colours:gen-types` (also runs in `pretest`) to refresh `cypress/support/colours.d.ts` — the `ColourKey` union that gives autocomplete and turns a bad key into a type error
 USAGES: specs and commands read colours as `colours['<key>']`; enumerate a namespace by prefix filter, never with dot-access `colours.<PROP>` or dynamically built keys
+
+## CLI commands
+
+CLI_ADD: use `node scripts/colours.js add <key> <default-value> [--<theme>="value"]` for non-interactive agent changes; example `node scripts/colours.js add button.marked "rgb(20, 163, 139)"`
+CLI_REMOVE: use `node scripts/colours.js remove <key> [<key> ...]` for non-interactive deletion; example `node scripts/colours.js remove toaster.error`
+CLI_RENAME: use `node scripts/colours.js rename <old-key> <new-key>` for one-to-one key renames; use `--dry-run` before updating spec usages
+CLI_LIST: use `node scripts/colours.js list --prefix=<prefix> --json` to discover existing reusable keys before adding a new visual concept
+CLI_VALIDATE: use `node scripts/colours.js validate` for read-only grammar, flatness, sort, prefix, and value checks
+CLI_SYNC: use `node scripts/colours.js sync --check` before edits to detect drift and `node scripts/colours.js sync` to sort and backfill missing theme keys
+CLI_DRY_RUN_JSON: append `--dry-run` to preview add, remove, rename, or sync without writes; append `--json` when an agent needs machine-readable output
+CLI_TYPES: use `npm run colours:gen-types` after add, remove, rename, or sync; use `COLOUR_THEME=default npm run pretest` when the active map also needs refreshing
+CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run colours:add -- checkbox.compliant "rgb(20, 163, 139)"`, `npm run colours:rename -- button.marked button.primary.marked --dry-run`, and `npm run colours:list -- --prefix=button. --json`
 
 ```js
 // lookup returns the active-theme value for the flat key

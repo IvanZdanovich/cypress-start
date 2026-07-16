@@ -16,7 +16,7 @@ NORMALIZATION: inconsistent source spellings resolve to one form per concept —
 ## File model
 
 LOCALE_FILES: one flat JSON per language at `cypress/localization/{lang}-localization.json`, entries `"dotted.key": "value"`, no nested objects — these are the hand-edited source of truth
-ACTIVE_MAP: pretest copies the `LANGUAGE`-selected locale file to the generated `cypress/localization/l10n.json`, exposed as the global `l10n` — never hand-edit `l10n.json`, it is overwritten by `scripts/copy-localization.js`
+ACTIVE_MAP: pretest copies the `LANGUAGE`-selected locale file to the generated `cypress/localization/l10n.json`, exposed as the global `l10n` — never hand-edit `l10n.json`, it is overwritten by `node scripts/l10n.js activate`
 TYPED_UNION: `cypress/support/l10n.d.ts` types `l10n` as `Record<L10nKey, string>`, generated from the active map by REGEN
 
 ## Signals to operation
@@ -53,13 +53,25 @@ COMMON_TOAST: generic toast titles to `common.toast.title.*`
 
 ## Maintenance operations
 
-ADD_KEY: name per grammar under the owning `feature.area` → apply PROMOTION_TEST, reusing an existing key when the concept exists → insert into every `cypress/localization/*-localization.json` in sorted position → REGEN → USAGES
-RENAME_KEY: pick the new key per grammar → rename the entry in every locale file, keeping sort order → update all `l10n['old']` to `l10n['new']` in one pass → REGEN
-REMOVE_KEY: confirm no usage in specs, commands, or frontend → delete from every locale file → REGEN
-DEDUPE: keep one key per concept → promote per PROMOTION_TEST when shared → point all usages at the survivor → delete the redundant keys → REGEN
+ADD_KEY: name per grammar under the owning `feature.area` → apply PROMOTION_TEST, reusing an existing key when the concept exists → run CLI_ADD so every locale file receives the key in sorted position → REGEN → USAGES
+RENAME_KEY: pick the new key per grammar → run CLI_RENAME so every locale file changes consistently → update all `l10n['old']` to `l10n['new']` in one pass → REGEN
+REMOVE_KEY: confirm no usage in specs, commands, or frontend → run CLI_REMOVE so every locale file loses the key consistently → REGEN
+DEDUPE: keep one key per concept → promote per PROMOTION_TEST when shared → point all usages at the survivor → run CLI_REMOVE for redundant keys → REGEN
 NORMALIZE: one spelling per concept — `toast` over `toaster`/`Toastr`, `common.list.noResults` over result-not-found variants, `create` over `creation`, `{{var}}` over `{var}` — and log real wording defects in `bug-log/`
-REGEN: run `npm run gen:l10n-types` (also runs in `pretest`) to refresh `cypress/support/l10n.d.ts` — the `L10nKey` union that gives autocomplete and turns a bad key into a type error
+REGEN: run `npm run l10n:gen-types` (also runs in `pretest`) to refresh `cypress/support/l10n.d.ts` — the `L10nKey` union that gives autocomplete and turns a bad key into a type error
 USAGES: specs and commands read strings as `l10n['<key>']`; enumerate a namespace by prefix filter, never with a `t()`/`tGroup()` wrapper or nested `l10n.<path>` access
+
+## CLI commands
+
+CLI_ADD: use `node scripts/l10n.js add <key> <english-value> [--<lang>="value"]` for non-interactive agent changes; example `node scripts/l10n.js add common.button.save "Save"`
+CLI_REMOVE: use `node scripts/l10n.js remove <key> [<key> ...]` for non-interactive deletion; example `node scripts/l10n.js remove common.button.exportPdf`
+CLI_RENAME: use `node scripts/l10n.js rename <old-key> <new-key>` for one-to-one key renames; use `--dry-run` before updating spec usages
+CLI_LIST: use `node scripts/l10n.js list --prefix=<prefix> --json` to discover existing reusable keys before adding a new concept
+CLI_VALIDATE: use `node scripts/l10n.js validate` for read-only grammar, flatness, sort, prefix, and value checks
+CLI_SYNC: use `node scripts/l10n.js sync --check` before edits to detect drift and `node scripts/l10n.js sync` to sort and backfill missing locale keys
+CLI_DRY_RUN_JSON: append `--dry-run` to preview add, remove, rename, or sync without writes; append `--json` when an agent needs machine-readable output
+CLI_TYPES: use `npm run l10n:gen-types` after add, remove, rename, or sync; use `LANGUAGE=en npm run pretest` when the active map also needs refreshing
+CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run l10n:add -- auditList.title "Audits"`, `npm run l10n:rename -- auditList.title auditList.page.title --dry-run`, and `npm run l10n:list -- --prefix=common.button. --json`
 
 ```js
 // lookup returns the active-language value for the flat key

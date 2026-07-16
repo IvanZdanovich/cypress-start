@@ -16,8 +16,13 @@ cy.get(auditType.creation.title).should('have.text', l10n['auditType.create.titl
 
 ```bash
 LANGUAGE=en npm run pretest      # select language + regenerate types
-npm run gen:l10n-types           # regenerate types on demand
+npm run l10n types               # regenerate types on demand
+npm run l10n add <key> <value>   # add a key to every locale file (interactive if no args)
+npm run l10n remove <key>        # remove a key from every locale file
+npm run l10n sync                # align locale files (add missing, sort)
 ```
+
+All localization operations run through the single `scripts/l10n.js` CLI (`node scripts/l10n.js help`).
 
 ## Source of truth
 
