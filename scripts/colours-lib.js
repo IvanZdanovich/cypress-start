@@ -15,7 +15,7 @@ const { createFlatMapLib } = require('./flat-map-lib');
 const ROOT = path.join(__dirname, '..');
 
 // Declared component scopes — kept in sync with the colour-theme-testing skill.
-const COMPONENT_SCOPES = ['button', 'checkbox', 'commentIcon', 'text', 'toaster'];
+const COMPONENT_SCOPES = ['button', 'checkbox', 'text', 'toaster'];
 
 // Accepted CSS colour value forms: rgb(), rgba(), or #hex (3 or 6 digits).
 const COLOUR_VALUE = /^(rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)|rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)|#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))$/;

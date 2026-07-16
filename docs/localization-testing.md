@@ -4,7 +4,7 @@ Tests assert localized UI text through the global `l10n` map, never hardcoded st
 and shared byte-for-byte with the frontend — the key string is the contract.
 
 ```javascript
-cy.get(auditType.creation.title).should('have.text', l10n['auditType.create.title']);
+cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
 ```
 
 ## How it works

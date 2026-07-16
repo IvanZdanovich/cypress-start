@@ -15,7 +15,7 @@ const { createFlatMapLib } = require('./flat-map-lib');
 const ROOT = path.join(__dirname, '..');
 
 // Declared feature scopes — kept in sync with the localization-testing skill.
-const FEATURE_SCOPES = ['auditList', 'auditCreate', 'auditView', 'auditPerform', 'auditRound', 'auditType', 'action', 'actionPriority', 'questionCategory', 'questionPriority', 'template', 'editTemplate', 'translationSettings', 'common'];
+const FEATURE_SCOPES = ['common'];
 
 const lib = createFlatMapLib({
   dir: path.join(ROOT, 'cypress', 'localization'),

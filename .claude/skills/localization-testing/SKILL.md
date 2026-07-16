@@ -36,7 +36,6 @@ LANGUAGE_SWITCH: a spec asserts text after changing language → run with the ta
 
 SHAPE: `feature.area.element[.role]`, `lowerCamelCase` segments, dot-joined
 DEPTH: 3-4 segments preferred, 5 the ceiling for table headers and option groups
-FEATURE_SCOPES: `auditList`, `auditCreate`, `auditView`, `auditPerform`, `auditRound`, `auditType`, `action`, `actionPriority`, `questionCategory`, `questionPriority`, `template`, `editTemplate`, `translationSettings`, `common`
 ROLE_PRESENTATIONAL: `title`, `label`, `placeholder`, `hint`, `tooltip`, `message`, `option`, `column`, `tab`, `empty`
 ROLE_VALIDATION: `required`, `maxLength`, `minLength`, `duplicate`, `invalid`, `specialChars`
 FIELD_CLUSTER: all strings of one field grouped under `feature.area.field.*`
@@ -71,11 +70,11 @@ CLI_VALIDATE: use `node scripts/l10n.js validate` for read-only grammar, flatnes
 CLI_SYNC: use `node scripts/l10n.js sync --check` before edits to detect drift and `node scripts/l10n.js sync` to sort and backfill missing locale keys
 CLI_DRY_RUN_JSON: append `--dry-run` to preview add, remove, rename, or sync without writes; append `--json` when an agent needs machine-readable output
 CLI_TYPES: use `npm run l10n:gen-types` after add, remove, rename, or sync; use `LANGUAGE=en npm run pretest` when the active map also needs refreshing
-CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run l10n:add -- auditList.title "Audits"`, `npm run l10n:rename -- auditList.title auditList.page.title --dry-run`, and `npm run l10n:list -- --prefix=common.button. --json`
+CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run l10n:add -- itemList.title "items"`, `npm run l10n:rename -- itemList.title itemList.page.title --dry-run`, and `npm run l10n:list -- --prefix=common.button. --json`
 
 ```js
 // lookup returns the active-language value for the flat key
-l10n['auditList.title']
+l10n['itemList.title']
 // enumerate a namespace for counting or listing options
 Object.keys(l10n).filter((key) => key.startsWith('common.status.'))
 ```

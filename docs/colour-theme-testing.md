@@ -4,7 +4,7 @@ Tests assert CSS colour values through the global `colours` map, never hardcoded
 dot-namespaced, and typed — a missing or renamed key is a dev-time error.
 
 ```javascript
-cy.get(auditPerformPage.questionList.compliantButton).should('have.css', 'background-color', colours['button.compliant']);
+cy.get(inventoryPage.card.add).should('have.css', 'background-color', colours['button.compliant']);
 ```
 
 ## How it works

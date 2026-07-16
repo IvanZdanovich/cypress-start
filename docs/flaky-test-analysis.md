@@ -174,9 +174,9 @@ Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
 {
   "suppressions": [
     {
-      "file": "audit.scoring-question-categories.api.spec.js",
-      "it": "Scoring.QuestionCategories.GET: Then return a 200 status code and audit score data",
-      "reason": "Backend scoring endpoint intermittent 500",
+      "file": "module.submodule.api.spec.js",
+      "it": "Module.SubModule.GET: Then return a 200 status code and data",
+      "reason": "Backend endpoint intermittent 500",
       "ticket": "BUG-API-12",
       "suppressedAt": "2026-07-14",
       "expiresAt": "2026-08-14"
@@ -184,7 +184,7 @@ Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
   ],
   "runSuppressions": [
     {
-      "commit": "f24924d",
+      "commit": "f84924c",
       "reason": "CI environment outage — run not representative",
       "ticket": "OPS-42",
       "suppressedAt": "2026-07-15"

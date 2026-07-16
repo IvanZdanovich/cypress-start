@@ -22,7 +22,7 @@
  *
  * Examples:
  *   node scripts/l10n.js add common.button.save "Save"
- *   node scripts/l10n.js rename auditList.title auditList.page.title --dry-run
+ *   node scripts/l10n.js rename itemList.title itemList.page.title --dry-run
  *   node scripts/l10n.js list --prefix=common.button. --json
  *   node scripts/l10n.js remove common.button.exportPdf
  *   node scripts/l10n.js validate
