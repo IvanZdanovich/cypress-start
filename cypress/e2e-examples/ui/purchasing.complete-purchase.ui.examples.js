@@ -1,4 +1,5 @@
 import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
+import { BUGGY_PRODUCT } from '../../constants/ui/product-catalog.ui.constants';
 
 export const completePurchase__examples = {
   indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, PRODUCT_COUNT.total), PRODUCT_COUNT.total - 1),
@@ -8,9 +9,5 @@ export const completePurchase__examples = {
     lastName: utils.generateRandomString(utils.getRandomNumber(5, 15)),
     zip: utils.generateRandomString(5, '0123456789'),
   },
-  buggyProductData: {
-    wrongTitle: 'Test.allTheThings() T-Shirt (Red)',
-    correctTitle: 'Sauce Labs T-Shirt (Red)',
-    wrongDescription: 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.',
-  },
+  buggyProductData: BUGGY_PRODUCT,
 };

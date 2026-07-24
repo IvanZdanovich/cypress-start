@@ -18,10 +18,10 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.title).should('have.text', l10n['loginPage.title']).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.formField.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.formField.passwordType).and('have.value', examples.formField.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
       cy.get(loginPage.login).should('have.value', l10n['loginPage.form.login']).and('be.visible').and('be.enabled');
@@ -46,10 +46,10 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
       cy.get(loginPage.title).should('have.text', l10n['loginPage.title']).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Username field with placeholder and empty value', () => {
-      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.username).should('have.attr', 'placeholder', l10n['loginPage.form.username']).and('have.value', examples.formField.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see Password field with placeholder, password input and empty value', () => {
-      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.field.passwordType).and('have.value', examples.field.emptyValue).and('be.visible');
+      cy.get(loginPage.password).should('have.attr', 'placeholder', l10n['loginPage.form.password']).and('have.attr', 'type', examples.formField.passwordType).and('have.value', examples.formField.emptyValue).and('be.visible');
     });
     it('LoginPage.STANDARD: Then user should see authenticate button', () => {
       cy.get(loginPage.login).should('have.value', l10n['loginPage.form.login']).and('be.visible').and('be.enabled');

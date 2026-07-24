@@ -1,5 +1,5 @@
 export const loginPage__examples = {
-  field: {
+  formField: {
     emptyValue: '',
     passwordType: 'password',
   },
