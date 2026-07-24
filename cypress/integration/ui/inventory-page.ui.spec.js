@@ -172,7 +172,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         });
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
     });
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n['inventoryPage.remove']).and('be.visible');
@@ -189,7 +189,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         });
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[1]).find(inventoryPage.card.remove).should('have.text', l10n['inventoryPage.remove']).and('be.visible');
@@ -235,7 +235,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
     it('InventoryPage.Card.STANDARD: Then the remove button is displayed for the products added to the cart', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n['inventoryPage.remove']).and('be.visible');
@@ -248,7 +248,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.inventoryPage__removeProductFromCart(examples.indicesOfProducts[0]);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
     });
     it('InventoryPage.Card.STANDARD: Then the remove button is changed to add button', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.add).should('have.text', l10n['inventoryPage.addToCart']).and('be.visible');
@@ -260,7 +260,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.inventoryPage__addProductToCart(examples.indicesOfProducts[0]);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
     it('InventoryPage.Card.STANDARD: Then the add to cart button is changed to remove button', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n['inventoryPage.remove']).and('be.visible');
@@ -307,7 +307,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.twoProducts);
     });
     it('InventoryPage.Card.STANDARD: Then the remove button is displayed for the products added to the cart', () => {
       cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[0]).find(inventoryPage.card.remove).should('have.text', l10n['inventoryPage.remove']).and('be.visible');
@@ -321,7 +321,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.inventoryPage__removeProductFromCart(examples.indicesOfProducts[1]);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button badge is not existed', () => {
-      cy.inventoryPage__verifyCartBadge(examples.cartBadgeCounts.empty);
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.empty);
     });
     it('InventoryPage.Card.STANDARD: Then the all the product cards have add to cart buttons', () => {
       cy.get(inventoryPage.card.add).should('have.length', PRODUCT_COUNT.total);

@@ -5,6 +5,7 @@ import '../commands/ui/inventory-page.ui.commands';
 import '../commands/ui/footer-comp.ui.commands';
 import '../commands/ui/cart-page.ui.commands';
 import '../commands/ui/checkout-page.ui.commands';
+import '../commands/ui/checkout-overview-page.ui.commands';
 import '../commands/api/common.api.commands';
 import '../commands/api/restful-booker.api.commands';
 

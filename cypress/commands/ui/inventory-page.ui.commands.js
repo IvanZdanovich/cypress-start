@@ -25,14 +25,6 @@ Cypress.Commands.add('inventoryPage__removeProductFromCart', (productIndex) => {
   cy.get(inventoryPage.cards).eq(productIndex).find(inventoryPage.card.remove).click();
 });
 
-Cypress.Commands.add('inventoryPage__verifyCartBadge', (expectedCount) => {
-  if (expectedCount === 0) {
-    cy.get(headerComp.cartBadge).should('not.exist');
-  } else {
-    cy.get(headerComp.cartBadge).should('have.text', String(expectedCount)).and('be.visible');
-  }
-});
-
 Cypress.Commands.add('inventoryPage__verifyProductImages', () => {
   cy.get(inventoryPage.card.image).each(($image) => {
     cy.wrap($image).should('be.visible').and('have.attr', 'src').and('not.be.empty');
