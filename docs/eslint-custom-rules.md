@@ -53,5 +53,5 @@ Update that skill (not this page) whenever a rule's behaviour changes.
 
 ## Related
 
-- [Constraints → Examples → Specs](requirements-examples-approach.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)
 - [Coverage gap analysis](coverage-gap-analysis.md)

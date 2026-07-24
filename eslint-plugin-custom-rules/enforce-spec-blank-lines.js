@@ -37,6 +37,10 @@ const HOOKS = new Set(['before', 'beforeEach', 'after', 'afterEach']);
 const TESTS = new Set(['it', 'test', 'specify']);
 const CONTEXTS = new Set(['context', 'describe']);
 
+// Compiled once at module scope — countTrueBlankLines() runs for every pair of
+// sibling statements in every spec file, so recompiling this per call is pure waste.
+const BLANK_LINE = /^\s*$/;
+
 /**
  * Counts the number of TRULY blank lines (whitespace-only) in the raw text
  * that sits between two AST nodes.
@@ -53,7 +57,7 @@ function countTrueBlankLines(textBetween) {
   // lines[lines.length-1] → indentation of the current node's line
   let count = 0;
   for (let i = 1; i < lines.length - 1; i++) {
-    if (/^\s*$/.test(lines[i])) {
+    if (BLANK_LINE.test(lines[i])) {
       count++;
     }
   }

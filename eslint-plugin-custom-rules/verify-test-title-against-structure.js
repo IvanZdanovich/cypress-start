@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { readParsedCached } = require('./_scan-cache.js');
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -44,8 +45,14 @@ const _currentStructures = {
   e2e: null,
 };
 
-let _structuresBuilt = false;
 let _exitHandlerRegistered = false;
+
+// Per-file caches keyed by mtime — structures are rebuilt cheaply on every run,
+// but each unchanged file is read+parsed only once across the daemon's lifetime.
+/** @type {Map<string, {mtimeMs: number, value: Set<string>}>} */
+const _testFileCache = new Map();
+/** @type {Map<string, {mtimeMs: number, value: object}>} */
+const _structureJsonCache = new Map();
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -144,25 +151,24 @@ function extractTitlesFromFile(content) {
 
 /**
  * Process a single test file and extract structure paths.
+ * The parsed path set is cached and re-validated by the file's mtime.
  */
 function processTestFile(filePath) {
-  const paths = new Set();
-  let content;
-  try {
-    content = fs.readFileSync(filePath, 'utf8');
-  } catch {
-    return paths;
-  }
-  const titles = extractTitlesFromFile(content);
-  for (const { type, title } of titles) {
-    if (title.startsWith('STATE:')) continue;
-    const partsToExclude = type === 'describe' ? 2 : 0;
-    const structurePath = extractStructurePath(title, partsToExclude);
-    if (structurePath) {
-      paths.add(structurePath);
-    }
-  }
-  return paths;
+  return (
+    readParsedCached(_testFileCache, filePath, (content) => {
+      const paths = new Set();
+      const titles = extractTitlesFromFile(content);
+      for (const { type, title } of titles) {
+        if (title.startsWith('STATE:')) continue;
+        const partsToExclude = type === 'describe' ? 2 : 0;
+        const structurePath = extractStructurePath(title, partsToExclude);
+        if (structurePath) {
+          paths.add(structurePath);
+        }
+      }
+      return paths;
+    }) || new Set()
+  );
 }
 
 /**
@@ -196,32 +202,34 @@ function buildStructureFromTests(testType) {
 }
 
 /**
- * Load current structure from disk.
+ * Load current structure from disk. Cached and re-validated by the file's mtime.
  */
 function loadCurrentStructure(testType) {
   const filePath = _expectedPaths[testType];
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    return {};
-  }
+  return (
+    readParsedCached(_structureJsonCache, filePath, (content) => {
+      try {
+        return JSON.parse(content);
+      } catch {
+        return {};
+      }
+    }) || {}
+  );
 }
 
 /**
- * Build all structures from test files (called once per ESLint run).
+ * Build all structures from test files.
+ *
+ * Runs on every rule invocation, but the underlying file reads/parses are
+ * mtime-cached — so unchanged files cost only a `stat`, while edited, added, or
+ * removed test files are picked up immediately. This replaces the previous
+ * build-once latch that made a long-lived ESLint daemon serve stale structures.
  */
 function buildAllStructures() {
-  if (_structuresBuilt) return;
-
   for (const testType of ['api', 'ui', 'e2e']) {
     _generatedStructures[testType] = buildStructureFromTests(testType);
     _currentStructures[testType] = loadCurrentStructure(testType);
   }
-
-  _structuresBuilt = true;
 }
 
 /**

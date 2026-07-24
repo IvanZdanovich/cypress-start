@@ -110,7 +110,6 @@ const UI_REPLACEMENTS = [
   [/\bpopup\b/gi, 'tooltip'],
   [/\bdialog\b/gi, 'modal'],
   [/\bloader\b/gi, 'spinner'],
-  [/\barea\b/gi, 'panel'],
   [/\balert\b/gi, 'notification'],
 ];
 

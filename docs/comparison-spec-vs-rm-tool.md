@@ -6,7 +6,7 @@ Two ways to keep requirements, test cases, and bugs in sync. This picks between 
   the requirement of record. A value lives in one layer and every other layer imports it:
   boundary in a constraint, named data in an example, requirement in a spec title + assertion.
   Bugs live in an issue tracker and are referenced from the spec via `req.bugs`.
-  See [Constraints → Examples → Specs](./requirements-examples-approach.md).
+  See [Constraints → Examples → Specs](constraints-examples-specs-approach.md).
 - **RM — a traditional requirements-management tool** (Jira + Xray, Zephyr, DOORS, Polarion).
   Requirements, test cases, and defects are separate records linked by a traceability matrix.
   The automated test is a *further* record, mapped back to the test-case record by a sync plugin.

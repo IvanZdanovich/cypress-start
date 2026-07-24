@@ -78,4 +78,4 @@ Example: 85% path coverage + 70% test coverage = 3 scenarios missing + 15 tests 
 ## Related
 
 - [ESLint custom rules](eslint-custom-rules.md) — `verify-test-title-against-structure`, title-pattern enforcement
-- [Constraints → Examples → Specs](requirements-examples-approach.md) — spec structure
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md) — spec structure

@@ -34,4 +34,4 @@ a human orientation.
 ## Related
 
 - [Localization](localization-testing.md)
-- [Constraints → Examples → Specs](requirements-examples-approach.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)

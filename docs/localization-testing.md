@@ -33,4 +33,4 @@ keys — this page is only a human orientation.
 ## Related
 
 - [Colour theme testing](colour-theme-testing.md)
-- [Constraints → Examples → Specs](requirements-examples-approach.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)

@@ -6,7 +6,7 @@
       <source media="(prefers-color-scheme: light)" srcset="./assets/cypress-logo-light.png">
       <img alt="Cypress Logo" src="./assets/cypress-logo-light.png">
     </picture>
-</p>
+</p>*
 
 ## Table of Contents
 
@@ -96,7 +96,7 @@ This framework includes examples of tests:
 - **The Spec Is the Requirement**: Tests follow a Constraints → Examples → Specs traceability model. Boundary values
   live in constraint files, named data instances in example files, and requirements as executable Given/When/Then titles
   in spec files. There are no separate requirement documents, mapping matrices, or test-management tools — the spec is
-  the single source of truth. ([docs](docs/requirements-examples-approach.md))
+  the single source of truth. ([docs](docs/constraints-examples-specs-approach.md))
 - **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
   provides a clear structure and naming conventions while using Gherkin‑style syntax to make tests self‑descriptive,
   readable, and understandable for non‑technical stakeholders.
@@ -251,8 +251,8 @@ completion.
 
 **Test Development:**
 
-- [Constraints → Examples → Specs](docs/requirements-examples-approach.md)
-- [CES vs. Traditional RM Tools](docs/approach-comparison-spec-vs-rm-tool.md)
+- [Constraints → Examples → Specs](docs/constraints-examples-specs-approach.md)
+- [CES vs. Traditional RM Tools](docs/comparison-spec-vs-rm-tool.md)
 - [FAQ](docs/faq.md)
 
 **Features & Tools:**
@@ -278,6 +278,7 @@ completion.
 
 ### Common Issues
 
+- **Sensitive data is not provided** Ensure dev-users.json and qa-users.json with credentials are provided in sensitive-data folder
 - **Pretest script fails:** Ensure you have the correct language and theme files in the appropriate directories.
 - **Test isolation issues:** Check that `testIsolation: false` is set on the relevant `describe` blocks.
 - **Localization errors:** Verify that the language file contains all required keys.

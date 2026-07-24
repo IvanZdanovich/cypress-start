@@ -141,7 +141,7 @@ They fragment documentation across systems, create artificial mapping, generate 
 integration complexity. Instead: specs under version control as single source of truth, with clear structure providing
 natural documentation and metrics.
 
-See [Approach comparison](approach-comparison-spec-vs-rm-tool.md).
+See [Approach comparison](comparison-spec-vs-rm-tool.md).
 
 ## 13. Why describe and skip non-implemented tests?
 
@@ -159,6 +159,6 @@ Benefits:
 
 ## Related
 
-- [Constraints → Examples → Specs](requirements-examples-approach.md)
-- [Approach comparison](approach-comparison-spec-vs-rm-tool.md)
-- [Requirements examples approach](requirements-examples-approach.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)
+- [Approach comparison](comparison-spec-vs-rm-tool.md)
+- [Requirements examples approach](constraints-examples-specs-approach.md)

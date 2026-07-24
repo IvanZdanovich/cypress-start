@@ -1,87 +1,45 @@
-const fs = require('fs');
 const path = require('path');
+const { walkCached, readParsedCached } = require('./_scan-cache.js');
 
 // ---------------------------------------------------------------------------
 // Module-level caches — persist for the entire ESLint process so directory
-// walking and file I/O are paid at most once per lint run.
+// walking and file I/O are paid at most once, yet are re-validated against the
+// filesystem via mtime so a long-lived ESLint daemon never serves stale results.
 // ---------------------------------------------------------------------------
 
-/** @type {string[] | null} */
-let cachedTestFilePaths = null;
+/** @type {{paths: string[]|null, dirMtimes: Map<string, number>|null}} */
+const fileListState = { paths: null, dirMtimes: null };
 
 /**
- * Per-file reference index.
- * null entry = file was unreadable (avoids repeated read attempts).
- * @type {Map<string, {pathSet: Set<string>} | null>}
+ * Per-file reference index, keyed by file path and validated by mtime.
+ * @type {Map<string, {mtimeMs: number, value: {pathSet: Set<string>}}>}
  */
 const cachedFileIndexes = new Map();
 
 // ---------------------------------------------------------------------------
 
 /**
- * Return (and cache) the sorted list of test/command JS files to scan.
- * The directory tree is walked only once per ESLint process.
+ * Return (and cache) the list of test/command JS files to scan.
+ * The directory tree is walked only when a scanned directory changes.
  * @param {string} workspaceRoot
  * @returns {string[]}
  */
 function getTestFilePaths(workspaceRoot) {
-  if (cachedTestFilePaths !== null) {
-    return cachedTestFilePaths;
-  }
-
   const testDirs = [path.join(workspaceRoot, 'cypress', 'integration'), path.join(workspaceRoot, 'cypress', 'e2e'), path.join(workspaceRoot, 'cypress', 'commands')];
-
-  const files = [];
-
-  function walkDirectory(dir) {
-    try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walkDirectory(fullPath);
-        } else if (entry.isFile() && /\.(js|cy\.js)$/.test(entry.name)) {
-          files.push(fullPath);
-        }
-      }
-    } catch {
-      // Skip directories that can't be read
-    }
-  }
-
-  testDirs.forEach((dir) => {
-    if (fs.existsSync(dir)) {
-      walkDirectory(dir);
-    }
-  });
-
-  cachedTestFilePaths = files;
-  return files;
+  return walkCached(fileListState, testDirs, (name) => /\.(js|cy\.js)$/.test(name));
 }
 
 /**
- * Build (and cache) a reference index for a single test/command file.
+ * Build a reference index for a single test/command file's content.
  *
  * pathSet contains every dotted-path reference found in the file PLUS all its
  * dot-prefixes (length ≥ 2), enabling O(1) Set.has() membership checks that
  * replicate the \b…\b word-boundary semantics of the original per-key regex.
  *
- * @param {string} filePath
- * @returns {{pathSet: Set<string>} | null}
+ * @param {string} content
+ * @returns {{pathSet: Set<string>}}
  */
-function buildFileIndex(filePath) {
-  if (cachedFileIndexes.has(filePath)) {
-    return cachedFileIndexes.get(filePath);
-  }
-
-  let content;
-  try {
-    content = fs.readFileSync(filePath, 'utf8');
-  } catch {
-    cachedFileIndexes.set(filePath, null);
-    return null;
-  }
-
+function parseSelectorIndex(content) {
   // Extract every `word.word[.word…]` chain and add the full path AND all its
   // prefixes (≥ 2 segments) so prefix lookups work correctly.
   // Uses incremental string building instead of slice+join per prefix.
@@ -97,9 +55,16 @@ function buildFileIndex(filePath) {
     }
   }
 
-  const index = { pathSet };
-  cachedFileIndexes.set(filePath, index);
-  return index;
+  return { pathSet };
+}
+
+/**
+ * Return the mtime-cached reference index for a test/command file.
+ * @param {string} filePath
+ * @returns {{pathSet: Set<string>} | null}
+ */
+function buildFileIndex(filePath) {
+  return readParsedCached(cachedFileIndexes, filePath, parseSelectorIndex);
 }
 
 // ---------------------------------------------------------------------------
