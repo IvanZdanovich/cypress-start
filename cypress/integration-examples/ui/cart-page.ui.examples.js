@@ -5,8 +5,6 @@ const _indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNum
 
 export const cartPage__examples = {
   indicesOfProducts: _indicesOfProducts,
-  randomIndex: utils.getRandomNumber(0, _indicesOfProducts.length - 1),
-  chosenProducts: [],
-  removedProductTitle: undefined,
+  randomIndex: utils.getRandomNumber(0, _indicesOfProducts.length),
   buggyProductData: BUGGY_PRODUCT,
 };

@@ -1,4 +1,4 @@
-import { LONG_STAY_MIN_DAYS, PRICE, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+import { FIELD_MAP, LONG_STAY_MIN_DAYS, PRICE, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
 
 const namePrefix = `RbBk_${utils.generateRandomString(6)}_`;
 
@@ -193,6 +193,8 @@ export const booking__examples = {
     // Pre-selected empty-string field; full payload composed inline so the case is fully visible.
     emptyStringField: {
       name: _emptyStringFieldName,
+      apiFieldName: FIELD_MAP[_emptyStringFieldName] ?? _emptyStringFieldName,
+      expectedValues: _emptyStringFieldName === 'additionalNeeds' ? ['', undefined, null] : [''],
       data: {
         bookingId: undefined,
         firstname: `${namePrefix}${utils.generateRandomString(4)}`,
@@ -239,6 +241,7 @@ export const booking__examples = {
     partialField: {
       name: _partialFieldName,
       value: _partialFieldValue,
+      apiFieldName: FIELD_MAP[_partialFieldName] ?? _partialFieldName,
       updateData: { [_partialFieldName]: _partialFieldValue },
     },
   },

@@ -1,7 +1,7 @@
 {
   "RestfulBooker": {
     "Auth": {
-      "GET": {}
+      "POST": {}
     },
     "Booking": {
       "Create": {

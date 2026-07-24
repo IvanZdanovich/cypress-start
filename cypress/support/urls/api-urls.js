@@ -17,7 +17,7 @@ const external = {
   linkedin: 'https://www.linkedin.com/company/sauce-labs/',
   linkedinBase: 'https://www.linkedin.com/',
   facebook: 'https://www.facebook.com/saucelabs',
-  twitter: 'https://x.com/saucelabs',
+  twitter: 'https://twitter.com/saucelabs',
 };
 
 export default {

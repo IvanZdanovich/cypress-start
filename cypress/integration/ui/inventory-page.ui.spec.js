@@ -1,9 +1,10 @@
 import { inventoryPage__examples as examples } from '../../integration-examples/ui/inventory-page.ui.examples';
-import { PRODUCT_COUNT, SORT_OPTIONS, DEFAULT_SORT } from '../../constants/ui/inventory-page.ui.constraints';
+import { PRODUCT_COUNT, SORT_OPTIONS, DEFAULT_SORT, PRICE_FORMAT } from '../../constants/ui/inventory-page.ui.constraints';
 import { ANIMATION } from '../../constants/ui/common.ui.constraints';
 
 describe('InventoryPage: Given STANDARD user on Inventory page, no products are added to cart', { testIsolation: false }, () => {
   let standardUser;
+  let chosenProducts = [];
 
   before(() => {
     cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
@@ -33,7 +34,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
-      cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
+      cy.get(footerComp.twitter).should('have.attr', 'href', urls.external.twitter).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('InventoryPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
       cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
@@ -59,12 +60,9 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it('InventoryPage.Card.STANDARD: Then each product card icon should be displayed', () => {
       cy.inventoryPage__verifyProductImages();
     });
-    it('InventoryPage.Card.STANDARD: Then each product card Price should be displayed', () => {
+    it('InventoryPage.Card.STANDARD: Then each product card Price should be displayed in currency format', () => {
       cy.get(inventoryPage.card.price).each(($price) => {
-        cy.wrap($price)
-          .should('be.visible')
-          .invoke('text')
-          .should('match', /^\$\d+\.\d{2}$/);
+        cy.wrap($price).should('be.visible').invoke('text').should('match', PRICE_FORMAT.pattern);
       });
     });
     it('InventoryPage.Card.STANDARD: Then each product card add to cart button should be displayed', () => {
@@ -103,7 +101,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.inventoryPage__selectSortOption(SORT_OPTIONS.nameDescending);
     });
-    it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
+    it('InventoryPage.STANDARD: Then sorting dropdown shows name descending as selected option', () => {
       cy.inventoryPage__verifySortingDropdown(SORT_OPTIONS.nameDescending);
     });
     it('InventoryPage.STANDARD: Then products are sorted by name descending', () => {
@@ -119,7 +117,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.inventoryPage__selectSortOption(SORT_OPTIONS.priceAscending);
     });
-    it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
+    it('InventoryPage.STANDARD: Then sorting dropdown shows price ascending as selected option', () => {
       cy.inventoryPage__verifySortingDropdown(SORT_OPTIONS.priceAscending);
     });
     it('InventoryPage.STANDARD: Then products are sorted by price ascending', () => {
@@ -134,7 +132,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.inventoryPage__selectSortOption(SORT_OPTIONS.priceDescending);
     });
-    it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
+    it('InventoryPage.STANDARD: Then sorting dropdown shows price descending as selected option', () => {
       cy.inventoryPage__verifySortingDropdown(SORT_OPTIONS.priceDescending);
     });
     it('InventoryPage.STANDARD: Then products are sorted by price descending', () => {
@@ -150,7 +148,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.inventoryPage__selectSortOption(SORT_OPTIONS.nameAscending);
     });
-    it('InventoryPage.STANDARD: Then default sorting dropdown with value', () => {
+    it('InventoryPage.STANDARD: Then sorting dropdown shows name ascending as selected option', () => {
       cy.inventoryPage__verifySortingDropdown(SORT_OPTIONS.nameAscending);
     });
     it('InventoryPage.STANDARD: Then products are sorted by name ascending', () => {
@@ -168,7 +166,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(inventoryPage.cards)
         .eq(examples.indicesOfProducts[0])
         .then(($card) => {
-          examples.chosenProducts.push({ title: $card.find(inventoryPage.card.title).text() });
+          chosenProducts.push({ title: $card.find(inventoryPage.card.title).text() });
         });
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
@@ -185,7 +183,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
       cy.get(inventoryPage.cards)
         .eq(examples.indicesOfProducts[1])
         .then(($card) => {
-          examples.chosenProducts.push({ title: $card.find(inventoryPage.card.title).text() });
+          chosenProducts.push({ title: $card.find(inventoryPage.card.title).text() });
         });
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
@@ -200,26 +198,14 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.get(headerComp.openCart).click();
     });
-    it('InventoryPage.STANDARD: Then user should be redirected to the Cart page', () => {
+    it('InventoryPage.STANDARD: Then user should be redirected to the Cart page URL', () => {
       cy.url().should('eq', urls.pages.cart);
+    });
+    it('InventoryPage.STANDARD: Then Cart page title is displayed', () => {
       cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('InventoryPage.Card.STANDARD: Then appropriate products are presented in the table', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
-      cy.get(cartPage.item.title).each(($title) => {
-        cy.wrap($title)
-          .invoke('text')
-          .then((title) => {
-            if (title === examples.buggyProductData.wrongTitle) {
-              return;
-            }
-
-            const foundProduct = examples.chosenProducts.find((product) => {
-              return product && product.title === title;
-            });
-
-            expect(foundProduct, `Product with title "${title}" should exist in chosen products`).to.not.eq(undefined);
-          });
-      });
+      cy.cartPage__validateChosenProductTitles(chosenProducts, examples.buggyProductData);
     });
     it('InventoryPage.Card.STANDARD: Then the total number of products is correct', () => {
       cy.get(cartPage.items).should('have.length', examples.cartBadgeCounts.twoProducts);
@@ -230,8 +216,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.go('back');
     });
-    it('InventoryPage.STANDARD: Then user should be redirected to the Inventory page', () => {
+    it('InventoryPage.STANDARD: Then user should be redirected to the Inventory page URL', () => {
       cy.url().should('eq', urls.pages.inventory);
+    });
+    it('InventoryPage.STANDARD: Then Inventory page title is displayed', () => {
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
@@ -283,7 +271,7 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
         cy.get(inventoryPage.cards).eq(examples.indicesOfProducts[2]).find(inventoryPage.card.title).click();
       });
     });
-    it('InventoryPage.STANDARD: Then user should be redirected to the Product page', () => {
+    it('InventoryPage.STANDARD: Then user should be redirected to the Product page URL', () => {
       cy.url().should('contain', urls.pages.item);
     });
     it('InventoryPage.STANDARD: Then Product title should be displayed', { req: { bugs: ['BUG-INVENTORY-001'] } }, () => {
@@ -302,8 +290,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.go('back');
     });
-    it('InventoryPage.STANDARD: Then user should be redirected to the Inventory page', () => {
+    it('InventoryPage.STANDARD: Then user should be redirected to the Inventory page URL', () => {
       cy.url().should('eq', urls.pages.inventory);
+    });
+    it('InventoryPage.STANDARD: Then Inventory page title is displayed', () => {
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
@@ -330,7 +320,6 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
 });
 
 describe('InventoryPage: Given STANDARD user on Inventory page, Header component', { testIsolation: false }, () => {
-  const randomProductIndices = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, PRODUCT_COUNT.total), PRODUCT_COUNT.total - 1);
   let standardUser;
 
   before(() => {
@@ -402,12 +391,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
 
   context('InventoryPage.Header.STANDARD: When user adds products to cart', () => {
     before(() => {
-      cy.get(inventoryPage.cards).then(($cards) => {
-        cy.wrap($cards[randomProductIndices[0]]).find(inventoryPage.card.add).click();
-      });
+      cy.get(inventoryPage.cards).eq(examples.randomProductIndices[0]).find(inventoryPage.card.add).click();
     });
     it('InventoryPage.Header.STANDARD: Then Cart badge displays count of added products', () => {
-      cy.get(headerComp.cartBadge).should('have.text', '1').and('be.visible');
+      cy.headerComp__verifyCartBadge(examples.cartBadgeCounts.oneProduct);
     });
   });
 
@@ -421,13 +408,11 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
     it('InventoryPage.Header.STANDARD: Then Cart badge is not displayed', () => {
       cy.get(headerComp.cartBadge).should('not.exist');
     });
-    it('InventoryPage.Header.STANDARD: Then Sidebar is displayed', () => {
-      cy.get(headerComp.sidebar.container).should('be.visible');
+    it('InventoryPage.Header.STANDARD: Then Sidebar is not displayed', () => {
+      cy.get(headerComp.sidebar.container).should('not.be.visible');
     });
     it('InventoryPage.Header.STANDARD: Then Remove buttons remain unchanged', { req: { bugs: ['BUG-HEADER-001'] } }, () => {
-      cy.get(inventoryPage.cards).then(($cards) => {
-        cy.wrap($cards[randomProductIndices[0]]).find(inventoryPage.card.remove).should('be.visible');
-      });
+      cy.get(inventoryPage.cards).eq(examples.randomProductIndices[0]).find(inventoryPage.card.remove).should('be.visible');
     });
   });
 
@@ -435,8 +420,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
     before(() => {
       cy.get(headerComp.openCart).click();
     });
-    it('InventoryPage.Header.STANDARD: Then user is redirected to the Cart page', () => {
+    it('InventoryPage.Header.STANDARD: Then user is redirected to the Cart page URL', () => {
       cy.url().should('eq', urls.pages.cart);
+    });
+    it('InventoryPage.Header.STANDARD: Then Cart page title is displayed', () => {
       cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then Cart button is displayed', () => {
@@ -455,8 +442,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
       cy.get(headerComp.sidebar.open).click();
       cy.get(headerComp.sidebar.openInventory).click();
     });
-    it('InventoryPage.Header.STANDARD: Then user is redirected to the Inventory page', () => {
+    it('InventoryPage.Header.STANDARD: Then user is redirected to the Inventory page URL', () => {
       cy.url().should('eq', urls.pages.inventory);
+    });
+    it('InventoryPage.Header.STANDARD: Then Inventory page title is displayed', () => {
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
     it('InventoryPage.Header.STANDARD: Then Cart button is displayed', () => {
@@ -474,8 +463,10 @@ describe('InventoryPage: Given STANDARD user on Inventory page, Header component
     before(() => {
       cy.headerComp__logOut();
     });
-    it('InventoryPage.Header.STANDARD: Then user is redirected to the Login page', () => {
-      cy.url().should('eq', `${Cypress.expose('baseUrl')}/`);
+    it('InventoryPage.Header.STANDARD: Then user is redirected to the Login page URL', () => {
+      cy.url().should('eq', urls.pages.login);
+    });
+    it('InventoryPage.Header.STANDARD: Then Login page title is displayed', () => {
       cy.get(loginPage.title).should('have.text', l10n['loginPage.title']);
     });
   });

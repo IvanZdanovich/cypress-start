@@ -19,10 +19,11 @@ DECISION: same sequence appears in more than one spec, or requires setup context
 
 ## File tiers
 
-TIER_DECISION: ask "which page or component owns this action?" → if none, "which domain concept does it describe?" → if none, common
+TIER_DECISION: ask "which page or component owns this action?" → if none, "which domain concept does it describe?" → if none, "is it a direct API call or UI action?" → if none, general
 PAGE_TIER: action owned by one page or component → `page-name.ui.commands.js`, `comp-name.ui.commands.js`
 DOMAIN_TIER: same action crosses multiple pages or components for one domain concept → `domain-name.ui.commands.js`
 COMMON_TIER: protocol-level, no domain specificity → `common.ui.commands.js`, `common.api.commands.js`
+GENERAL_TIER: utility helpers that are neither direct API calls nor UI actions (e.g. fixture readers, role-based data loaders, shared cache logic) → `commands.js`; these commands are not subject to the API or UI naming rules
 DOMAIN_SIGNAL: same command body imported or duplicated across two or more page files — extract to domain file
 NOT_DOMAIN: a command originating on one page but called from another's spec stays a page command — call site does not move ownership
 
@@ -74,7 +75,7 @@ PATH_CHECK: file exists under `cypress/commands/api/` or `cypress/commands/ui/`
 NAMING_CHECK: API command matches `moduleName__operationDetails__METHOD`; UI command matches `pageName__action` or
 `componentName__action`
 SCOPE_CHECK: command wraps multi-step flow or complex assertion; single-step actions remain inline in specs
-TIER_CHECK: page-specific action in page file, cross-page domain action in domain file, protocol-level in common file
+TIER_CHECK: page-specific action in page file, protocol-level in common file, utility helpers that are neither API calls nor UI actions in `commands.js`
 RETURN_CHECK: every API command returns `cy.request()` for chainability
 SELECTOR_CHECK: UI commands reference global selector variables, not raw selector strings
 CONSTRAINT_CHECK: boundary values in assertions imported from constraint files, not hardcoded

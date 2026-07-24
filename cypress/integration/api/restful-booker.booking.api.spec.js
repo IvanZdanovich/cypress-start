@@ -1,6 +1,6 @@
 import { booking__examples as examples } from '../../integration-examples/api/restful-booker.booking.api.examples';
 import { HTTP_STATUS, ERROR_MESSAGE } from '../../constants/api/common.api.constraints';
-import { PRICE, FIELD_MAP } from '../../constants/api/rb.booking.api.constraints';
+import { PRICE } from '../../constants/api/rb.booking.api.constraints';
 
 describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false }, () => {
   let authToken;
@@ -14,8 +14,8 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
   });
   after(cleanUp);
 
-  context('RestfulBooker.Auth.GET: When invalid credentials are provided', () => {
-    it('RestfulBooker.Auth.GET: Then return 200 status code and reason Bad credentials', { req: { bugs: ['BUG-AUTH-001'] } }, () => {
+  context('RestfulBooker.Auth.POST: When invalid credentials are provided', () => {
+    it('RestfulBooker.Auth.POST: Then return 200 status code and reason Bad credentials', { req: { bugs: ['BUG-AUTH-001'] } }, () => {
       cy.restfullBooker__getAuthToken__POST(examples.invalidCredentials, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
         expect(response.body).to.have.property('reason');
@@ -189,12 +189,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
       cy.restfullBooker__createBooking__POST(examples.invalidBookings.emptyStringField.data, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
         examples.invalidBookings.emptyStringField.data.bookingId = response.body.bookingid;
-        const apiFieldName = FIELD_MAP[examples.invalidBookings.emptyStringField.name] ?? examples.invalidBookings.emptyStringField.name;
-        if (examples.invalidBookings.emptyStringField.name === 'additionalNeeds') {
-          expect(response.body.booking[apiFieldName]).to.be.oneOf(['', undefined, null]);
-        } else {
-          expect(response.body.booking[apiFieldName]).to.eq('');
-        }
+        expect(response.body.booking[examples.invalidBookings.emptyStringField.apiFieldName]).to.be.oneOf(examples.invalidBookings.emptyStringField.expectedValues);
       });
     });
   });
@@ -212,7 +207,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by firstname are requested', () => {
-    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
+    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and results filtered by firstname include created booking', () => {
       cy.restfullBooker__getBookingIds__GET({ firstname: examples.validBookings.withAllFields.firstname }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
         const bookingIds = response.body.map((b) => b.bookingid);
@@ -222,7 +217,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by lastname are requested', () => {
-    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
+    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and results filtered by lastname include created booking', () => {
       cy.restfullBooker__getBookingIds__GET({ lastname: examples.validBookings.withAllFields.lastname }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
         const bookingIds = response.body.map((b) => b.bookingid);
@@ -232,7 +227,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
   });
 
   context('RestfulBooker.Booking.Retrieve.GET: When booking IDs filtered by full name are requested', () => {
-    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and filtered results include created booking', () => {
+    it('RestfulBooker.Booking.Retrieve.GET: Then return 200 status code and results filtered by full name include created booking', () => {
       cy.restfullBooker__getBookingIds__GET({ firstname: examples.validBookings.withAllFields.firstname, lastname: examples.validBookings.withAllFields.lastname }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
         const bookingIds = response.body.map((b) => b.bookingid);
@@ -326,7 +321,6 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
         expect(response.body.bookingdates.checkin).to.eq(examples.updates.full.bookingDates.checkin);
         expect(response.body.bookingdates.checkout).to.eq(examples.updates.full.bookingDates.checkout);
         expect(response.body.additionalneeds).to.eq(examples.updates.full.additionalNeeds);
-        examples.validBookings.withAllFields = { ...examples.validBookings.withAllFields, ...examples.updates.full };
       });
     });
   });
@@ -353,8 +347,7 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
     it('RestfulBooker.Booking.PartialUpdate.PATCH: Then only specified field changes and others remain unchanged', () => {
       cy.restfullBooker__partialUpdateBooking__PATCH(authToken, examples.validBookings.minimalPrice.bookingId, examples.updates.partialField.updateData).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.OK);
-        const apiFieldName = FIELD_MAP[examples.updates.partialField.name] ?? examples.updates.partialField.name;
-        expect(response.body[apiFieldName]).to.eq(examples.updates.partialField.value);
+        expect(response.body[examples.updates.partialField.apiFieldName]).to.eq(examples.updates.partialField.value);
         examples.validBookings.minimalPrice[examples.updates.partialField.name] = examples.updates.partialField.value;
       });
     });
@@ -420,10 +413,12 @@ describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false
   });
 
   context('RestfulBooker.Booking.Delete.DELETE: When valid booking ID is deleted with authentication', () => {
-    it('RestfulBooker.Booking.Delete.DELETE: Then return 201 status code and booking is deleted', { req: { bugs: ['BUG-BOOKING-008'] } }, () => {
+    it('RestfulBooker.Booking.Delete.DELETE: Then return 201 status code', { req: { bugs: ['BUG-BOOKING-008'] } }, () => {
       cy.restfullBooker__deleteBooking__DELETE(authToken, examples.validBookings.sameDayCheckout.bookingId).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.CREATED);
       });
+    });
+    it('RestfulBooker.Booking.Delete.DELETE: Then deleted booking returns 404 on retrieval', () => {
       cy.restfullBooker__getBookingById__GET(examples.validBookings.sameDayCheckout.bookingId, { failOnStatusCode: false }).then((response) => {
         expect(response.status).to.eq(HTTP_STATUS.NOT_FOUND);
         expect(response.body).to.eq(ERROR_MESSAGE.NOT_FOUND);

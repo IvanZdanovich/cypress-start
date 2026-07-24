@@ -25,3 +25,12 @@ export const SORT_OPTIONS = Object.freeze({
 
 /** Default sort option applied when the page first loads. */
 export const DEFAULT_SORT = SORT_OPTIONS.nameAscending;
+
+/**
+ * Regular expression that matches a valid product price as displayed in the UI.
+ * Format: a dollar sign followed by one or more digits, a dot, and exactly two decimal digits.
+ * Example matches: "$9.99", "$29.00", "$100.50".
+ */
+export const PRICE_FORMAT = Object.freeze({
+  pattern: /^\$\d+\.\d{2}$/,
+});

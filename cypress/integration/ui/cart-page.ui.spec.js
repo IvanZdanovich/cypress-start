@@ -2,6 +2,8 @@ import { cartPage__examples as examples } from '../../integration-examples/ui/ca
 
 describe('CartPage: Given STANDARD user on Cart page and no products are added to cart', { testIsolation: false }, () => {
   let standardUser;
+  let chosenProducts = [];
+  let removedProductTitle;
 
   before(() => {
     cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
@@ -40,7 +42,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
-      cy.get(footerComp.twitter).should('have.attr', 'href', 'https://twitter.com/saucelabs').and('have.attr', 'target', '_blank').and('be.visible');
+      cy.get(footerComp.twitter).should('have.attr', 'href', urls.external.twitter).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('CartPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
       cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
@@ -62,41 +64,32 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     before(() => {
       cy.get(cartPage.continueShopping).click();
     });
-    it('CartPage.STANDARD: Then user should be redirected to the Inventory page', () => {
+    it('CartPage.STANDARD: Then user should be redirected to the Inventory page URL', () => {
       cy.url().should('eq', urls.pages.inventory);
+    });
+    it('CartPage.STANDARD: Then Inventory page title is displayed', () => {
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
     });
   });
 
   context('CartPage.STANDARD: When user adds random products and clicks Cart button', () => {
     before(() => {
-      cy.wrap(examples.indicesOfProducts).each((index) => {
-        cy.get(inventoryPage.cards).eq(index).find(inventoryPage.card.add).click();
-        cy.get(inventoryPage.cards)
-          .eq(index)
-          .then(($card) => {
-            let title = $card.find(inventoryPage.card.title).text();
-            if (title === examples.buggyProductData.wrongTitle) {
-              title = examples.buggyProductData.correctTitle;
-            }
-            const description = $card.find(inventoryPage.card.description).text();
-            const price = parseFloat($card.find(inventoryPage.card.price).text().replace('$', ''));
-            examples.chosenProducts.push({ title, description, price });
-          });
-      });
+      cy.inventoryPage__collectAndAddProductsToCart(examples.indicesOfProducts, chosenProducts, examples.buggyProductData);
       cy.then(() => {
         cy.get(headerComp.openCart).click();
       });
     });
-    it('CartPage.STANDARD: Then user should be redirected to the Cart page', () => {
+    it('CartPage.STANDARD: Then user should be redirected to the Cart page URL', () => {
       cy.url().should('eq', urls.pages.cart);
+    });
+    it('CartPage.STANDARD: Then Cart page title is displayed', () => {
       cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
     });
     it('CartPage.STANDARD: Then number of items should correspond to the number of chosen products', () => {
       cy.get(cartPage.items).should('have.length', examples.indicesOfProducts.length);
     });
     it('CartPage.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      cy.get(headerComp.cartBadge).should('have.text', examples.indicesOfProducts.length).and('be.visible');
+      cy.headerComp__verifyCartBadge(examples.indicesOfProducts.length);
     });
     it('CartPage.STANDARD: Then Checkout button is displayed', () => {
       cy.get(cartPage.checkout).should('have.text', l10n['cartPage.checkout']).and('be.visible').and('be.enabled');
@@ -116,7 +109,7 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       });
     });
     it('CartPage.STANDARD: Then on each item should have appropriate title, description and price', () => {
-      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
+      cy.cartPage__validateProductDetails(chosenProducts, examples.buggyProductData);
     });
   });
 
@@ -127,9 +120,8 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
         .find(cartPage.item.title)
         .invoke('text')
         .then((title) => {
-          examples.removedProductTitle = title;
+          removedProductTitle = title;
         });
-
       cy.then(() => {
         cy.get(cartPage.items).eq(examples.randomIndex).find(cartPage.item.remove).click();
       });
@@ -138,22 +130,10 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
       cy.get(cartPage.items).should('have.length', examples.indicesOfProducts.length - 1);
     });
     it('CartPage.STANDARD: Then the Cart button with an appropriate number on the badge is displayed', () => {
-      if (examples.indicesOfProducts.length - 1 === 0) {
-        cy.get(headerComp.cartBadge).should('not.exist');
-        return;
-      }
-      cy.get(headerComp.cartBadge)
-        .should('have.text', examples.indicesOfProducts.length - 1)
-        .and('be.visible');
+      cy.headerComp__verifyCartBadge(examples.indicesOfProducts.length - 1);
     });
     it('CartPage.STANDARD: Then the removed product is not displayed', () => {
-      if (examples.indicesOfProducts.length - 1 === 0) {
-        cy.get(cartPage.items).should('not.exist');
-        return;
-      }
-      cy.get(cartPage.items).each(($item) => {
-        cy.wrap($item).find(cartPage.item.title).should('not.have.text', examples.removedProductTitle);
-      });
+      cy.cartPage__verifyProductRemoved(removedProductTitle, examples.indicesOfProducts.length - 1);
     });
   });
 
@@ -161,8 +141,10 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     before(() => {
       cy.get(cartPage.checkout).click();
     });
-    it('CartPage.STANDARD: Then user should be redirected to the Checkout page', () => {
+    it('CartPage.STANDARD: Then user should be redirected to the Checkout page URL', () => {
       cy.url().should('eq', urls.pages.checkout);
+    });
+    it('CartPage.STANDARD: Then Checkout page title is displayed', () => {
       cy.get(checkoutPage.title).should('have.text', l10n['checkoutPage.title']);
     });
   });

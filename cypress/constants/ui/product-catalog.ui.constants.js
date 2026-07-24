@@ -14,4 +14,3 @@ export const BUGGY_PRODUCT = Object.freeze({
   correctTitle: 'Sauce Labs T-Shirt (Red)',
   wrongDescription: 'carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.',
 });
-

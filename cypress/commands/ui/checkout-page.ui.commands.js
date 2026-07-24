@@ -4,4 +4,3 @@ Cypress.Commands.add('checkoutPage__fillDeliveryInfo', (user) => {
   cy.get(checkoutPage.lastName).type(lastName, { delay: 0 });
   cy.get(checkoutPage.zip).type(zip, { delay: 0 });
 });
-

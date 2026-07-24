@@ -27,8 +27,8 @@ VERIFY_TEST_TITLE_AGAINST_STRUCTURE: the dotted prefix of each spec title exists
 
 ## Naming
 
-VERIFY_API_COMMAND_NAMING: in `cypress/support/commands/api/*.api.commands.js`, `Cypress.Commands.add` names match `resource__action__METHOD` — camelCase resource, camelCase action, uppercase method in GET/POST/PUT/PATCH/DELETE
-VERIFY_UI_COMMAND_NAMING: in `cypress/support/commands/ui/*.ui.commands.js`, command names match exactly two camelCase parts `page__action`
+VERIFY_API_COMMAND_NAMING: in `cypress/commands/api/*.api.commands.js`, `Cypress.Commands.add` names match `resource__action__METHOD` — camelCase resource, camelCase action, uppercase method in GET/POST/PUT/PATCH/DELETE
+VERIFY_UI_COMMAND_NAMING: in `cypress/commands/ui/*.ui.commands.js`, command names match exactly two camelCase parts `page__action`
 VERIFY_REQ_CONFIG: when an `it` config object carries a `req` key, `req` is an object allowing only `p` (`'P1'|'P2'|'P3'`), `preconditions` (non-empty string array), `refs` (non-empty valid-URL array), `bugs` (non-empty array of `BUG-MODULE-NNN` ids or URLs), `note` (non-empty string comment about the checks); unknown keys, empty arrays, and empty notes error; `req` itself stays optional — otherwise metadata schema rots and bug/story links go unvalidated
 
 ## Data and examples
