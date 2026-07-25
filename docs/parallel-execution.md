@@ -319,4 +319,3 @@ the latest version of `parallel-cypress-runner.js`.
 - **Use unique test data** — random names/IDs prevent conflicts
 - **Monitor resource usage** — optimize stream count based on metrics
 - **Check stream-specific artifacts** — each stream has its own folders
-

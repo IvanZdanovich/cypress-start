@@ -6,16 +6,13 @@
  * grammar, and message wording, then re-exports the shared behaviour under the
  * localization-specific names consumed by scripts/l10n.js.
  *
- * Aligned with the localization-testing skill (grammar, scopes).
+ * Aligned with the localization-testing skill (grammar).
  */
 
 const path = require('path');
 const { createFlatMapLib } = require('./flat-map-lib');
 
 const ROOT = path.join(__dirname, '..');
-
-// Declared feature scopes — kept in sync with the localization-testing skill.
-const FEATURE_SCOPES = ['common'];
 
 const lib = createFlatMapLib({
   dir: path.join(ROOT, 'cypress', 'localization'),
@@ -25,8 +22,6 @@ const lib = createFlatMapLib({
   generatedFile: 'l10n.json',
   placeholder: 'MISSING_TRANSLATION',
   fileSuffix: '-localization.json',
-  scopes: FEATURE_SCOPES,
-  scopeLabel: 'feature scope',
   depthHint: 'feature.area',
   minDepth: 2, // at least feature.area
   maxDepth: 5, // ceiling for table headers / option groups
@@ -46,12 +41,12 @@ const lib = createFlatMapLib({
   globalName: 'l10n',
   mapDescription: 'Flat localization map: every dot-namespaced key resolves to the active-language string.',
   typesBaseName: 'l10n.d.ts',
+  codeRoot: path.join(ROOT, 'cypress'),
 });
 
 module.exports = {
   REFERENCE_CODE: lib.REFERENCE_CODE,
   PLACEHOLDER: lib.PLACEHOLDER,
-  FEATURE_SCOPES: lib.SCOPES,
   langCodeOf: lib.codeOf,
   localeFiles: lib.files,
   requireLocalizationDir: lib.requireDir,

@@ -55,40 +55,39 @@ function validateOverrides(config, overrides, files) {
   return errors;
 }
 
+/** Repeatedly prompt until `validate` returns no errors, then return the answer. */
+async function askUntilValid(lib, rl, prompt, validate) {
+  for (;;) {
+    const answer = await lib.ask(rl, prompt);
+    const errors = validate(answer);
+    if (errors.length === 0) return answer;
+    errors.forEach((error) => console.error(`  - ${error}`));
+  }
+}
+
+/** Prompt for an optional override value: blank skips (returns undefined). */
+async function askOverride(lib, rl, code) {
+  for (;;) {
+    const answer = await lib.ask(rl, `${code} value (blank = ${lib.PLACEHOLDER}): `);
+    if (answer === '') return undefined;
+    const errors = lib.validateValue(answer);
+    if (errors.length === 0) return answer;
+    errors.forEach((error) => console.error(`  - ${error}`));
+  }
+}
+
 function promptAdd(config, refKeys, files) {
   const { lib } = config;
 
   return lib.withPrompt(async (rl) => {
-    let key;
-    for (;;) {
-      key = await lib.ask(rl, config.keyPrompt);
-      const keyErrors = lib.validateKey(key, refKeys);
-      if (keyErrors.length === 0) break;
-      keyErrors.forEach((error) => console.error(`  - ${error}`));
-    }
-
-    let value;
-    for (;;) {
-      value = await lib.ask(rl, config.valuePrompt);
-      const valueErrors = lib.validateValue(value);
-      if (valueErrors.length === 0) break;
-      valueErrors.forEach((error) => console.error(`  - ${error}`));
-    }
+    const key = await askUntilValid(lib, rl, config.keyPrompt, (answer) => lib.validateKey(answer, refKeys));
+    const value = await askUntilValid(lib, rl, config.valuePrompt, (answer) => lib.validateValue(answer));
 
     const overrides = {};
     for (const code of files.map(config.codeOf)) {
       if (code === lib.REFERENCE_CODE) continue;
-      for (;;) {
-        const answer = await lib.ask(rl, `${code} value (blank = ${lib.PLACEHOLDER}): `);
-        if (answer === '') break;
-
-        const valueErrors = lib.validateValue(answer);
-        if (valueErrors.length === 0) {
-          overrides[code] = answer;
-          break;
-        }
-        valueErrors.forEach((error) => console.error(`  - ${error}`));
-      }
+      const answer = await askOverride(lib, rl, code);
+      if (answer !== undefined) overrides[code] = answer;
     }
 
     return { key, value, overrides };
@@ -254,65 +253,44 @@ function cmdList(config, argv) {
   console.log(`\n${result.count} key(s).`);
 }
 
+const HELP_COMMANDS = new Set(['help', '--help', '-h']);
+
+function cmdSync(config, argv, checkOnly) {
+  const { flags } = parseFlags(argv);
+  const result = config.lib.sync({ checkOnly, dryRun: flags.dryRun, silent: flags.json });
+  if (flags.json) writeJson(result);
+  process.exitCode = result.hasErrors ? 1 : 0;
+}
+
 async function runFlatMapCli(config) {
   const [command, ...argv] = process.argv.slice(2);
 
-  if (!command || command === 'help' || command === '--help' || command === '-h') {
+  if (!command || HELP_COMMANDS.has(command)) {
     console.log(config.help);
     process.exit(command ? 0 : 1);
   }
 
   config.requireDir();
 
-  if (command === 'add') {
-    await cmdAdd(config, argv);
-    return;
+  const handlers = {
+    add: () => cmdAdd(config, argv),
+    remove: () => cmdRemove(config, argv),
+    rename: () => cmdRename(config, argv),
+    list: () => cmdList(config, argv),
+    sync: () => cmdSync(config, argv, argv.includes('--check')),
+    validate: () => cmdSync(config, argv, true),
+    activate: () => config.lib.activate(),
+    types: () => config.lib.generateTypes(),
+  };
+
+  const handler = handlers[command];
+  if (!handler) {
+    console.error(`Unknown command '${command}'.\n`);
+    console.log(config.help);
+    process.exit(1);
   }
 
-  if (command === 'remove') {
-    await cmdRemove(config, argv);
-    return;
-  }
-
-  if (command === 'rename') {
-    await cmdRename(config, argv);
-    return;
-  }
-
-  if (command === 'list') {
-    cmdList(config, argv);
-    return;
-  }
-
-  if (command === 'sync') {
-    const { flags } = parseFlags(argv);
-    const result = config.lib.sync({ checkOnly: argv.includes('--check'), dryRun: flags.dryRun, silent: flags.json });
-    if (flags.json) writeJson(result);
-    process.exitCode = result.hasErrors ? 1 : 0;
-    return;
-  }
-
-  if (command === 'validate') {
-    const { flags } = parseFlags(argv);
-    const result = config.lib.sync({ checkOnly: true, dryRun: flags.dryRun, silent: flags.json });
-    if (flags.json) writeJson(result);
-    process.exitCode = result.hasErrors ? 1 : 0;
-    return;
-  }
-
-  if (command === 'activate') {
-    config.lib.activate();
-    return;
-  }
-
-  if (command === 'types') {
-    config.lib.generateTypes();
-    return;
-  }
-
-  console.error(`Unknown command '${command}'.\n`);
-  console.log(config.help);
-  process.exit(1);
+  await handler();
 }
 
 module.exports = { runFlatMapCli };

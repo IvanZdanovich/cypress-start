@@ -6,7 +6,7 @@
  * colour-value validation, and message wording, then re-exports the shared
  * behaviour under the colour-specific names consumed by scripts/colours.js.
  *
- * Aligned with the colour-theme-testing skill (grammar, component scopes).
+ * Aligned with the colour-theme-testing skill (grammar).
  */
 
 const path = require('path');
@@ -14,11 +14,12 @@ const { createFlatMapLib } = require('./flat-map-lib');
 
 const ROOT = path.join(__dirname, '..');
 
-// Declared component scopes — kept in sync with the colour-theme-testing skill.
-const COMPONENT_SCOPES = ['button', 'checkbox', 'text', 'toaster'];
-
 // Accepted CSS colour value forms: rgb(), rgba(), or #hex (3 or 6 digits).
-const COLOUR_VALUE = /^(rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)|rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(?:0|1|0?\.\d+)\s*\)|#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}))$/;
+// Composed from simple named fragments so no single pattern is hard to read.
+const RGB_TRIPLET = String.raw`\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*`;
+const ALPHA = String.raw`\s*(?:0|1|0?\.\d+)\s*`;
+const HEX = String.raw`#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})`;
+const COLOUR_VALUE = new RegExp(`^(?:rgb\\(${RGB_TRIPLET}\\)|rgba\\(${RGB_TRIPLET},${ALPHA}\\)|${HEX})$`);
 
 const lib = createFlatMapLib({
   dir: path.join(ROOT, 'cypress', 'colours'),
@@ -28,8 +29,6 @@ const lib = createFlatMapLib({
   generatedFile: 'colours.json',
   placeholder: 'MISSING_COLOUR',
   fileSuffix: '-theme-colours.json',
-  scopes: COMPONENT_SCOPES,
-  scopeLabel: 'component scope',
   depthHint: 'component.state',
   minDepth: 2, // at least component.state
   maxDepth: 4, // ceiling
@@ -50,12 +49,12 @@ const lib = createFlatMapLib({
   globalName: 'colours',
   mapDescription: 'Flat colour-theme map: every dot-namespaced key resolves to the active-theme colour value.',
   typesBaseName: 'colours.d.ts',
+  codeRoot: path.join(ROOT, 'cypress'),
 });
 
 module.exports = {
   REFERENCE_CODE: lib.REFERENCE_CODE,
   PLACEHOLDER: lib.PLACEHOLDER,
-  COMPONENT_SCOPES: lib.SCOPES,
   themeCodeOf: lib.codeOf,
   themeFiles: lib.files,
   requireColoursDir: lib.requireDir,

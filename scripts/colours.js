@@ -17,7 +17,7 @@
  *   validate [--json]
  *   sync [--check] [--dry-run] [--json]
  *   activate                                      Copy the COLOUR_THEME-selected theme file to the active colours.json.
- *   types                                         Regenerate cypress/support/colours.d.ts from the active map.
+ *   types                                         Regenerate cypress/support/colours.d.ts from the reference theme file.
  *   help                                          Show this help.
  *
  * Examples:
@@ -39,12 +39,12 @@ Commands:
   add [<key> <value> [--<theme>="value" ...]] [--dry-run] [--json]
                                                      Add a key to every theme file (interactive if no args).
   remove [<key> ...] [--dry-run] [--json]            Remove key(s) from every theme file (interactive if no args).
-  rename [<old-key> <new-key>] [--dry-run] [--json]  Rename a key in every theme file (interactive if no args).
+  rename [<old-key> <new-key>] [--dry-run] [--json]  Rename a key in every theme file and rewrite colours['key'] usages (interactive if no args).
   list [--prefix=<prefix>] [--json]                  List reference colour keys.
   validate [--json]                                  Check theme files without writing.
   sync [--check] [--dry-run] [--json]                Align theme files (add missing, sort); --check reports only.
   activate                                      Copy the COLOUR_THEME-selected theme file to the active colours.json.
-  types                                         Regenerate cypress/support/colours.d.ts from the active map.
+  types                                         Regenerate cypress/support/colours.d.ts from the reference theme file.
   help                                          Show this help.`;
 
 runFlatMapCli({

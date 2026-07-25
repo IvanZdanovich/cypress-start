@@ -17,7 +17,7 @@
  *   validate [--json]
  *   sync [--check] [--dry-run] [--json]
  *   activate                                             Copy the LANGUAGE-selected locale file to the active l10n.json.
- *   types                                                Regenerate cypress/support/l10n.d.ts from the active map.
+ *   types                                                Regenerate cypress/support/l10n.d.ts from the reference locale file.
  *   help                                                 Show this help.
  *
  * Examples:
@@ -39,12 +39,12 @@ Commands:
   add [<key> <english-value> [--<lang>="value" ...]] [--dry-run] [--json]
                                                         Add a key to every locale file (interactive if no args).
   remove [<key> ...] [--dry-run] [--json]               Remove key(s) from every locale file (interactive if no args).
-  rename [<old-key> <new-key>] [--dry-run] [--json]     Rename a key in every locale file (interactive if no args).
+  rename [<old-key> <new-key>] [--dry-run] [--json]     Rename a key in every locale file and rewrite l10n['key'] usages (interactive if no args).
   list [--prefix=<prefix>] [--json]                     List reference localization keys.
   validate [--json]                                     Check locale files without writing.
   sync [--check] [--dry-run] [--json]                   Align locale files (add missing, sort); --check reports only.
   activate                                             Copy the LANGUAGE-selected locale file to the active l10n.json.
-  types                                                Regenerate cypress/support/l10n.d.ts from the active map.
+  types                                                Regenerate cypress/support/l10n.d.ts from the reference locale file.
   help                                                 Show this help.`;
 
 runFlatMapCli({

@@ -40,8 +40,8 @@ OUT_OF_RANGE: derive inline in examples (e.g. `-PRICE.MAX`) for ad-hoc invalid d
 ZERO_AS_BELOW_MIN: when `ZERO < MIN`, `ZERO` serves as `BELOW_MIN` — do not add a separate `BELOW_MIN` key
 
 ```javascript
-export const PRICE = Object.freeze({MIN: 1, MAX: 100_000, ZERO: 0});
-export const FIRSTNAME = Object.freeze({MIN_LENGTH: 1, MAX_LENGTH: 50});
+export const PRICE = Object.freeze({ MIN: 1, MAX: 100_000, ZERO: 0 });
+export const FIRSTNAME = Object.freeze({ MIN_LENGTH: 1, MAX_LENGTH: 50 });
 export const DATE_FORMAT = 'YYYY-MM-DD';
 export const REQUIRED_FIELDS = Object.freeze(['firstname', 'lastname', 'totalprice', 'depositpaid', 'bookingdates.checkin', 'bookingdates.checkout']);
 ```
@@ -61,9 +61,9 @@ CROSS_LAYER: when a UI constant represents the display face of an API-validated 
 
 ```javascript
 // UI constraint referencing its API counterpart
-import {PRICE} from '../api/rb.booking.api.constraints';
+import { PRICE } from '../api/rb.booking.api.constraints';
 
-export const PRICE_DISPLAY = Object.freeze({...PRICE, decimalPlaces: 2, currencySymbol: '$'});
+export const PRICE_DISPLAY = Object.freeze({ ...PRICE, decimalPlaces: 2, currencySymbol: '$' });
 ```
 
 # Validation

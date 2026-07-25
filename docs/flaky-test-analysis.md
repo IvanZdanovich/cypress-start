@@ -64,10 +64,7 @@ One JSON object per line, one line per CI run:
   "failures": [
     {
       "file": "cypress/integration/api/module.api.spec.js",
-      "context": [
-        "Module.Sub: Given preconditions",
-        "Module.Sub.Retrieve.GET: When retrieving"
-      ],
+      "context": ["Module.Sub: Given preconditions", "Module.Sub.Retrieve.GET: When retrieving"],
       "it": "Module.Sub.Retrieve.GET: Then retrieves correctly",
       "duration": 5000,
       "error": "Expected 200 but got 500"
@@ -90,7 +87,7 @@ atomic push. This bounds the ledger file size and keeps `git show` / analysis fa
 - **Disable:** set `--max-runs 0` (or `RESULTS_MAX_RUNS=0`) for an unbounded ledger.
 - **Concurrency-safe:** pruning rides on the existing fetch → dedup → retry loop, so parallel pipelines converge on
   the same trimmed state.
-- **Scope:** retention trims the ledger *file content*. Commit history is bounded separately (see below).
+- **Scope:** retention trims the ledger _file content_. Commit history is bounded separately (see below).
 
 ```bash
 # Keep only the last 50 runs

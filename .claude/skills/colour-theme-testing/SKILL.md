@@ -35,7 +35,7 @@ THEME_SWITCH: a spec asserts colours after switching theme → run with the targ
 
 SHAPE: `component.state`, `lowerCamelCase` segments, dot-joined
 DEPTH: 2-3 segments preferred, 4 the ceiling
-COMPONENT_SCOPES: `button`, `checkbox`, `commentIcon`, `text`, `toaster`
+COMPONENT_SCOPES: `button`, `checkbox`, `text`, `toaster` — extend both this list and `scripts/colours-lib.js` when a new scope is needed (NEW_SCOPE signal)
 STATE_SUFFIXES: visual state of the component — `compliant`, `nonCompliant`, `notAnswered`, `notApplicable`, `marked`, `default`, `hasComment`, `error`, `success`
 
 ## Maintenance operations
@@ -61,9 +61,9 @@ CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run col
 
 ```js
 // lookup returns the active-theme value for the flat key
-colours['toaster.success']
+colours['toaster.success'];
 // enumerate a namespace for listing all button colours
-Object.keys(colours).filter((key) => key.startsWith('button.'))
+Object.keys(colours).filter((key) => key.startsWith('button.'));
 ```
 
 ## Access behavior

@@ -75,13 +75,17 @@ describe('Workflow.SubFlow: Given user is authenticated, workflow data exists', 
   let tokenUser;
   const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
   before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
+    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
+      tokenUser = accessToken;
+    });
     cy.then(cleanUp);
     cy.common__getSessionUI(userRoles.ADMIN);
   });
 
   context('Workflow.SubFlow.ADMIN: When complete flow is submitted with all fields', () => {
-    before(() => { cy.workflowPage__completeFlow(examples.completeFlow.withAllFields); });
+    before(() => {
+      cy.workflowPage__completeFlow(examples.completeFlow.withAllFields);
+    });
 
     it('Workflow.SubFlow.ADMIN: Then workflow completes and summary shows completed status', { req: { p: 'P1' } }, () => {
       cy.get(workflowPage.status).should('contain', examples.completeFlow.withAllFields.expectedResult.status);

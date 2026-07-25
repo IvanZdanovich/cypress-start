@@ -7,7 +7,7 @@ description: Use when creating branches, writing commits, or opening pull reques
 
 LINEAR_HISTORY: squash merge only, one commit per change — otherwise merge and rebase commits fracture `main` so it no longer bisects and a ticket no longer maps to a single revision
 ATOMICITY: one logical change per commit — otherwise a mixed commit cannot be reverted or reviewed without collateral
-INTENT_OVER_ACTION: commit body explains *why*, not *what* — otherwise the reasoning is lost while the diff still shows what, and the part that decays goes unrecorded
+INTENT_OVER_ACTION: commit body explains _why_, not _what_ — otherwise the reasoning is lost while the diff still shows what, and the part that decays goes unrecorded
 TRACEABILITY: ticket key threads branch, commit scope, and PR title — otherwise a change with no ticket link strands its context
 
 # Method
@@ -23,7 +23,7 @@ BRANCH_NAME: `feature/<TICKET_KEY>-<short-kebab-description>`
 STYLE: Conventional Commits — `<type>(<scope>): <imperative summary>`
 MOOD: imperative summary
 SCOPE: optional, ticket key when helpful, e.g. `feat(B52-1234): add cart link`
-BODY: optional, explain *why*
+BODY: optional, explain _why_
 
 ## Pull requests
 

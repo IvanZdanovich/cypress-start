@@ -77,7 +77,9 @@ describe('Module.Submodule: Given no preconditions', { testIsolation: false }, (
   let tokenUser;
   const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
   before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
+    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
+      tokenUser = accessToken;
+    });
     cy.then(cleanUp);
   });
 

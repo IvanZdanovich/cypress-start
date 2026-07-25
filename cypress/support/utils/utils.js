@@ -113,6 +113,32 @@ const getFutureDate = (daysAhead = 1) => {
   return formatDate(addDays(today, daysAhead));
 };
 
+/**
+ * Returns a deep clone of `obj` with the property at `dottedPath` removed.
+ * Handles dotted paths (e.g. 'bookingDates.checkin') as well as top-level keys.
+ */
+const removeProperty = (obj, dottedPath) => {
+  if (typeof obj !== 'object' || obj === null) {
+    throw new TypeError('removeProperty: first argument must be an object');
+  }
+  if (typeof dottedPath !== 'string' || dottedPath.length === 0) {
+    throw new TypeError('removeProperty: dottedPath must be a non-empty string');
+  }
+
+  const clone = JSON.parse(JSON.stringify(obj));
+  const segments = dottedPath.split('.');
+
+  let cursor = clone;
+  for (let i = 0; i < segments.length - 1; i++) {
+    if (typeof cursor[segments[i]] !== 'object' || cursor[segments[i]] === null) {
+      return clone; // path does not exist — nothing to remove
+    }
+    cursor = cursor[segments[i]];
+  }
+  delete cursor[segments[segments.length - 1]];
+  return clone;
+};
+
 export default {
   getRandomNumber,
   generateRandomString,
@@ -120,4 +146,5 @@ export default {
   getRandomEntry,
   getRandomElement,
   getFutureDate,
+  removeProperty,
 };

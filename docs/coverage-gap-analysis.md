@@ -43,9 +43,9 @@ npm run coverage:check      # Fail if below threshold
 ## How it works
 
 1. **Load expected structure** from JSON files:
-    - `app-structure/components.json` (Integration UI)
-    - `app-structure/modules.json` (Integration API)
-    - `app-structure/workflows.json` (E2E UI)
+   - `app-structure/components.json` (Integration UI)
+   - `app-structure/modules.json` (Integration API)
+   - `app-structure/workflows.json` (E2E UI)
 
 2. **Parse test files** — extract structure paths from test titles, count total and skipped tests
 

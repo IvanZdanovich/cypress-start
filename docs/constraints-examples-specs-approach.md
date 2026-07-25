@@ -1,7 +1,7 @@
 # Constraints → Examples → Specs
 
 Human orientation to the methodology this project uses. The canonical rules live in the skills listed
-under [Source of truth](#source-of-truth); this page explains the *why* and shows the three layers wired together end to
+under [Source of truth](#source-of-truth); this page explains the _why_ and shows the three layers wired together end to
 end.
 
 ## Core idea
@@ -31,15 +31,15 @@ If a literal appears mid-chain with no owning layer, it is an orphan no requirem
 ## The three layers
 
 - **1. Constraints** — boundary values, formats, required-field lists, enums; declared once, imported everywhere.
-    - Location: `cypress/constants/{api,ui}/*.constraints.js`
-    - Skill: [define-constraints](../.claude/skills/define-constraints/SKILL.md)
-- **2. Examples** — named test-data instances composed *from* constraints; one key = one tested state.
-    - Location: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
-    - Skill: [define-examples](../.claude/skills/define-examples/SKILL.md)
+  - Location: `cypress/constants/{api,ui}/*.constraints.js`
+  - Skill: [define-constraints](../.claude/skills/define-constraints/SKILL.md)
+- **2. Examples** — named test-data instances composed _from_ constraints; one key = one tested state.
+  - Location: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
+  - Skill: [define-examples](../.claude/skills/define-examples/SKILL.md)
 - **3. Specs** — requirement titles + assertions; `req` metadata; per-file cleanup.
-    - Location: `cypress/integration/{api,ui}/`, `cypress/e2e/ui/`
-    -
-    Skills: [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md)
+  - Location: `cypress/integration/{api,ui}/`, `cypress/e2e/ui/`
+  -
+  Skills: [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md)
 
 In an examples file the **key name** is the example (which case is tested) and the **object
 value** is the test data (the payload that makes it executable). Both roles share one file so a
@@ -90,17 +90,12 @@ import { PRICE } from '../../constants/api/rb.booking.api.constraints';
 
 describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false }, () => {
   context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
-    it(
-      `RestfulBooker.Booking.Create.POST: Then return 200 and totalprice equals ${PRICE.MIN}`,
-      { req: { p: 'P1' } },
-      () => {
-        cy.restfullBooker__createBooking__POST(testData.validBookings.allFieldsWithMinimalPrice)
-          .then((res) => {
-            expect(res.status).to.eq(200);
-            expect(res.body.booking.totalprice).to.eq(PRICE.MIN);
-          });
-      },
-    );
+    it(`RestfulBooker.Booking.Create.POST: Then return 200 and totalprice equals ${PRICE.MIN}`, { req: { p: 'P1' } }, () => {
+      cy.restfullBooker__createBooking__POST(testData.validBookings.allFieldsWithMinimalPrice).then((res) => {
+        expect(res.status).to.eq(200);
+        expect(res.body.booking.totalprice).to.eq(PRICE.MIN);
+      });
+    });
   });
 });
 ```

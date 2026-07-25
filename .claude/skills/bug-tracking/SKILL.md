@@ -80,13 +80,12 @@ FAIL_ON_STATUS_CODE: request an error response with `failOnStatusCode: false` so
 PLACEHOLDER: an unimplementable expectation is `it.skip(...)` with `req.bugs`, never a failing or deleted block — otherwise the requirement disappears from the suite
 
 ```js
-it('Module.Op.METHOD: Then return 500 status code', {
-  req: { p: 'P1', bugs: ['BUG-BOOKING-002'] },
-}, () => {
-  cy.module__create__POST(payload, { failOnStatusCode: false }).then((res) => {
-    expect(res.status).to.eq(500);
-  });
-});
+it('Module.Op.METHOD: Then return 500 status code',  {req: { p: 'P1', bugs: ['BUG-BOOKING-002'] } }, () => {
+    cy.module__create__POST(payload, { failOnStatusCode: false }).then((res) => {
+      expect(res.status).to.eq(500);
+    });
+  },
+);
 ```
 
 ## Review process

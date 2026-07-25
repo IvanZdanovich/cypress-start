@@ -42,6 +42,7 @@ FIELD_CLUSTER: all strings of one field grouped under `feature.area.field.*`
 
 ## Shared scope
 
+FEATURE_SCOPES: `cartPage`, `checkoutCompletePage`, `checkoutOverviewPage`, `checkoutPage`, `common`, `footer`, `header`, `inventoryPage`, `loginPage` — extend both this list and `scripts/l10n-lib.js` when a new scope is needed (NEW_SCOPE signal)
 PROMOTION_TEST: promote to `common.*` when the string is identical everywhere and tied to a reusable component or domain noun, otherwise keep it under the owning feature — the identical-and-reused test decides placement so shared strings stay single-sourced
 COMMON_BUTTON: identical buttons collapse to `common.button.*`
 COMMON_VALIDATION: shared special-characters message to `common.validation.specialChars`
@@ -74,9 +75,9 @@ CLI_NPM_ARGS: npm wrappers require `--` before forwarded args, e.g. `npm run l10
 
 ```js
 // lookup returns the active-language value for the flat key
-l10n['itemList.title']
+l10n['itemList.title'];
 // enumerate a namespace for counting or listing options
-Object.keys(l10n).filter((key) => key.startsWith('common.status.'))
+Object.keys(l10n).filter((key) => key.startsWith('common.status.'));
 ```
 
 ## Access behavior

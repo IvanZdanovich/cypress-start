@@ -83,13 +83,17 @@ describe('Page.Component: Given user is authenticated, created data exists', { t
   let tokenUser;
   const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
   before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
+    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
+      tokenUser = accessToken;
+    });
     cy.then(cleanUp);
     cy.common__getSessionUI(userRoles.ADMIN);
   });
 
   context('Page.Component.ADMIN: When item with all fields is opened', () => {
-    before(() => { cy.visit(uiUrls.pageName.component); });
+    before(() => {
+      cy.visit(uiUrls.pageName.component);
+    });
 
     it('Page.Component.ADMIN: Then item name from the all-fields example is shown on the form', { req: {} }, () => {
       cy.get(componentPage.itemName).should('contain', examples.validItems.withAllFields.name);

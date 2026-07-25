@@ -105,8 +105,7 @@ Specs interpolate constraint values in titles for traceability.
 export const PRICE = { MIN: 1, MAX: 10000 };
 
 // spec title uses constraint
-context(`Module.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
-});
+context(`Module.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {});
 ```
 
 ## 9. Why are tags discouraged?
@@ -146,8 +145,7 @@ See [Approach comparison](comparison-spec-vs-rm-tool.md).
 ## 13. Why describe and skip non-implemented tests?
 
 ```javascript
-it.skip('CartPage.STANDARD: Then error message is displayed for unauthorized user', () => {
-});
+it.skip('CartPage.STANDARD: Then error message is displayed for unauthorized user', () => {});
 ```
 
 Benefits:
