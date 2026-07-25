@@ -117,7 +117,9 @@ function failureKey(failure) {
 
 /**
  * Load suppression rules from flaky-suppressions.json.
- * Returns an array of active (non-expired) suppression entries.
+ * Returns active (non-expired) test-level suppressions and the set of
+ * run commits that should be excluded entirely from analysis.
+ * @returns {{ testSuppressions: Array, runCommits: Set<string> }}
  */
 function loadSuppressions() {
   if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return { testSuppressions: [], runCommits: new Set() };
@@ -298,13 +300,10 @@ function truncate(str, maxLen) {
 }
 
 /**
- * Generate the markdown report.
+ * Aggregate summary statistics across all runs.
+ * @returns {{ overallPassRate: string }}
  */
-function generateReport(runs, failMap, suppressedMap = new Map()) {
-  const totalRuns = runs.length;
-  const firstRun = runs[0]?.timestamp || 'N/A';
-  const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
-
+function computeSummaryStats(runs) {
   const totalTests = runs.reduce((sum, r) => sum + (r.stats?.total || 0), 0);
   const totalPassed = runs.reduce((sum, r) => sum + (r.stats?.passed || 0), 0);
   const totalPending = runs.reduce((s, r) => s + (r.stats?.pending || 0), 0);
@@ -312,44 +311,71 @@ function generateReport(runs, failMap, suppressedMap = new Map()) {
   // Verified = tests that actually executed: exclude both pending and skipped.
   const verified = totalTests - totalPending - totalSkipped;
   const overallPassRate = verified > 0 ? ((totalPassed / verified) * 100).toFixed(2) : '0';
+  return { overallPassRate };
+}
 
+/**
+ * Sort failures by lifetime count and split into flaky/consistent/rare buckets.
+ * @returns {{ sorted: Array, flaky: Array, consistent: Array, rare: Array }}
+ */
+function classifyBuckets(failMap, totalRuns) {
   const sorted = [...failMap.entries()].sort((a, b) => b[1].count - a[1].count);
+  return {
+    sorted,
+    flaky: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'flaky'),
+    consistent: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'consistent'),
+    rare: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'rare'),
+  };
+}
 
-  const flaky = sorted.filter(([, v]) => classify(v.count, totalRuns) === 'flaky');
-  const consistent = sorted.filter(([, v]) => classify(v.count, totalRuns) === 'consistent');
-  const rare = sorted.filter(([, v]) => classify(v.count, totalRuns) === 'rare');
-
-  // Recency signals: catch tests that are failing *now* regardless of their
-  // lifetime fail rate (a brand-new regression has a low overall rate).
-  const recency = analyzeRecency(runs, failMap);
-  const actionable = sorted
+/**
+ * Filter to failures needing action now, ordered by urgency
+ * (longest current streak first, then most recent-window fails).
+ */
+function computeActionable(sorted, recency) {
+  return sorted
     .filter(([key]) => needsAction(recency.get(key)))
-    // Most urgent first: longest current streak, then most recent-window fails.
     .sort((a, b) => {
       const ra = recency.get(a[0]);
       const rb = recency.get(b[0]);
       return rb.streak - ra.streak || rb.recentFails - ra.recentFails;
     });
+}
 
-  const lines = [];
+/** First (optional) error line for a failure entry, cleaned and truncated. */
+function firstError(data) {
+  return data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
+}
 
-  lines.push('# Flaky Test Analysis Report');
-  lines.push('');
-  lines.push(`Generated: ${new Date().toISOString()}`);
-  lines.push('');
-  lines.push('## Summary');
-  lines.push('');
-  lines.push(`- **Runs analyzed:** ${totalRuns}`);
-  lines.push(`- **Period:** ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}`);
-  lines.push(`- **Overall pass rate:** ${overallPassRate}%`);
-  lines.push(`- **Unique failing tests:** ${failMap.size}`);
-  lines.push(`- **Flaky tests (10-79% fail rate):** ${flaky.length}`);
-  lines.push(`- **Consistently failing (>=80%):** ${consistent.length}`);
-  lines.push(`- **Rare failures (<10%):** ${rare.length}`);
-  lines.push(`- **⚠️ Action required (recent regressions):** ${actionable.length}`);
+/**
+ * Build the summary header section.
+ */
+function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap) {
+  const totalRuns = runs.length;
+  const firstRun = runs[0]?.timestamp || 'N/A';
+  const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
+
+  const lines = [
+    '# Flaky Test Analysis Report',
+    '',
+    `Generated: ${new Date().toISOString()}`,
+    '',
+    '## Summary',
+    '',
+    `- **Runs analyzed:** ${totalRuns}`,
+    `- **Period:** ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}`,
+    `- **Overall pass rate:** ${overallPassRate}%`,
+    `- **Unique failing tests:** ${failMap.size}`,
+    `- **Flaky tests (10-79% fail rate):** ${buckets.flaky.length}`,
+    `- **Consistently failing (>=80%):** ${buckets.consistent.length}`,
+    `- **Rare failures (<10%):** ${buckets.rare.length}`,
+    `- **⚠️ Action required (recent regressions):** ${actionable.length}`,
+  ];
+
   if (suppressedMap.size > 0) {
     lines.push(`- **🔇 Suppressed (known issues):** ${suppressedMap.size}`);
   }
+
   lines.push('');
   lines.push('> Note: only the **first failure per spec file** is tracked — specs run with');
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
@@ -357,132 +383,136 @@ function generateReport(runs, failMap, suppressedMap = new Map()) {
   lines.push('> repeated runs of the same commit).');
   lines.push('');
 
-  // --- Latest issues: surfaced first because they need action now ---
-  if (actionable.length > 0) {
-    lines.push('## ⚠️ Action Required — Recent Regressions');
+  return lines;
+}
+
+/** Compose the header suffix tags for an actionable entry. */
+function actionableTags(rec) {
+  const tags = [];
+  if (rec.streak >= STREAK_THRESHOLD) tags.push(`🔴 ${rec.streak} in a row`);
+  if (rec.isNew) tags.push('🆕 new regression');
+  if (!rec.failingNow) tags.push('recovered on latest run');
+  return tags;
+}
+
+/**
+ * Build the "Action Required" section (recent regressions surfaced first).
+ */
+function buildActionableSection(actionable, recency, totalRuns) {
+  if (actionable.length === 0) return [];
+
+  const lines = [
+    '## ⚠️ Action Required — Recent Regressions',
+    '',
+    `Tests failing **now**: a streak of ≥${STREAK_THRESHOLD} consecutive failures, or`,
+    `a majority of the last ${RECENT_WINDOW} runs failing. These likely reflect a real change`,
+    'rather than lifetime flakiness — investigate the recent commits.',
+    '',
+  ];
+
+  for (const [key, data] of actionable) {
+    const rec = recency.get(key);
+    const ctx = clean(data.context.join(' > '));
+    const error = firstError(data);
+    const rate = ((data.count / totalRuns) * 100).toFixed(1);
+    const tags = actionableTags(rec);
+    const tagSuffix = tags.length > 0 ? ` — ${tags.join(', ')}` : '';
+
+    lines.push(`### ${clean(data.file)}${tagSuffix}`);
     lines.push('');
-    lines.push(`Tests failing **now**: a streak of ≥${STREAK_THRESHOLD} consecutive failures, or`);
-    lines.push(`a majority of the last ${RECENT_WINDOW} runs failing. These likely reflect a real change`);
-    lines.push('rather than lifetime flakiness — investigate the recent commits.');
+    if (ctx) lines.push(`- **Context:** ${ctx}`);
+    lines.push(`- **it:** ${clean(data.it)}`);
+    lines.push(`- **Current streak:** ${rec.streak} consecutive failure(s)`);
+    lines.push(`- **Recent window:** ${rec.recentFails}/${rec.recentTotal} of last ${RECENT_WINDOW} runs failed`);
+    lines.push(`- **Lifetime:** ${data.count}/${totalRuns} runs (${rate}%)`);
+    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    if (error) lines.push(`- **Error:** ${error}`);
     lines.push('');
-    for (const [key, data] of actionable) {
-      const rec = recency.get(key);
-      const ctx = clean(data.context.join(' > '));
-      const error = data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
-      const rate = ((data.count / totalRuns) * 100).toFixed(1);
-      const tags = [];
-      if (rec.streak >= STREAK_THRESHOLD) tags.push(`🔴 ${rec.streak} in a row`);
-      if (rec.isNew) tags.push('🆕 new regression');
-      if (!rec.failingNow) tags.push('recovered on latest run');
-      lines.push(`### ${clean(data.file)}${tags.length ? ` — ${tags.join(', ')}` : ''}`);
-      lines.push('');
-      if (ctx) lines.push(`- **Context:** ${ctx}`);
-      lines.push(`- **it:** ${clean(data.it)}`);
-      lines.push(`- **Current streak:** ${rec.streak} consecutive failure(s)`);
-      lines.push(`- **Recent window:** ${rec.recentFails}/${rec.recentTotal} of last ${RECENT_WINDOW} runs failed`);
-      lines.push(`- **Lifetime:** ${data.count}/${totalRuns} runs (${rate}%)`);
-      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
-      if (error) lines.push(`- **Error:** ${error}`);
-      lines.push('');
-    }
   }
 
-  if (flaky.length > 0) {
-    lines.push('## Flaky Tests');
+  return lines;
+}
+
+/**
+ * Build one failure-bucket section (Flaky / Consistently Failing / Rare).
+ * @param {object} opts
+ * @param {string} opts.heading   Section heading text.
+ * @param {string} opts.intro     One-line description under the heading.
+ * @param {boolean} opts.showRate Include the percentage in the failures line.
+ * @param {boolean} opts.showError Include the error line.
+ */
+function buildBucketSection(entries, totalRuns, { heading, intro, showRate, showError }) {
+  if (entries.length === 0) return [];
+
+  const lines = [`## ${heading}`, '', intro, ''];
+
+  for (const [, data] of entries) {
+    const rate = ((data.count / totalRuns) * 100).toFixed(1);
+    const ctx = clean(data.context.join(' > '));
+    const error = showError ? firstError(data) : '';
+    const failures = showRate ? `${data.count}/${totalRuns} (${rate}%)` : `${data.count}/${totalRuns}`;
+
+    lines.push(`### ${clean(data.file)}`);
     lines.push('');
-    lines.push('First failure per spec file — tests within a file depend on previous ones.');
+    if (ctx) lines.push(`- **Context:** ${ctx}`);
+    lines.push(`- **it:** ${clean(data.it)}`);
+    lines.push(`- **Failures:** ${failures}`);
+    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    if (error) lines.push(`- **Error:** ${error}`);
     lines.push('');
-    for (const [, data] of flaky) {
-      const rate = ((data.count / totalRuns) * 100).toFixed(1);
-      const ctx = clean(data.context.join(' > '));
-      const error = data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
-      lines.push(`### ${clean(data.file)}`);
-      lines.push('');
-      if (ctx) lines.push(`- **Context:** ${ctx}`);
-      lines.push(`- **it:** ${clean(data.it)}`);
-      lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
-      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
-      if (error) lines.push(`- **Error:** ${error}`);
-      lines.push('');
-    }
   }
 
-  if (consistent.length > 0) {
-    lines.push('## Consistently Failing Tests');
-    lines.push('');
-    lines.push('First failure per spec file — fail in most runs, likely broken.');
-    lines.push('');
-    for (const [, data] of consistent) {
-      const rate = ((data.count / totalRuns) * 100).toFixed(1);
-      const ctx = clean(data.context.join(' > '));
-      lines.push(`### ${clean(data.file)}`);
-      lines.push('');
-      if (ctx) lines.push(`- **Context:** ${ctx}`);
-      lines.push(`- **it:** ${clean(data.it)}`);
-      lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
-      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
-      lines.push('');
+  return lines;
+}
+
+/** Group normalised error strings shared by more than one spec. */
+function groupErrorPatterns(sorted) {
+  const errorGroups = new Map();
+  for (const [, data] of sorted) {
+    const label = `${data.file} > ${data.context.join(' > ')} > ${data.it}`;
+    for (const err of data.errors) {
+      const normalized = err.replace(/\d+/g, 'N').slice(0, 100);
+      if (!errorGroups.has(normalized)) errorGroups.set(normalized, []);
+      errorGroups.get(normalized).push(label);
     }
   }
+  return [...errorGroups.entries()].filter(([, tests]) => tests.length > 1).sort((a, b) => b[1].length - a[1].length);
+}
 
-  if (rare.length > 0) {
-    lines.push('## Rare Failures');
+/**
+ * Build the "Error Patterns" section (recurring errors across spec files).
+ */
+function buildErrorPatternsSection(sorted, failMap) {
+  if (failMap.size === 0) return [];
+
+  const lines = ['## Error Patterns', ''];
+  const groupedErrors = groupErrorPatterns(sorted);
+
+  if (groupedErrors.length === 0) {
+    lines.push('No recurring error patterns detected across multiple tests.');
     lines.push('');
-    lines.push('First failure per spec file — failed once or twice, may be environment-related.');
-    lines.push('');
-    for (const [, data] of rare) {
-      const ctx = clean(data.context.join(' > '));
-      const error = data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
-      lines.push(`### ${clean(data.file)}`);
-      lines.push('');
-      if (ctx) lines.push(`- **Context:** ${ctx}`);
-      lines.push(`- **it:** ${clean(data.it)}`);
-      lines.push(`- **Failures:** ${data.count}/${totalRuns}`);
-      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
-      if (error) lines.push(`- **Error:** ${error}`);
-      lines.push('');
-    }
+    return lines;
   }
 
-  if (failMap.size > 0) {
-    lines.push('## Error Patterns');
-    lines.push('');
-
-    const errorGroups = new Map();
-    for (const [, data] of sorted) {
-      const label = `${data.file} > ${data.context.join(' > ')} > ${data.it}`;
-      for (const err of data.errors) {
-        const normalized = err.replace(/\d+/g, 'N').slice(0, 100);
-        if (!errorGroups.has(normalized)) {
-          errorGroups.set(normalized, []);
-        }
-        errorGroups.get(normalized).push(label);
-      }
-    }
-
-    const groupedErrors = [...errorGroups.entries()].filter(([, tests]) => tests.length > 1).sort((a, b) => b[1].length - a[1].length);
-
-    if (groupedErrors.length > 0) {
-      lines.push('Recurring error patterns across multiple spec files:');
-      lines.push('');
-      for (const [pattern, tests] of groupedErrors.slice(0, 10)) {
-        lines.push(`### ${truncate(pattern, 100)}`);
-        lines.push('');
-        lines.push(`Affects ${tests.length} spec(s):`);
-        for (const t of tests.slice(0, 5)) {
-          lines.push(`- ${truncate(t, 120)}`);
-        }
-        if (tests.length > 5) lines.push(`- ...and ${tests.length - 5} more`);
-        lines.push('');
-      }
-    } else {
-      lines.push('No recurring error patterns detected across multiple tests.');
-      lines.push('');
-    }
-  }
-
-  lines.push('## Run History');
+  lines.push('Recurring error patterns across multiple spec files:');
   lines.push('');
+  for (const [pattern, tests] of groupedErrors.slice(0, 10)) {
+    lines.push(`### ${truncate(pattern, 100)}`);
+    lines.push('');
+    lines.push(`Affects ${tests.length} spec(s):`);
+    for (const t of tests.slice(0, 5)) lines.push(`- ${truncate(t, 120)}`);
+    if (tests.length > 5) lines.push(`- ...and ${tests.length - 5} more`);
+    lines.push('');
+  }
+
+  return lines;
+}
+
+/**
+ * Build the "Run History" section (last 20 runs, newest first).
+ */
+function buildRunHistorySection(runs) {
+  const lines = ['## Run History', ''];
 
   const recentRuns = runs.slice(-20);
   for (let i = recentRuns.length - 1; i >= 0; i--) {
@@ -496,32 +526,84 @@ function generateReport(runs, failMap, suppressedMap = new Map()) {
   }
   lines.push('');
 
-  // --- Suppressed known issues (collapsed at the bottom) ---
-  if (suppressedMap.size > 0) {
-    lines.push('## 🔇 Suppressed — Known Issues');
-    lines.push('');
-    lines.push('These failures are suppressed from actionable sections because they have been');
-    lines.push('reviewed and linked to a tracked ticket. Edit `scripts/flaky-suppressions.json`');
-    lines.push('to add, remove, or expire suppressions.');
-    lines.push('');
+  return lines;
+}
 
-    const sortedSuppressed = [...suppressedMap.entries()].sort((a, b) => b[1].data.count - a[1].data.count);
+/**
+ * Build the collapsed "Suppressed — Known Issues" section.
+ */
+function buildSuppressedSection(suppressedMap, totalRuns) {
+  if (suppressedMap.size === 0) return [];
 
-    for (const [, { data, rule }] of sortedSuppressed) {
-      const rate = ((data.count / totalRuns) * 100).toFixed(1);
-      const ctx = clean(data.context.join(' > '));
-      lines.push(`### ${clean(data.file)}`);
-      lines.push('');
-      if (ctx) lines.push(`- **Context:** ${ctx}`);
-      lines.push(`- **it:** ${clean(data.it)}`);
-      lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
-      lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
-      lines.push(`- **Reason:** ${rule.reason}`);
-      lines.push(`- **Ticket:** ${rule.ticket}`);
-      if (rule.expiresAt) lines.push(`- **Expires:** ${rule.expiresAt}`);
-      lines.push('');
-    }
+  const lines = [
+    '## 🔇 Suppressed — Known Issues',
+    '',
+    'These failures are suppressed from actionable sections because they have been',
+    'reviewed and linked to a tracked ticket. Edit `scripts/flaky-suppressions.json`',
+    'to add, remove, or expire suppressions.',
+    '',
+  ];
+
+  const sortedSuppressed = [...suppressedMap.entries()].sort((a, b) => b[1].data.count - a[1].data.count);
+
+  for (const [, { data, rule }] of sortedSuppressed) {
+    const rate = ((data.count / totalRuns) * 100).toFixed(1);
+    const ctx = clean(data.context.join(' > '));
+    lines.push(`### ${clean(data.file)}`);
+    lines.push('');
+    if (ctx) lines.push(`- **Context:** ${ctx}`);
+    lines.push(`- **it:** ${clean(data.it)}`);
+    lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
+    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    lines.push(`- **Reason:** ${rule.reason}`);
+    lines.push(`- **Ticket:** ${rule.ticket}`);
+    if (rule.expiresAt) lines.push(`- **Expires:** ${rule.expiresAt}`);
+    lines.push('');
   }
+
+  return lines;
+}
+
+/**
+ * Generate the markdown report.
+ */
+function generateReport(runs, failMap, suppressedMap = new Map()) {
+  const totalRuns = runs.length;
+  const { overallPassRate } = computeSummaryStats(runs);
+  const buckets = classifyBuckets(failMap, totalRuns);
+
+  // Recency signals: catch tests that are failing *now* regardless of their
+  // lifetime fail rate (a brand-new regression has a low overall rate).
+  const recency = analyzeRecency(runs, failMap);
+  const actionable = computeActionable(buckets.sorted, recency);
+
+  const lines = [
+    ...buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap),
+    // --- Latest issues: surfaced first because they need action now ---
+    ...buildActionableSection(actionable, recency, totalRuns),
+    ...buildBucketSection(buckets.flaky, totalRuns, {
+      heading: 'Flaky Tests',
+      intro: 'First failure per spec file — tests within a file depend on previous ones.',
+      showRate: true,
+      showError: true,
+    }),
+    ...buildBucketSection(buckets.consistent, totalRuns, {
+      heading: 'Consistently Failing Tests',
+      intro: 'First failure per spec file — fail in most runs, likely broken.',
+      showRate: true,
+      showError: false,
+    }),
+    ...buildBucketSection(buckets.rare, totalRuns, {
+      heading: 'Rare Failures',
+      intro: 'First failure per spec file — failed once or twice, may be environment-related.',
+      showRate: false,
+      showError: true,
+    }),
+    ...buildErrorPatternsSection(buckets.sorted, failMap),
+    ...buildRunHistorySection(runs),
+    // --- Suppressed known issues (collapsed at the bottom) ---
+    ...buildSuppressedSection(suppressedMap, totalRuns),
+  ];
 
   return lines.join('\n');
 }
@@ -538,8 +620,16 @@ function main() {
     runs = runs.slice(-LAST_N);
   }
 
+  const { testSuppressions, runCommits } = loadSuppressions();
+
+  if (runCommits.size > 0) {
+    const before = runs.length;
+    runs = runs.filter((r) => !runCommits.has(r.commit));
+    const excluded = before - runs.length;
+    if (excluded > 0) console.log(`  Excluded ${excluded} suppressed run(s)`);
+  }
+
   const fullFailMap = aggregateFailures(runs);
-  const { testSuppressions } = loadSuppressions();
   const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, testSuppressions);
   const report = generateReport(runs, failMap, suppressedMap);
 
@@ -562,6 +652,6 @@ function main() {
   console.log(`Report written to ${OUTPUT_PATH}`);
 }
 
-module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions };
+module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey };
 
 if (require.main === module) main();
