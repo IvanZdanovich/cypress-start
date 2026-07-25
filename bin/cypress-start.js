@@ -58,14 +58,21 @@ const OPTIONAL_MODULES = {
   },
 };
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+let rl;
+
+function getReadline() {
+  if (!rl) {
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+  }
+  return rl;
+}
 
 function question(query) {
   return new Promise((resolve) => {
-    rl.question(query, (answer) => {
+    getReadline().question(query, (answer) => {
       resolve(answer);
     });
   });
@@ -487,7 +494,7 @@ async function main() {
     // Validate project name
     const isValid = await validateProjectName(projectName);
     if (!isValid) {
-      rl.close();
+      rl?.close();
       process.exit(1);
     }
 
@@ -529,22 +536,33 @@ async function main() {
       log('\n✅ Files copied successfully!', 'green');
     }
 
-    rl.close();
+    rl?.close();
 
     // Print success message
     printSuccessMessage(projectName, setupMode, selectedModules);
   } catch (error) {
     console.error(`\n${COLORS.red}${COLORS.bright}❌ Error:${COLORS.reset} ${error.message}`);
-    rl.close();
+    rl?.close();
     process.exit(1);
   }
 }
 
-// Handle SIGINT (Ctrl+C)
-process.on('SIGINT', () => {
-  console.log(`\n\n${COLORS.yellow}Setup cancelled by user${COLORS.reset}`);
-  rl.close();
-  process.exit(0);
-});
+// Only run the interactive CLI and register the SIGINT handler when this file
+// is executed directly, so the module can be required in tests without side effects.
+if (require.main === module) {
+  // Handle SIGINT (Ctrl+C)
+  process.on('SIGINT', () => {
+    console.log(`\n\n${COLORS.yellow}Setup cancelled by user${COLORS.reset}`);
+    rl?.close();
+    process.exit(0);
+  });
 
-main();
+  main();
+}
+
+module.exports = {
+  OPTIONAL_MODULES,
+  validateProjectName,
+  copyDirectory,
+  copyOrUpdatePackageJson,
+};

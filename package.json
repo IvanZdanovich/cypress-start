@@ -10,7 +10,7 @@
     "create-cypress-start": "bin/cypress-start.js"
   },
   "files": [
-    "bin/"
+    "bin/cypress-start.js"
   ],
   "scripts": {
     "pretest": "node scripts/l10n.js activate && node scripts/l10n.js types && node scripts/colours.js activate && node scripts/colours.js types",
