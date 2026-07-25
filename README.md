@@ -6,7 +6,7 @@
       <source media="(prefers-color-scheme: light)" srcset="./assets/cypress-logo-light.png">
       <img alt="Cypress Logo" src="./assets/cypress-logo-light.png">
     </picture>
-</p>*
+</p>
 
 ## Table of Contents
 
@@ -226,7 +226,7 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers.
 - `language` — Language code (default: `en`)
 - `target_env` — Target environment (default: `dev`)
 - `colour_theme` — Color theme (default: `default`)
-- `parallel_streams` — Number of parallel streams, 1–6 (default: `3`)
+- `parallel_streams` — Number of parallel streams, 1–4 (default: `2`)
 - `browser` — Browser to use: `electron`, `chrome`, `firefox`, `edge` (default: `electron`)
 - `test_scope` — Scope of tests to run: `all`, `integration`, `e2e` (default: `all`)
 - `test_type` — Type of tests to run: `all`, `api`, `ui` (default: `all`)

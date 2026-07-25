@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
@@ -64,14 +64,10 @@ const rl = readline.createInterface({
 });
 
 function question(query) {
-  return new Promise((resolve, reject) => {
-    try {
-      rl.question(query, (answer) => {
-        resolve(answer);
-      });
-    } catch (error) {
-      reject(error);
-    }
+  return new Promise((resolve) => {
+    rl.question(query, (answer) => {
+      resolve(answer);
+    });
   });
 }
 
@@ -118,6 +114,11 @@ function copyDirectory(source, destination) {
 async function validateProjectName(projectName) {
   if (!projectName) {
     log('❌ Project name is required!', 'red');
+    return false;
+  }
+
+  if (/[^a-zA-Z0-9._\-]/.test(projectName)) {
+    log('❌ Project name must only contain letters, numbers, dots, dashes, or underscores.', 'red');
     return false;
   }
 
@@ -178,7 +179,7 @@ async function cloneTemplate(projectName) {
   logStep('1/5', 'Cloning template from GitHub...');
 
   try {
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${projectName}"`, { stdio: 'inherit', shell: true });
+    spawnSync('git', ['clone', '--depth', '1', GITHUB_TEMPLATE_URL, projectName], { stdio: 'inherit' });
     log('✅ Template cloned successfully', 'green');
   } catch (error) {
     log('❌ Failed to clone template. Please check your internet connection.', 'red');
@@ -267,7 +268,7 @@ async function copySpecificFiles(projectName, selectedModules) {
   try {
     // Clone to temporary directory
     log('  Downloading files from GitHub...', 'cyan');
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${tempPath}"`, { stdio: 'pipe', shell: true });
+    spawnSync('git', ['clone', '--depth', '1', GITHUB_TEMPLATE_URL, tempPath], { stdio: 'pipe' });
 
     // Create project directory
     fs.mkdirSync(projectPath, { recursive: true });
@@ -327,7 +328,7 @@ async function cleanupGitHistory(projectName) {
   }
 
   // Initialize new git repository
-  execSync('git init', { cwd: projectPath, stdio: 'inherit', shell: true });
+  spawnSync('git', ['init'], { cwd: projectPath, stdio: 'inherit' });
   log('✅ Fresh git repository initialized', 'green');
 }
 
@@ -363,7 +364,7 @@ async function installDependencies(projectName) {
   const projectPath = path.resolve(projectName);
 
   try {
-    execSync('npm install', { cwd: projectPath, stdio: 'inherit', shell: true });
+    spawnSync('npm', ['install'], { cwd: projectPath, stdio: 'inherit' });
     log('✅ Dependencies installed successfully', 'green');
   } catch {
     log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
@@ -409,7 +410,7 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
   }
 
   const docsSection =
-    selectedModules?.documentation !== false
+    selectedModules?.documentation
       ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
   - Test Writing Guidelines: ${COLORS.blue}docs/test-writing-guideline.md${COLORS.reset}
   - Naming Conventions: ${COLORS.blue}docs/naming-conventions.md${COLORS.reset}
