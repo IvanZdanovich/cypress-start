@@ -20,7 +20,7 @@ module.exports = {
     },
   },
   create(context) {
-    const filename = context.filename;
+    const filename = context.filename || context.getFilename?.() || '';
 
     // Only apply this rule to API command files
     if (!filename.includes('/commands/api/') || !filename.endsWith('.api.commands.js')) {

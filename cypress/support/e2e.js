@@ -10,7 +10,7 @@ import '../commands/api/common.api.commands';
 import '../commands/api/restful-booker.api.commands';
 
 import l10n from '../localization/l10n.json';
-import colours from '../colours/default-theme-colours.json';
+import colours from '../colours/colours.json';
 import selectors from '../selectors/selectors';
 import urls from './urls/api-urls';
 import utils from './utils/utils';

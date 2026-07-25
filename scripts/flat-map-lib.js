@@ -158,7 +158,7 @@ type ${typeName} =
 ${union};
 
 /** ${mapDescription} */
-declare const ${globalName}: Record<${typeName}, string>;
+declare var ${globalName}: Record<${typeName}, string>;
 `;
     try {
       fs.writeFileSync(typesFile, out);

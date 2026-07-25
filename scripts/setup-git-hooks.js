@@ -16,6 +16,10 @@ const path = require('path');
 const hooksDir = path.join(__dirname, '..', '.git', 'hooks');
 const preCommitHook = path.join(hooksDir, 'pre-commit');
 const checkScriptPath = path.join(__dirname, 'pre-commit-lint.js');
+// Normalize to forward slashes so the path is safe to embed in the /bin/sh hook.
+// On Windows (Git Bash) path.join() yields backslashes, which the shell would
+// interpret as escape sequences and break the node "..." invocation.
+const normalizedCheckScriptPath = checkScriptPath.split(path.sep).join('/');
 
 // Check if .git directory exists (skip in CI or template creation)
 if (!fs.existsSync(path.join(__dirname, '..', '.git'))) {
@@ -41,7 +45,7 @@ fi
 
 echo "Running ESLint check..."
 export PATH="$PATH:/usr/local/bin"
-node "${checkScriptPath}"
+node "${normalizedCheckScriptPath}"
 `;
 
 try {
