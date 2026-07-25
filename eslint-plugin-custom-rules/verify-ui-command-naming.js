@@ -1,3 +1,6 @@
+// Compiled once at module scope — reused across every file and every call.
+const UI_PART_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -15,7 +18,7 @@ module.exports = {
     },
   },
   create(context) {
-    const filename = context.getFilename();
+    const filename = context.filename || context.getFilename?.() || '';
 
     // Only apply this rule to UI command files
     if (!filename.includes('/commands/ui/') || !filename.endsWith('.ui.commands.js')) {
@@ -43,12 +46,12 @@ module.exports = {
       const [page, action] = parts;
 
       // Validate page name (must start with lowercase letter, can contain letters and numbers)
-      if (!/^[a-z][a-zA-Z0-9]*$/.test(page)) {
+      if (!UI_PART_PATTERN.test(page)) {
         return 'invalidCasing';
       }
 
       // Validate action name (must start with lowercase letter, can contain letters and numbers)
-      if (!/^[a-z][a-zA-Z0-9]*$/.test(action)) {
+      if (!UI_PART_PATTERN.test(action)) {
         return 'invalidCasing';
       }
 

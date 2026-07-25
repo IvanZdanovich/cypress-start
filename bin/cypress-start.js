@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
@@ -22,7 +22,7 @@ const OPTIONAL_MODULES = {
   eslintCustomRules: {
     name: 'ESLint Custom Rules',
     description: 'Custom ESLint rules for test title standardization, validation, and JSON structure definitions',
-    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/check-eslint.js', 'scripts/setup-git-hooks.js', '.prettierrc.js'],
+    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/setup-git-hooks.js', '.prettierrc.js'],
     scripts: {
       lint: 'eslint . --format stylish --fix',
       postinstall: 'node scripts/setup-git-hooks.js',
@@ -34,10 +34,10 @@ const OPTIONAL_MODULES = {
     description: 'Comprehensive testing guidelines, conventions, best practices, and bug logging system',
     files: ['docs/'],
   },
-  copilotInstructions: {
-    name: 'Copilot Instructions',
-    description: 'GitHub Copilot configuration and test-specific instructions',
-    files: ['.github/copilot-instructions.md', '.github/instructions/'],
+  claudeSkills: {
+    name: 'Claude Skills',
+    description: 'Claude Code skill files for AI-assisted test writing, constraints, examples, and documentation workflows',
+    files: ['.claude/'],
   },
   parallelRunner: {
     name: 'Parallel Test Execution',
@@ -58,20 +58,23 @@ const OPTIONAL_MODULES = {
   },
 };
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+let rl;
+
+function getReadline() {
+  if (!rl) {
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+  }
+  return rl;
+}
 
 function question(query) {
-  return new Promise((resolve, reject) => {
-    try {
-      rl.question(query, (answer) => {
-        resolve(answer);
-      });
-    } catch (error) {
-      reject(error);
-    }
+  return new Promise((resolve) => {
+    getReadline().question(query, (answer) => {
+      resolve(answer);
+    });
   });
 }
 
@@ -121,6 +124,11 @@ async function validateProjectName(projectName) {
     return false;
   }
 
+  if (/[^a-zA-Z0-9._\-]/.test(projectName)) {
+    log('❌ Project name must only contain letters, numbers, dots, dashes, or underscores.', 'red');
+    return false;
+  }
+
   const projectPath = path.resolve(projectName);
   if (fs.existsSync(projectPath)) {
     log(`❌ Directory "${projectName}" already exists!`, 'red');
@@ -135,7 +143,7 @@ async function selectSetupMode() {
 ${COLORS.bright}${COLORS.cyan}Setup Mode Selection:${COLORS.reset}
 
   ${COLORS.green}1.${COLORS.reset} ${COLORS.bright}Full Setup${COLORS.reset} - Install complete framework with all features
-     └─ Includes: Complete test suite, ESLint rules, documentation, Copilot instructions,
+     └─ Includes: Complete test suite, ESLint rules, documentation, Claude Skills,
         GitHub workflows, parallel runner, Docker support
 
   ${COLORS.yellow}2.${COLORS.reset} ${COLORS.bright}Specific Files${COLORS.reset} - Choose which modules to include
@@ -178,7 +186,7 @@ async function cloneTemplate(projectName) {
   logStep('1/5', 'Cloning template from GitHub...');
 
   try {
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${projectName}"`, { stdio: 'inherit', shell: true });
+    spawnSync('git', ['clone', '--depth', '1', GITHUB_TEMPLATE_URL, projectName], { stdio: 'inherit' });
     log('✅ Template cloned successfully', 'green');
   } catch (error) {
     log('❌ Failed to clone template. Please check your internet connection.', 'red');
@@ -267,7 +275,7 @@ async function copySpecificFiles(projectName, selectedModules) {
   try {
     // Clone to temporary directory
     log('  Downloading files from GitHub...', 'cyan');
-    execSync(`git clone --depth 1 ${GITHUB_TEMPLATE_URL} "${tempPath}"`, { stdio: 'pipe', shell: true });
+    spawnSync('git', ['clone', '--depth', '1', GITHUB_TEMPLATE_URL, tempPath], { stdio: 'pipe' });
 
     // Create project directory
     fs.mkdirSync(projectPath, { recursive: true });
@@ -327,7 +335,7 @@ async function cleanupGitHistory(projectName) {
   }
 
   // Initialize new git repository
-  execSync('git init', { cwd: projectPath, stdio: 'inherit', shell: true });
+  spawnSync('git', ['init'], { cwd: projectPath, stdio: 'inherit' });
   log('✅ Fresh git repository initialized', 'green');
 }
 
@@ -363,7 +371,7 @@ async function installDependencies(projectName) {
   const projectPath = path.resolve(projectName);
 
   try {
-    execSync('npm install', { cwd: projectPath, stdio: 'inherit', shell: true });
+    spawnSync('npm', ['install'], { cwd: projectPath, stdio: 'inherit' });
     log('✅ Dependencies installed successfully', 'green');
   } catch {
     log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
@@ -409,7 +417,7 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
   }
 
   const docsSection =
-    selectedModules?.documentation !== false
+    selectedModules?.documentation
       ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
   - Test Writing Guidelines: ${COLORS.blue}docs/test-writing-guideline.md${COLORS.reset}
   - Naming Conventions: ${COLORS.blue}docs/naming-conventions.md${COLORS.reset}
@@ -486,7 +494,7 @@ async function main() {
     // Validate project name
     const isValid = await validateProjectName(projectName);
     if (!isValid) {
-      rl.close();
+      rl?.close();
       process.exit(1);
     }
 
@@ -528,22 +536,33 @@ async function main() {
       log('\n✅ Files copied successfully!', 'green');
     }
 
-    rl.close();
+    rl?.close();
 
     // Print success message
     printSuccessMessage(projectName, setupMode, selectedModules);
   } catch (error) {
     console.error(`\n${COLORS.red}${COLORS.bright}❌ Error:${COLORS.reset} ${error.message}`);
-    rl.close();
+    rl?.close();
     process.exit(1);
   }
 }
 
-// Handle SIGINT (Ctrl+C)
-process.on('SIGINT', () => {
-  console.log(`\n\n${COLORS.yellow}Setup cancelled by user${COLORS.reset}`);
-  rl.close();
-  process.exit(0);
-});
+// Only run the interactive CLI and register the SIGINT handler when this file
+// is executed directly, so the module can be required in tests without side effects.
+if (require.main === module) {
+  // Handle SIGINT (Ctrl+C)
+  process.on('SIGINT', () => {
+    console.log(`\n\n${COLORS.yellow}Setup cancelled by user${COLORS.reset}`);
+    rl?.close();
+    process.exit(0);
+  });
 
-main();
+  main();
+}
+
+module.exports = {
+  OPTIONAL_MODULES,
+  validateProjectName,
+  copyDirectory,
+  copyOrUpdatePackageJson,
+};

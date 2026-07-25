@@ -1,63 +1,59 @@
+// Compiled once at module scope — reused across every file and every call.
+const VALID_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+const RESOURCE_PATTERN = /^[a-z]\w*$/;
+const ACTION_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
+
 module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Verify API command names follow the naming convention: resourceName__actionDescription__METHOD',
+      description: 'Verify API command names follow the naming convention: endpointName__actionDescription__METHOD',
       category: 'Best Practices',
       recommended: true,
     },
     schema: [],
     messages: {
-      invalidApiCommandName: 'API command name "{{commandName}}" does not follow the naming convention. Expected pattern: resourceName__actionDescription__METHOD (e.g., "settingAuditRound__add__POST", "templates__getById__GET")',
+      invalidApiCommandName: 'API command name "{{commandName}}" does not follow the naming convention. Expected pattern: endpointName__actionDescription__METHOD',
       missingDoubleUnderscore: 'API command name "{{commandName}}" must use double underscores (__) as separators',
       invalidHttpMethod: 'API command name "{{commandName}}" must end with a valid HTTP method: GET, POST, PUT, PATCH, DELETE',
       invalidCasing: 'API command name "{{commandName}}" must use camelCase for resource and action parts',
     },
   },
   create(context) {
-    const filename = context.getFilename();
+    const filename = context.filename || context.getFilename?.() || '';
 
     // Only apply this rule to API command files
     if (!filename.includes('/commands/api/') || !filename.endsWith('.api.commands.js')) {
       return {};
     }
 
-    // Valid HTTP methods
-    const validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-
-    // Pattern: resourceName__actionDescription__METHOD
+    // Pattern: endpointName__actionDescription__METHOD
     // - resourceName: camelCase (may include underscores for nested resources like setting_auditRound)
     // - actionDescription: camelCase
     // - METHOD: uppercase HTTP method
 
     function validateApiCommandName(commandName) {
-      // Check for double underscores
       if (!commandName.includes('__')) {
         return 'missingDoubleUnderscore';
       }
 
-      // Split by double underscores
       const parts = commandName.split('__');
 
-      // Must have exactly 3 parts: resource, action, method
       if (parts.length !== 3) {
         return 'invalidApiCommandName';
       }
 
       const [resource, action, method] = parts;
 
-      // Validate HTTP method
-      if (!validMethods.includes(method)) {
+      if (!VALID_METHODS.has(method)) {
         return 'invalidHttpMethod';
       }
 
-      // Validate resource name (must start with lowercase letter, can contain letters, numbers, underscores)
-      if (!/^[a-z][a-zA-Z0-9_]*$/.test(resource)) {
+      if (!RESOURCE_PATTERN.test(resource)) {
         return 'invalidCasing';
       }
 
-      // Validate action name (must start with lowercase letter, can contain letters and numbers)
-      if (!/^[a-z][a-zA-Z0-9]*$/.test(action)) {
+      if (!ACTION_PATTERN.test(action)) {
         return 'invalidCasing';
       }
 

@@ -1,3 +1,16 @@
+function getNodeTitle(node) {
+  const arg = node.arguments[0];
+  if (!arg) return null;
+  if (arg.type === 'Literal' && typeof arg.value === 'string') return arg.value;
+  if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0) return arg.quasis[0].value.cooked;
+  return null;
+}
+
+// Defined at module scope so the regex object is compiled once per ESLint
+// process.  The explicit lastIndex reset before each exec-loop makes it safe
+// to share the instance across multiple checkTitle() calls.
+const INVALID_CHARACTERS_PATTERN = /[!@#$%^&*()+={}[\]|\\;"'<>?/]/g;
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -9,10 +22,8 @@ module.exports = {
     schema: [], // no options
   },
   create(context) {
-    const invalidCharactersPattern = /[!@#$%^&*()+={}[\]|\\;"'<>?/]/g;
-
     function checkTitle(node) {
-      const title = node.arguments[0] && node.arguments[0]?.value;
+      const title = getNodeTitle(node);
       if (title) {
         if (title.trim() !== title) {
           context.report({
@@ -22,7 +33,10 @@ module.exports = {
         } else {
           const invalidCharacters = [];
           let match;
-          while ((match = invalidCharactersPattern.exec(title)) !== null) {
+          // Explicit reset ensures a shared module-level g-flag regex always
+          // starts from position 0, regardless of previous call history.
+          INVALID_CHARACTERS_PATTERN.lastIndex = 0;
+          while ((match = INVALID_CHARACTERS_PATTERN.exec(title)) !== null) {
             invalidCharacters.push({ char: match[0], index: match.index });
           }
           if (invalidCharacters.length > 0) {

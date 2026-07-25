@@ -1,0 +1,6 @@
+{
+  "$schema": "./flaky-suppressions.schema.json",
+  "$comment": "Suppress known/reviewed failures from the flaky-test report. `suppressions` silences a specific test (file + context + it). `runSuppressions` excludes an entire CI run by commit SHA — use when an environment outage compromises all stats for a run.",
+  "suppressions": [],
+  "runSuppressions": []
+}

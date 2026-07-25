@@ -11,9 +11,18 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
+// Enable every custom rule registered in the plugin's index.js so the config
+// can never drift out of sync with the registered rule set. Rules default to
+// 'error'; list only the exceptions here.
+const customRuleSeverityOverrides = {
+  'find-unused-examples': 'warn',
+  'verify-req-config': 'warn',
+};
+const customRules = Object.fromEntries(Object.keys(customPlugin.rules).map((name) => [`custom/${name}`, customRuleSeverityOverrides[name] ?? 'error']));
+
 export default [
   {
-    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'], // Add your ignore patterns here
+    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'],
   },
   ...compat.extends('plugin:chai-friendly/recommended', 'plugin:prettier/recommended'),
   {
@@ -37,16 +46,13 @@ export default [
       'cypress/unsafe-to-chain-command': 'error',
       'no-unused-expressions': 'warn',
       'chai-friendly/no-unused-expressions': 'error',
-      'custom/do-not-allow-empty-blocks': 'error',
-      'custom/prevent-duplicated-titles': 'error',
-      'custom/prevent-test-data-loops': 'error',
-      'custom/verify-test-title-without-forbidden-symbols': 'error',
-      'custom/verify-test-title-pattern': 'error',
-      'custom/verify-test-title-against-structure': 'error',
-      'custom/verify-todos-have-links': 'error',
-      'custom/standardize-test-titles': 'warn',
-      'custom/verify-api-command-naming': 'error',
-      'custom/verify-ui-command-naming': 'error',
+      ...customRules,
+    },
+  },
+  {
+    files: ['cypress/integration/**/*.spec.js', 'cypress/e2e/**/*.spec.js'],
+    rules: {
+      'no-magic-numbers': ['warn', { ignore: [0, 1, -1], ignoreArrayIndexes: true }],
     },
   },
 ];

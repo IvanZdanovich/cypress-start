@@ -1,14 +1,26 @@
+# auto-generated files (do not edit by hand)
+cypress/localization/l10n.json
+cypress/colours/colours.json
+cypress/support/l10n.d.ts
+cypress/support/colours.d.ts
+
 # compiled output
 dist
 
 # separate reports
+cypress/reports/**
 !cypress/reports/mochawesome/.gitkeep
 !cypress/reports/screenshots/.gitkeep
-cypress/reports/**
+
+# generated coverage / requirements reports
+reports/**
 
 # asset folders
 cypress/downloads
 cypress/fixtures/assets
+
+#development data
+development-data
 
 # dependencies
 node_modules

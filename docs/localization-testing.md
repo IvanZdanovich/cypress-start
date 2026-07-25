@@ -1,28 +1,36 @@
-# Localization Testing in Cypress
+# Localization
 
-## Overview
+Tests assert localized UI text through the global `l10n` map, never hardcoded strings. Keys are flat, dot-namespaced,
+and shared byte-for-byte with the frontend — the key string is the contract.
 
-The project manages localizations using environment variable and file copying to support multiple color configurations.
-
-## Implementation Details
-
-### Environment Variables
-
-- `LANGUAGE`: Specifies the language code.
-
-### JSON Localization Files
-
-Localization strings are stored in JSON files, organized by language.
-
-### Pretest Script
-
-A pretest script copies the appropriate localization file to a common file (`l10n.json`).
-Run the pretest script during implementation to update it.
-
-```bash
-  LANGUAGE=en npm run pretest
+```javascript
+cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
 ```
 
-### Accessing Localization Strings
+## How it works
 
-In your tests, you can access the localization strings using global variable `l10n`.
+- One flat JSON per language at `cypress/localization/{lang}-localization.json` (`"dotted.key": "Translated text"`, no
+  nesting). These are the source files you edit.
+- `pretest` copies the `LANGUAGE`-selected file to the generated `cypress/localization/l10n.json` (the global `l10n`
+  map) and regenerates `cypress/support/l10n.d.ts`, which types keys so a missing or renamed key is a dev-time error.
+
+```bash
+LANGUAGE=en npm run pretest      # select language + regenerate types
+npm run l10n types               # regenerate types on demand
+npm run l10n add <key> <value>   # add a key to every locale file (interactive if no args)
+npm run l10n remove <key>        # remove a key from every locale file
+npm run l10n sync                # align locale files (add missing, sort)
+```
+
+All localization operations run through the single `scripts/l10n.js` CLI (`node scripts/l10n.js help`).
+
+## Source of truth
+
+The **[localization-testing skill](../.claude/skills/localization-testing/SKILL.md)** governs key grammar, feature
+scopes, `common.*` reuse rules, normalization, and the add/rename/remove/dedupe procedures. Follow it when touching
+keys — this page is only a human orientation.
+
+## Related
+
+- [Colour theme testing](colour-theme-testing.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)

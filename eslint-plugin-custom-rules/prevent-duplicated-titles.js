@@ -1,3 +1,11 @@
+function getNodeTitle(node) {
+  const arg = node.arguments[0];
+  if (!arg) return null;
+  if (arg.type === 'Literal' && typeof arg.value === 'string') return arg.value;
+  if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0) return arg.quasis[0].value.cooked;
+  return null;
+}
+
 module.exports = {
   meta: {
     type: 'problem',
@@ -12,13 +20,13 @@ module.exports = {
     const globalTitles = new Set();
 
     function checkForDuplicate(node) {
-      const title = node.arguments[0] && node.arguments[0].value && node.arguments[0].value.replace(/["'`]/g, '');
+      const title = getNodeTitle(node);
       if (title && globalTitles.has(title)) {
         context.report({
           node,
           message: `Duplicate title "${title}" is not allowed.`,
         });
-      } else {
+      } else if (title) {
         globalTitles.add(title);
       }
     }

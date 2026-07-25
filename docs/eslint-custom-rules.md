@@ -1,275 +1,57 @@
 # Custom ESLint Rules
 
-This document describes the custom ESLint rules implemented in this project to maintain code quality and consistency in
-tests.
-
-## Table of Contents
-
-- [Do Not Allow Empty Blocks](#do-not-allow-empty-blocks)
-- [Prevent Duplicated Titles](#prevent-duplicated-titles)
-- [Prevent Test Data Loops](#prevent-test-data-loops)
-- [Verify Test Title Against Structure](#verify-test-title-against-structure)
-- [Verify Test Title Pattern](#verify-test-title-pattern)
-- [Verify TODOs Have Links](#verify-todos-have-links)
-- [Verify Test Title Without Forbidden Symbols](#verify-test-title-without-forbidden-symbols)
-- [Standardize Test Titles](#standardize-test-titles)
-- [API Command Naming Rule](#api-command-naming-rule)
-- [UI Command Naming Rule](#ui-command-naming-rule)
-
-## Do Not Allow Empty Blocks
-
-**Rule file:** `eslint-plugin-custom-rules/do-not-allow-empty-blocks.js`
-
-Disallows empty test blocks to ensure all tests contain assertions or actions, forcing developers either to implement
-the test or mark tests as skipped.
-
-### Example
-
-```javascript
-describe('ActionPriorityPage.Creation: Given the user navigates to the Creation component of Action Priority page', {testIsolation: false}, () => {
-    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
-        // Empty block - this will trigger the rule violation
-    });
-    context('ActionPriorityPage.Creation.ADMIN: When User navigates to the component', () => {
-        it('ActionPriorityPage.Creation.ADMIN: Then Title is displayed', () => {
-            // Empty block - this will trigger the rule violation
-        });
-        it.skip('ActionPriorityPage.Creation.ADMIN: Then Name Input field with label and placeholder is displayed', () => {
-            // Valid - skipped test without implementation is allowed
-        });
-    });
-});
-```
-
-## Prevent Duplicated Titles
-
-**Rule file:** `eslint-plugin-custom-rules/prevent-duplicated-titles.js`
-
-Ensures that all test titles are unique across the test suite, preventing confusion and improving clarity.
-
-### Example
-
-```javascript
-
-describe('Module.Submodule: Given preconditions', () => {
-    it('Module.Submodule.GET: Then return 200', () => {}); // Valid
-    it('Module.Submodule.GET: Then return 200', () => {}); // ❌ Error: duplicate title
-});
-```
+This project ships a local ESLint plugin that enforces spec conventions no
+off-the-shelf rule covers: title grammar, command naming, structure coverage,
+data-loop bans, and dead-code detection.
 
-## Prevent Test Data Loops
+## Where rules live
 
-**Rule file:** `eslint-plugin-custom-rules/prevent-test-data-loops.js`
+- **Implementations:** `eslint-plugin-custom-rules/<rule-name>.js`
+- **Plugin export:** `eslint-plugin-custom-rules/index.js`
+- **Registration:** `eslint.config.mjs`, under the `custom/` namespace (all rules set to `error`)
+- **Structure data:** `eslint-plugin-custom-rules/app-structure/{modules,components,workflows}.json`
 
-Prevents the use of loops (forEach, for...of, for...in) over test data arrays within test files. Enforces the use of randomization functions instead.
+## Running lint
 
-### Rationale
+- `npm run lint` — report violations
+- `npm run lint -- --fix` — auto-fix the fixable rules (blank lines, title terminology, structure files, single-line unused selectors/test-data)
 
-- ONE test validates ONE behavior with ONE randomly selected value
-- DIFFERENT test runs cover DIFFERENT values automatically
-- FASTER test execution (no redundant loops)
-- CLEANER test reports (no duplicate test titles)
-- CONSISTENT with Cypress best practices
+## Rules by concern
 
-### Examples
+**Titles and structure**
 
-**❌ Incorrect - Loop over test data:**
+- `verify-test-title-pattern` — Given/When/Then title grammar per block type
+- `verify-test-title-without-forbidden-symbols` — no whitespace/special chars in titles
+- `prevent-duplicated-titles` — globally unique describe/context titles
+- `standardize-test-titles` — canonical UI/API terminology (fixable)
+- `enforce-spec-blank-lines` — blank-line layout inside spec bodies (fixable)
+- `do-not-allow-empty-blocks` — no empty it/context blocks
+- `verify-test-title-against-structure` — title paths tracked in `app-structure/` (fixable)
 
-```javascript
-const invalidIds = [0, -1, null, 'NaN', 1.2];
+**Naming**
 
-describe('Module.Submodule', () => {
-  // ❌ Error: Do not use .forEach() to loop over test data
-  invalidIds.forEach((id) => {
-    it(`Should reject invalid ID: ${id}`, () => {
-      cy.module__action__POST(id, { failOnStatusCode: false }).then((response) => {
-        expect(response.status).to.eq(400);
-      });
-    });
-  });
+- `verify-api-command-naming` — `resource__action__METHOD` for API commands
+- `verify-ui-command-naming` — `page__action` for UI commands
+- `verify-req-config` — schema for the `req` metadata object on `it` blocks
 
-  // ❌ Error: Do not use for...of loops over test data
-  for (const id of testData.invalidIds) {
-    context(`When ID is ${id}`, () => {
-      it('Should return error', () => {
-        // test logic
-      });
-    });
-  }
-});
-```
+**Data and examples**
 
-**✅ Correct - Use randomization:**
+- `prevent-examples-loops` — no loops over test data inside specs
+- `find-unused-examples` — flag unused exported test-data instances (fixable)
+- `find-unused-selectors` — flag unused selectors (fixable)
 
-```javascript
-// Test Data File
-const invalidIdsArray = [0, -1, null, 'NaN', 1.2];
-const getRandomInvalidId = () => invalidIdsArray[Math.floor(Math.random() * invalidIdsArray.length)];
+**Guardrails**
 
-export const module_testData = {
-  invalidItems: {
-    invalidId: getRandomInvalidId(), // ONE random value per execution
-  },
-};
+- `verify-todos-have-links` — TODO/FIXME comments need a tracker link
 
-// Test File
-describe('Module.Submodule', () => {
-  it('Module.Submodule.POST: Then return 400 status code for invalid ID', () => {
-    cy.module__action__POST(testData.invalidItems.invalidId, { failOnStatusCode: false }).then((response) => {
-      expect(response.status).to.eq(400);
-    });
-  });
-});
+## Source of truth
 
-describe('UserManagement', () => {
-    // ...
-});
+The full invariant each rule enforces, its scope gate and exemptions, and the
+inline suppression rules live in the
+**[eslint-custom-rules skill](../.claude/skills/eslint-custom-rules/SKILL.md)**.
+Update that skill (not this page) whenever a rule's behaviour changes.
 
-// Later in the same test suite or another file
-describe('UserManagement', () => {
-    // This will trigger the rule violation
-});
-```
+## Related
 
-## Verify Test Title Against Structure
-
-**Rule file:** `eslint-plugin-custom-rules/verify-test-title-against-structure.js`
-
-Verifies that test titles follow a predefined structure defined in JSON configuration files. Different structures are
-applied based on the test type (e2e, api, ui). The rule forces developers to use the correct structure and naming of app
-instances.
-
-### Configuration Files
-
-- E2E tests: `./app-names/workflows.json`
-- API tests: `./app-names/modules.json`
-- UI tests: `./app-names/components.json`
-
-### How It Works
-
-The rule validates that each part in the dot-separated title exists in the JSON structure hierarchy.
-
-## Verify Test Title Pattern
-
-**Rule file:** `eslint-plugin-custom-rules/verify-test-title-pattern.js`
-
-Enforces a specific pattern for test block titles, according to the naming conventions.
-
-## Verify TODOs Have Links
-
-**Rule file:** `eslint-plugin-custom-rules/verify-todos-have-links.js`
-
-Ensures that all TODO, FIXME, and similar comments include a bug tracking system ticket link for tracking purposes.
-
-### Invalid Examples
-
-```javascript
-// TODO: Fix this later
-// FIXME: This is broken
-```
-
-### Valid Examples
-
-```javascript
-// TODO: Fix validation issues - https://company.org.net/browse/PROJ-123
-// FIXME: Handle edge case - https://company.org.net/browse/PROJ-456
-```
-
-## Verify Test Title Without Forbidden Symbols
-
-**Rule file:** `eslint-plugin-custom-rules/verify-test-title-without-forbidden-symbols.js`
-
-Prevents test titles from containing leading/trailing whitespace or special characters that could cause issues.
-
-### Examples
-
-```javascript
-    context('LoginPage.STANDARD: When user logs in with valid credentials ', () => {
-        // Trailing space
-    });
-    context(' LoginPage.STANDARD: When user logs in with valid credentials', () => {
-        // Leading space
-    }); 
-    context('LoginPage.STANDARD: When user logs in with valid credentials!', () => {
-        // Special character "!"
-    }); 
-```
-
-
-## Standardize Test Titles
-
-**Rule file:** `eslint-plugin-custom-rules/standardize-test-titles.js`
-
-Ensures that test titles use consistent and standardized terminology for UI interactions, elements, assertions, and API
-terms. This improves clarity and uniformity across the test suite.
-
-### How It Works
-
-The rule scans the titles of `describe`, `context`, and `it` blocks and automatically suggests replacements for
-non-standard terms (e.g., replacing `show` with `display`, `btn` with `button`, `is shown` with `is displayed`, etc.).
-
-
-## API Command Naming Rule
-
-### Rule: `verify-api-command-naming`
-
-**Location:** `eslint-plugin-custom-rules/verify-api-command-naming.js`
-
-**Applies to:** Files in `cypress/support/commands/api/` ending with `.api.commands.js`
-
-### Pattern
-```
-resourceName__actionDescription__METHOD
-```
-
-### Requirements
-1. **Three parts separated by double underscores (`__`)**
-    - Resource name (e.g., `restfullBooker`, `templates`)
-    - Action description (e.g., `add`, `getById`, `update`, `delete`)
-    - HTTP method (e.g., `GET`, `POST`, `PUT`, `PATCH`, `DELETE`)
-
-2. **Resource name**
-    - Must start with lowercase letter
-    - Can contain letters, numbers, and underscores
-    - Use camelCase
-    - Examples: `restfullBooker`, `templates`
-
-3. **Action description**
-    - Must start with lowercase letter
-    - Can contain letters and numbers only
-    - Use camelCase
-    - Examples: `add`, `getById`, `update`, `delete`, `getAll`, `addComment`
-
-4. **HTTP method**
-    - Must be uppercase
-    - Valid methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`
-
-## UI Command Naming Rule
-
-### Rule: `verify-ui-command-naming`
-
-**Location:** `eslint-plugin-custom-rules/verify-ui-command-naming.js`
-
-**Applies to:** Files in `cypress/support/commands/ui/` ending with `.ui.commands.js`
-
-### Pattern
-```
-pageName__actionDescription
-```
-
-### Requirements
-1. **Two parts separated by double underscores (`__`)**
-    - Page/component name (e.g., `loginPage`, `checkoutPage`)
-    - Action description (e.g., `logIn`, `fillForm`, `submitData`)
-
-2. **Page name**
-    - Must start with lowercase letter
-    - Can contain letters and numbers only
-    - Use camelCase
-    - Examples: `loginPage`, `checkoutPage`
-
-3. **Action description**
-    - Must start with lowercase letter
-    - Can contain letters and numbers only
-    - Use camelCase
-    - Examples: `logIn`, `fillForm`, `submitData`, `clickButton`
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)
+- [Coverage gap analysis](coverage-gap-analysis.md)

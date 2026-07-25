@@ -1,31 +1,37 @@
-# Color Theme Testing in Cypress
+# Colour theme testing
 
-## Overview
+Tests assert CSS colour values through the global `colours` map, never hardcoded `rgb(…)` strings. Keys are flat,
+dot-namespaced, and typed — a missing or renamed key is a dev-time error.
 
-The project manages color themes using environment variable and file copying to support multiple color configurations.
-
-## Implementation Details
-
-### Environment Variables
-
-- `COLOUR_THEME`: Specifies the theme code to use (defaults to "default" if not set)
-
-### JSON Theme Files
-
-Colour values are stored in JSON files, organized by themes.
-
-### Pretest Script
-
-A pretest script copies the appropriate colour theme file to a common file (`current-theme-colours.json`) before tests
-run.
-
-Run the pretest script to update the current theme:
-
-```bash
-  COLOUR_THEME=default npm run pretest
+```javascript
+cy.get(inventoryPage.card.add).should('have.css', 'background-color', colours['button.compliant']);
 ```
 
-### Accessing Theme Colors
+## How it works
 
-In your tests, you can access the colour values using global variable `colours`.
+- One flat JSON per theme at `cypress/colours/{theme}-theme-colours.json` (`"dotted.key": "rgb(…)"`, no nesting). These
+  are the source files you edit.
+- `pretest` copies the `COLOUR_THEME`-selected file to the generated `cypress/colours/colours.json` (the global
+  `colours` map) and regenerates `cypress/support/colours.d.ts`, which types keys so a missing or renamed key is a
+  dev-time error.
 
+```bash
+COLOUR_THEME=default npm run pretest      # select theme + regenerate types
+npm run colours:gen-types                  # regenerate types on demand
+npm run colours add <key> <value>          # add a key to every theme file (interactive if no args)
+npm run colours remove <key>               # remove a key from every theme file
+npm run colours sync                       # align theme files (add missing, sort)
+```
+
+All colour operations run through the single `scripts/colours.js` CLI (`node scripts/colours.js help`).
+
+## Source of truth
+
+The **[colour-theme-testing skill](../.claude/skills/colour-theme-testing/SKILL.md)** governs key grammar, component
+scopes, the add/rename/remove/dedupe procedures, and the sync pipeline. Follow it when touching keys — this page is only
+a human orientation.
+
+## Related
+
+- [Localization](localization-testing.md)
+- [Constraints → Examples → Specs](constraints-examples-specs-approach.md)

@@ -1,13 +1,24 @@
 {
   "RestfulBooker": {
-    "Auth": {},
+    "Auth": {
+      "POST": {}
+    },
     "Booking": {
-      "Create": {},
-      "Retrieve": {},
-      "Update": {},
-      "PartialUpdate": {},
-      "Delete": {}
+      "Create": {
+        "POST": {}
+      },
+      "Delete": {
+        "DELETE": {}
+      },
+      "PartialUpdate": {
+        "PATCH": {}
+      },
+      "Retrieve": {
+        "GET": {}
+      },
+      "Update": {
+        "PUT": {}
+      }
     }
   }
 }
-

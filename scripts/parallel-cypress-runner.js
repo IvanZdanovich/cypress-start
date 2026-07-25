@@ -145,11 +145,11 @@ function classifyFilesIntoDomains(files) {
     const normalizedPath = file.replace(/\\/g, '/');
 
     // Check against each domain pattern
-    if (normalizedPath.match(/^cypress\/integration\/api\/.*\.api\.spec\.js$/)) {
+    if (/^cypress\/integration\/api\/.*\.api\.spec\.js$/.exec(normalizedPath)) {
       domainFiles.integrationApi.push(file);
-    } else if (normalizedPath.match(/^cypress\/integration\/ui\/.*\.ui\.spec\.js$/)) {
+    } else if (/^cypress\/integration\/ui\/.*\.ui\.spec\.js$/.exec(normalizedPath)) {
       domainFiles.integrationUi.push(file);
-    } else if (normalizedPath.match(/^cypress\/e2e\/.*\.ui\.spec\.js$/)) {
+    } else if (/^cypress\/e2e\/.*\.ui\.spec\.js$/.exec(normalizedPath)) {
       domainFiles.e2eUi.push(file);
     } else {
       unmatchedFiles.push(file);
@@ -182,7 +182,7 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
   return new Promise((resolve) => {
     const specArg = specFiles.join(',');
     const startTime = Date.now();
-    const browser = process.env.BROWSER || 'chrome';
+    const browser = process.env.BROWSER || 'electron';
 
     if (!bufferOutput) {
       console.log(`[${chunkName}] Starting execution with ${specFiles.length} file(s) on display :${displayNumber}`);

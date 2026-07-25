@@ -1,18 +1,23 @@
 {
-  "LoginPage": {},
-  "InventoryPage": {
-    "Header": {},
-    "Footer": {},
-    "Card": {}
+  "LoginPage": {
+    "STANDARD": {}
   },
   "CartPage": {
-    "Header": {},
-    "Footer": {}
+    "STANDARD": {},
+    "Footer": {
+      "STANDARD": {}
+    }
   },
-  "Header": {},
-  "Footer": {},
-  "ProductPage": {
-    "Footer": {},
-    "Header": {}
+  "InventoryPage": {
+    "STANDARD": {},
+    "Card": {
+      "STANDARD": {}
+    },
+    "Footer": {
+      "STANDARD": {}
+    },
+    "Header": {
+      "STANDARD": {}
+    }
   }
 }

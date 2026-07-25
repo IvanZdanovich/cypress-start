@@ -4,6 +4,9 @@ node_modules
 # Ignore .github directory
 .github
 
+# Ignore claude directory
+.claude
+
 # Ignore npm debug log
 npm-debug.log
 
@@ -15,10 +18,6 @@ npm-debug.log
 .git
 .DS_Store
 .idea
-
-# Ignore Cypress screenshots and videos
-cypress/reports/screenshots/**
-cypress/reports/videos/**
 
 # Ignore Cypress reports
 cypress/reports/**

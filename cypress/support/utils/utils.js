@@ -1,3 +1,6 @@
+import { TEXT } from '../../constants/ui/common.ui.constraints';
+import { DATE_FORMAT } from '../../constants/api/rb.booking.api.constraints';
+
 const getRandomIndex = (arrayLength) => {
   if (typeof arrayLength !== 'number' || arrayLength <= 0 || !Number.isInteger(arrayLength)) {
     throw new RangeError('getRandomIndex: array length should be a positive integer');
@@ -12,11 +15,7 @@ const getRandomNumber = (min, maxNotIncluded) => {
   return Math.floor(Math.random() * (maxNotIncluded - min) + min);
 };
 
-const generateRandomBoolean = () => {
-  return Math.random() < 0.5;
-};
-
-const generateRandomString = (length, chars = reqs.text.allowedSymbols) => {
+const generateRandomString = (length, chars = TEXT.allowedSymbols) => {
   if (typeof length !== 'number' || length <= 0) {
     throw new Error('Length must be a positive number');
   }
@@ -63,7 +62,7 @@ const generateArrayOfRandomIndices = (arrayLength, maxIndex) => {
   return indices;
 };
 
-const formatDate = (date, format = 'YYYY-MM-DD') => {
+const formatDate = (date, format = DATE_FORMAT) => {
   if (!(date instanceof Date) || isNaN(date)) {
     throw new TypeError('formatDate: date must be a valid Date object');
   }
@@ -88,43 +87,6 @@ const addDays = (date, days) => {
   return result;
 };
 
-const addMonths = (date, months) => {
-  if (!(date instanceof Date) || isNaN(date)) {
-    throw new TypeError('addMonths: date must be a valid Date object');
-  }
-  if (typeof months !== 'number') {
-    throw new TypeError('addMonths: months must be a number');
-  }
-
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  return result;
-};
-
-const getRandomDate = (startDate, endDate) => {
-  if (!(startDate instanceof Date) || isNaN(startDate)) {
-    throw new TypeError('getRandomDate: startDate must be a valid Date object');
-  }
-  if (!(endDate instanceof Date) || isNaN(endDate)) {
-    throw new TypeError('getRandomDate: endDate must be a valid Date object');
-  }
-  if (startDate > endDate) {
-    throw new RangeError('getRandomDate: startDate must be before endDate');
-  }
-
-  const startTime = startDate.getTime();
-  const endTime = endDate.getTime();
-  const randomTime = startTime + Math.random() * (endTime - startTime);
-  return new Date(randomTime);
-};
-
-const cloneObject = (obj) => {
-  if (obj === null || typeof obj !== 'object') {
-    return obj;
-  }
-  return JSON.parse(JSON.stringify(obj));
-};
-
 const getRandomEntry = (obj) => {
   if (typeof obj !== 'object' || obj === null) {
     throw new TypeError('getRandomEntry: argument must be an object');
@@ -146,147 +108,43 @@ const getRandomElement = (array) => {
   return array[getRandomIndex(array.length)];
 };
 
-const removeProperty = (obj, path) => {
-  if (typeof obj !== 'object' || obj === null) {
-    throw new TypeError('removeProperty: obj must be an object');
-  }
-  if (typeof path !== 'string') {
-    throw new TypeError('removeProperty: path must be a string');
-  }
-
-  const result = cloneObject(obj);
-  const parts = path.split('.');
-  let current = result;
-
-  for (let i = 0; i < parts.length - 1; i++) {
-    if (!(parts[i] in current)) {
-      return result;
-    }
-    current = current[parts[i]];
-  }
-
-  delete current[parts[parts.length - 1]];
-  return result;
-};
-
-const generateRandomEmail = () => {
-  const username = generateRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
-  const domain = generateRandomString(6, 'abcdefghijklmnopqrstuvwxyz');
-  const tld = getRandomElement(['com', 'net', 'org', 'io']);
-  return `${username}@${domain}.${tld}`;
-};
-
 const getFutureDate = (daysAhead = 1) => {
   const today = new Date();
   return formatDate(addDays(today, daysAhead));
 };
 
-const generateBookingDates = (minStayDays = 1, maxStayDays = 30) => {
-  const checkinDaysAhead = getRandomNumber(1, 60);
-  const stayDuration = getRandomNumber(minStayDays, maxStayDays);
+/**
+ * Returns a deep clone of `obj` with the property at `dottedPath` removed.
+ * Handles dotted paths (e.g. 'bookingDates.checkin') as well as top-level keys.
+ */
+const removeProperty = (obj, dottedPath) => {
+  if (typeof obj !== 'object' || obj === null) {
+    throw new TypeError('removeProperty: first argument must be an object');
+  }
+  if (typeof dottedPath !== 'string' || dottedPath.length === 0) {
+    throw new TypeError('removeProperty: dottedPath must be a non-empty string');
+  }
 
-  const today = new Date();
-  const checkin = addDays(today, checkinDaysAhead);
-  const checkout = addDays(checkin, stayDuration);
+  const clone = JSON.parse(JSON.stringify(obj));
+  const segments = dottedPath.split('.');
 
-  return {
-    checkin: formatDate(checkin),
-    checkout: formatDate(checkout),
-  };
-};
-
-const generateRandomBooking = (overrides = {}) => {
-  return {
-    firstname: 'User' + generateRandomString(6, 'abcdefghijklmnopqrstuvwxyz'),
-    lastname: 'Test' + generateRandomString(6, 'abcdefghijklmnopqrstuvwxyz'),
-    totalPrice: getRandomNumber(100, 5000),
-    depositPaid: generateRandomBoolean(),
-    bookingDates: generateBookingDates(),
-    additionalNeeds: getRandomElement(['Breakfast', 'Lunch', 'Dinner', 'All-inclusive', 'Breakfast and Dinner', '']),
-    ...overrides,
-  };
-};
-
-const generateInvalidDateFormat = () => {
-  const today = new Date();
-  const checkinDaysAhead = getRandomNumber(5, 30);
-  const checkoutDaysAhead = checkinDaysAhead + getRandomNumber(5, 15);
-
-  const checkinDate = addDays(today, checkinDaysAhead);
-  const checkoutDate = addDays(today, checkoutDaysAhead);
-
-  const year = checkinDate.getFullYear();
-  const month = String(checkinDate.getMonth() + 1).padStart(2, '0');
-  const day = String(checkinDate.getDate()).padStart(2, '0');
-
-  const checkoutYear = checkoutDate.getFullYear();
-  const checkoutMonth = String(checkoutDate.getMonth() + 1).padStart(2, '0');
-  const checkoutDay = String(checkoutDate.getDate()).padStart(2, '0');
-
-  const invalidFormats = [
-    // DD-MM-YYYY
-    () => ({
-      checkin: `${day}-${month}-${year}`,
-      checkout: `${checkoutDay}-${checkoutMonth}-${checkoutYear}`,
-      formatType: 'DD-MM-YYYY',
-    }),
-    // MM/DD/YYYY
-    () => ({
-      checkin: `${month}/${day}/${year}`,
-      checkout: `${checkoutMonth}/${checkoutDay}/${checkoutYear}`,
-      formatType: 'MM/DD/YYYY',
-    }),
-    // DD.MM.YYYY
-    () => ({
-      checkin: `${day}.${month}.${year}`,
-      checkout: `${checkoutDay}.${checkoutMonth}.${checkoutYear}`,
-      formatType: 'DD.MM.YYYY',
-    }),
-    // YYYY/MM/DD
-    () => ({
-      checkin: `${year}/${month}/${day}`,
-      checkout: `${checkoutYear}/${checkoutMonth}/${checkoutDay}`,
-      formatType: 'YYYY/MM/DD',
-    }),
-    // Text format
-    () => ({
-      checkin: checkinDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      checkout: checkoutDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      formatType: 'Text (Month DD, YYYY)',
-    }),
-    // YYYYMMDD (no separators)
-    () => ({
-      checkin: `${year}${month}${day}`,
-      checkout: `${checkoutYear}${checkoutMonth}${checkoutDay}`,
-      formatType: 'YYYYMMDD',
-    }),
-    // MM-DD-YYYY
-    () => ({
-      checkin: `${month}-${day}-${year}`,
-      checkout: `${checkoutMonth}-${checkoutDay}-${checkoutYear}`,
-      formatType: 'MM-DD-YYYY',
-    }),
-  ];
-
-  return getRandomElement(invalidFormats)();
+  let cursor = clone;
+  for (let i = 0; i < segments.length - 1; i++) {
+    if (typeof cursor[segments[i]] !== 'object' || cursor[segments[i]] === null) {
+      return clone; // path does not exist — nothing to remove
+    }
+    cursor = cursor[segments[i]];
+  }
+  delete cursor[segments[segments.length - 1]];
+  return clone;
 };
 
 export default {
-  getRandomIndex,
   getRandomNumber,
-  generateRandomBoolean,
   generateRandomString,
   generateArrayOfRandomIndices,
-  formatDate,
-  addDays,
-  addMonths,
-  getRandomDate,
-  cloneObject,
   getRandomEntry,
   getRandomElement,
-  removeProperty,
-  generateRandomEmail,
   getFutureDate,
-  generateRandomBooking,
-  generateInvalidDateFormat,
+  removeProperty,
 };
