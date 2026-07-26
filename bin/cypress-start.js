@@ -27,7 +27,7 @@ const OPTIONAL_MODULES = {
       lint: 'eslint . --format stylish --fix',
       postinstall: 'node scripts/setup-git-hooks.js',
     },
-    devDependencies: ['@eslint/js', 'eslint', 'eslint-config-prettier', 'eslint-plugin-cypress', 'eslint-plugin-prettier', 'prettier'],
+    devDependencies: ['@eslint/eslintrc', '@eslint/js', 'eslint', 'eslint-config-prettier', 'eslint-plugin-chai-friendly', 'eslint-plugin-cypress', 'eslint-plugin-prettier', 'prettier'],
   },
   documentation: {
     name: 'Documentation',
@@ -419,8 +419,8 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
   const docsSection =
     selectedModules?.documentation
       ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
-  - Test Writing Guidelines: ${COLORS.blue}docs/test-writing-guideline.md${COLORS.reset}
-  - Naming Conventions: ${COLORS.blue}docs/naming-conventions.md${COLORS.reset}
+  - Constraints, Examples & Specs: ${COLORS.blue}docs/constraints-examples-specs-approach.md${COLORS.reset}
+  - ESLint Custom Rules: ${COLORS.blue}docs/eslint-custom-rules.md${COLORS.reset}
   - Localization Testing: ${COLORS.blue}docs/localization-testing.md${COLORS.reset}
   - FAQ: ${COLORS.blue}docs/faq.md${COLORS.reset}
 
