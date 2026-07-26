@@ -76,7 +76,7 @@ on:
         default: false
         type: boolean
       run_cypress_tests:
-        description: 'Run Cypress tests (disable to generate reports only)'
+        description: 'Run Cypress tests'
         required: false
         default: true
         type: boolean

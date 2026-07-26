@@ -1,5 +1,6 @@
 # Cypress Testing Framework
 
+[![Weekly Cypress Tests](https://github.com/IvanZdanovich/cypress-start/actions/workflows/weekly-cypress-tests.yml/badge.svg?branch=main)](https://github.com/IvanZdanovich/cypress-start/actions/workflows/weekly-cypress-tests.yml)
 <p style="text-align: center;">  
     <picture>
       <source media="(prefers-color-scheme: dark)"  srcset="./assets/cypress-logo-dark.png">
