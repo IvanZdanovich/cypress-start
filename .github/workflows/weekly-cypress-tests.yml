@@ -89,7 +89,7 @@ permissions:
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
-    if: ${{ inputs.run_cypress_tests != false }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_cypress_tests != false }}
 
     steps:
       - name: Checkout code
@@ -139,7 +139,7 @@ jobs:
             --build-arg LANGUAGE=${{ inputs.language || 'en' }} \
             --build-arg TARGET_ENV=${{ inputs.target_env || 'dev' }} \
             --build-arg COLOUR_THEME=${{ inputs.colour_theme || 'default' }} \
-            --build-arg PARALLEL_STREAMS=${{ inputs.parallel_streams || '3' }} \
+            --build-arg PARALLEL_STREAMS=${{ inputs.parallel_streams || '2' }} \
             -t cypress-tests .
 
       - name: Run Cypress tests in Docker
