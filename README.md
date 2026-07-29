@@ -38,11 +38,11 @@ Create a new project from this template in seconds! The CLI offers two setup mod
 
 ```bash
 # Using npx (no installation required)
-npx create-cypress-start my-project
+npx cypress-start my-project
 
 # Or install globally first
 npm install -g cypress-start
-create-cypress-start my-project
+cypress-start my-project
 ```
 
 **Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Best for
