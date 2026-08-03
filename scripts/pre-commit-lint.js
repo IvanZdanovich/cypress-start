@@ -2,32 +2,8 @@ const { ESLint } = require('eslint');
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { gitExecutable, sanitizedEnv } = require('./git-exec-lib');
 
-const nodeBinDir = path.dirname(process.execPath);
-const systemPaths = (process.env.PATH || '').split(path.delimiter).filter((p) => p && !p.includes('node_modules'));
-const sanitizedEnv = { ...process.env, PATH: [nodeBinDir, ...systemPaths].join(path.delimiter) };
-
-/**
- * Resolve an executable to an absolute path by probing well-known, trusted
- * install locations. Falls back to the bare command name (which is then looked
- * up via the explicitly-sanitized PATH in `sanitizedEnv`).
- *
- * Using an absolute path mitigates SonarQube hotspot javascript:S4036 by
- * removing the dependency on PATH lookup for the spawned binary.
- */
-function resolveExecutable(name) {
-  const exeName = process.platform === 'win32' ? `${name}.exe` : name;
-  const candidates =
-    process.platform === 'win32'
-      ? [`C:\\Program Files\\Git\\cmd\\${exeName}`, `C:\\Program Files\\Git\\bin\\${exeName}`, `C:\\Program Files (x86)\\Git\\cmd\\${exeName}`]
-      : ['/usr/bin', '/usr/local/bin', '/opt/homebrew/bin', '/bin'].map((dir) => path.join(dir, exeName));
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-  return name;
-}
-
-const gitExecutable = resolveExecutable('git');
 const nodeExecutable = process.execPath;
 
 /**

@@ -21,7 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { gitExecFileSync } = require('./git-exec-lib');
 
 const WORKSPACE = process.cwd();
 const RESULTS_BRANCH = 'test-results';
@@ -60,7 +60,7 @@ function git(args) {
     // against a not-yet-created branch (fetch/show/rev-parse on first run)
     // shouldn't spill benign `fatal:` lines into the build log. Genuine push
     // failures are surfaced separately by appendToLedger.
-    return execFileSync('git', args, {
+    return gitExecFileSync(args, {
       cwd: WORKSPACE,
       encoding: 'utf8',
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -265,7 +265,7 @@ function buildAndPushCommit(tmpFile, message) {
   if (!blobSha) throw new Error('Failed to create blob');
 
   const treeInput = `100644 blob ${blobSha}\t${LEDGER_FILENAME}\n`;
-  const treeSha = execFileSync('git', ['mktree'], {
+  const treeSha = gitExecFileSync(['mktree'], {
     cwd: WORKSPACE,
     encoding: 'utf8',
     input: treeInput,
@@ -287,7 +287,7 @@ function buildAndPushCommit(tmpFile, message) {
     pushArgs.push(`--force-with-lease=refs/heads/${RESULTS_BRANCH}:${parentSha}`);
   }
 
-  execFileSync('git', pushArgs, {
+  gitExecFileSync(pushArgs, {
     cwd: WORKSPACE,
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe'],
