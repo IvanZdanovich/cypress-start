@@ -269,10 +269,15 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
 
     render();
 
+    // Assigned below once the handler is defined; kept here so cleanup() can
+    // detach exactly the listener it installed without referencing it early.
+    let keyHandler;
+
     function cleanup() {
-      // Detach the raw-input handler so it can't consume keystrokes during the
-      // readline prompts that follow (no other 'data' listener is active here).
-      process.stdin.removeAllListeners('data');
+      // Detach only the raw-input handler we installed so it can't consume
+      // keystrokes during the readline prompts that follow, without touching
+      // any other 'data' listeners on stdin.
+      process.stdin.removeListener('data', keyHandler);
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stdout.write(SHOW_CURSOR);
@@ -316,7 +321,8 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
       render();
     }
 
-    process.stdin.on('data', onKey);
+    keyHandler = onKey;
+    process.stdin.on('data', keyHandler);
   });
 }
 

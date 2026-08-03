@@ -46,14 +46,17 @@ const gitExecutable = resolveExecutable('git');
 
 /**
  * Run git with the resolved absolute binary and sanitized environment.
- * Caller-supplied options are merged, but `env` always resolves to the
- * sanitized environment unless explicitly overridden.
+ * Caller-supplied options are merged. Any caller-provided env vars are layered
+ * on top of the sanitized environment, but PATH is always forced back to the
+ * sanitized one so the hardening (javascript:S4036) can never be overridden.
  * @param {string[]} gitArgs Arguments passed to git (array form — never a shell string).
- * @param {object} [options] execFileSync options (cwd, encoding, stdio, input, ...).
+ * @param {object} [options] execFileSync options (cwd, encoding, stdio, input, env, ...).
  * @returns {Buffer|string} Whatever execFileSync returns for the given options.
  */
 function gitExecFileSync(gitArgs, options = {}) {
-  return execFileSync(gitExecutable, gitArgs, { env: sanitizedEnv, ...options });
+  const { env: extraEnv, ...rest } = options;
+  const env = { ...sanitizedEnv, ...extraEnv, PATH: sanitizedEnv.PATH };
+  return execFileSync(gitExecutable, gitArgs, { ...rest, env });
 }
 
 module.exports = {
