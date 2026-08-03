@@ -48,13 +48,13 @@ const CLEAR_SCREEN = `${ESC}2J${ESC}3J${ESC}H`;
 // --- Data loading ---
 
 function loadLedger() {
-  const { execSync } = require('child_process');
+  const { gitExecFileSync } = require('./git-exec-lib');
   const WORKSPACE = process.cwd();
   const RESULTS_BRANCH = 'test-results';
   const LEDGER_FILENAME = 'test-run-history.jsonl';
 
   try {
-    execSync(`git fetch origin ${RESULTS_BRANCH}`, { cwd: WORKSPACE, stdio: 'pipe' });
+    gitExecFileSync(['fetch', 'origin', RESULTS_BRANCH], { cwd: WORKSPACE, stdio: 'pipe' });
   } catch {
     console.error('Cannot fetch test-results branch. Ensure git credentials are configured.');
     process.exit(1);
@@ -62,7 +62,7 @@ function loadLedger() {
 
   let content;
   try {
-    content = execSync(`git show origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`, { cwd: WORKSPACE, encoding: 'utf8' });
+    content = gitExecFileSync(['show', `origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`], { cwd: WORKSPACE, encoding: 'utf8' });
   } catch {
     console.error('Ledger file not found on test-results branch.');
     process.exit(1);
@@ -143,7 +143,8 @@ function formatRun(run, idx, totalRuns) {
 }
 
 function formatRunSuppression(entry) {
-  return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : ''}`;
+  const added = entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : '';
+  return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${added}`;
 }
 
 // --- Interactive UI ---
@@ -239,9 +240,10 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
       const maxLen = Math.max(10, cols - 2);
 
       const lines = [];
+      const status = truncate(`${selected.size} selected of ${items.length} — ${hint}`, maxLen);
       lines.push(`  ${BOLD}${truncate(title, maxLen)}${RESET}`);
       lines.push(`  ${DIM}${truncate('↑↓ navigate · space toggle · enter confirm · q quit', maxLen)}${RESET}`);
-      lines.push(`  ${DIM}${truncate(`${selected.size} selected of ${items.length} — ${hint}`, maxLen)}${RESET}`);
+      lines.push(`  ${DIM}${status}${RESET}`);
       lines.push('');
 
       for (let i = start; i < end; i++) {
@@ -268,12 +270,15 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
     render();
 
     function cleanup() {
+      // Detach the raw-input handler so it can't consume keystrokes during the
+      // readline prompts that follow (no other 'data' listener is active here).
+      process.stdin.removeAllListeners('data');
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stdout.write(SHOW_CURSOR);
     }
 
-    process.stdin.on('data', (key) => {
+    function onKey(key) {
       if (key === '\x03') {
         cleanup();
         process.exit(0);
@@ -309,7 +314,9 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
       }
 
       render();
-    });
+    }
+
+    process.stdin.on('data', onKey);
   });
 }
 
@@ -512,9 +519,18 @@ async function reviewSuppressions(runs) {
 
 // --- Main ---
 
+/** Resolve the run mode from CLI flags (first match wins, defaults to 'add'). */
+function resolveMode(argv) {
+  if (argv.includes('--remove-runs')) return 'remove-runs';
+  if (argv.includes('--add-runs')) return 'add-runs';
+  if (argv.includes('--remove')) return 'remove';
+  if (argv.includes('--review')) return 'review';
+  return 'add';
+}
+
 async function main() {
   const argv = process.argv;
-  const mode = argv.includes('--remove-runs') ? 'remove-runs' : argv.includes('--add-runs') ? 'add-runs' : argv.includes('--remove') ? 'remove' : argv.includes('--review') ? 'review' : 'add';
+  const mode = resolveMode(argv);
 
   console.log(`  ${BOLD}Flaky Test Suppressions Manager${RESET}`);
   console.log(`  ${DIM}Mode: ${mode}${RESET}`);

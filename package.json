@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
@@ -77,30 +77,29 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "cypress": "^15.19.0",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.1",
     "eslint-plugin-cypress": "^6.4.3",
     "eslint-plugin-prettier": "^5.5.6",
     "glob": "^13.0.6",
-    "mochawesome": "^7.1.4",
+    "mochawesome": "^8.0.1",
     "prettier": "^3.9.6"
   },
   "overrides": {
-    "mochawesome": {
-      "uuid": "^11.1.1"
-    },
     "diff": "^5.2.0",
     "serialize-javascript": "^7.0.7",
     "brace-expansion": "^5.0.8",
     "mocha": {
-      "minimatch": "^10.0.3",
       "glob": "^13.0.6"
     }
   },
   "engines": {
     "node": ">=24"
+  },
+  "allowScripts": {
+    "cypress": true
   }
 }
