@@ -65,7 +65,7 @@ OPERATIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
 ## Readability
 
 DIRECT_REFERENCE: `examples.group.instance` inline — a local `const` shadow hides which example is asserted
-ID_ASSIGN: `examples.group.instance.id = response.body.id`
+ID_ASSIGN: source only — `examples.group.source.id = response.body.id`; dependents declare `get id() { return examples.group.source.id; }` in examples and are never assigned by the spec
 ASSERTION_SCOPE: one core outcome per `it`, related fields in one `.then()` when practical
 CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
 TRIM: only comments that add meaning, necessary setup, used tokens
@@ -77,9 +77,7 @@ describe('Module.Submodule: Given no preconditions', { testIsolation: false }, (
   let tokenUser;
   const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
   before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
-      tokenUser = accessToken;
-    });
+    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
     cy.then(cleanUp);
   });
 
@@ -103,3 +101,4 @@ SEGMENTATION_CHECK: one outcome per `it`
 TITLE_CHECK: unique, constraint-backed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, name pattern, file independence
 TRACE_CHECK: assertion values trace through examples to constraints
+ID_OWNERSHIP_CHECK: each runtime ID is assigned in exactly one `then` of the spec and to exactly one instance — a second `instance.id = response.body.id` for the same value means the dependent needs a getter

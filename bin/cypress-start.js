@@ -351,16 +351,23 @@ async function setupSensitiveData(projectName, setupMode) {
   const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
   const examplePath = path.join(sensitivePath, 'env-users.example.json');
   const devUsersPath = path.join(sensitivePath, 'dev-users.json');
+  const qaUsersPath = path.join(sensitivePath, 'qa-users.json');
 
   // Ensure sensitive-data directory exists
   if (!fs.existsSync(sensitivePath)) {
     fs.mkdirSync(sensitivePath, { recursive: true });
   }
 
-  // Copy example to dev-users.json
-  if (fs.existsSync(examplePath) && !fs.existsSync(devUsersPath)) {
-    fs.copyFileSync(examplePath, devUsersPath);
-    log('✅ Credentials file created from example', 'green');
+  if (fs.existsSync(examplePath)) {
+    // Copy example to dev-users.json
+    if (!fs.existsSync(devUsersPath)) {
+      fs.copyFileSync(examplePath, devUsersPath);
+    }
+    // Copy example to qa-users.json
+    if (!fs.existsSync(qaUsersPath)) {
+      fs.copyFileSync(examplePath, qaUsersPath);
+    }
+    log('✅ Credentials files created from example', 'green');
   }
 }
 

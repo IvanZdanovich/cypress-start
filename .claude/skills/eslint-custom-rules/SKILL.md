@@ -47,7 +47,7 @@ SUPPRESS_PREFIX: custom rules disable under the `custom/` prefix, Cypress built-
 
 ```js
 // eslint-disable-next-line custom/find-unused-selectors
-reservedForFutureUse: '[data-test="future-element"]';
+reservedForFutureUse: '[data-test="future-element"]'
 ```
 
 # Validation

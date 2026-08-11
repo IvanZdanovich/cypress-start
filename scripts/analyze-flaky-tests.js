@@ -29,7 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { gitExecFileSync } = require('./git-exec-lib');
 
 const WORKSPACE = process.cwd();
 const RESULTS_BRANCH = 'test-results';
@@ -58,7 +58,7 @@ const NO_SUPPRESS = args.includes('--no-suppress');
  */
 function readLedger() {
   try {
-    execFileSync('git', ['fetch', 'origin', RESULTS_BRANCH], { cwd: WORKSPACE, stdio: 'pipe' });
+    gitExecFileSync(['fetch', 'origin', RESULTS_BRANCH], { cwd: WORKSPACE, stdio: 'pipe' });
   } catch (err) {
     // Distinguish an authentication/transport failure from a genuinely missing
     // branch: the catch-all previously reported every fetch failure as "branch
@@ -78,7 +78,7 @@ function readLedger() {
 
   let content;
   try {
-    content = execFileSync('git', ['show', `origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`], {
+    content = gitExecFileSync(['show', `origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`], {
       cwd: WORKSPACE,
       encoding: 'utf8',
     });
@@ -288,8 +288,10 @@ function needsAction(rec) {
  */
 function clean(text) {
   return String(text)
-    .replace(/\s*\n\s*/g, ' ')
-    .trim();
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(' ');
 }
 
 /**

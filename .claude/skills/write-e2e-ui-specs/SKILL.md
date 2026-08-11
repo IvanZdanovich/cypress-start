@@ -62,7 +62,7 @@ INLINE_SCOPE: direct `.click()`, `.type()`, `.clear()`, simple assertions
 ## Readability
 
 DIRECT_REFERENCE: `examples.group.instance` inline, never shadowed by a local `const`
-ID_ASSIGN: `examples.group.instance.id = response.body.id`
+ID_ASSIGN: source only — `examples.group.source.id = response.body.id`; dependents declare `get id() { return examples.group.source.id; }` in examples and are never assigned by the spec
 ASSERTION_SCOPE: one user-visible workflow outcome per `it`
 IT_BODY: 5 lines target — assertion plus direct setup only
 CYPRESS_CHAIN: flat `cy.then()` blocks, nesting no deeper than one level
@@ -108,3 +108,4 @@ SEGMENTATION_CHECK: one workflow outcome per `it`
 TITLE_CHECK: unique, flow-prefixed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, API-backed, name pattern
 FLOW_CHECK: contexts follow business order of the user journey
+ID_OWNERSHIP_CHECK: each runtime ID is assigned in exactly one `then` of the spec and to exactly one instance — a second `instance.id = response.body.id` for the same value means the dependent needs a getter

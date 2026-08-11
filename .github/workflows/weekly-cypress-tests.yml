@@ -45,7 +45,6 @@ on:
         options:
           - electron
           - chrome
-          - firefox
           - edge
       test_scope:
         description: 'Test scope filter (all, integration, e2e)'
