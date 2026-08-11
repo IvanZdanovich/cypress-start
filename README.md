@@ -61,7 +61,7 @@ npx cypress open          # open Cypress UI
 
 ### Alternative setup
 
-**GitHub Template:** click **"Use this template"** → create repository → clone it.
+**GitHub Template:** navigate to https://github.com/IvanZdanovich/cypress-start → click **"Use this template"** → create repository → clone it.
 
 **Direct clone:**
 
@@ -71,7 +71,7 @@ cd my-project
 npm install
 ```
 
-Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.
+**Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.**
 
 ---
 
@@ -169,7 +169,7 @@ Run tests with specific environment parameters in headless mode.
 - `LANGUAGE`: Language code (default: `en`)
 - `TARGET_ENV`: Target environment (default: `dev`)
 - `COLOUR_THEME`: Color theme (default: `default`)
-- `BROWSER`: Browser for execution (default: `electron`, options: `electron`, `chrome`, `edge`, `firefox`)
+- `BROWSER`: Browser for execution (default: `electron`, options: `electron`, `chrome`, `edge`)
 
 **Windows (PowerShell):**
 
@@ -228,7 +228,7 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers.
 - `target_env` — Target environment (default: `dev`)
 - `colour_theme` — Color theme (default: `default`)
 - `parallel_streams` — Number of parallel streams, 1–4 (default: `2`)
-- `browser` — Browser to use: `electron`, `chrome`, `firefox`, `edge` (default: `electron`)
+- `browser` — Browser to use: `electron`, `chrome`, `edge` (default: `electron`)
 - `test_scope` — Scope of tests to run: `all`, `integration`, `e2e` (default: `all`)
 - `test_type` — Type of tests to run: `all`, `api`, `ui` (default: `all`)
 

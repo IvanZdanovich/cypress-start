@@ -60,6 +60,7 @@ NAMING_CHECK: keys match `^[a-z][a-zA-Z0-9]*$`, export uses `_examples` suffix
 GROUPING_CHECK: instances are grouped by entity plus type, validity, role, or lifecycle before individual case names
 MIRROR_CHECK: property keys mirror API/UI field names
 GETTER_CHECK: getters appear only for runtime dynamic identifiers or server-generated values; static, constrained, randomized, expected, and display values are plain fields
+SOURCE_OWNERSHIP_CHECK: each runtime ID has exactly one owning instance holding the placeholder; every other instance needing it exposes a getter, never a second placeholder the spec assigns
 HIDDEN_COMPOSITION_CHECK: no factories, builders, generic defaults, broad base objects, or broad spreads hide case-specific data
 DERIVE_CHECK: aggregates compute from structure
 TRACE_CHECK: boundaries import from constraints, specs reference directly

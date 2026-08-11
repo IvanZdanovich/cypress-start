@@ -287,12 +287,11 @@ function needsAction(rec) {
  * Collapse newlines so a value stays on a single markdown line.
  */
 function clean(text) {
-  // Collapse each run of horizontal whitespace + newlines into a single space.
-  // `[^\S\n]` matches horizontal whitespace only, so the quantifiers never
-  // overlap with `\n`, keeping this linear-time and immune to ReDoS backtracking.
   return String(text)
-    .replace(/[^\S\n]*\n[^\S\n]*(?:\n[^\S\n]*)*/g, ' ')
-    .trim();
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(' ');
 }
 
 /**

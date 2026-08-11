@@ -45,7 +45,7 @@ REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `
 
 INSTANCE_REUSE: create, update, delete one instance across the file lifecycle — reruns stay deterministic
 ID_FIELDS: placeholder on source instance only; set once on source after API setup; dependent instances read source IDs via ES getters defined in examples — manually assigning the same ID to multiple instances desyncs them
-ID_ASSIGN: `examples.group.instance.id = response.body.id`
+ID_ASSIGN: source only — `examples.group.source.id = response.body.id`; dependents declare `get id() { return examples.group.source.id; }` in examples and are never assigned by the spec
 CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after` — clears current and prior data so a crashed run leaves nothing behind
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
 CONSISTENCY: API and UI property names aligned
@@ -112,4 +112,5 @@ TITLE_CHECK: unique, page/component-prefixed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, API-backed, name pattern
 SELECTOR_CHECK: global variables, no hardcoded CSS strings
 L10N_CHECK: UI text via `l10n`, not hardcoded strings
+ID_OWNERSHIP_CHECK: each runtime ID is assigned in exactly one `then` of the spec and to exactly one instance — a second `instance.id = response.body.id` for the same value means the dependent needs a getter
 TRACEABILITY_CHECK: every asserted value resolves to one of — constraint import, named example field, `l10n` key, `colours` key; no orphan literals
