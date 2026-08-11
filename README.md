@@ -71,7 +71,7 @@ cd my-project
 npm install
 ```
 
-**Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` for test credentials.**
+**Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` and to `cypress/sensitive-data/qa-users.json` for test credentials.**
 
 ---
 
@@ -169,24 +169,24 @@ Run tests with specific environment parameters in headless mode.
 - `LANGUAGE`: Language code (default: `en`)
 - `TARGET_ENV`: Target environment (default: `dev`)
 - `COLOUR_THEME`: Color theme (default: `default`)
-- `BROWSER`: Browser for execution (default: `electron`, options: `electron`, `chrome`, `edge`)
+- `BROWSER`: Browser for execution (default: `chrome`, options: `chrome`, `edge`)
 
 **Windows (PowerShell):**
 
 ```powershell
-$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="electron"; npm run test
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
 ```
 
 **Windows (CMD):**
 
 ```cmd
-set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=electron&& npm run test
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
 ```
 
 **macOS/Linux:**
 
 ```bash
-LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=electron npm run test
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=chrome npm run test
 ```
 
 ### Debug Mode
@@ -228,7 +228,7 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers.
 - `target_env` — Target environment (default: `dev`)
 - `colour_theme` — Color theme (default: `default`)
 - `parallel_streams` — Number of parallel streams, 1–4 (default: `2`)
-- `browser` — Browser to use: `electron`, `chrome`, `edge` (default: `electron`)
+- `browser` — Browser to use: `electron`, `chrome`, `edge` (default: `chrome`)
 - `test_scope` — Scope of tests to run: `all`, `integration`, `e2e` (default: `all`)
 - `test_type` — Type of tests to run: `all`, `api`, `ui` (default: `all`)
 
