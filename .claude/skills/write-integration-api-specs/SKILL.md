@@ -54,7 +54,8 @@ INSTANCE_REUSE: create, update, delete within file lifecycle
 ID_FIELDS: placeholder on source instance only → set once on source after creation → dependent instances read source IDs via ES getters defined in examples — assigning the same ID to multiple instances in setup breaks single-source traceability
 CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-SPEC_CALLS: pass pre-composed examples directly — reconstructing a payload in the spec forks it from its constraint-backed source
+REQUEST_PREP: compose every request as a named example instance grouped by operation before writing the spec — otherwise inline payloads scatter request data across contexts and fork from constraints
+SPEC_CALLS: pass the pre-composed request instance as the command argument — path params, query, headers, body all sourced from the example — reconstructing any part in the spec forks the request from its constraint-backed source
 
 ## Commands
 
