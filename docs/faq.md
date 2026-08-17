@@ -19,9 +19,7 @@ load.
 - **Complexity** — POM builds an OOP hierarchy; here, a flat file structure.
 
 Recommended: selectors in `cypress/selectors/selectors.js`, reusable flows in `cypress/commands/{api,ui}/`, tests import
-directly. This "no abstraction a fresh solver wouldn't need" rule is enforced by the
-[produce-solution](../.claude/skills/produce-solution/SKILL.md) and
-[validate-solution](../.claude/skills/validate-solution/SKILL.md) skills.
+directly.
 
 ```javascript
 // selectors.js — global page objects

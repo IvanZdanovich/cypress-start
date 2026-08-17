@@ -29,8 +29,8 @@ node scripts/analyze-coverage-gaps.js --type=all --threshold=80 || exit 1
 ### NPM scripts
 
 ```bash
-npm run report:coverage     # Markdown report for all types
-npm run coverage:check      # Fail if below threshold
+npm run report:coverage           # Markdown report for all types
+npm run report:coverage:check     # Fail if below threshold
 ```
 
 ## Options
@@ -43,9 +43,9 @@ npm run coverage:check      # Fail if below threshold
 ## How it works
 
 1. **Load expected structure** from JSON files:
-   - `app-structure/components.json` (Integration UI)
-   - `app-structure/modules.json` (Integration API)
-   - `app-structure/workflows.json` (E2E UI)
+    - `app-structure/components.json` (Integration UI)
+    - `app-structure/modules.json` (Integration API)
+    - `app-structure/workflows.json` (E2E UI)
 
 2. **Parse test files** — extract structure paths from test titles, count total and skipped tests
 
