@@ -8,10 +8,11 @@ health.
 
 ## Metrics
 
-- **Path coverage** — expected paths implemented (%).
-- **Test coverage** — active (non-skipped) tests / total tests (%).
-- **Missing paths** — expected but not implemented.
-- **Extra paths** — implemented but not in expected structure.
+- **Path coverage** — expected paths with at least one active test / expected paths (%).
+- **Test coverage** — active tests / total tests (%).
+- **Missing paths** — expected paths without active automation.
+- **Skipped-only paths** — declared paths with tests, but no active test.
+- **Extra paths** — active paths not in the expected structure.
 
 ## Usage
 
@@ -47,7 +48,7 @@ npm run report:coverage:check     # Fail if below threshold
     - `app-structure/modules.json` (Integration API)
     - `app-structure/workflows.json` (E2E UI)
 
-2. **Parse test files** — extract structure paths from test titles, count total and skipped tests
+2. **Parse test files** — use the AST to extract structure paths from test titles, inherit skipped suite state, and count total and active tests
 
 3. **Compare** — identify missing, extra, and inconsistent paths
 
@@ -56,18 +57,20 @@ npm run report:coverage:check     # Fail if below threshold
 ## Report sections
 
 - **Summary** — overall coverage percentages.
-- **Missing coverage** — paths in expected but not tested, grouped by component.
-- **Extra coverage** — paths implemented but not in expected structure.
+- **Missing coverage** — expected paths without active automation, grouped by component.
+- **Skipped-only paths** — paths declared by tests whose suites or tests are skipped.
+- **Extra coverage** — active paths not in expected structure.
+- **Parse errors** — files that could not be parsed while the rest of the analysis continued.
 - **Structural inconsistencies** — paths with different child structures.
 - **Coverage by component** — per-component breakdown with status indicators.
 - **Recommendations** — priority actions based on results.
 
 ## Path coverage vs test coverage
 
-- **Path coverage** = what is tested (are all scenarios defined?)
-- **Test coverage** = how well it's tested (are tests running, not skipped?)
+- **Path coverage** = what has active automation (does every expected scenario have an active test?)
+- **Test coverage** = how well declared tests are running (active tests / total tests).
 
-Example: 85% path coverage + 70% test coverage = 3 scenarios missing + 15 tests skipped needing attention.
+An `it.skip`, an empty test body, or any test inside `describe.skip` or `context.skip` is pending. A skipped-only path is missing from path coverage and is also listed separately so declared scope is not mistaken for running automation.
 
 ## Troubleshooting
 

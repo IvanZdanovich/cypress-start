@@ -523,14 +523,18 @@ function buildRunHistorySection(runs) {
   const recentRuns = runs.slice(-20);
   for (let i = recentRuns.length - 1; i >= 0; i--) {
     const r = recentRuns[i];
-    const runFailedFiles = Array.isArray(r.failures) ? r.failures.length : 0;
-    const runTotalFiles = r.specFiles || 0;
-    const runPassedFiles = runTotalFiles - runFailedFiles;
-    const rate = runTotalFiles > 0 ? ((runPassedFiles / runTotalFiles) * 100).toFixed(1) : '0';
     const num = runs.indexOf(r) + 1;
     const date = r.timestamp?.slice(0, 10) || '';
     const branch = clean(r.branch || '');
-    lines.push(`- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}): ${runPassedFiles} passed, ${runFailedFiles} failed of ${runTotalFiles} spec file(s) — ${rate}% pass rate`);
+    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}):`;
+    if (r.specFiles > 0) {
+      const runFailedFiles = Array.isArray(r.failures) ? r.failures.length : 0;
+      const runPassedFiles = r.specFiles - runFailedFiles;
+      const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
+      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
+    } else {
+      lines.push(`${prefix} legacy run — spec-file pass rate unavailable (no specFiles recorded)`);
+    }
   }
   lines.push('');
 
