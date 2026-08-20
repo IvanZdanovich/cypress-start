@@ -17,10 +17,15 @@
  *   --format=<format>     Output format: cli, markdown, both (default: both)
  *   --output=<path>       Save markdown report to file
  *   --threshold=<number>  Fail if coverage below percentage (0-100)
+ *
+ * Path coverage counts only paths with at least one active `it` block.
+ * Tests skipped directly or through a skipped ancestor suite are pending.
+ * Skipped-only paths are reported separately and do not independently fail.
  */
 
 const fs = require('fs');
 const path = require('path');
+const espree = require('espree');
 
 // Configuration
 const CONFIG = {
@@ -93,7 +98,8 @@ function parseArgs() {
     } else if (arg.startsWith('--output=')) {
       parsed.output = arg.slice(arg.indexOf('=') + 1);
     } else if (arg.startsWith('--threshold=')) {
-      parsed.threshold = parseInt(arg.slice(arg.indexOf('=') + 1), 10);
+      const value = arg.slice(arg.indexOf('=') + 1);
+      parsed.threshold = value === '' ? NaN : Number(value);
     }
   }
 
@@ -151,27 +157,110 @@ function extractStructurePath(title) {
 function parseTestFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const testBlocks = [];
+  let ast;
 
-  // Match it() and it.skip() blocks - matches single or double quotes
-  const itBlockRegex = /(?:^|\s)(it(?:\.skip)?)\s*\(\s*['"]([^'"]+)['"]/gm;
-  let match;
-
-  while ((match = itBlockRegex.exec(content)) !== null) {
-    const isSkipped = match[1] === 'it.skip';
-    const title = match[2];
-    const structurePath = extractStructurePath(title);
-
-    if (structurePath) {
-      testBlocks.push({
-        title,
-        structurePath,
-        isSkipped,
+  try {
+    ast = espree.parse(content, {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    });
+  } catch (error) {
+    return {
+      testBlocks,
+      parseError: {
         filePath,
-      });
-    }
+        message: error.message,
+      },
+    };
   }
 
-  return testBlocks;
+  const getCallDescriptor = (callee) => {
+    if (callee.type === 'Identifier' && ['describe', 'context', 'it'].includes(callee.name)) {
+      return { name: callee.name, skipped: false };
+    }
+
+    if (
+      callee.type === 'MemberExpression' &&
+      !callee.computed &&
+      callee.object.type === 'Identifier' &&
+      ['describe', 'context', 'it'].includes(callee.object.name) &&
+      callee.property.type === 'Identifier' &&
+      ['only', 'skip'].includes(callee.property.name)
+    ) {
+      return {
+        name: callee.object.name,
+        skipped: callee.property.name === 'skip',
+      };
+    }
+
+    return null;
+  };
+
+  const getCallback = (node) => [...node.arguments].reverse().find((argument) => ['ArrowFunctionExpression', 'FunctionExpression'].includes(argument.type));
+
+  const getStringValue = (node) => {
+    if (node?.type === 'Literal' && typeof node.value === 'string') {
+      return node.value;
+    }
+
+    if (node?.type === 'TemplateLiteral' && node.expressions.length === 0) {
+      return node.quasis[0].value.cooked ?? node.quasis[0].value.raw;
+    }
+
+    return null;
+  };
+
+  const hasBody = (callback) => {
+    if (!callback) {
+      return false;
+    }
+
+    return callback.body.type === 'BlockStatement' ? callback.body.body.length > 0 : true;
+  };
+
+  const visit = (node, suiteSkipped = false) => {
+    if (!node || typeof node !== 'object') {
+      return;
+    }
+
+    if (node.type === 'CallExpression') {
+      const descriptor = getCallDescriptor(node.callee);
+
+      if (descriptor?.name === 'describe' || descriptor?.name === 'context') {
+        const callback = getCallback(node);
+        if (callback) {
+          visit(callback, suiteSkipped || descriptor.skipped);
+        }
+        return;
+      }
+
+      if (descriptor?.name === 'it') {
+        const title = getStringValue(node.arguments[0]);
+        const structurePath = extractStructurePath(title ?? '');
+
+        if (structurePath) {
+          testBlocks.push({
+            title,
+            structurePath,
+            isSkipped: suiteSkipped || descriptor.skipped || !hasBody(getCallback(node)),
+            filePath,
+          });
+        }
+        return;
+      }
+    }
+
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) {
+        value.forEach((child) => visit(child, suiteSkipped));
+      } else {
+        visit(value, suiteSkipped);
+      }
+    }
+  };
+
+  visit(ast);
+  return { testBlocks, parseError: null };
 }
 
 /**
@@ -227,13 +316,30 @@ function parseAllTestFiles(testDir, testPattern) {
   const testFiles = findTestFiles(fullTestDir, testPattern);
 
   let allTestBlocks = [];
+  const parseErrors = [];
 
   for (const file of testFiles) {
-    const blocks = parseTestFile(file);
-    allTestBlocks = allTestBlocks.concat(blocks);
+    const result = parseTestFile(file);
+    allTestBlocks = allTestBlocks.concat(result.testBlocks);
+    if (result.parseError) {
+      parseErrors.push(result.parseError);
+    }
   }
 
-  return buildStructureWithCounts(allTestBlocks);
+  const allStructure = buildStructureWithCounts(allTestBlocks);
+  const activeStructure = buildStructureWithCounts(allTestBlocks.filter((block) => !block.isSkipped));
+  const skippedOnlyPaths = Object.entries(allStructure.pathCounts)
+    .filter(([, counts]) => counts.active === 0 && counts.skipped > 0)
+    .map(([structurePath]) => structurePath)
+    .sort();
+
+  return {
+    structure: allStructure.structure,
+    activeStructure: activeStructure.structure,
+    pathCounts: allStructure.pathCounts,
+    skippedOnlyPaths,
+    parseErrors,
+  };
 }
 
 /**
@@ -397,20 +503,20 @@ function groupByTopLevel(paths) {
 /**
  * Calculate coverage by top-level component/module
  */
-function calculateCoverageByComponent(expected, actualWithCounts, pathCounts) {
+function calculateCoverageByComponent(expected, activeActual, actualWithCounts, pathCounts) {
   const coverage = {};
 
   // Get all unique top-level keys from both structures
-  const allKeys = new Set([...Object.keys(expected), ...Object.keys(actualWithCounts).filter((k) => k !== '__counts')]);
+  const allKeys = new Set([...Object.keys(expected), ...Object.keys(activeActual).filter((k) => k !== '__counts')]);
 
   for (const key of allKeys) {
     const expectedCount = key in expected ? countLeafNodes(expected[key]) : 0;
 
-    // For actual, count both paths and test blocks
-    const actualPathCount = key in actualWithCounts ? countLeafNodes(actualWithCounts[key]) : 0;
+    // Count active paths for path coverage and all tests for test health.
+    const actualPathCount = key in activeActual ? countLeafNodes(activeActual[key]) : 0;
     const actualTestCounts = key in actualWithCounts ? countTestBlocks(actualWithCounts[key], pathCounts, key) : { total: 0, skipped: 0, active: 0 };
 
-    const { missing: componentMissing, extra: componentExtra } = compareStructures(key in expected ? expected[key] : {}, key in actualWithCounts ? actualWithCounts[key] : {});
+    const { missing: componentMissing, extra: componentExtra } = compareStructures(key in expected ? expected[key] : {}, key in activeActual ? activeActual[key] : {});
     const covered = expectedCount - componentMissing.length;
     let percent;
 
@@ -486,9 +592,11 @@ function generateCLIReport(result) {
   console.log(colorize('\nSUMMARY', 'bright'));
   console.log(colorize('\nStructure Coverage (test paths vs expected):', 'cyan'));
   console.log(`  Expected paths:        ${summary.totalExpected}`);
-  console.log(`  Actual paths:          ${summary.totalActual}`);
+  console.log(`  Active paths:          ${summary.totalActual}`);
+  console.log(`  Declared paths:        ${summary.totalDeclared}`);
   console.log(`  Missing paths:         ${colorize(summary.missing, summary.missing > 0 ? 'red' : 'green')}`);
   console.log(`  Extra paths:           ${colorize(summary.extra, summary.extra > 0 ? 'yellow' : 'green')}`);
+  console.log(`  Skipped-only paths:    ${colorize(summary.skippedOnly, summary.skippedOnly > 0 ? 'yellow' : 'green')}`);
 
   const coverageColor = getCoverageColor(summary.coveragePercent);
   const coverageText = `${summary.coveragePercent}%`;
@@ -530,6 +638,18 @@ function generateCLIReport(result) {
     console.log(colorize('\nNo missing coverage.', 'green'));
   }
 
+  if (gaps.skippedOnly.length > 0) {
+    console.log(colorize(`\nSKIPPED-ONLY PATHS (${gaps.skippedOnly.length} paths)`, 'yellow'));
+    console.log(colorize('-'.repeat(60), 'dim'));
+    console.log(colorize('These declared paths have tests, but none are active:\n', 'dim'));
+    gaps.skippedOnly.slice(0, 10).forEach((p) => {
+      console.log(`  ${colorize('~', 'yellow')} ${p}`);
+    });
+    if (gaps.skippedOnly.length > 10) {
+      console.log(colorize(`  ... and ${gaps.skippedOnly.length - 10} more`, 'dim'));
+    }
+  }
+
   // Extra coverage
   if (gaps.extra.length > 0) {
     console.log(colorize(`\nEXTRA COVERAGE (${gaps.extra.length} paths)`, 'yellow'));
@@ -541,6 +661,15 @@ function generateCLIReport(result) {
     if (gaps.extra.length > 10) {
       console.log(colorize(`  ... and ${gaps.extra.length - 10} more`, 'dim'));
     }
+  }
+
+  if (result.parseErrors.length > 0) {
+    console.log(colorize(`\nPARSE ERRORS (${result.parseErrors.length} files)`, 'red'));
+    console.log(colorize('-'.repeat(60), 'dim'));
+    result.parseErrors.forEach(({ filePath, message }) => {
+      console.log(`  ${colorize('!', 'red')} ${filePath}`);
+      console.log(`     ${message}`);
+    });
   }
 
   // Structural inconsistencies
@@ -614,7 +743,7 @@ function generateCLIReport(result) {
  * Generate Markdown report
  */
 function generateMarkdownReport(result) {
-  const { name, summary, gaps, coverageByComponent } = result;
+  const { name, summary, gaps, coverageByComponent, parseErrors } = result;
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
   let md = `# Test Coverage Gap Analysis Report\n\n`;
@@ -624,7 +753,8 @@ function generateMarkdownReport(result) {
   // Summary
   md += `## Summary\n\n`;
   md += `- **Total Expected**: ${summary.totalExpected}\n`;
-  md += `- **Total Actual**: ${summary.totalActual}\n`;
+  md += `- **Active Paths**: ${summary.totalActual}\n`;
+  md += `- **Declared Paths**: ${summary.totalDeclared}\n`;
 
   if (summary.totalTests !== undefined) {
     md += `- **Total Tests**: ${summary.totalTests}\n`;
@@ -639,7 +769,8 @@ function generateMarkdownReport(result) {
   }
 
   md += `- **Missing**: ${summary.missing}\n`;
-  md += `- **Extra**: ${summary.extra}\n\n`;
+  md += `- **Extra**: ${summary.extra}\n`;
+  md += `- **Skipped-only paths**: ${summary.skippedOnly}\n\n`;
 
   const statusLabel = getCoverageLabel(summary.coveragePercent);
   let statusMessage;
@@ -671,12 +802,29 @@ function generateMarkdownReport(result) {
     md += `No missing coverage. All expected paths are covered.\n\n`;
   }
 
+  if (gaps.skippedOnly.length > 0) {
+    md += `## Skipped-only Paths (${gaps.skippedOnly.length} paths)\n\n`;
+    md += `These declared paths have tests, but none are active:\n\n`;
+    gaps.skippedOnly.forEach((p) => {
+      md += `- Skipped-only: \`${p}\`\n`;
+    });
+    md += `\n`;
+  }
+
   // Extra coverage
   if (gaps.extra.length > 0) {
     md += `## Extra Coverage (${gaps.extra.length} paths)\n\n`;
     md += `These paths exist in actual tests but are not in the expected structure:\n\n`;
     gaps.extra.forEach((p) => {
       md += `- Extra: \`${p}\`\n`;
+    });
+    md += `\n`;
+  }
+
+  if (parseErrors.length > 0) {
+    md += `## Parse Errors (${parseErrors.length} files)\n\n`;
+    parseErrors.forEach(({ filePath, message }) => {
+      md += `- **${filePath}** — ${message}\n`;
     });
     md += `\n`;
   }
@@ -724,7 +872,7 @@ function generateMarkdownReport(result) {
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
       md += `### ${component} — Extra\n\n`;
       md += `- **Expected Paths**: 0\n`;
-      md += `- **Actual Paths**: ${stats.actualPaths}\n`;
+      md += `- **Active Paths**: ${stats.actualPaths}\n`;
       md += `- **Path Coverage**: N/A\n`;
       md += `- **Tests (Active/Total)**: ${testInfo}\n`;
       md += `- **Test Coverage**: ${testCov}\n\n`;
@@ -735,7 +883,7 @@ function generateMarkdownReport(result) {
       const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
       md += `### ${component} — ${status}\n\n`;
       md += `- **Expected Paths**: ${stats.expected}\n`;
-      md += `- **Actual Paths**: ${actualDisplay}\n`;
+      md += `- **Active Paths**: ${actualDisplay}\n`;
       md += `- **Path Coverage**: ${stats.percent}%\n`;
       md += `- **Tests (Active/Total)**: ${testInfo}\n`;
       md += `- **Test Coverage**: ${testCov}\n\n`;
@@ -761,7 +909,7 @@ function generateMarkdownReport(result) {
     md += `3. Update expected structure if some paths are no longer needed\n`;
     md += `4. Re-run analysis after adding tests\n\n`;
   } else {
-    md += `Coverage is complete. Consider:\n\n`;
+    md += `Expected active coverage is complete. Consider:\n\n`;
     md += `1. Maintaining this coverage level as features evolve\n`;
     md += `2. Reviewing and updating expected structure for new features\n`;
     md += `3. Ensuring test quality matches coverage quantity\n\n`;
@@ -788,40 +936,45 @@ function analyzeTestType(type, config) {
   const expected = JSON.parse(fs.readFileSync(expectedPath, 'utf-8'));
 
   // Parse actual test files to get structure with counts
-  const { structure: actual, pathCounts } = parseAllTestFiles(config.testDir, config.testPattern);
+  const { structure: declaredActual, activeStructure, pathCounts, skippedOnlyPaths, parseErrors } = parseAllTestFiles(config.testDir, config.testPattern);
 
   // Compare structures
-  const gaps = compareStructures(expected, actual);
+  const gaps = compareStructures(expected, activeStructure);
+  gaps.skippedOnly = skippedOnlyPaths;
 
   // Detect structural inconsistencies
-  const inconsistencies = detectInconsistencies(expected, actual);
+  const inconsistencies = detectInconsistencies(expected, activeStructure);
 
   // Calculate metrics
   const totalExpected = countLeafNodes(expected, true);
-  const totalActual = countLeafNodes(actual, true);
+  const totalActual = countLeafNodes(activeStructure, true);
+  const totalDeclared = countLeafNodes(declaredActual, true);
   const covered = totalExpected - gaps.missing.length;
   const coveragePercent = totalExpected > 0 ? Math.round((covered / totalExpected) * 100 * 10) / 10 : 0;
 
   // Calculate total test counts
-  const totalTestCounts = countTestBlocks(actual, pathCounts);
+  const totalTestCounts = countTestBlocks(declaredActual, pathCounts);
   const testCoveragePercent = totalTestCounts.total > 0 ? Math.round((totalTestCounts.active / totalTestCounts.total) * 100 * 10) / 10 : 0;
 
   const summary = {
     totalExpected,
     totalActual,
+    totalDeclared,
     covered,
     coveragePercent,
     missing: gaps.missing.length,
     extra: gaps.extra.length,
+    skippedOnly: gaps.skippedOnly.length,
     totalTests: totalTestCounts.total,
     activeTests: totalTestCounts.active,
     skippedTests: totalTestCounts.skipped,
     testCoveragePercent,
     inconsistencies: inconsistencies.length,
+    parseErrors: parseErrors.length,
   };
 
   // Calculate coverage by component
-  const coverageByComponent = calculateCoverageByComponent(expected, actual, pathCounts);
+  const coverageByComponent = calculateCoverageByComponent(expected, activeStructure, declaredActual, pathCounts);
 
   return {
     type,
@@ -830,6 +983,7 @@ function analyzeTestType(type, config) {
     gaps,
     inconsistencies,
     coverageByComponent,
+    parseErrors,
   };
 }
 
@@ -838,6 +992,16 @@ function analyzeTestType(type, config) {
  */
 function main() {
   const args = parseArgs();
+
+  if (!['cli', 'markdown', 'both'].includes(args.format)) {
+    console.error(`Invalid --format value: ${args.format}. Expected cli, markdown, or both.`);
+    process.exit(1);
+  }
+
+  if (args.threshold !== null && (!Number.isFinite(args.threshold) || args.threshold < 0 || args.threshold > 100)) {
+    console.error(`Invalid --threshold value: ${args.threshold}. Expected a finite number from 0 to 100.`);
+    process.exit(1);
+  }
 
   const types = args.type === 'all' ? ['integration-ui', 'integration-api', 'e2e-ui'] : [args.type];
   const results = [];
@@ -879,12 +1043,14 @@ function main() {
         const testCov = result.summary.totalTests > 0 ? `${result.summary.testCoveragePercent}%` : 'N/A';
         combinedMd += `### ${result.name} — ${status}\n\n`;
         combinedMd += `- **Expected Paths**: ${result.summary.totalExpected}\n`;
-        combinedMd += `- **Actual Paths**: ${result.summary.totalActual}\n`;
+        combinedMd += `- **Active Paths**: ${result.summary.totalActual}\n`;
+        combinedMd += `- **Declared Paths**: ${result.summary.totalDeclared}\n`;
         combinedMd += `- **Path Coverage**: ${result.summary.coveragePercent}%\n`;
         combinedMd += `- **Tests (Active/Total)**: ${testInfo}\n`;
         combinedMd += `- **Test Coverage**: ${testCov}\n`;
         combinedMd += `- **Missing**: ${result.summary.missing}\n`;
-        combinedMd += `- **Extra**: ${result.summary.extra}\n\n`;
+        combinedMd += `- **Extra**: ${result.summary.extra}\n`;
+        combinedMd += `- **Skipped-only paths**: ${result.summary.skippedOnly}\n\n`;
       });
 
       combinedMd += `---\n\n`;

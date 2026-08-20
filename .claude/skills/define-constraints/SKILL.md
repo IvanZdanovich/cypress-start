@@ -1,6 +1,6 @@
 ---
 name: define-constraints
-description: Use when creating or updating API or UI constraint files that define reusable boundaries, formats, enums, required fields, durations, or display options.
+description: Use when creating or updating API or UI constraint files that define reusable boundaries, formats, enums, required fields, durations, business or system constants.
 ---
 
 # Principles

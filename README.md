@@ -131,10 +131,9 @@ This framework includes examples of tests:
 - **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
 - **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
 - **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
-- **Claude Code Skills:** 18 project-specific skills covering the full development workflow — spec writing, data
-  authoring, command creation, linting, bug tracking, localization, colour themes, git strategy, and solution
-  validation. Invoked automatically by [Claude Code](https://claude.ai/code) when the task matches, or explicitly via
-  `/skill-name`.
+- **Claude Code Skills:** 16 project-specific skills covering the full development workflow — spec writing, data
+  authoring, command creation, linting, bug tracking, localization, colour themes, and git strategy. Invoked
+  automatically by [Claude Code](https://claude.ai/code) when the task matches, or explicitly via `/skill-name`.
 
 ---
 

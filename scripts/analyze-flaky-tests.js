@@ -303,16 +303,19 @@ function truncate(str, maxLen) {
 
 /**
  * Aggregate summary statistics across all runs.
+ * Pass rate is measured at the spec-file level: the share of test files that
+ * did not fail, summed across all runs — (total files − failed files) / total files.
+ * A file counts as failed when the run recorded at least one first-failure for it.
+ * Runs missing `specFiles` (legacy ledger rows) are excluded so they don't
+ * understate the rate by contributing failures with a zero file count.
  * @returns {{ overallPassRate: string }}
  */
 function computeSummaryStats(runs) {
-  const totalTests = runs.reduce((sum, r) => sum + (r.stats?.total || 0), 0);
-  const totalPassed = runs.reduce((sum, r) => sum + (r.stats?.passed || 0), 0);
-  const totalPending = runs.reduce((s, r) => s + (r.stats?.pending || 0), 0);
-  const totalSkipped = runs.reduce((s, r) => s + (r.stats?.skipped || 0), 0);
-  // Verified = tests that actually executed: exclude both pending and skipped.
-  const verified = totalTests - totalPending - totalSkipped;
-  const overallPassRate = verified > 0 ? ((totalPassed / verified) * 100).toFixed(2) : '0';
+  const rated = runs.filter((r) => (r.specFiles || 0) > 0);
+  const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
+  const failedFiles = rated.reduce((sum, r) => sum + (Array.isArray(r.failures) ? r.failures.length : 0), 0);
+  const passedFiles = totalFiles - failedFiles;
+  const overallPassRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
   return { overallPassRate };
 }
 
@@ -381,8 +384,9 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
   lines.push('');
   lines.push('> Note: only the **first failure per spec file** is tracked — specs run with');
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
-  lines.push('> are unreliable. Fail rate is measured across recorded executions (each CI run, including');
-  lines.push('> repeated runs of the same commit).');
+  lines.push('> are unreliable. Pass rate is measured at the **spec-file level**: the share of');
+  lines.push('> test files with no recorded first failure, summed across all recorded executions');
+  lines.push('> (each CI run, including repeated runs of the same commit).');
   lines.push('');
 
   return lines;
@@ -519,12 +523,18 @@ function buildRunHistorySection(runs) {
   const recentRuns = runs.slice(-20);
   for (let i = recentRuns.length - 1; i >= 0; i--) {
     const r = recentRuns[i];
-    const runVerified = (r.stats?.total || 0) - (r.stats?.pending || 0) - (r.stats?.skipped || 0);
-    const rate = runVerified > 0 ? (((r.stats?.passed || 0) / runVerified) * 100).toFixed(1) : '0';
     const num = runs.indexOf(r) + 1;
     const date = r.timestamp?.slice(0, 10) || '';
     const branch = clean(r.branch || '');
-    lines.push(`- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}): ${r.stats?.passed || 0} passed, ${r.stats?.failed || 0} failed of ${r.stats?.total || 0} total — ${rate}% pass rate`);
+    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}):`;
+    if (r.specFiles > 0) {
+      const runFailedFiles = Array.isArray(r.failures) ? r.failures.length : 0;
+      const runPassedFiles = r.specFiles - runFailedFiles;
+      const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
+      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
+    } else {
+      lines.push(`${prefix} legacy run — spec-file pass rate unavailable (no specFiles recorded)`);
+    }
   }
   lines.push('');
 

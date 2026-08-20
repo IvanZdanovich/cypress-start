@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
@@ -42,7 +42,7 @@
     "report:coverage:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
     "report:coverage:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",
     "report:coverage:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown --output=reports/coverage-e2e-ui.md",
-    "check:coverage": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
+    "report:coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
     "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
@@ -78,7 +78,7 @@
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.2.0",
-    "cypress": "^15.19.0",
+    "cypress": "^15.21.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.1",
