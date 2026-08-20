@@ -42,7 +42,7 @@
     "report:coverage:integration-ui": "node scripts/analyze-coverage-gaps.js --type=integration-ui --format=markdown --output=reports/coverage-integration-ui.md",
     "report:coverage:integration-api": "node scripts/analyze-coverage-gaps.js --type=integration-api --format=markdown --output=reports/coverage-integration-api.md",
     "report:coverage:e2e-ui": "node scripts/analyze-coverage-gaps.js --type=e2e-ui --format=markdown --output=reports/coverage-e2e-ui.md",
-    "check:coverage": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
+    "report:coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
     "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
