@@ -523,6 +523,33 @@ function deleteObsoleteFiles(projectPath, previousFiles, newFiles) {
   return deleted;
 }
 
+function createSensitiveDataFilesFromExample(projectPath, options = {}) {
+  const { overwriteExisting = false } = options;
+  const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
+  const examplePath = path.join(sensitivePath, 'env-users.example.json');
+  const targetFiles = ['dev-users.json', 'qa-users.json'];
+  const createdFiles = [];
+
+  // Ensure sensitive-data directory exists
+  if (!fs.existsSync(sensitivePath)) {
+    fs.mkdirSync(sensitivePath, { recursive: true });
+  }
+
+  if (!fs.existsSync(examplePath)) {
+    return createdFiles;
+  }
+
+  for (const fileName of targetFiles) {
+    const targetPath = path.join(sensitivePath, fileName);
+    if (overwriteExisting || !fs.existsSync(targetPath)) {
+      fs.copyFileSync(examplePath, targetPath);
+      createdFiles.push(`cypress/sensitive-data/${fileName}`);
+    }
+  }
+
+  return createdFiles;
+}
+
 async function updateProject(target) {
   const projectPath = path.resolve(target || '.');
 
@@ -570,6 +597,11 @@ async function updateProject(target) {
     }
     await copyOrUpdatePackageJson(projectPath, allModules, tempPath);
 
+    const createdCredentialFiles = createSensitiveDataFilesFromExample(projectPath);
+    if (createdCredentialFiles.length > 0) {
+      log(`  ✓ Credential file(s) created from example: ${createdCredentialFiles.join(', ')}`, 'green');
+    }
+
     logStep('4/5', 'Removing obsolete files...');
     const previousManifest = readManifest(projectPath);
     if (!previousManifest) {
@@ -612,7 +644,7 @@ async function cleanupGitHistory(projectName) {
   log('✅ Fresh git repository initialized', 'green');
 }
 
-async function setupSensitiveData(projectName, setupMode) {
+async function setupSensitiveData(projectName, setupMode, options = {}) {
   // Only setup sensitive data in full mode
   if (setupMode !== 'full') {
     return;
@@ -621,25 +653,9 @@ async function setupSensitiveData(projectName, setupMode) {
   logStep('3/5', 'Setting up credentials structure...');
 
   const projectPath = path.resolve(projectName);
-  const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
-  const examplePath = path.join(sensitivePath, 'env-users.example.json');
-  const devUsersPath = path.join(sensitivePath, 'dev-users.json');
-  const qaUsersPath = path.join(sensitivePath, 'qa-users.json');
+  const createdFiles = createSensitiveDataFilesFromExample(projectPath, options);
 
-  // Ensure sensitive-data directory exists
-  if (!fs.existsSync(sensitivePath)) {
-    fs.mkdirSync(sensitivePath, { recursive: true });
-  }
-
-  if (fs.existsSync(examplePath)) {
-    // Copy example to dev-users.json
-    if (!fs.existsSync(devUsersPath)) {
-      fs.copyFileSync(examplePath, devUsersPath);
-    }
-    // Copy example to qa-users.json
-    if (!fs.existsSync(qaUsersPath)) {
-      fs.copyFileSync(examplePath, qaUsersPath);
-    }
+  if (createdFiles.length > 0) {
     log('✅ Credentials files created from example', 'green');
   }
 }
@@ -940,7 +956,7 @@ async function main() {
         // Execute full setup steps (5 steps) for a fresh directory
         await cloneTemplate(projectName);
         await cleanupGitHistory(projectName);
-        await setupSensitiveData(projectName, setupMode);
+        await setupSensitiveData(projectName, setupMode, { overwriteExisting: true });
 
         // Record installed files so future updates can manage them.
         const fullProjectPath = path.resolve(projectName);
@@ -1003,6 +1019,7 @@ module.exports = {
   getTemplateVersion,
   syncTemplateFiles,
   deleteObsoleteFiles,
+  createSensitiveDataFilesFromExample,
   runNpmInstall,
   updateProject,
   installFullIntoExistingDirectory,
