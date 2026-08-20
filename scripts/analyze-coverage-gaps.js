@@ -98,7 +98,8 @@ function parseArgs() {
     } else if (arg.startsWith('--output=')) {
       parsed.output = arg.slice(arg.indexOf('=') + 1);
     } else if (arg.startsWith('--threshold=')) {
-      parsed.threshold = parseInt(arg.slice(arg.indexOf('=') + 1), 10);
+      const value = arg.slice(arg.indexOf('=') + 1);
+      parsed.threshold = value === '' ? NaN : Number(value);
     }
   }
 
@@ -991,6 +992,16 @@ function analyzeTestType(type, config) {
  */
 function main() {
   const args = parseArgs();
+
+  if (!['cli', 'markdown', 'both'].includes(args.format)) {
+    console.error(`Invalid --format value: ${args.format}. Expected cli, markdown, or both.`);
+    process.exit(1);
+  }
+
+  if (args.threshold !== null && (!Number.isFinite(args.threshold) || args.threshold < 0 || args.threshold > 100)) {
+    console.error(`Invalid --threshold value: ${args.threshold}. Expected a finite number from 0 to 100.`);
+    process.exit(1);
+  }
 
   const types = args.type === 'all' ? ['integration-ui', 'integration-api', 'e2e-ui'] : [args.type];
   const results = [];
