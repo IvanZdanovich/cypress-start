@@ -423,16 +423,15 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
     }
   }
 
-  const docsSection =
-    selectedModules?.documentation
-      ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
+  const docsSection = selectedModules?.documentation
+    ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
   - Constraints, Examples & Specs: ${COLORS.blue}docs/constraints-examples-specs-approach.md${COLORS.reset}
   - ESLint Custom Rules: ${COLORS.blue}docs/eslint-custom-rules.md${COLORS.reset}
   - Localization Testing: ${COLORS.blue}docs/localization-testing.md${COLORS.reset}
   - FAQ: ${COLORS.blue}docs/faq.md${COLORS.reset}
 
 `
-      : '';
+    : '';
 
   // Full mode vs Specific mode next steps
   let nextSteps = '';
