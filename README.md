@@ -53,7 +53,7 @@ new standalone projects.
 
 **Mode 2 — Specific Files** cherry-picks modules (ESLint, Docs, Claude Skills, Parallel Runner, GitHub Actions, Docker)
 into an existing project directory. `package.json` is created or merged automatically; run `npm install` manually after.
-Use `npx cypress-start .` when you want the selected modules copied into the folder you are already in.
+Use `npm exec --yes --package=cypress-start -- cypress-start .` when you want the selected modules copied into the folder you are already in.
 
 **Mode 3 — Update Existing Project** refreshes a project you already created **in place** — no new subfolder. It pulls the
 latest template, adds/overwrites managed files, deletes files that are no longer part of the template, and merges

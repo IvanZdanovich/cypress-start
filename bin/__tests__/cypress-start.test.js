@@ -21,7 +21,9 @@ const {
   getTemplateVersion,
   syncTemplateFiles,
   deleteObsoleteFiles,
+  runNpmInstall,
   updateProject,
+  installFullIntoExistingDirectory,
 } = require('../cypress-start.js');
 
 // --- helpers ---------------------------------------------------------------
@@ -224,6 +226,9 @@ test('isExcludedFromUpdate protects user-owned files but allows template files',
   assert.equal(isExcludedFromUpdate('node_modules/foo/index.js'), true);
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/dev-users.json'), true);
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/qa-users.json'), true);
+  // The bin/ folder is CLI tooling — never copy it into a consumer project.
+  assert.equal(isExcludedFromUpdate('bin/cypress-start.js'), true);
+  assert.equal(isExcludedFromUpdate('bin/__tests__/cypress-start.test.js'), true);
   // The example file should stay in sync with the template.
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/env-users.example.json'), false);
   assert.equal(isExcludedFromUpdate('cypress/e2e/ui/login.spec.js'), false);
@@ -344,6 +349,26 @@ test('deleteObsoleteFiles never removes user-owned sensitive files', async () =>
   });
 });
 
+test('runNpmInstall returns true when npm install succeeds', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'ok-install', version: '1.0.0' }));
+
+    assert.equal(runNpmInstall(project), true);
+  });
+});
+
+test('runNpmInstall returns false when npm install exits non-zero', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'failed-install', version: '1.0.0', scripts: { preinstall: 'node -e "process.exit(7)"' } }));
+
+    assert.equal(runNpmInstall(project), false);
+  });
+});
+
 test('updateProject applies latest template in place, deletes obsolete files, preserves credentials, and stages only project changes', async () => {
   await withTmpCwd(async (tmp) => {
     const template = path.join(tmp, 'template-source');
@@ -415,5 +440,54 @@ test('updateProject applies latest template in place, deletes obsolete files, pr
     for (const line of stagedChanges) {
       assert.equal(line[1], ' ', `expected staged-only change, got: ${line}`);
     }
+  });
+});
+
+// --- installFullIntoExistingDirectory ---------------------------------------
+
+test('installFullIntoExistingDirectory copies all template files into an existing directory without touching .git', async () => {
+  await withTmpCwd(async (tmp) => {
+    // Prepare a minimal fake template served locally
+    const templateSource = path.join(tmp, 'template-source');
+    fs.mkdirSync(path.join(templateSource, 'cypress', 'sensitive-data'), { recursive: true });
+    fs.writeFileSync(path.join(templateSource, 'cypress.config.js'), 'module.exports = {};\n');
+    fs.writeFileSync(path.join(templateSource, 'cypress', 'sensitive-data', 'env-users.example.json'), '{"user":"example"}\n');
+    fs.writeFileSync(path.join(templateSource, 'package.json'), JSON.stringify({ version: '9.9.9', devDependencies: {} }) + '\n');
+    runGit(templateSource, ['init']);
+    runGit(templateSource, ['add', '-A']);
+    runGit(templateSource, ['commit', '-m', 'init', '--allow-empty']);
+
+    // Prepare the project — an existing directory with its own git history
+    const project = path.join(tmp, 'existing-project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'my-file.js'), '// my code\n');
+    runGit(project, ['init']);
+    runGit(project, ['add', '-A']);
+    runGit(project, ['commit', '-m', 'initial commit', '--allow-empty']);
+
+    const previousTemplateUrl = process.env.CYPRESS_START_TEMPLATE_URL;
+    process.env.CYPRESS_START_TEMPLATE_URL = templateSource;
+    try {
+      await installFullIntoExistingDirectory(project);
+    } finally {
+      if (previousTemplateUrl === undefined) {
+        delete process.env.CYPRESS_START_TEMPLATE_URL;
+      } else {
+        process.env.CYPRESS_START_TEMPLATE_URL = previousTemplateUrl;
+      }
+    }
+
+    // Template files should have been copied
+    assert.ok(fs.existsSync(path.join(project, 'cypress.config.js')), 'cypress.config.js should be copied');
+    // Original user file must be preserved
+    assert.ok(fs.existsSync(path.join(project, 'my-file.js')), 'user file must not be deleted');
+    // .git must still be the original repo (not wiped/re-inited)
+    assert.ok(fs.existsSync(path.join(project, '.git')), '.git must be preserved');
+    // Manifest should be written
+    const manifest = readManifest(project);
+    assert.ok(manifest, 'manifest should be written');
+    assert.ok(manifest.files.includes('cypress.config.js'), 'manifest should list copied files');
+    // bin/ must not be copied
+    assert.equal(fs.existsSync(path.join(project, 'bin')), false, 'bin/ must not be copied into project');
   });
 });
