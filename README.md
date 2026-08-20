@@ -26,7 +26,7 @@
 
 ## Quick Start
 
-Create a new project from this template in seconds! The CLI offers two setup modes to match your needs:
+Create a new project from this template in seconds! The CLI offers three setup modes to match your needs:
 
 ### Prerequisites
 
@@ -40,6 +40,9 @@ Create a new project from this template in seconds! The CLI offers two setup mod
 # Using npx (no installation required)
 npx cypress-start my-project
 
+# Or copy selected modules into the current directory
+npx cypress-start .
+
 # Or install globally first
 npm install -g cypress-start
 cypress-start my-project
@@ -50,6 +53,25 @@ new standalone projects.
 
 **Mode 2 — Specific Files** cherry-picks modules (ESLint, Docs, Claude Skills, Parallel Runner, GitHub Actions, Docker)
 into an existing project directory. `package.json` is created or merged automatically; run `npm install` manually after.
+Use `npx cypress-start .` when you want the selected modules copied into the folder you are already in.
+
+**Mode 3 — Update Existing Project** refreshes a project you already created **in place** — no new subfolder. It pulls the
+latest template, adds/overwrites managed files, deletes files that are no longer part of the template, and merges
+`package.json` (keeping your custom scripts and credentials). Every change is staged with `git add -A` so you can review
+the diff and roll back individual edits before committing:
+
+```bash
+# From inside the project (or: npx cypress-start ./path/to/project)
+npx cypress-start
+# choose "3. Update Existing Project"
+
+git diff --staged                 # review everything the update changed
+git restore --staged <file>       # unstage a file you want to keep as-is
+git restore <file>                # discard the update for that single file
+```
+
+User-owned files are never touched: `package.json` is merged (not overwritten), and `cypress/sensitive-data/*-users.json`
+credentials are preserved. Obsolete-file deletion relies on the `.cypress-start-manifest.json` written on install/update.
 
 ```bash
 cd my-project
@@ -118,7 +140,8 @@ This framework includes examples of tests:
 
 ## Features
 
-- **Interactive CLI Setup:** Two setup modes — Full Setup (complete framework) or Specific Files (cherry-pick modules)
+- **Interactive CLI Setup:** Three setup modes — Full Setup (complete framework), Specific Files (cherry-pick modules),
+  or Update Existing Project
 - **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
 - **Localization Testing:** Type-safe localization with auto-generated typed `l10n` map from locale
   files ([docs](docs/localization-testing.md))
