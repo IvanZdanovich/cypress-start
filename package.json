@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
