@@ -37,11 +37,11 @@ Create a new project from this template in seconds! The CLI offers three setup m
 ### 🚀 Create New Project with cypress-start CLI (Recommended)
 
 ```bash
-# Using npx (no installation required)
+# Using npx or npm
 npx cypress-start my-project
 
 # Or copy selected modules into the current directory
-npx cypress-start .
+npm exec --yes --package=cypress-start@latest -- cypress-start .
 ```
 
 **Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Best for
@@ -49,7 +49,7 @@ new standalone projects.
 
 **Mode 2 — Specific Files** cherry-picks modules (ESLint, Docs, Claude Skills, Parallel Runner, GitHub Actions, Docker)
 into an existing project directory. `package.json` is created or merged automatically; run `npm install` manually after.
-Use `npx cypress-start .` when you want the selected modules copied into the folder you are already in.
+Use `npm exec --yes --package=cypress-start@latest -- cypress-start .` when you want the selected modules copied into the folder you are already in.
 
 **Mode 3 — Update Existing Project** refreshes a project you already created **in place** — no new subfolder. It pulls the
 latest template, adds/overwrites managed files, deletes files that are no longer part of the template, and merges
@@ -57,7 +57,7 @@ latest template, adds/overwrites managed files, deletes files that are no longer
 the diff and roll back individual edits before committing:
 
 ```bash
-# From inside the project (or: npx cypress-start ./path/to/project)
+# From inside the project (or: npm exec --yes --package=cypress-start@latest -- cypress-start ./path/to/project)
 npx cypress-start
 # choose "3. Update Existing Project"
 
