@@ -152,6 +152,10 @@ function isExcludedFromUpdate(relPath) {
   if (normalized.startsWith('.git/')) return true;
   if (normalized.startsWith('node_modules/')) return true;
 
+  // The bin/ folder is the CLI tooling that ships with the template package
+  // itself — it must never be copied into a consumer project.
+  if (normalized.startsWith('bin/')) return true;
+
   // Preserve user credentials but keep the example file up to date.
   return /^cypress\/sensitive-data\//.test(normalized) && !normalized.endsWith('env-users.example.json');
 }
@@ -519,6 +523,33 @@ function deleteObsoleteFiles(projectPath, previousFiles, newFiles) {
   return deleted;
 }
 
+function createSensitiveDataFilesFromExample(projectPath, options = {}) {
+  const { overwriteExisting = false } = options;
+  const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
+  const examplePath = path.join(sensitivePath, 'env-users.example.json');
+  const targetFiles = ['dev-users.json', 'qa-users.json'];
+  const createdFiles = [];
+
+  // Ensure sensitive-data directory exists
+  if (!fs.existsSync(sensitivePath)) {
+    fs.mkdirSync(sensitivePath, { recursive: true });
+  }
+
+  if (!fs.existsSync(examplePath)) {
+    return createdFiles;
+  }
+
+  for (const fileName of targetFiles) {
+    const targetPath = path.join(sensitivePath, fileName);
+    if (overwriteExisting || !fs.existsSync(targetPath)) {
+      fs.copyFileSync(examplePath, targetPath);
+      createdFiles.push(`cypress/sensitive-data/${fileName}`);
+    }
+  }
+
+  return createdFiles;
+}
+
 async function updateProject(target) {
   const projectPath = path.resolve(target || '.');
 
@@ -566,6 +597,11 @@ async function updateProject(target) {
     }
     await copyOrUpdatePackageJson(projectPath, allModules, tempPath);
 
+    const createdCredentialFiles = createSensitiveDataFilesFromExample(projectPath);
+    if (createdCredentialFiles.length > 0) {
+      log(`  ✓ Credential file(s) created from example: ${createdCredentialFiles.join(', ')}`, 'green');
+    }
+
     logStep('4/5', 'Removing obsolete files...');
     const previousManifest = readManifest(projectPath);
     if (!previousManifest) {
@@ -608,7 +644,7 @@ async function cleanupGitHistory(projectName) {
   log('✅ Fresh git repository initialized', 'green');
 }
 
-async function setupSensitiveData(projectName, setupMode) {
+async function setupSensitiveData(projectName, setupMode, options = {}) {
   // Only setup sensitive data in full mode
   if (setupMode !== 'full') {
     return;
@@ -617,26 +653,31 @@ async function setupSensitiveData(projectName, setupMode) {
   logStep('3/5', 'Setting up credentials structure...');
 
   const projectPath = path.resolve(projectName);
-  const sensitivePath = path.join(projectPath, 'cypress', 'sensitive-data');
-  const examplePath = path.join(sensitivePath, 'env-users.example.json');
-  const devUsersPath = path.join(sensitivePath, 'dev-users.json');
-  const qaUsersPath = path.join(sensitivePath, 'qa-users.json');
+  const createdFiles = createSensitiveDataFilesFromExample(projectPath, options);
 
-  // Ensure sensitive-data directory exists
-  if (!fs.existsSync(sensitivePath)) {
-    fs.mkdirSync(sensitivePath, { recursive: true });
-  }
-
-  if (fs.existsSync(examplePath)) {
-    // Copy example to dev-users.json
-    if (!fs.existsSync(devUsersPath)) {
-      fs.copyFileSync(examplePath, devUsersPath);
-    }
-    // Copy example to qa-users.json
-    if (!fs.existsSync(qaUsersPath)) {
-      fs.copyFileSync(examplePath, qaUsersPath);
-    }
+  if (createdFiles.length > 0) {
     log('✅ Credentials files created from example', 'green');
+  }
+}
+
+function runNpmInstall(projectPath, followUpMessage) {
+  try {
+    const result = spawnSync('npm', ['install'], { cwd: projectPath, stdio: 'inherit' });
+    if (result.error || result.status !== 0) {
+      log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
+      if (followUpMessage) {
+        log(followUpMessage, 'yellow');
+      }
+      return false;
+    }
+    log('✅ Dependencies installed successfully', 'green');
+    return true;
+  } catch {
+    log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
+    if (followUpMessage) {
+      log(followUpMessage, 'yellow');
+    }
+    return false;
   }
 }
 
@@ -646,12 +687,44 @@ async function installDependencies(projectName) {
 
   const projectPath = path.resolve(projectName);
 
+  return runNpmInstall(projectPath, 'You can run "npm install" manually in your project directory');
+}
+
+// Full setup into an existing directory — copies every template file,
+// merges package.json, sets up credentials, writes the manifest, and installs
+// dependencies, but leaves .git untouched so the user keeps their git history.
+async function installFullIntoExistingDirectory(projectPath) {
+  const tempPath = fs.mkdtempSync(path.join(os.tmpdir(), 'cypress-start-full-'));
+
   try {
-    spawnSync('npm', ['install'], { cwd: projectPath, stdio: 'inherit' });
-    log('✅ Dependencies installed successfully', 'green');
-  } catch {
-    log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
-    log('You can run "npm install" manually in your project directory', 'yellow');
+    logStep('1/4', 'Downloading latest template...');
+    runRequiredCommand('git', ['clone', '--depth', '1', getTemplateUrl(), tempPath], { stdio: 'pipe' }, 'Failed to download template');
+
+    const templateVersion = getTemplateVersion(tempPath);
+
+    logStep('2/4', 'Copying template files...');
+    const { newFiles, added, updated } = syncTemplateFiles(projectPath, tempPath);
+    log(`  ✓ ${added} added, ${updated} updated`, 'green');
+
+    logStep('3/4', 'Configuring package.json...');
+    const allModules = {};
+    for (const key of Object.keys(OPTIONAL_MODULES)) {
+      allModules[key] = true;
+    }
+    await copyOrUpdatePackageJson(projectPath, allModules, tempPath);
+
+    // Set up credentials from example if they don't exist yet.
+    await setupSensitiveData(projectPath, 'full');
+
+    writeManifest(projectPath, newFiles, templateVersion);
+
+    logStep('4/4', 'Installing dependencies...');
+    log('This may take a few minutes...', 'yellow');
+    runNpmInstall(projectPath, 'Run "npm install" manually.');
+  } finally {
+    if (fs.existsSync(tempPath)) {
+      fs.rmSync(tempPath, { recursive: true, force: true });
+    }
   }
 }
 
@@ -841,13 +914,31 @@ async function main() {
       projectName = await question(`${COLORS.blue}Enter project name:${COLORS.reset} `);
     }
 
-    // Validate target. Full setup requires a fresh directory; specific-files
-    // setup may intentionally copy selected modules into an existing directory
-    // such as `.` when running `npx cypress-start .`.
-    const isValid = await validateProjectName(projectName, { allowExistingDirectory: setupMode === 'specific' });
-    if (!isValid) {
-      rl?.close();
-      process.exit(1);
+    // For specific-files setup an existing directory (e.g. ".") is intentional.
+    // For full setup, if the target already exists, offer to install into it
+    // in place so the user can keep their existing git history. Otherwise keep
+    // prompting until a valid fresh name is supplied.
+    let installInPlace = false;
+
+    while (true) {
+      const targetPath = path.resolve(projectName);
+      const exists = fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory();
+
+      if (setupMode === 'full' && exists) {
+        log(`\n⚠️  Directory "${projectName}" already exists.`, 'yellow');
+        const answer = await question(`${COLORS.magenta}Install the full framework here and keep your existing git history? (y/n):${COLORS.reset} `);
+        if (answer.trim().toLowerCase() === 'y') {
+          installInPlace = true;
+          break;
+        }
+        // Ask for a different name
+        projectName = await question(`${COLORS.blue}Enter a new project name:${COLORS.reset} `);
+        continue;
+      }
+
+      const isValid = await validateProjectName(projectName, { allowExistingDirectory: setupMode === 'specific' });
+      if (isValid) break;
+      projectName = await question(`${COLORS.blue}Enter a valid project name:${COLORS.reset} `);
     }
 
     if (setupMode === 'full') {
@@ -857,20 +948,26 @@ async function main() {
       }
       log('\n✅ Full setup selected - all modules will be included', 'green');
 
-      // Execute full setup steps (5 steps)
-      await cloneTemplate(projectName);
-      await cleanupGitHistory(projectName);
-      await setupSensitiveData(projectName, setupMode);
+      if (installInPlace) {
+        // Install into the existing directory, preserving .git
+        await installFullIntoExistingDirectory(path.resolve(projectName));
+        log('\n✅ Framework installed into existing directory', 'green');
+      } else {
+        // Execute full setup steps (5 steps) for a fresh directory
+        await cloneTemplate(projectName);
+        await cleanupGitHistory(projectName);
+        await setupSensitiveData(projectName, setupMode, { overwriteExisting: true });
 
-      // Record installed files so future updates can manage them.
-      const fullProjectPath = path.resolve(projectName);
-      writeManifest(fullProjectPath, buildTemplateFileList(fullProjectPath), getTemplateVersion(fullProjectPath));
+        // Record installed files so future updates can manage them.
+        const fullProjectPath = path.resolve(projectName);
+        writeManifest(fullProjectPath, buildTemplateFileList(fullProjectPath), getTemplateVersion(fullProjectPath));
 
-      await installDependencies(projectName);
+        await installDependencies(projectName);
 
-      // Final step
-      logStep('5/5', 'Finalizing setup...');
-      log('✅ Setup complete', 'green');
+        // Final step
+        logStep('5/5', 'Finalizing setup...');
+        log('✅ Setup complete', 'green');
+      }
     } else if (setupMode === 'specific') {
       // Let user select modules
       log('\n⚙️  Starting module selection...', 'cyan');
@@ -922,5 +1019,8 @@ module.exports = {
   getTemplateVersion,
   syncTemplateFiles,
   deleteObsoleteFiles,
+  createSensitiveDataFilesFromExample,
+  runNpmInstall,
   updateProject,
+  installFullIntoExistingDirectory,
 };

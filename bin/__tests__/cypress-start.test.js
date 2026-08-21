@@ -21,7 +21,10 @@ const {
   getTemplateVersion,
   syncTemplateFiles,
   deleteObsoleteFiles,
+  createSensitiveDataFilesFromExample,
+  runNpmInstall,
   updateProject,
+  installFullIntoExistingDirectory,
 } = require('../cypress-start.js');
 
 // --- helpers ---------------------------------------------------------------
@@ -224,6 +227,9 @@ test('isExcludedFromUpdate protects user-owned files but allows template files',
   assert.equal(isExcludedFromUpdate('node_modules/foo/index.js'), true);
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/dev-users.json'), true);
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/qa-users.json'), true);
+  // The bin/ folder is CLI tooling — never copy it into a consumer project.
+  assert.equal(isExcludedFromUpdate('bin/cypress-start.js'), true);
+  assert.equal(isExcludedFromUpdate('bin/__tests__/cypress-start.test.js'), true);
   // The example file should stay in sync with the template.
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/env-users.example.json'), false);
   assert.equal(isExcludedFromUpdate('cypress/e2e/ui/login.spec.js'), false);
@@ -344,6 +350,60 @@ test('deleteObsoleteFiles never removes user-owned sensitive files', async () =>
   });
 });
 
+test('createSensitiveDataFilesFromExample creates missing dev and qa files from the example', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    const sensitiveData = path.join(project, 'cypress', 'sensitive-data');
+    fs.mkdirSync(sensitiveData, { recursive: true });
+    fs.writeFileSync(path.join(sensitiveData, 'env-users.example.json'), '{"example":true}\n');
+
+    const createdFiles = createSensitiveDataFilesFromExample(project);
+
+    assert.deepEqual(createdFiles, ['cypress/sensitive-data/dev-users.json', 'cypress/sensitive-data/qa-users.json']);
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'dev-users.json'), 'utf8'), '{"example":true}\n');
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'qa-users.json'), 'utf8'), '{"example":true}\n');
+  });
+});
+
+test('createSensitiveDataFilesFromExample preserves existing files unless overwrite is requested', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    const sensitiveData = path.join(project, 'cypress', 'sensitive-data');
+    fs.mkdirSync(sensitiveData, { recursive: true });
+    fs.writeFileSync(path.join(sensitiveData, 'env-users.example.json'), '{"example":true}\n');
+    fs.writeFileSync(path.join(sensitiveData, 'dev-users.json'), '{"secret":true}\n');
+    fs.writeFileSync(path.join(sensitiveData, 'qa-users.json'), '{"secret":true}\n');
+
+    assert.deepEqual(createSensitiveDataFilesFromExample(project), []);
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'dev-users.json'), 'utf8'), '{"secret":true}\n');
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'qa-users.json'), 'utf8'), '{"secret":true}\n');
+
+    assert.deepEqual(createSensitiveDataFilesFromExample(project, { overwriteExisting: true }), ['cypress/sensitive-data/dev-users.json', 'cypress/sensitive-data/qa-users.json']);
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'dev-users.json'), 'utf8'), '{"example":true}\n');
+    assert.equal(fs.readFileSync(path.join(sensitiveData, 'qa-users.json'), 'utf8'), '{"example":true}\n');
+  });
+});
+
+test('runNpmInstall returns true when npm install succeeds', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'ok-install', version: '1.0.0' }));
+
+    assert.equal(runNpmInstall(project), true);
+  });
+});
+
+test('runNpmInstall returns false when npm install exits non-zero', async () => {
+  await withTmpCwd((tmp) => {
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'failed-install', version: '1.0.0', scripts: { preinstall: 'node -e "process.exit(7)"' } }));
+
+    assert.equal(runNpmInstall(project), false);
+  });
+});
+
 test('updateProject applies latest template in place, deletes obsolete files, preserves credentials, and stages only project changes', async () => {
   await withTmpCwd(async (tmp) => {
     const template = path.join(tmp, 'template-source');
@@ -396,6 +456,7 @@ test('updateProject applies latest template in place, deletes obsolete files, pr
     assert.equal(fs.readFileSync(path.join(project, 'new-template-file.js'), 'utf8'), 'new template file\n');
     assert.equal(fs.existsSync(path.join(project, 'obsolete-template-file.js')), false);
     assert.equal(fs.readFileSync(path.join(project, 'cypress', 'sensitive-data', 'dev-users.json'), 'utf8'), '{"token":"secret"}\n');
+    assert.equal(fs.readFileSync(path.join(project, 'cypress', 'sensitive-data', 'qa-users.json'), 'utf8'), '{"example":true}\n');
 
     const pkg = JSON.parse(fs.readFileSync(path.join(project, 'package.json'), 'utf8'));
     assert.equal(pkg.name, 'existing-app');
@@ -407,6 +468,7 @@ test('updateProject applies latest template in place, deletes obsolete files, pr
     assert.ok(stagedChanges.includes('M  .cypress-start-manifest.json'));
     assert.ok(stagedChanges.includes('M  cypress.config.js'));
     assert.ok(stagedChanges.includes('A  cypress/sensitive-data/env-users.example.json'));
+    assert.ok(stagedChanges.includes('A  cypress/sensitive-data/qa-users.json'));
     assert.ok(stagedChanges.includes('A  new-template-file.js'));
     assert.ok(stagedChanges.includes('D  obsolete-template-file.js'));
     assert.ok(stagedChanges.includes('M  package.json'));
@@ -415,5 +477,56 @@ test('updateProject applies latest template in place, deletes obsolete files, pr
     for (const line of stagedChanges) {
       assert.equal(line[1], ' ', `expected staged-only change, got: ${line}`);
     }
+  });
+});
+
+// --- installFullIntoExistingDirectory ---------------------------------------
+
+test('installFullIntoExistingDirectory copies all template files into an existing directory without touching .git', async () => {
+  await withTmpCwd(async (tmp) => {
+    // Prepare a minimal fake template served locally
+    const templateSource = path.join(tmp, 'template-source');
+    fs.mkdirSync(path.join(templateSource, 'cypress', 'sensitive-data'), { recursive: true });
+    fs.writeFileSync(path.join(templateSource, 'cypress.config.js'), 'module.exports = {};\n');
+    fs.writeFileSync(path.join(templateSource, 'cypress', 'sensitive-data', 'env-users.example.json'), '{"user":"example"}\n');
+    fs.writeFileSync(path.join(templateSource, 'package.json'), JSON.stringify({ version: '9.9.9', devDependencies: {} }) + '\n');
+    runGit(templateSource, ['init']);
+    runGit(templateSource, ['add', '-A']);
+    runGit(templateSource, ['commit', '-m', 'init', '--allow-empty']);
+
+    // Prepare the project — an existing directory with its own git history
+    const project = path.join(tmp, 'existing-project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(path.join(project, 'my-file.js'), '// my code\n');
+    runGit(project, ['init']);
+    runGit(project, ['add', '-A']);
+    runGit(project, ['commit', '-m', 'initial commit', '--allow-empty']);
+
+    const previousTemplateUrl = process.env.CYPRESS_START_TEMPLATE_URL;
+    process.env.CYPRESS_START_TEMPLATE_URL = templateSource;
+    try {
+      await installFullIntoExistingDirectory(project);
+    } finally {
+      if (previousTemplateUrl === undefined) {
+        delete process.env.CYPRESS_START_TEMPLATE_URL;
+      } else {
+        process.env.CYPRESS_START_TEMPLATE_URL = previousTemplateUrl;
+      }
+    }
+
+    // Template files should have been copied
+    assert.ok(fs.existsSync(path.join(project, 'cypress.config.js')), 'cypress.config.js should be copied');
+    // Original user file must be preserved
+    assert.ok(fs.existsSync(path.join(project, 'my-file.js')), 'user file must not be deleted');
+    // .git must still be the original repo (not wiped/re-inited)
+    assert.ok(fs.existsSync(path.join(project, '.git')), '.git must be preserved');
+    // Manifest should be written
+    const manifest = readManifest(project);
+    assert.ok(manifest, 'manifest should be written');
+    assert.ok(manifest.files.includes('cypress.config.js'), 'manifest should list copied files');
+    assert.equal(fs.readFileSync(path.join(project, 'cypress', 'sensitive-data', 'dev-users.json'), 'utf8'), '{"user":"example"}\n');
+    assert.equal(fs.readFileSync(path.join(project, 'cypress', 'sensitive-data', 'qa-users.json'), 'utf8'), '{"user":"example"}\n');
+    // bin/ must not be copied
+    assert.equal(fs.existsSync(path.join(project, 'bin')), false, 'bin/ must not be copied into project');
   });
 });
