@@ -42,10 +42,6 @@ npx cypress-start my-project
 
 # Or copy selected modules into the current directory
 npx cypress-start .
-
-# Or install globally first
-npm install -g cypress-start
-cypress-start my-project
 ```
 
 **Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Best for
