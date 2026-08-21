@@ -37,7 +37,7 @@ Create a new project from this template in seconds! The CLI offers three setup m
 ### 🚀 Create New Project with cypress-start CLI (Recommended)
 
 ```bash
-# Using npx (no installation required)
+# Using npx or npm
 npx cypress-start my-project
 
 # Or copy selected modules into the current directory
@@ -57,7 +57,7 @@ latest template, adds/overwrites managed files, deletes files that are no longer
 the diff and roll back individual edits before committing:
 
 ```bash
-# From inside the project
+# From inside the project (or: npm exec --yes --package=cypress-start@latest -- cypress-start ./path/to/project)
 npx cypress-start
 # choose "3. Update Existing Project"
 
