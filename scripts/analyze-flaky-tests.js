@@ -324,7 +324,7 @@ function computeSummaryStats(runs) {
  * @returns {{ sorted: Array, flaky: Array, consistent: Array, rare: Array }}
  */
 function classifyBuckets(failMap, totalRuns) {
-  const sorted = [...failMap.entries()].sort((a, b) => b[1].count - a[1].count);
+  const sorted = [...failMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count);
   return {
     sorted,
     flaky: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'flaky'),

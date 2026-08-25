@@ -334,7 +334,9 @@ async function addSuppressions(runs) {
   const { testSuppressions } = loadSuppressions();
   const { activeMap } = partitionBySuppressions(failMap, testSuppressions);
 
-  const failures = [...activeMap.entries()].sort((a, b) => b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
+  const failures = [...activeMap.entries()]
+    .sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count)
+    .map(([key, data]) => ({ key, data }));
 
   console.log(`\n  ${BOLD}Add Suppressions${RESET} — select failures to suppress\n`);
 
