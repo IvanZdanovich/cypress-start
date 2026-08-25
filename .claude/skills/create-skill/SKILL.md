@@ -1,6 +1,7 @@
 ---
 name: create-skill
 description: Use when creating, updating, or sharpening `.claude/skills/*/SKILL.md` files by converting behavior-changing guidance into compact, self-contained, tag-based rules
+context: fork
 ---
 
 # Reasoning Principles
