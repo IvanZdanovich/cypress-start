@@ -64,7 +64,10 @@ One JSON object per line, one line per CI run:
   "failures": [
     {
       "file": "cypress/integration/api/module.api.spec.js",
-      "context": ["Module.Sub: Given preconditions", "Module.Sub.Retrieve.GET: When retrieving"],
+      "context": [
+        "Module.Sub: Given preconditions",
+        "Module.Sub.Retrieve.GET: When retrieving"
+      ],
       "it": "Module.Sub.Retrieve.GET: Then retrieves correctly",
       "duration": 5000,
       "error": "Expected 200 but got 500"
@@ -87,7 +90,7 @@ atomic push. This bounds the ledger file size and keeps `git show` / analysis fa
 - **Disable:** set `--max-runs 0` (or `RESULTS_MAX_RUNS=0`) for an unbounded ledger.
 - **Concurrency-safe:** pruning rides on the existing fetch → dedup → retry loop, so parallel pipelines converge on
   the same trimmed state.
-- **Scope:** retention trims the ledger _file content_. Commit history is bounded separately (see below).
+- **Scope:** retention trims the ledger *file content*. Commit history is bounded separately (see below).
 
 ```bash
 # Keep only the last 50 runs
@@ -130,12 +133,12 @@ visibility.
 `runSuppressions`.
 
 **Test suppression** — identifies a failure by `file` + `it` (+ optional `context`) and carries `reason`, `ticket`,
-optional `expiresAt`.
+optional `lastFailedAt`, `env`, `lastCommit`, and `expiresAt` metadata.
 
-**Run suppression** — identifies a compromised ledger run by `commit` and carries `reason`, `ticket`, `suppressedAt`.
-Analysis removes matching runs before aggregating failures, pass rate, run history, action-required signals, and flaky
-classification. Use this for whole-run incidents such as CI outages or environment failures, not for individual test
-bugs.
+**Run suppression** — identifies a compromised ledger run by `commit` and carries `runDate`, `env`, `reason`, `ticket`,
+and `suppressedAt`. Analysis removes matching runs before aggregating failures, pass rate, run history, action-required
+signals, and flaky classification. Use this for whole-run incidents such as CI outages or environment failures, not for
+individual test bugs.
 
 **Auto-expiry** — test entries with an `expiresAt` date resurface in the main report after that date passes. Use this
 to force a re-check (e.g. 30 days after a backend fix is expected).
@@ -176,12 +179,17 @@ Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
       "reason": "Backend endpoint intermittent 500",
       "ticket": "BUG-API-12",
       "suppressedAt": "2026-07-14",
+      "lastFailedAt": "2026-07-14",
+      "env": "qa",
+      "lastCommit": "f84924c",
       "expiresAt": "2026-08-14"
     }
   ],
   "runSuppressions": [
     {
       "commit": "f84924c",
+      "runDate": "2026-07-15",
+      "env": "qa",
       "reason": "CI environment outage — run not representative",
       "ticket": "OPS-42",
       "suppressedAt": "2026-07-15"
@@ -201,8 +209,7 @@ The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
 - **Rare failures** — one-off failures.
 - **Error patterns** — recurring error messages across multiple tests.
 - **Run history** — last 20 runs with per-run stats.
-- **Suppressed** — known test issues with linked ticket, shown for reference only. Run suppressions are excluded before
-  report sections are generated.
+- **Suppressed** — known test issues and excluded runs with linked ticket or incident, date, environment, and commit metadata.
 
 ## CI integration
 

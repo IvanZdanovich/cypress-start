@@ -119,21 +119,22 @@ function failureKey(failure) {
  * Load suppression rules from flaky-suppressions.json.
  * Returns active (non-expired) test-level suppressions and the set of
  * run commits that should be excluded entirely from analysis.
- * @returns {{ testSuppressions: Array, runCommits: Set<string> }}
+ * @returns {{ testSuppressions: Array, runSuppressions: Array, runCommits: Set<string> }}
  */
 function loadSuppressions() {
-  if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return { testSuppressions: [], runCommits: new Set() };
+  if (NO_SUPPRESS || !fs.existsSync(SUPPRESSIONS_PATH)) return { testSuppressions: [], runSuppressions: [], runCommits: new Set() };
 
   try {
     const data = JSON.parse(fs.readFileSync(SUPPRESSIONS_PATH, 'utf8'));
     const today = new Date().toISOString().slice(0, 10);
 
     const testSuppressions = (data.suppressions || []).filter((s) => !s.expiresAt || s.expiresAt >= today);
-    const runCommits = new Set((data.runSuppressions || []).map((r) => r.commit));
+    const runSuppressions = data.runSuppressions || [];
+    const runCommits = new Set(runSuppressions.map((r) => r.commit));
 
-    return { testSuppressions, runCommits };
+    return { testSuppressions, runSuppressions, runCommits };
   } catch {
-    return { testSuppressions: [], runCommits: new Set() };
+    return { testSuppressions: [], runSuppressions: [], runCommits: new Set() };
   }
 }
 
@@ -172,7 +173,7 @@ function partitionBySuppressions(failMap, suppressions) {
  * Aggregate failure data across runs.
  * Each failure represents the first failure in a spec file.
  * @param {Array<object>} runs
- * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, errors: string[], file: string, context: string[], it: string }>}
+ * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, lastCommit: string, lastEnv: string, errors: string[], file: string, context: string[], it: string }>}
  */
 function aggregateFailures(runs) {
   const failMap = new Map();
@@ -186,6 +187,8 @@ function aggregateFailures(runs) {
           count: 0,
           lastFailed: '',
           lastBranch: '',
+          lastCommit: '',
+          lastEnv: '',
           errors: [],
           file: failure.file || '',
           context: Array.isArray(failure.context) ? failure.context : [],
@@ -196,6 +199,8 @@ function aggregateFailures(runs) {
       entry.count++;
       entry.lastFailed = run.timestamp;
       entry.lastBranch = run.branch;
+      entry.lastCommit = run.commit;
+      entry.lastEnv = run.env;
       if (failure.error && !entry.errors.includes(failure.error)) {
         entry.errors.push(failure.error);
       }
@@ -352,10 +357,26 @@ function firstError(data) {
   return data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
 }
 
+function dateOnly(value) {
+  return value ? String(value).slice(0, 10) : 'N/A';
+}
+
+function envLabel(value) {
+  return value || 'N/A';
+}
+
+function commitLabel(value) {
+  return value || 'N/A';
+}
+
+function failureMetadata(data) {
+  return `${dateOnly(data.lastFailed)} (${envLabel(data.lastEnv)}, ${commitLabel(data.lastCommit)})`;
+}
+
 /**
  * Build the summary header section.
  */
-function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap) {
+function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap, excludedRuns) {
   const totalRuns = runs.length;
   const firstRun = runs[0]?.timestamp || 'N/A';
   const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
@@ -379,6 +400,9 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
 
   if (suppressedMap.size > 0) {
     lines.push(`- **🔇 Suppressed (known issues):** ${suppressedMap.size}`);
+  }
+  if (excludedRuns.length > 0) {
+    lines.push(`- **🔇 Suppressed runs:** ${excludedRuns.length}`);
   }
 
   lines.push('');
@@ -431,7 +455,7 @@ function buildActionableSection(actionable, recency, totalRuns) {
     lines.push(`- **Current streak:** ${rec.streak} consecutive failure(s)`);
     lines.push(`- **Recent window:** ${rec.recentFails}/${rec.recentTotal} of last ${RECENT_WINDOW} runs failed`);
     lines.push(`- **Lifetime:** ${data.count}/${totalRuns} runs (${rate}%)`);
-    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
     if (error) lines.push(`- **Error:** ${error}`);
     lines.push('');
   }
@@ -441,6 +465,8 @@ function buildActionableSection(actionable, recency, totalRuns) {
 
 /**
  * Build one failure-bucket section (Flaky / Consistently Failing / Rare).
+ * @param {Array} entries Failure entries for this bucket.
+ * @param {number} totalRuns Number of analyzed runs.
  * @param {object} opts
  * @param {string} opts.heading   Section heading text.
  * @param {string} opts.intro     One-line description under the heading.
@@ -463,7 +489,7 @@ function buildBucketSection(entries, totalRuns, { heading, intro, showRate, show
     if (ctx) lines.push(`- **Context:** ${ctx}`);
     lines.push(`- **it:** ${clean(data.it)}`);
     lines.push(`- **Failures:** ${failures}`);
-    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
     if (error) lines.push(`- **Error:** ${error}`);
     lines.push('');
   }
@@ -544,29 +570,43 @@ function buildRunHistorySection(runs) {
 /**
  * Build the collapsed "Suppressed — Known Issues" section.
  */
-function buildSuppressedSection(suppressedMap, totalRuns) {
-  if (suppressedMap.size === 0) return [];
+function buildSuppressedSection(suppressedMap, totalRuns, excludedRuns) {
+  if (suppressedMap.size === 0 && excludedRuns.length === 0) return [];
 
   const lines = [
-    '## 🔇 Suppressed — Known Issues',
+    '## 🔇 Suppressed — Known Issues and Runs',
     '',
-    'These failures are suppressed from actionable sections because they have been',
-    'reviewed and linked to a tracked ticket. Edit `scripts/flaky-suppressions.json`',
-    'to add, remove, or expire suppressions.',
+    'These entries are suppressed from actionable sections because they have been',
+    'reviewed and linked to a tracked ticket or incident. Edit `scripts/flaky-suppressions.json`',
+    'to add, remove, or expire test suppressions, or restore suppressed runs.',
     '',
   ];
+
+  if (excludedRuns.length > 0) {
+    lines.push('### Suppressed runs');
+    lines.push('');
+    for (const { run, rule } of excludedRuns) {
+      lines.push(`- ${dateOnly(run.timestamp)} (${envLabel(run.env)}) — \`${run.commit || rule.commit || 'N/A'}\`: ${clean(rule.reason || 'No reason recorded')}${rule.ticket ? ` — ${clean(rule.ticket)}` : ''}`);
+    }
+    lines.push('');
+  }
+
+  if (suppressedMap.size === 0) return lines;
+
+  lines.push('### Suppressed tests');
+  lines.push('');
 
   const sortedSuppressed = [...suppressedMap.entries()].sort((a, b) => b[1].data.count - a[1].data.count);
 
   for (const [, { data, rule }] of sortedSuppressed) {
     const rate = ((data.count / totalRuns) * 100).toFixed(1);
     const ctx = clean(data.context.join(' > '));
-    lines.push(`### ${clean(data.file)}`);
+    lines.push(`#### ${clean(data.file)}`);
     lines.push('');
     if (ctx) lines.push(`- **Context:** ${ctx}`);
     lines.push(`- **it:** ${clean(data.it)}`);
     lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
-    lines.push(`- **Last failed:** ${data.lastFailed.slice(0, 10)}`);
+    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
     lines.push(`- **Reason:** ${rule.reason}`);
     lines.push(`- **Ticket:** ${rule.ticket}`);
     if (rule.expiresAt) lines.push(`- **Expires:** ${rule.expiresAt}`);
@@ -579,7 +619,7 @@ function buildSuppressedSection(suppressedMap, totalRuns) {
 /**
  * Generate the markdown report.
  */
-function generateReport(runs, failMap, suppressedMap = new Map()) {
+function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = []) {
   const totalRuns = runs.length;
   const { overallPassRate } = computeSummaryStats(runs);
   const buckets = classifyBuckets(failMap, totalRuns);
@@ -590,7 +630,7 @@ function generateReport(runs, failMap, suppressedMap = new Map()) {
   const actionable = computeActionable(buckets.sorted, recency);
 
   const lines = [
-    ...buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap),
+    ...buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap, excludedRuns),
     // --- Latest issues: surfaced first because they need action now ---
     ...buildActionableSection(actionable, recency, totalRuns),
     ...buildBucketSection(buckets.flaky, totalRuns, {
@@ -614,7 +654,7 @@ function generateReport(runs, failMap, suppressedMap = new Map()) {
     ...buildErrorPatternsSection(buckets.sorted, failMap),
     ...buildRunHistorySection(runs),
     // --- Suppressed known issues (collapsed at the bottom) ---
-    ...buildSuppressedSection(suppressedMap, totalRuns),
+    ...buildSuppressedSection(suppressedMap, totalRuns, excludedRuns),
   ];
 
   return lines.join('\n');
@@ -632,10 +672,12 @@ function main() {
     runs = runs.slice(-LAST_N);
   }
 
-  const { testSuppressions, runCommits } = loadSuppressions();
+  const { testSuppressions, runSuppressions, runCommits } = loadSuppressions();
+  let excludedRuns = [];
 
   if (runCommits.size > 0) {
     const before = runs.length;
+    excludedRuns = runs.filter((r) => runCommits.has(r.commit)).map((run) => ({ run, rule: runSuppressions.find((s) => s.commit === run.commit) || {} }));
     runs = runs.filter((r) => !runCommits.has(r.commit));
     const excluded = before - runs.length;
     if (excluded > 0) console.log(`  Excluded ${excluded} suppressed run(s)`);
@@ -643,7 +685,7 @@ function main() {
 
   const fullFailMap = aggregateFailures(runs);
   const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, testSuppressions);
-  const report = generateReport(runs, failMap, suppressedMap);
+  const report = generateReport(runs, failMap, suppressedMap, excludedRuns);
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, report);

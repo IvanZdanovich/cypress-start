@@ -120,13 +120,17 @@ function isInteractiveTTY() {
 function formatFailure(data, totalRuns) {
   const rate = ((data.count / totalRuns) * 100).toFixed(1);
   const file = path.basename(data.file);
-  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})`;
+  const lastFailed = data.lastFailed ? data.lastFailed.slice(0, 10) : 'N/A';
+  const env = data.lastEnv || 'N/A';
+  const commit = data.lastCommit || 'N/A';
+  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${env}, ${commit})${RESET}`;
 }
 
 function formatSuppression(entry) {
   const file = path.basename(entry.file);
+  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'})${RESET}` : '';
   const expires = entry.expiresAt ? `  ${DIM}expires ${entry.expiresAt}${RESET}` : '';
-  return `${file}  ${DIM}${truncate(entry.it, 50)}${RESET}  ${CYAN}${entry.ticket}${RESET}${expires}`;
+  return `${file}  ${DIM}${truncate(entry.it, 50)}${RESET}  ${CYAN}${entry.ticket}${RESET}${lastFailed}${expires}`;
 }
 
 function formatRun(run, idx, totalRuns) {
@@ -144,7 +148,8 @@ function formatRun(run, idx, totalRuns) {
 
 function formatRunSuppression(entry) {
   const added = entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : '';
-  return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${added}`;
+  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${entry.env || 'N/A'})${RESET}` : '';
+  return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${runDate}${added}`;
 }
 
 // --- Interactive UI ---
@@ -334,9 +339,7 @@ async function addSuppressions(runs) {
   const { testSuppressions } = loadSuppressions();
   const { activeMap } = partitionBySuppressions(failMap, testSuppressions);
 
-  const failures = [...activeMap.entries()]
-    .sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count)
-    .map(([key, data]) => ({ key, data }));
+  const failures = [...activeMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
 
   console.log(`\n  ${BOLD}Add Suppressions${RESET} — select failures to suppress\n`);
 
@@ -369,6 +372,15 @@ async function addSuppressions(runs) {
       ticket,
       suppressedAt: today,
     };
+    if (data.lastFailed) {
+      entry.lastFailedAt = data.lastFailed.slice(0, 10);
+    }
+    if (data.lastEnv) {
+      entry.env = data.lastEnv;
+    }
+    if (data.lastCommit) {
+      entry.lastCommit = data.lastCommit;
+    }
     if (data.context.length > 0) {
       entry.context = data.context.join(' > ');
     }
@@ -441,7 +453,14 @@ async function addRunSuppressions(runs) {
       console.log(`  ${DIM}Already suppressed: ${run.commit}${RESET}`);
       continue;
     }
-    fileData.runSuppressions.push({ commit: run.commit, reason, ticket, suppressedAt: today });
+    fileData.runSuppressions.push({
+      commit: run.commit,
+      runDate: run.timestamp ? run.timestamp.slice(0, 10) : undefined,
+      env: run.env || undefined,
+      reason,
+      ticket,
+      suppressedAt: today,
+    });
     alreadySuppressed.add(run.commit);
     added++;
   }

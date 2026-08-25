@@ -104,7 +104,7 @@ function buildFileIndex(filePath) {
 
 /**
  * Extract all integration-examples instances from integration-examples files
- * Supports both named exports and default exports
+ * Supports named exported object examples
  * Uses indentation-based tracking for accurate structure detection
  */
 function extractTestDataInstances(sourceCode, filename) {
@@ -125,16 +125,6 @@ function extractTestDataInstances(sourceCode, filename) {
     const namedExportMatch = trimmedLine.match(/^export\s+const\s+(\w+)\s*=\s*\{/);
     if (namedExportMatch) {
       currentExportName = namedExportMatch[1];
-      const indent = line.search(/\S/);
-      indentStack.length = 0;
-      indentStack.push({ name: currentExportName, indent: indent });
-      return;
-    }
-
-    // Detect default export object: const exportName = {
-    const defaultExportMatch = trimmedLine.match(/^const\s+(\w+)\s*=\s*\{/);
-    if (defaultExportMatch && !currentExportName) {
-      currentExportName = defaultExportMatch[1];
       const indent = line.search(/\S/);
       indentStack.length = 0;
       indentStack.push({ name: currentExportName, indent: indent });
