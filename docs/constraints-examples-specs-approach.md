@@ -1,7 +1,7 @@
 # Constraints → Examples → Specs
 
 Human orientation to the methodology this project uses. The canonical rules live in the skills listed
-under [Source of truth](#source-of-truth); this page explains the _why_ and shows the three layers wired together end to
+under [Source of truth](#source-of-truth); this page explains the *why* and shows the three layers wired together end to
 end.
 
 ## Core idea
@@ -31,15 +31,15 @@ If a literal appears mid-chain with no owning layer, it is an orphan no requirem
 ## The three layers
 
 - **1. Constraints** — boundary values, formats, required-field lists, enums; declared once, imported everywhere.
-  - Location: `cypress/constants/{api,ui}/*.constraints.js`
-  - Skill: [define-constraints](../.claude/skills/define-constraints/SKILL.md)
-- **2. Examples** — named test-data instances composed _from_ constraints; one key = one tested state.
-  - Location: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
-  - Skill: [define-examples](../.claude/skills/define-examples/SKILL.md)
+    - Location: `cypress/constants/{api,ui}/*.constraints.js`
+    - Skill: [define-constraints](../.claude/skills/define-constraints/SKILL.md)
+- **2. Examples** — named test-data instances composed *from* constraints; one key = one tested state.
+    - Location: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
+    - Skill: [define-examples](../.claude/skills/define-examples/SKILL.md)
 - **3. Specs** — requirement titles + assertions; `req` metadata; per-file cleanup.
-  - Location: `cypress/integration/{api,ui}/`, `cypress/e2e/ui/`
-  -
-  Skills: [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md)
+    - Location: `cypress/integration/{api,ui}/`, `cypress/e2e/ui/`
+    -
+    Skills: [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md)
 
 In an examples file the **key name** is the example (which case is tested) and the **object
 value** is the test data (the payload that makes it executable). Both roles share one file so a
@@ -111,7 +111,7 @@ PRICE.MIN = 1                                          ← constraint
 Each named example instance maps 1-to-1 to a `context` block, so the case tested and the requirement stated always
 agree. The `{ req: {...} }` object on each `it` carries requirement metadata (priority, extra preconditions, story
 `refs`, `bugs`, a free-text `note` about the checks) — its field-by-field schema and the ESLint rules that enforce it
-are owned by the [eslint-custom-rules](../.claude/skills/eslint-custom-rules/SKILL.md) skill.
+are documented in [Custom ESLint Rules](eslint-custom-rules.md).
 
 ## Extracting requirements
 
@@ -128,8 +128,8 @@ npm run req:coverage:check   # Fail if P1 coverage below threshold
 
 ## Source of truth
 
-The skills below govern the canonical rules for this methodology. This page is human
-orientation only — where they disagree, the skills win.
+The skills and docs below govern the canonical rules for this methodology. This page is human orientation for the model;
+where a linked source gives narrower guidance, follow that source.
 
 - [constraints-examples-specs-approach](../.claude/skills/constraints-examples-specs-approach/SKILL.md) — the
   traceability model: principles, chain integrity, layer separation, outcome titles.
@@ -139,11 +139,11 @@ orientation only — where they disagree, the skills win.
   aliasing.
 - [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md) —
   spec titles, structure, `req` usage, and cleanup.
-- [eslint-custom-rules](../.claude/skills/eslint-custom-rules/SKILL.md) — the `req` config field schema and the ESLint
-  rules that enforce titles, naming, and structure.
+- [Custom ESLint Rules](eslint-custom-rules.md) — the `req` config field schema and the ESLint rules that enforce
+  titles, naming, and structure.
 
 ## Related
 
 - [Bug tracking](../.claude/skills/bug-tracking/SKILL.md)
 - [Localization testing](../.claude/skills/localization-testing/SKILL.md)
-- [FAQ](./faq.md)
+- [FAQ](FAQ.md)
