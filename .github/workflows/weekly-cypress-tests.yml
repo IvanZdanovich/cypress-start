@@ -43,7 +43,6 @@ on:
         default: 'chrome'
         type: choice
         options:
-          - electron
           - chrome
           - edge
       test_scope:

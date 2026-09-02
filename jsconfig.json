@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "target": "ES2021",
+    "moduleResolution": "node"
+  },
+  "include": ["cypress/**/*.js", "cypress/**/*.d.ts"]
+}

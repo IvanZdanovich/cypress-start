@@ -90,12 +90,17 @@ import { PRICE } from '../../constants/api/rb.booking.api.constraints';
 
 describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false }, () => {
   context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
-    it(`RestfulBooker.Booking.Create.POST: Then return 200 and totalprice equals ${PRICE.MIN}`, { req: { p: 'P1' } }, () => {
-      cy.restfullBooker__createBooking__POST(testData.validBookings.allFieldsWithMinimalPrice).then((res) => {
-        expect(res.status).to.eq(200);
-        expect(res.body.booking.totalprice).to.eq(PRICE.MIN);
-      });
-    });
+    it(
+      `RestfulBooker.Booking.Create.POST: Then return 200 and totalprice equals ${PRICE.MIN}`,
+      { req: { p: 'P1' } },
+      () => {
+        cy.restfullBooker__createBooking__POST(testData.validBookings.allFieldsWithMinimalPrice)
+          .then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body.booking.totalprice).to.eq(PRICE.MIN);
+          });
+      },
+    );
   });
 });
 ```
@@ -126,21 +131,63 @@ npm run req:coverage         # P1/P2/P3 coverage counts
 npm run req:coverage:check   # Fail if P1 coverage below threshold
 ```
 
+## Reasoning principles
+
+- **Single owner** — every data value has exactly one authoritative source that consumers import. Otherwise a second
+  copy drifts and no reader knows which is canonical.
+- **Layer separation** — constraints own boundaries, examples own composition, specs own assertions. Otherwise a
+  boundary change ripples into files that should not care.
+- **Chain integrity** — every value traces constraint → example → spec unbroken. Otherwise a mid-chain literal is an
+  orphan that no requirement backs and no boundary governs.
+- **Outcome titles** — a spec title states the business requirement, not the mechanics. Otherwise the requirement of
+  record is vague and the assertion is untraceable.
+
+## Output shape
+
+- **Constraints** — boundary values, defaults, and system constants in `cypress/constants/`.
+- **Examples** — executable named instances composed from constraints in `cypress/integration-examples/` and
+  `cypress/e2e-examples/`.
+- **Specs** — requirement titles and assertions in `cypress/integration/` and `cypress/e2e/`.
+- **Chain direction** — constraint value → example field → spec title → assertion.
+- **Boundary to example** — examples import constraint constants and compose fields from them.
+- **Example to spec** — specs import examples and reference instances directly.
+- **Spec to assertion** — the `it` title names the business outcome; the assertion verifies an example value or a
+  constraint boundary.
+- **Requirement to layers** — one business requirement → constraint boundary + example instance + spec assertion.
+- **Boundary split** — one constraint file per domain concept.
+- **Instance split** — one example key per distinct tested state.
+- **Spec split** — one `it` per verified outcome; related property checks on the same element are allowed.
+- **Multi-module** — each module keeps its own constraints and examples; a spec imports from all. Colocating another
+  module's data would give it two owners.
+- **API/UI divergence** — examples mirror the API field name; specs use `l10n` for UI text. The API name is the data's
+  identity, the UI string is presentation.
+- **Constraint overlap** — a boundary enforced across multiple modules or pages goes in a domain-tier file
+  (`domain-name.api.constraints.js` or `domain-name.ui.constraints.js`), named after the domain concept, never after a
+  consumer, so no consumer owns shared truth.
+- **Example coupling** — a spec creates its own instance via an API command; never import another spec's examples.
+  Cross-spec imports couple unrelated files and break isolation.
+- **Broken-chain signal** — a literal in a spec that could trace to a constraint should be extracted to its owning
+  layer.
+
+## Validation checks
+
+- **Trace check** — every asserted value resolves constraint → example field → spec title → assertion end to end.
+- **Placement check** — no boundary literal in examples, no payload reconstruction in specs.
+- **Single-owner check** — no duplicated definitions across layers.
+- **Chain completeness** — every asserted value traces to its source; exported examples are consumed by specs; unused
+  constraints require removal or a named shared-domain purpose.
+
 ## Source of truth
 
 The skills and docs below govern the canonical rules for this methodology. This page is human orientation for the model;
 where a linked source gives narrower guidance, follow that source.
 
-- [constraints-examples-specs-approach](../.claude/skills/constraints-examples-specs-approach/SKILL.md) — the
-  traceability model: principles, chain integrity, layer separation, outcome titles.
 - [define-constraints](../.claude/skills/define-constraints/SKILL.md) — constraint file layout, naming, and boundary
   authoring.
 - [define-examples](../.claude/skills/define-examples/SKILL.md) — example file layout, instance naming, composition, and
   aliasing.
 - [write-integration-api-specs](../.claude/skills/write-integration-api-specs/SKILL.md), [write-integration-ui-specs](../.claude/skills/write-integration-ui-specs/SKILL.md), [write-e2e-ui-specs](../.claude/skills/write-e2e-ui-specs/SKILL.md) —
   spec titles, structure, `req` usage, and cleanup.
-- [Custom ESLint Rules](eslint-custom-rules.md) — the `req` config field schema and the ESLint rules that enforce
-  titles, naming, and structure.
 
 ## Related
 

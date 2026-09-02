@@ -30,7 +30,7 @@ Create a new project from this template in seconds! The CLI offers three setup m
 
 ### Prerequisites
 
-- Node.js >= 24
+- Node.js >= 26
 - npm or yarn
 - Git
 
@@ -246,7 +246,7 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers.
 - `target_env` — Target environment (default: `dev`)
 - `colour_theme` — Color theme (default: `default`)
 - `parallel_streams` — Number of parallel streams, 1–4 (default: `2`)
-- `browser` — Browser to use: `electron`, `chrome`, `edge` (default: `chrome`)
+- `browser` — Browser to use: `chrome`, `edge` (default: `chrome`)
 - `test_scope` — Scope of tests to run: `all`, `integration`, `e2e` (default: `all`)
 - `test_type` — Type of tests to run: `all`, `api`, `ui` (default: `all`)
 

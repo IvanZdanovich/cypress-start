@@ -41,7 +41,7 @@ This is the sharpest divide, and the reason CES exists.
   value flows constraint → example → spec by `import`; the chain is the dependency graph, not a
   separate document. A literal that appears mid-chain with no owning layer is an *orphan* — and
   the [custom ESLint rules](eslint-custom-rules.md) and the
-  [CES traceability model](../.claude/skills/constraints-examples-specs-approach/SKILL.md) flag
+  [CES traceability model](constraints-examples-specs-approach.md) flag
   it. You cannot ship a broken link without the build noticing.
 
 The practical consequence: in RM, "is every requirement tested?" is answered by trusting the

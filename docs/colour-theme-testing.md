@@ -12,15 +12,16 @@ cy.get(inventoryPage.card.add).should('have.css', 'background-color', colours['b
 - One flat JSON per theme at `cypress/colours/{theme}-theme-colours.json` (`"dotted.key": "rgb(…)"`, no nesting). These
   are the source files you edit.
 - `pretest` copies the `COLOUR_THEME`-selected file to the generated `cypress/colours/colours.json` (the global
-  `colours` map) and regenerates `cypress/support/colours.d.ts`, which types keys so a missing or renamed key is a
-  dev-time error.
+  `colours` map) and regenerates `cypress/support/colours.d.ts` from the reference `default-theme-colours.json`, so the
+  typed key union is the complete, theme-independent key set — a missing or renamed key is a dev-time error (per-theme
+  drift is reported by `npm run colours:validate` / `npm run sync:colours -- --check`).
 
 ```bash
-COLOUR_THEME=default npm run pretest      # select theme + regenerate types
-npm run colours:gen-types                  # regenerate types on demand
-npm run colours add <key> <value>          # add a key to every theme file (interactive if no args)
-npm run colours remove <key>               # remove a key from every theme file
-npm run colours sync                       # align theme files (add missing, sort)
+COLOUR_THEME=default npm run pretest         # select theme + regenerate types
+npm run colours:gen-types                    # regenerate types on demand
+npm run colours:add -- <key> <value>         # add a key to every theme file (interactive if no args)
+npm run colours:remove -- <key>              # remove a key from every theme file
+npm run sync:colours                         # align theme files (add missing, sort)
 ```
 
 All colour operations run through the single `scripts/colours.js` CLI (`node scripts/colours.js help`).
