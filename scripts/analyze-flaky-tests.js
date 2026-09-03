@@ -307,18 +307,44 @@ function truncate(str, maxLen) {
 }
 
 /**
+ * Does a single failure entry match any active suppression rule?
+ * Mirrors matchesSuppression() but tolerates the `it`/`title` field variance
+ * present in raw ledger failures (matchesSuppression assumes a normalised
+ * aggregate). Used to drop suppressed failures from run-level counts.
+ */
+function isFailureSuppressed(failure, suppressions) {
+  if (!suppressions || suppressions.length === 0) return false;
+  const file = failure.file || '';
+  const it = failure.it || failure.title || '';
+  const context = Array.isArray(failure.context) ? failure.context : [];
+  return suppressions.some((rule) => file.includes(rule.file) && it === rule.it && (!rule.context || context.join(' > ').includes(rule.context)));
+}
+
+/**
+ * Count the failed spec files recorded in a run, excluding any that match an
+ * active suppression rule. Suppressed (known/reviewed) failures should not
+ * count against pass rate or per-run failure totals.
+ */
+function countActiveFailures(run, suppressions = []) {
+  if (!Array.isArray(run.failures)) return 0;
+  return run.failures.filter((f) => !isFailureSuppressed(f, suppressions)).length;
+}
+
+/**
  * Aggregate summary statistics across all runs.
  * Pass rate is measured at the spec-file level: the share of test files that
  * did not fail, summed across all runs — (total files − failed files) / total files.
  * A file counts as failed when the run recorded at least one first-failure for it.
+ * Suppressed (known/reviewed) failures are excluded from the failed-file count so
+ * the pass rate reflects only actionable failures.
  * Runs missing `specFiles` (legacy ledger rows) are excluded so they don't
  * understate the rate by contributing failures with a zero file count.
  * @returns {{ overallPassRate: string }}
  */
-function computeSummaryStats(runs) {
+function computeSummaryStats(runs, suppressions = []) {
   const rated = runs.filter((r) => (r.specFiles || 0) > 0);
   const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
-  const failedFiles = rated.reduce((sum, r) => sum + (Array.isArray(r.failures) ? r.failures.length : 0), 0);
+  const failedFiles = rated.reduce((sum, r) => sum + countActiveFailures(r, suppressions), 0);
   const passedFiles = totalFiles - failedFiles;
   const overallPassRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
   return { overallPassRate };
@@ -410,7 +436,8 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
   lines.push('> are unreliable. Pass rate is measured at the **spec-file level**: the share of');
   lines.push('> test files with no recorded first failure, summed across all recorded executions');
-  lines.push('> (each CI run, including repeated runs of the same commit).');
+  lines.push('> (each CI run, including repeated runs of the same commit). **Suppressed');
+  lines.push('> (known/reviewed) failures are excluded** from the pass rate and per-run failure counts.');
   lines.push('');
 
   return lines;
@@ -542,8 +569,10 @@ function buildErrorPatternsSection(sorted, failMap) {
 
 /**
  * Build the "Run History" section (last 20 runs, newest first).
+ * Suppressed (known/reviewed) failures are excluded from each run's failed
+ * count so the per-run pass rate matches the summary.
  */
-function buildRunHistorySection(runs) {
+function buildRunHistorySection(runs, suppressions = []) {
   const lines = ['## Run History', ''];
 
   const recentRuns = runs.slice(-20);
@@ -554,7 +583,7 @@ function buildRunHistorySection(runs) {
     const branch = clean(r.branch || '');
     const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}):`;
     if (r.specFiles > 0) {
-      const runFailedFiles = Array.isArray(r.failures) ? r.failures.length : 0;
+      const runFailedFiles = countActiveFailures(r, suppressions);
       const runPassedFiles = r.specFiles - runFailedFiles;
       const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
       lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
@@ -619,9 +648,9 @@ function buildSuppressedSection(suppressedMap, totalRuns, excludedRuns) {
 /**
  * Generate the markdown report.
  */
-function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = []) {
+function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = [], suppressions = []) {
   const totalRuns = runs.length;
-  const { overallPassRate } = computeSummaryStats(runs);
+  const { overallPassRate } = computeSummaryStats(runs, suppressions);
   const buckets = classifyBuckets(failMap, totalRuns);
 
   // Recency signals: catch tests that are failing *now* regardless of their
@@ -652,7 +681,7 @@ function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns =
       showError: true,
     }),
     ...buildErrorPatternsSection(buckets.sorted, failMap),
-    ...buildRunHistorySection(runs),
+    ...buildRunHistorySection(runs, suppressions),
     // --- Suppressed known issues (collapsed at the bottom) ---
     ...buildSuppressedSection(suppressedMap, totalRuns, excludedRuns),
   ];
@@ -685,7 +714,7 @@ function main() {
 
   const fullFailMap = aggregateFailures(runs);
   const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, testSuppressions);
-  const report = generateReport(runs, failMap, suppressedMap, excludedRuns);
+  const report = generateReport(runs, failMap, suppressedMap, excludedRuns, testSuppressions);
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, report);
@@ -706,6 +735,6 @@ function main() {
   console.log(`Report written to ${OUTPUT_PATH}`);
 }
 
-module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey };
+module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey, isFailureSuppressed, countActiveFailures, computeSummaryStats };
 
 if (require.main === module) main();

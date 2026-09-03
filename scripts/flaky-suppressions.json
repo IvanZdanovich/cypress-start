@@ -1,6 +1,19 @@
 {
   "$schema": "./flaky-suppressions.schema.json",
   "$comment": "Suppress known/reviewed failures from the flaky-test report. `suppressions` silences a specific test (file + context + it). `runSuppressions` excludes an entire CI run by commit SHA — use when an environment outage compromises all stats for a run.",
-  "suppressions": [],
+  "suppressions": [
+    {
+      "file": "cypress/integration/ui/inventory-page.ui.spec.js",
+      "it": "InventoryPage.STANDARD: Then name ascending sorting option is marked as chosen",
+      "reason": "Cypress 16 changed its visibility algorithm to use the browser-native Element.checkVisibility() API. Under this API, <option> elements inside a native <select> dropdown are never considered \"visible\" — because the browser renders them in a native OS-level popup, not as normal laid-out DOM. Even though the computed styles look visible (display: block, visibility: visible, etc.), checkVisibility() returns false, so .should('be.visible') now fails.",
+      "ticket": "",
+      "suppressedAt": "2026-09-03",
+      "lastFailedAt": "2026-09-02",
+      "env": "dev",
+      "lastCommit": "4595c9c",
+      "context": "InventoryPage: Given STANDARD user on Inventory page, no products are added to cart > InventoryPage.STANDARD: When user clicks on sorting dropdown",
+      "expiresAt": "2026-09-04"
+    }
+  ],
   "runSuppressions": []
 }
