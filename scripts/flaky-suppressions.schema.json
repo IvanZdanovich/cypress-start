@@ -33,6 +33,19 @@
             "type": "string",
             "description": "Linked ticket or bug ID (e.g., 'BUG-API-12', 'A65-4321')"
           },
+          "lastFailedAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Latest observed failure date when the suppression was added"
+          },
+          "env": {
+            "type": "string",
+            "description": "Environment where the latest observed failure occurred"
+          },
+          "lastCommit": {
+            "type": "string",
+            "description": "Commit identifier for the latest observed failure when the suppression was added"
+          },
           "expiresAt": {
             "type": "string",
             "format": "date",
@@ -57,6 +70,15 @@
           "commit": {
             "type": "string",
             "description": "Short SHA of the CI commit whose run was compromised (must match the value stored in the ledger)"
+          },
+          "runDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of the compromised run"
+          },
+          "env": {
+            "type": "string",
+            "description": "Environment of the compromised run"
           },
           "reason": {
             "type": "string",

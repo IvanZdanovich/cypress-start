@@ -1,99 +1,68 @@
 ---
 name: write-integration-api-specs
-description: Use when writing, updating, or reviewing any API-level test — asserting responses, status codes, payloads, headers, or CRUD lifecycle behavior of an endpoint. Triggers on editing any `*.api.spec.js` under `cypress/integration/api/`, adding a request-based test (cy.request/api command), asserting an endpoint's contract or error case, create-update-delete against an API, or a spec whose asserted values must trace to constraints and named examples.
+description: Use when writing, updating, or reviewing integration API specs for endpoint contracts, statuses, payloads, headers, errors, or CRUD lifecycles.
 ---
 
-# Principles
+# Reasoning Principles
 
-EXECUTABLE_REQUIREMENT: a spec asserts the assumed outcome of a named example or business rule — otherwise a failing assertion signals a brittle test rather than a real contradiction
-TRACEABILITY: every asserted value traces through examples to constraints — otherwise a literal inlined in the spec drifts from its source and hides which rule it verifies
-COMPUTING_EFFICIENCY: set up via API and reuse one instance across its create-update-delete lifecycle within a file — otherwise per-`it` recreation multiplies calls without adding coverage
-DETERMINISM: cleanup by name prefix before and after, and keep each file independent of order — otherwise a leftover from a prior run passes or poisons a later spec
-INVERSION: name what gives false confidence — untraced literals, shadowed examples, reconstructed payloads, order dependence — otherwise positive rules alone let these slip through
+API_SCOPE: a spec verifies request/response contract, status, payload, headers, error case, or CRUD lifecycle of an endpoint — otherwise UI behaviour belongs in UI skills
+EXECUTABLE_REQUIREMENT: assertion states the assumed outcome of a named example or business rule — otherwise a failing assertion signals brittle test data rather than a real contradiction
+TRACEABILITY: every asserted value traces through examples to constraints — otherwise inline literals drift from the source rule and hide what is verified
+COMPUTING_EFFICIENCY: setup via API commands and one reused instance across create-update-delete lifecycle — otherwise per-`it` recreation multiplies calls without adding coverage
+DETERMINISM: prefix cleanup before and after with file-independent order — otherwise leftovers from prior runs pass or poison later specs
+REQUEST_SINGLE_SOURCE: path params, query, headers, and body come from one pre-composed example instance — otherwise rebuilt request parts fork from constraint-backed data
+ID_OWNERSHIP: runtime IDs assigned once to the source example and shared through getters — otherwise copied IDs break single-source traceability
+READABILITY: direct example references and flat Cypress chains over local aliases and nested callbacks — otherwise the asserted source and command order become harder to audit
+METADATA_NOT_COMMENTS: requirement facts live in `req` fields the lint rule and reporter can read — otherwise inline `// P1`, `// TODO`, or Jira comments are invisible to tooling and drift from the block they describe
+TITLE_OWNS_REQUIREMENT: the Given/When/Then title states the requirement; `req` only classifies, links, and scopes it — otherwise a verbose `note` duplicates the title and the two versions disagree
+PERMISSION_TRUTH: role, endpoint, and expected status are validated through `validate-permissions-api` before writing — otherwise a wrong supplied status ships as a green spec
+INVERSION: false confidence risks are named as untraced literals, shadowed examples, rebuilt payloads, and order dependence — otherwise a rebuilt payload or order-dependent context passes green while drifting from its constraint-backed example
 
-# Method
+# Output Shape
 
 ## Paths
 
-SPEC: `cypress/integration/api/module-name.submodule-name.api.spec.js` — kebab-case, e.g. `restful-booker.booking.api.spec.js`
-EXAMPLES: `cypress/integration-examples/api/module-name.submodule-name.api.examples.js`
-CONSTRAINTS: `cypress/constants/api/module-name.api.constraints.js`
-COMMANDS: `cypress/commands/api/`
-URLS: `cypress/urls/api-urls.js`
-REGISTRY: `eslint-plugin-custom-rules/app-structure/modules.json`
+SCOPE_PATH: `cypress/integration/api/**/*.api.spec.js`
+SPEC_PATH: `cypress/integration/api/<kebab-domain>[.<kebab-scenario>].api.spec.js`, one or more dot-separated domain/scenario segments before `.api.spec.js`
+EXAMPLES_PATH: `cypress/integration-examples/api/<kebab-domain>[.<kebab-scenario>].api.examples.js`, mirrored to the spec scope when examples are spec-specific
+CONSTRAINTS_PATH: `cypress/constants/api/module-name.api.constraints.js`
+COMMANDS_PATH: `cypress/commands/api/`
+URLS_PATH: `cypress/urls/api-urls.js`
+REGISTRY_PATH: `eslint-plugin-custom-rules/app-structure/modules.json`
 
-## Reverse brainstorming
-
-SABOTAGE: name what would make this spec give false confidence, become unmaintainable, or mislead
-REALITY_CHECK: for each, ask "are we already doing this?" — matches are the defects to fix before writing
-
-## Structure
+## Structure & Lifecycle
 
 HIERARCHY: single `describe` → sequential `context` blocks → `it` blocks
-ISOLATION: `{ testIsolation: false }` on `describe` — shared token and created data persist across contexts
-DESCRIBE_SETUP: `before` for token, cleanup
-CONTEXT_SETUP: `before` for shared request or created data
-FLOW: order contexts by dependency, state explicit per context
-SKIP: `context.skip` or `it.skip` with clear description
-ERROR_RESPONSES: `{ failOnStatusCode: false }` for expected non-2xx
+TEST_ISOLATION: `{ testIsolation: false }` on `describe` so token and created data persist across contexts
+SETUP_LIFECYCLE: `before` obtains token and runs cleanup; context `before` performs shared request or created-data setup; `after` runs cleanup
+FLOW_ORDER: contexts ordered by dependency with explicit state per context
+EXPECTED_ERRORS: `{ failOnStatusCode: false }` on expected non-2xx requests
 
-## Titles
+## Titles & Metadata
 
-TITLE_DESCRIBE: `Module.Submodule: Given preconditions, created data`
-TITLE_CONTEXT: `Module.Submodule.Operation.METHOD: When condition`
-TITLE_IT: `Module.Submodule.Operation.METHOD: Then expected result`
-UNIQUENESS: unique titles within `context`
-SPECIFICITY: verified assumed outcome of example or business rule
-PLAIN: no parentheses, no square brackets
-VALUE_MEANING: "minimal price" not "price 1" — a named value survives constraint changes that a literal does not
-REQ_METADATA: optional `{ req: {} }` fields `p` (omit for default P2), `preconditions`, `refs`, `bugs`, `note` (non-empty string comment about the checks); omit when empty
+TITLE_FORMAT: `Module.Submodule: Given preconditions, created data`; `Module.Submodule.Operation.METHOD: When condition`; `Module.Submodule.Operation.METHOD: Then expected result`
+TITLE_QUALITY: unique within `context`, constraint-backed, Given/When/Then, no parentheses or square brackets, value meaning over literal value
+REQ_METADATA: optional `{ req: { p, preconditions, refs, bugs, note } }`; omit empty fields, set `p` only for `'P1'` or `'P3'` since `'P2'` is the default and is omitted, keep tickets in `refs`, tracked bugs in `bugs`, behaviour reason in `note`
+NEAREST_SCOPE: `req` sits on the smallest block it is true for — `it` for one outcome, `context` for one action and all its outcomes, `describe` for every block in the file; parent metadata is not repeated on children
 
-## Data
+## Data & Requests
 
-INSTANCE_REUSE: create, update, delete within file lifecycle
-ID_FIELDS: placeholder on source instance only → set once on source after creation → dependent instances read source IDs via ES getters defined in examples — assigning the same ID to multiple instances in setup breaks single-source traceability
-CLEANUP: `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after`
+DATA_LIFECYCLE: one named instance moves through create, retrieve, update, partial update, and delete within the file when the endpoint lifecycle requires it
 NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-REQUEST_PREP: compose every request as a named example instance grouped by operation before writing the spec — otherwise inline payloads scatter request data across contexts and fork from constraints
-SPEC_CALLS: pass the pre-composed request instance as the command argument — path params, query, headers, body all sourced from the example — reconstructing any part in the spec forks the request from its constraint-backed source
+EXAMPLE_IDS: source example owns placeholder `id`; spec assigns `examples.group.source.id = response.body.id` once; dependent examples expose `get id() { return examples.group.source.id; }`
+REQUEST_PREPARATION: every request composed as a named example instance grouped by operation before the spec uses it
+SPEC_CALLS: command receives the pre-composed request instance; path params, query, headers, and body are not rebuilt inside the spec
 
 ## Commands
 
-FORMAT: `moduleName__operationDetails__METHOD`
-PARAMETERS: token first, then body, context headers, request overrides
-OPERATIONS: `Create`, `Retrieve`, `Update`, `PartialUpdate`, `Delete`
+COMMAND_FORMAT: `moduleName__operationDetails__METHOD`
+COMMAND_PARAMETERS: auth principal first → required route/path params in URL order → body/request data → optional context/header params → `restOptions` last
+COMMAND_OPERATIONS: operation wording names the endpoint action precisely; CRUD verbs fit CRUD endpoints, while domain actions such as `move`, `recalculate`, `set`, or `deleteAll...` fit non-CRUD API behaviour
 
 ## Readability
 
-DIRECT_REFERENCE: `examples.group.instance` inline — a local `const` shadow hides which example is asserted
-ID_ASSIGN: source only — `examples.group.source.id = response.body.id`; dependents declare `get id() { return examples.group.source.id; }` in examples and are never assigned by the spec
-ASSERTION_SCOPE: one core outcome per `it`, related fields in one `.then()` when practical
-CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
-TRIM: only comments that add meaning, necessary setup, used tokens
-
-```javascript
-import { module_examples as examples } from '../../integration-examples/api/module-name.submodule-name.api.examples';
-
-describe('Module.Submodule: Given no preconditions', { testIsolation: false }, () => {
-  let tokenUser;
-  const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
-  before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => { tokenUser = accessToken; });
-    cy.then(cleanUp);
-  });
-
-  context('Module.Submodule.Create.POST: When item with minimal allowed price is provided', () => {
-    it('Module.Submodule.Create.POST: Then item is created', () => {
-      cy.moduleName__create__POST(tokenUser, examples.validItems.minimalPrice).then((response) => {
-        expect(response.status).to.eq(201);
-        examples.validItems.minimalPrice.id = response.body.id;
-      });
-    });
-  });
-
-  after(cleanUp);
-});
-```
+READABILITY_SHAPE: `examples.group.instance` referenced inline, one core outcome per `it`, related fields asserted in one `.then()` when practical, `cy.then()` nesting no deeper than one level, comments only when they add behaviour meaning
+REVERSE_BRAINSTORMING: risk checks list false confidence, hard-to-maintain code, or misleading-output risks; matches are treated as defects before writing the spec
 
 # Validation
 
@@ -103,3 +72,12 @@ TITLE_CHECK: unique, constraint-backed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, name pattern, file independence
 TRACE_CHECK: assertion values trace through examples to constraints
 ID_OWNERSHIP_CHECK: each runtime ID is assigned in exactly one `then` of the spec and to exactly one instance — a second `instance.id = response.body.id` for the same value means the dependent needs a getter
+REQUEST_SOURCE_CHECK: path params, query, headers, and body come from the named example instance, not rebuilt literals in the spec
+REQUEST_PREPARATION_CHECK: every command call that sends data consumes a pre-composed example request instance rather than assembling body, query, or headers inline
+PERMISSION_CHECK: every `401`, `403`, and role-dependent success expectation carries a `validate-permissions-api` verdict
+ERROR_RESPONSE_CHECK: expected non-2xx requests use `{ failOnStatusCode: false }`
+REQ_METADATA_CHECK: optional fields omitted when empty; `refs` owns requirement links; `bugs` owns tracked bugs; `note` adds behaviour meaning not already stated in the title
+SCOPE_CHECK: each `req` field sits on the smallest block it is true for and is not repeated on a child
+COMMENT_CHECK: no inline priority, Jira, bug, or TODO comment survives where a `req` field should carry it
+COMMAND_CHECK: API commands follow `moduleName__operationDetails__METHOD` and auth-first, route-before-body, `restOptions`-last parameter order
+READABILITY_CHECK: direct example references, flat Cypress chains, meaningful comments only

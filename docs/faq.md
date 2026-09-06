@@ -24,26 +24,26 @@ directly.
 ```javascript
 // selectors.js — global page objects
 export const loginPage = {
-  usernameInput: '#username',
-  passwordInput: '#password',
-  loginButton: '#login',
+    usernameInput: '#username',
+    passwordInput: '#password',
+    loginButton: '#login',
 };
 
 // login-page.ui.commands.js — multi-step reusable flow
 Cypress.Commands.add('loginPage__logIn', (user) => {
-  cy.get(loginPage.usernameInput).type(user.username, { delay: 0 });
-  cy.get(loginPage.passwordInput).type(user.password, { log: false, delay: 0 });
-  cy.get(loginPage.loginButton).click();
+    cy.get(loginPage.usernameInput).type(user.username, { delay: 0 });
+    cy.get(loginPage.passwordInput).type(user.password, { log: false, delay: 0 });
+    cy.get(loginPage.loginButton).click();
 });
 
 // spec — direct, transparent
 context('LoginPage.STANDARD: When user logs in with valid credentials', () => {
-  before(() => {
-    cy.loginPage__logIn(standardUser);
-  });
-  it('LoginPage.STANDARD: Then user is navigated to Inventory page', { req: {} }, () => {
-    cy.url().should('eq', urls.pages.inventory);
-  });
+    before(() => {
+        cy.loginPage__logIn(standardUser);
+    });
+    it('LoginPage.STANDARD: Then user is navigated to Inventory page', { req: {} }, () => {
+        cy.url().should('eq', urls.pages.inventory);
+    });
 });
 ```
 
@@ -69,18 +69,18 @@ Where BDD adds a layer, this project collapses it:
 ```javascript
 // Each check is a separate requirement
 context('CartPage.STANDARD: When user visits the page', () => {
-  before(() => {
-    cy.get(headerComp.openCart).click();
-  });
-  it('CartPage.STANDARD: Then Cart page URL is displayed', { req: {} }, () => {
-    cy.url().should('eq', urls.pages.cart);
-  });
-  it('CartPage.STANDARD: Then Cart page title is displayed', { req: {} }, () => {
-    cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
-  });
-  it('CartPage.STANDARD: Then no items are displayed', { req: {} }, () => {
-    cy.get(cartPage.items).should('not.exist');
-  });
+    before(() => {
+        cy.get(headerComp.openCart).click();
+    });
+    it('CartPage.STANDARD: Then Cart page URL is displayed', { req: {} }, () => {
+        cy.url().should('eq', urls.pages.cart);
+    });
+    it('CartPage.STANDARD: Then Cart page title is displayed', { req: {} }, () => {
+        cy.get(cartPage.title).should('have.text', l10n['cartPage.title']);
+    });
+    it('CartPage.STANDARD: Then no items are displayed', { req: {} }, () => {
+        cy.get(cartPage.items).should('not.exist');
+    });
 });
 ```
 
@@ -91,7 +91,7 @@ context('CartPage.STANDARD: When user visits the page', () => {
 - Streamline onboarding — predictable patterns
 - Generate meaningful reports from test titles alone
 
-The naming rules live in the spec-writing skills ([API](../.claude/skills/write-integration-api-specs/SKILL.md), [integration UI](../.claude/skills/write-integration-ui-specs/SKILL.md), [E2E UI](../.claude/skills/write-e2e-ui-specs/SKILL.md)) and the [eslint-custom-rules skill](../.claude/skills/eslint-custom-rules/SKILL.md), which enforces them.
+The naming rules live in the spec-writing skills ([API](../.claude/skills/write-integration-api-specs/SKILL.md), [integration UI](../.claude/skills/write-integration-ui-specs/SKILL.md), [E2E UI](../.claude/skills/write-e2e-ui-specs/SKILL.md)) and [Custom ESLint Rules](eslint-custom-rules.md), which documents their enforcement.
 
 ## 7. Why store constants in variables?
 

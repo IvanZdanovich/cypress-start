@@ -6,17 +6,21 @@ const { defineConfig } = require('cypress');
 /**
  * Tracks screenshot order per spec file and prepends the order index to the
  * screenshot filename so that the first failure in a file is clearly
- * identifiable (e.g. "1.test name -- attempt 1.png").
+ * identifiable (e.g. "01.test name -- attempt 1.png").
  *
  * Handles:
  * - Counter reset per spec via before:spec
  * - Filename conflicts from previous runs (trashAssetsBeforeRuns: false)
- *   by appending a collision suffix (e.g. "1.test name.1.png")
+ *   by appending a collision suffix (e.g. "01.test name.1.png")
  * - Rename failures: falls back to the original path so the screenshot
  *   is never silently lost
  */
 function setupScreenshotOrdering(on) {
   let screenshotCounter = 0;
+
+  // Zero-pad width — 2 digits keeps ordering correct for up to 99 screenshots
+  // per spec and avoids the 1, 10, 11, 2 … lexicographic mis-sort.
+  const PAD_WIDTH = 2;
 
   on('before:spec', () => {
     screenshotCounter = 0;
@@ -28,27 +32,30 @@ function setupScreenshotOrdering(on) {
     const dir = path.dirname(details.path);
     const ext = path.extname(details.path);
     const baseName = path.basename(details.path, ext);
+    const paddedCounter = String(screenshotCounter).padStart(PAD_WIDTH, '0');
 
     // Truncate baseName so the final filename (prefix + "." + baseName + ext) stays within 255 chars.
-    // Reserve space for: counter digits (up to 4) + "." separator + ext + optional ".N" collision suffix (up to 6).
+    // Reserve space for: padded counter + "." separator + ext + optional ".N" collision suffix (up to 6).
     const MAX_FILENAME = 255;
-    const reserved = String(screenshotCounter).length + 1 + ext.length + 6;
-    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME ? baseName.slice(0, MAX_FILENAME - reserved) : baseName;
+    const reserved = PAD_WIDTH + 1 + ext.length + 6;
+    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME
+      ? baseName.slice(0, MAX_FILENAME - reserved)
+      : baseName;
 
     // Resolve a conflict-free target path
-    let newPath = path.join(dir, `${screenshotCounter}.${truncatedBaseName}${ext}`);
+    let newPath = path.join(dir, `${paddedCounter}.${truncatedBaseName}${ext}`);
     let collision = 0;
 
     while (fs.existsSync(newPath)) {
       collision++;
-      newPath = path.join(dir, `${screenshotCounter}.${truncatedBaseName}.${collision}${ext}`);
+      newPath = path.join(dir, `${paddedCounter}.${truncatedBaseName}.${collision}${ext}`);
     }
 
     try {
       await fs.promises.rename(details.path, newPath);
       return { path: newPath };
     } catch (err) {
-      console.error(`[screenshot-ordering] Failed to rename screenshot (counter=${screenshotCounter}): ${err.message}`);
+      console.error(`[screenshot-ordering] Failed to rename screenshot (counter=${paddedCounter}): ${err.message}`);
       return { path: details.path };
     }
   });
@@ -104,9 +111,9 @@ const baseConfig = {
 };
 
 /**
- * Get spec pattern based on environment variable or default
- * @param {string} customSpec - Custom spec pattern from SPEC_PATTERN env variable
- * @returns {string|string[]} Spec pattern(s)
+ * Get spec pattern with self-healing script prioritized
+ * @param {string} customSpec - Custom spec pattern from environment variable
+ * @returns {string[]} Array of spec patterns
  */
 function getSpecPattern(customSpec) {
   if (customSpec) {

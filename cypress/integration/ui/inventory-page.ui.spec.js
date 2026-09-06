@@ -83,17 +83,21 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     before(() => {
       cy.get(inventoryPage.sorting.container).click();
     });
+    it('InventoryPage.STANDARD: Then sorting dropdown is displayed', () => {
+      cy.get(inventoryPage.sorting.dropdown).should('be.visible');
+    });
     it('InventoryPage.STANDARD: Then name ascending sorting option is marked as chosen', () => {
-      cy.get(inventoryPage.sorting.options.nameAscending).should('have.text', l10n['inventoryPage.sort.options.nameAscending']).and('be.visible');
+      cy.inventoryPage__verifySortingDropdown(SORT_OPTIONS.nameAscending);
+      cy.get(inventoryPage.sorting.options.nameAscending).should('have.text', l10n['inventoryPage.sort.options.nameAscending']).and('exist');
     });
     it('InventoryPage.STANDARD: Then name descending sorting option is displayed', () => {
-      cy.get(inventoryPage.sorting.options.nameDescending).should('have.text', l10n['inventoryPage.sort.options.nameDescending']).and('be.visible');
+      cy.get(inventoryPage.sorting.options.nameDescending).should('have.text', l10n['inventoryPage.sort.options.nameDescending']).and('exist');
     });
     it('InventoryPage.STANDARD: Then price ascending sorting option is displayed', () => {
-      cy.get(inventoryPage.sorting.options.priceAscending).should('have.text', l10n['inventoryPage.sort.options.priceAscending']).and('be.visible');
+      cy.get(inventoryPage.sorting.options.priceAscending).should('have.text', l10n['inventoryPage.sort.options.priceAscending']).and('exist');
     });
     it('InventoryPage.STANDARD: Then price descending sorting option is displayed', () => {
-      cy.get(inventoryPage.sorting.options.priceDescending).should('have.text', l10n['inventoryPage.sort.options.priceDescending']).and('be.visible');
+      cy.get(inventoryPage.sorting.options.priceDescending).should('have.text', l10n['inventoryPage.sort.options.priceDescending']).and('exist');
     });
   });
 

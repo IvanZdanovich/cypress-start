@@ -1,116 +1,72 @@
 ---
 name: write-integration-ui-specs
-description: Use when writing, updating, or reviewing any single page or component UI test — asserting one page's visible behavior, elements, validation messages, or state after an action. Triggers on editing any `*.ui.spec.js` under `cypress/integration/ui/`, adding a page-level test (login, inventory, cart, etc.), asserting UI text/elements/errors, driving one page while seeding preconditions via API, or a spec whose asserted values must trace to constraints and named examples.
+description: Use when writing, updating, or reviewing integration UI specs for one page or component's visible behaviour, validation, text, or state.
 ---
 
-# Principles
+# Reasoning Principles
 
-TRACEABILITY: every asserted value traces to a named example or a constraint — inline literals break the constraints→examples→specs chain and drift silently
-API_SETUP: build preconditions through API commands, drive only the behavior under test through the UI — otherwise slow UI setup fails for reasons unrelated to what the spec verifies
+PAGE_SCOPE: a spec verifies one page or component visible behaviour after an action — otherwise integration UI coverage drifts into end-to-end workflow testing
+TRACEABILITY: every asserted value traces to a named example, constraint, `l10n` key, or `colours` key — otherwise inline literals break the constraints→examples→specs chain and drift silently
+API_SETUP: preconditions created through API commands, UI used only for the behaviour under test — otherwise slow UI setup fails for reasons unrelated to the visible outcome
 SEGMENTATION: one visible UI outcome per `it` — otherwise a block asserting several outcomes cannot name which one regressed
-INVERSION: name what would make the spec give false confidence, be unmaintainable, or mislead, then check which you already do — otherwise forward writing misses these failures
+DETERMINISM: one reusable instance lifecycle with prefix cleanup before and after — otherwise leftovers from crashed or prior runs hide real failures
+ID_OWNERSHIP: runtime IDs assigned once to the source example and shared through getters — otherwise copied IDs desync dependent examples from the created entity
+READABILITY: direct example references and flat Cypress chains over local aliases and nested callbacks — otherwise the asserted source and command order become harder to audit
+METADATA_NOT_COMMENTS: requirement facts live in `req` fields the lint rule and reporter can read — otherwise inline `// P1`, `// TODO`, or Jira comments are invisible to tooling and drift from the block they describe
+TITLE_OWNS_REQUIREMENT: the Given/When/Then title states the requirement; `req` only classifies, links, and scopes it — otherwise a verbose `note` duplicates the title and the two versions disagree
+PERMISSION_TRUTH: role-based visibility, enabled state, and page access are validated through `validate-permissions-ui` before writing — otherwise a wrong UI permission expectation ships as a green spec
+INVERSION: false confidence, hard-to-maintain code, and misleading-title risks are named before writing assertions — otherwise a green spec can verify less than its title states
 
-# Method
+# Output Shape
 
 ## Paths
 
-SPEC: `cypress/integration/ui/page-name.component-name.ui.spec.js` — kebab-case, e.g. `inventory-page.ui.spec.js`
-EXAMPLES: `cypress/integration-examples/ui/page-name.component-name.ui.examples.js`
-SELECTORS: `cypress/selectors/selectors.js`
-UI_COMMANDS: `cypress/commands/ui/`
-API_COMMANDS: `cypress/commands/api/`
-CONSTRAINTS: import directly from `cypress/constants/{api,ui}/`
+SCOPE_PATH: `cypress/integration/ui/**/*.ui.spec.js`
+SPEC_PATH: `cypress/integration/ui/<page-name>[.<component-or-scenario>].ui.spec.js`, dot segments only when they clarify the covered component or scenario
+EXAMPLES_PATH: `cypress/integration-examples/ui/<page-name>[.<component-or-scenario>].ui.examples.js`, mirrored to the spec scope when examples are spec-specific
+SELECTORS_PATH: `cypress/selectors/selectors.js`
+COMMAND_PATHS: `cypress/commands/ui/` for reusable interactions; `cypress/commands/api/` for setup and cleanup
+CONSTRAINT_IMPORTS: constraints imported directly from `cypress/constants/{api,ui}/`
 
-## Structure
+## Structure & Lifecycle
 
 HIERARCHY: single `describe` → sequential `context` blocks → `it` blocks
-ISOLATION: `{ testIsolation: false }` on `describe` — shared setup persists across contexts within the file
-DESCRIBE_SETUP: `before` for token, cleanup, session
-CONTEXT_SETUP: `before` for navigation or shared UI state
-FLOW: related contexts in efficient order, explicit state per context
-SKIP: `context.skip` or `it.skip` with clear description
+TEST_ISOLATION: `{ testIsolation: false }` on `describe` so token, session, and created data persist across contexts
+SETUP_LIFECYCLE: `before` obtains token, runs cleanup, creates API-backed data, and establishes session; context `before` navigates or prepares shared UI state; `after` runs cleanup
 
-## Titles
+## Titles & Metadata
 
-TITLE_DESCRIBE: `Page.Component: Given preconditions, created data`
-TITLE_CONTEXT: `Page.Component.USER_ROLE: When condition`
-TITLE_IT: `Page.Component.USER_ROLE: Then expected result`
-UNIQUENESS: unique titles within `context`
-SPECIFICITY: title names the verified outcome of a constraint boundary or an example instance — not implementation mechanics
-PLAIN: no parentheses, no square brackets
-VALUE_MEANING: "minimal price" over "price 1" — the intent, not the literal
-REQ_METADATA: optional `{ req: {} }` with fields `p`, `preconditions`, `refs`, `bugs`, `note` (non-empty string comment about the checks); omit when empty
+TITLE_FORMAT: `Page.Component: Given preconditions, created data`; `Page.Component.USER_ROLE: When condition`; `Page.Component.USER_ROLE: Then expected result`
+TITLE_QUALITY: unique within `context`, page/component-prefixed, Given/When/Then, no parentheses or square brackets, value meaning over literal value
+REQ_METADATA: optional `{ req: { p, preconditions, refs, bugs, note } }`; omit empty fields, set `p` only for `'P1'` or `'P3'` since `'P2'` is the default and is omitted, keep tickets in `refs`, tracked bugs in `bugs`, behaviour reason in `note`
+NEAREST_SCOPE: `req` sits on the smallest block it is true for — `it` for one outcome, `context` for one action and all its outcomes, `describe` for every block in the file; parent metadata is not repeated on children
 
-## Data and cleanup
+## Data & Values
 
-INSTANCE_REUSE: create, update, delete one instance across the file lifecycle — reruns stay deterministic
-ID_FIELDS: placeholder on source instance only; set once on source after API setup; dependent instances read source IDs via ES getters defined in examples — manually assigning the same ID to multiple instances desyncs them
-ID_ASSIGN: source only — `examples.group.source.id = response.body.id`; dependents declare `get id() { return examples.group.source.id; }` in examples and are never assigned by the spec
-CLEANUP: API-backed `const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix])` in `before` and `after` — clears current and prior data so a crashed run leaves nothing behind
-NAME_PATTERN: `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
-CONSISTENCY: API and UI property names aligned
+DATA_LIFECYCLE: create, update, and delete one named instance across the file lifecycle with names matching `SpecFileAbbr.EntityAbbr.ActionOrIntent.${randomSuffix}`
+EXAMPLE_IDS: source example owns placeholder `id`; spec assigns `examples.group.source.id = response.body.id` once; dependent examples expose `get id() { return examples.group.source.id; }`
+ASSERTED_VALUE_SOURCES: boundary values from constraints; displayed data from named examples; UI text from global `l10n`; theme colours from global `colours`; inline literals only for Cypress chainer names, attribute names, or structural states
 
-## Asserted value sources
+## Selectors, Commands & Readability
 
-CONSTRAINT: boundary values (`PRICE.MAX`, `TEXT_CAPACITY.MAX_LENGTH`, enum members) imported from `cypress/constants/{api,ui}/` — assert boundary enforcement
-EXAMPLE: composed named instances from `cypress/integration-examples/ui/` — assert data display and CRUD outcomes
-L10N: UI-visible text via global `l10n` — assert labels, buttons, messages match the current locale
-COLOURS: theme-dependent hex values via global `colours` — assert visual styling
-INLINE_LITERAL: only for structural expectations not owned by any layer (e.g. `'be.visible'`, `'be.disabled'`, attribute names)
-
-## UI behavior
-
-SELECTOR_ACCESS: global variables — `commonUI`, `templatesPage` — no hardcoded CSS strings
-SELECTOR_NAMING: camelCase, purpose-driven, pattern `elementPurposeElementType` — static-text elements as nouns (`errorMessage`, `userNameInput`), action elements as verbs (`submitForm`, `openListingTab`)
-LOCALIZATION: UI text via global `l10n`
-THEME: hex colours via global `colours`
-UI_COMMAND_FORMAT: `pageName__operation`, `componentName__operation`
-UI_COMMAND_SCOPE: reused multi-step interactions
-INLINE_SCOPE: direct `.click()`, `.type()`, `.clear()`, simple assertions
-
-## Readability
-
-DIRECT_REFERENCE: `examples.group.instance` inline, never shadowed by a local `const`
-ASSERTION_SCOPE: one visible UI outcome per `it`, related checks scoped within the parent element when practical
-IT_BODY: 5 lines target — assertion plus direct setup only
-CYPRESS_CHAIN: flat `cy.then()` blocks, no nesting beyond one level
-TRIM: only meaningful comments, necessary setup, used tokens
-
-```javascript
-import { list_examples as examples } from '../../integration-examples/ui/page-name.component-name.ui.examples';
-
-describe('Page.Component: Given user is authenticated, created data exists', { testIsolation: false }, () => {
-  let tokenUser;
-  const cleanUp = () => cy.moduleName__deleteByNames__DELETE(tokenUser, [examples.namePrefix]);
-  before(() => {
-    cy.common__getTokenByRole__POST(userRoles.ADMIN).then((accessToken) => {
-      tokenUser = accessToken;
-    });
-    cy.then(cleanUp);
-    cy.common__getSessionUI(userRoles.ADMIN);
-  });
-
-  context('Page.Component.ADMIN: When item with all fields is opened', () => {
-    before(() => {
-      cy.visit(uiUrls.pageName.component);
-    });
-
-    it('Page.Component.ADMIN: Then item name from the all-fields example is shown on the form', { req: {} }, () => {
-      cy.get(componentPage.itemName).should('contain', examples.validItems.withAllFields.name);
-    });
-  });
-
-  after(cleanUp);
-});
-```
+SELECTOR_ACCESS: global selector variables such as `commonUI` or page objects, no literal CSS strings
+SELECTOR_NAMING: camelCase purpose-driven names using `elementPurposeElementType`; static text as nouns and actions as verbs
+COMMAND_SCOPE: `pageName__operation` or `componentName__operation` commands for reused multi-step UI interactions; inline `.click()`, `.type()`, `.clear()`, and simple assertions for one-off actions
+READABILITY_SHAPE: `examples.group.instance` referenced inline, assertions scoped within parent element when practical, `it` body targets five lines, `cy.then()` nesting no deeper than one level, comments only when they add behaviour meaning
 
 # Validation
 
 STRUCTURE_CHECK: describe/context/it with `{ testIsolation: false }`
+PAGE_SCOPE_CHECK: the spec drives one page or component only; multi-page stateful journeys move to `write-e2e-ui-specs`
 SEGMENTATION_CHECK: one visible outcome per `it`
 TITLE_CHECK: unique, page/component-prefixed Given/When/Then
 CLEANUP_CHECK: `before` + `after`, API-backed, name pattern
-SELECTOR_CHECK: global variables, no hardcoded CSS strings
-L10N_CHECK: UI text via `l10n`, not hardcoded strings
+SELECTOR_CHECK: global variables, no literal CSS strings
+L10N_CHECK: UI text via `l10n`, not literal strings
+COLOUR_CHECK: theme-dependent colours via `colours`, not literal hex or RGB values
 ID_OWNERSHIP_CHECK: each runtime ID is assigned in exactly one `then` of the spec and to exactly one instance — a second `instance.id = response.body.id` for the same value means the dependent needs a getter
 TRACEABILITY_CHECK: every asserted value resolves to one of — constraint import, named example field, `l10n` key, `colours` key; no orphan literals
+REQ_METADATA_CHECK: optional fields omitted when empty; `refs` owns requirement links; `bugs` owns tracked bugs; `note` adds behaviour meaning not already stated in the title
+SCOPE_CHECK: each `req` field sits on the smallest block it is true for and is not repeated on a child
+COMMENT_CHECK: no inline priority, Jira, bug, or TODO comment survives where a `req` field should carry it
+READABILITY_CHECK: direct example references, flat Cypress chains, meaningful comments only

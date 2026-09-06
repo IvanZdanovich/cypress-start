@@ -1,6 +1,6 @@
 {
   "name": "cypress-start",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Cypress testing framework starter - Professional test automation framework template with comprehensive structure, documentation, and best practices",
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
     "pretest": "node scripts/l10n.js activate && node scripts/l10n.js types && node scripts/colours.js activate && node scripts/colours.js types",
     "test": "cypress run --headless",
     "test:parallel": "node scripts/parallel-cypress-runner.js",
+    "debug": "cross-env LANGUAGE=en COLOUR_THEME=default npm run pretest && cross-env LANGUAGE=en COLOUR_THEME=default npx cypress open --browser chrome",
     "l10n": "node scripts/l10n.js",
     "l10n:gen-types": "node scripts/l10n.js types",
     "l10n:add": "node scripts/l10n.js add",
@@ -45,6 +46,9 @@
     "report:coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
+    "report:flaky:all": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests-all.md",
+    "report:flaky:qa": "node scripts/analyze-flaky-tests.js --env qa --output reports/flaky-tests-qa.md",
+    "report:flaky:dev": "node scripts/analyze-flaky-tests.js --env dev --output reports/flaky-tests-dev.md",
     "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
     "report:unsuppress": "node scripts/manage-flaky-suppressions.js --remove",
     "report:suppress-run": "node scripts/manage-flaky-suppressions.js --add-runs",
@@ -75,14 +79,15 @@
   "author": "Ivan Zdanovich",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.6",
+    "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.2.0",
-    "cypress": "^15.21.0",
-    "eslint": "^10.8.1",
+    "@types/node": "^26.4.1",
+    "cross-env": "^10.1.0",
+    "cypress": "^16.0.0",
+    "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.1",
-    "eslint-plugin-cypress": "^7.0.0",
+    "eslint-plugin-cypress": "^7.0.1",
     "eslint-plugin-prettier": "^5.5.6",
     "glob": "^13.0.6",
     "mochawesome": "^8.0.1",
@@ -93,7 +98,7 @@
     "serialize-javascript": "^7.0.7"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=26"
   },
   "allowScripts": {
     "cypress": true

@@ -43,7 +43,6 @@ on:
         default: 'chrome'
         type: choice
         options:
-          - electron
           - chrome
           - edge
       test_scope:
@@ -74,6 +73,15 @@ on:
         required: false
         default: false
         type: boolean
+      flaky_report_env:
+        description: 'Environment scope for the flaky tests report'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - all
+          - dev
+          - qa
       run_cypress_tests:
         description: 'Run Cypress tests'
         required: false
@@ -194,7 +202,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'npm'
 
       - name: Install dependencies
@@ -226,18 +234,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Generate flaky tests report
-        run: npm run report:flaky
+        env:
+          FLAKY_ENV: ${{ inputs.flaky_report_env || 'dev' }}
+        run: npm run report:flaky:"$FLAKY_ENV"
 
       - name: Upload flaky report
         uses: actions/upload-artifact@v7
         with:
           name: flaky-report-${{ github.run_number }}
-          path: reports/flaky-tests.md
+          path: reports/flaky-tests-${{ inputs.flaky_report_env || 'dev' }}.md
           retention-days: 30

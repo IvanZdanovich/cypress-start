@@ -138,7 +138,7 @@ SPEC_PATTERN.
 - **`PARALLEL_STREAMS`** — number of parallel execution streams. Default `3`, e.g. `6`.
 - **`CHUNK_STRATEGY`** — chunking strategy (unified or domain). Default `unified`, e.g. `domain`.
 - **`SPEC_PATTERN`** — custom glob pattern for test discovery. Default all domains, e.g. `cypress/integration/**/*.spec.js`.
-- **`BROWSER`** — browser for test execution. Default `chrome`, e.g. `chrome`, `electron`, `edge`.
+- **`BROWSER`** — browser for test execution. Default `chrome`, e.g. `chrome`, `edge`.
 - **`WORKSPACE_ROOT`** — project root directory. Default `process.cwd()`, e.g. `/tests`.
 - **`CI`** — CI environment flag (enables Xvfb). Default `false`, e.g. `true`.
 
@@ -319,3 +319,4 @@ the latest version of `parallel-cypress-runner.js`.
 - **Use unique test data** — random names/IDs prevent conflicts
 - **Monitor resource usage** — optimize stream count based on metrics
 - **Check stream-specific artifacts** — each stream has its own folders
+

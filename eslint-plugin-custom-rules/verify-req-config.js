@@ -1,7 +1,7 @@
 /**
  * ESLint rule: verify-req-config
  *
- * When an `it()` block (including .skip and .only variants) has a Cypress config object with a
+ * When an `it()`/`describe()`/`context()` block (including .skip and .only variants) has a Cypress config object with a
  * `req` property, validates all fields inside that object.
  *
  * The config object and the `req` property are both optional.
@@ -11,8 +11,8 @@
  *   - p             — 'P1' | 'P2' | 'P3'  (omit when P2 — that is the default)
  *   - preconditions — non-empty array of non-empty strings.
  *   - refs          — non-empty array of valid HTTP/HTTPS URLs.
- *   - bugs          — non-empty array of BUG-MODULE-NNN strings or valid URLs.
- *   - note          — non-empty string comment about the checks in this it block.
+ *   - bugs          — non-empty array of BUG-CONTEXT-NNN strings or valid URLs; context is uppercase alphanumeric.
+ *   - note          — non-empty string comment about the checks in this block.
  *
  * Any field name other than the five above is reported as unknown.
  *
@@ -29,7 +29,7 @@ module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'When { req: {...} } is provided in an it() block, validates p, preconditions, refs, bugs and rejects unknown fields',
+      description: 'When { req: {...} } is provided in an it/describe/context block, validates p, preconditions, refs, bugs and rejects unknown fields',
       category: 'Best Practices',
       recommended: true,
     },
@@ -38,7 +38,7 @@ module.exports = {
   create(context) {
     const VALID_PRIORITIES = ['P1', 'P2', 'P3'];
     const KNOWN_FIELDS = ['p', 'preconditions', 'refs', 'bugs', 'note'];
-    const BUG_ID_PATTERN = /^BUG-[A-Z]+-\d{3}$/;
+    const BUG_ID_PATTERN = /^BUG-[A-Z0-9]+-\d{3}$/;
     const URL_PATTERN = /^https?:\/\/.+/;
 
     function getStaticValue(node) {
@@ -47,10 +47,10 @@ module.exports = {
       return undefined;
     }
 
-    function checkItBlock(node) {
+    function checkReqConfigBlock(node) {
       const args = node.arguments;
 
-      // Cypress signature: it(title, [config], fn)
+      // Cypress/Mocha signature: block(title, [config], fn)
       // config is the second argument when it is an ObjectExpression
       let configArg = null;
       if (args.length >= 2 && args[1].type === 'ObjectExpression') {
@@ -162,7 +162,7 @@ module.exports = {
         }
       }
 
-      // ── Validate bugs (non-empty array of BUG-MODULE-NNN strings or URLs) ───
+      // ── Validate bugs (non-empty array of BUG-CONTEXT-NNN strings or URLs) ───
       if (reqProps.bugs) {
         const bugsNode = reqProps.bugs.value;
         if (bugsNode.type !== 'ArrayExpression') {
@@ -181,7 +181,7 @@ module.exports = {
             if (val !== undefined && !BUG_ID_PATTERN.test(val) && !URL_PATTERN.test(val)) {
               context.report({
                 node: element,
-                message: `req.bugs entries must match BUG-MODULE-NNN format or be a valid URL. Got: "${val}".`,
+                message: `req.bugs entries must match BUG-CONTEXT-NNN format, where CONTEXT is uppercase alphanumeric, or be a valid URL. Got: "${val}".`,
               });
             }
           }
@@ -206,14 +206,14 @@ module.exports = {
     }
 
     return {
-      'CallExpression[callee.name="it"]'(node) {
-        checkItBlock(node);
+      'CallExpression[callee.name="it"], CallExpression[callee.name="describe"], CallExpression[callee.name="context"]'(node) {
+        checkReqConfigBlock(node);
       },
-      'CallExpression[callee.object.name="it"][callee.property.name="skip"]'(node) {
-        checkItBlock(node);
+      'CallExpression[callee.object.name="it"][callee.property.name="skip"], CallExpression[callee.object.name="describe"][callee.property.name="skip"], CallExpression[callee.object.name="context"][callee.property.name="skip"]'(node) {
+        checkReqConfigBlock(node);
       },
-      'CallExpression[callee.object.name="it"][callee.property.name="only"]'(node) {
-        checkItBlock(node);
+      'CallExpression[callee.object.name="it"][callee.property.name="only"], CallExpression[callee.object.name="describe"][callee.property.name="only"], CallExpression[callee.object.name="context"][callee.property.name="only"]'(node) {
+        checkReqConfigBlock(node);
       },
     };
   },
