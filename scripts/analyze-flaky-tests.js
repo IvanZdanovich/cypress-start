@@ -15,13 +15,14 @@
  * Outputs a markdown report to reports/flaky-tests.md.
  *
  * Usage:
- *   node scripts/analyze-flaky-tests.js [--output <path>] [--last <N>] [--recent <N>] [--streak <N>] [--no-suppress]
+ *   node scripts/analyze-flaky-tests.js [--output <path>] [--last <N>] [--recent <N>] [--streak <N>] [--env <env>] [--no-suppress]
  *
  * Defaults:
  *   --output  reports/flaky-tests.md
  *   --last    0 (all runs; set a number to limit to the N most recent runs)
  *   --recent  5 (size of the recent-run window that defines "latest issues")
  *   --streak  3 (consecutive trailing failures that flag a regression)
+ *   --env     unset (all environments; set to e.g. qa or dev to scope the report)
  *
  * Flags:
  *   --no-suppress  Ignore flaky-suppressions.json and show all failures unsuppressed
@@ -51,6 +52,9 @@ const STREAK_THRESHOLD = parseInt(argValue('--streak', '3'), 10);
 // Suppression: known/reviewed failures are moved to a separate section.
 const SUPPRESSIONS_PATH = path.resolve(__dirname, 'flaky-suppressions.json');
 const NO_SUPPRESS = args.includes('--no-suppress');
+// Optional environment filter: limit analysis to a single env (e.g. qa, dev).
+// When empty, the report covers all environments combined.
+const ENV_FILTER = argValue('--env', '').toLowerCase();
 
 /**
  * Read and parse the JSONL ledger from the orphan branch.
@@ -415,6 +419,7 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
     '## Summary',
     '',
     `- **Runs analyzed:** ${totalRuns}`,
+    `- **Environment:** ${ENV_FILTER || 'all environments'}`,
     `- **Period:** ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}`,
     `- **Overall pass rate:** ${overallPassRate}%`,
     `- **Unique failing tests:** ${failMap.size}`,
@@ -695,6 +700,16 @@ function main() {
   console.log(`  Output: ${OUTPUT_PATH}`);
 
   let runs = readLedger();
+
+  if (ENV_FILTER) {
+    const before = runs.length;
+    runs = runs.filter((r) => String(r.env || '').toLowerCase() === ENV_FILTER);
+    console.log(`  Filtering to env '${ENV_FILTER}' (${runs.length} of ${before} runs)`);
+    if (runs.length === 0) {
+      console.error(`No runs found for env '${ENV_FILTER}'. Check the env name or run without --env.`);
+      process.exit(1);
+    }
+  }
 
   if (LAST_N > 0 && runs.length > LAST_N) {
     console.log(`  Limiting to last ${LAST_N} runs (${runs.length} total)`);

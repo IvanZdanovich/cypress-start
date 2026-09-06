@@ -46,6 +46,8 @@
     "report:coverage:check": "node scripts/analyze-coverage-gaps.js --type=all --threshold=80",
     "report:coverage": "node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md",
     "report:flaky": "node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md",
+    "report:flaky:qa": "node scripts/analyze-flaky-tests.js --env qa --output reports/flaky-tests-qa.md",
+    "report:flaky:dev": "node scripts/analyze-flaky-tests.js --env dev --output reports/flaky-tests-dev.md",
     "report:suppress": "node scripts/manage-flaky-suppressions.js --add",
     "report:unsuppress": "node scripts/manage-flaky-suppressions.js --remove",
     "report:suppress-run": "node scripts/manage-flaky-suppressions.js --add-runs",

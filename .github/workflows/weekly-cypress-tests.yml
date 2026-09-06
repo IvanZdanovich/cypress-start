@@ -73,6 +73,15 @@ on:
         required: false
         default: false
         type: boolean
+      flaky_report_env:
+        description: 'Environment scope for the flaky tests report'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - all
+          - dev
+          - qa
       run_cypress_tests:
         description: 'Run Cypress tests'
         required: false
@@ -232,11 +241,18 @@ jobs:
         run: npm ci
 
       - name: Generate flaky tests report
-        run: npm run report:flaky
+        env:
+          FLAKY_ENV: ${{ inputs.flaky_report_env || 'dev' }}
+        run: |
+          if [ "$FLAKY_ENV" = "all" ]; then
+            node scripts/analyze-flaky-tests.js --output "reports/flaky-tests.md"
+          else
+            node scripts/analyze-flaky-tests.js --env "$FLAKY_ENV" --output "reports/flaky-tests-${FLAKY_ENV}.md"
+          fi
 
       - name: Upload flaky report
         uses: actions/upload-artifact@v7
         with:
           name: flaky-report-${{ github.run_number }}
-          path: reports/flaky-tests.md
+          path: ${{ (inputs.flaky_report_env || 'dev') == 'all' && 'reports/flaky-tests.md' || format('reports/flaky-tests-{0}.md', inputs.flaky_report_env || 'dev') }}
           retention-days: 30

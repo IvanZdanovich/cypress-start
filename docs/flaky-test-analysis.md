@@ -14,22 +14,33 @@ protected branches.
    (no working-tree changes)
 2. **Analyze** (`report:flaky`, local or CI) fetches `origin/test-results`, reads the ledger via
    `git show`, groups failures by test title, classifies each as flaky / consistent / rare, and writes
-   `reports/flaky-tests.md`
+   `reports/flaky-tests.md`. Pass `--env <env>` to scope analysis to a single environment; omit it to
+   combine all environments.
 
 ## Usage
 
 Collection runs automatically in CI. Analysis can be run locally against the committed ledger.
 
 ```bash
-# Generate the flaky test report from accumulated CI data
+# Generate the flaky test report from accumulated CI data (all environments)
 npm run report:flaky
+
+# Scope the report to a single environment
+npm run report:flaky:qa   # writes reports/flaky-tests-qa.md
+npm run report:flaky:dev  # writes reports/flaky-tests-dev.md
 
 # Analyze only the last 30 runs
 node scripts/analyze-flaky-tests.js --last 30
 
+# Filter to one environment directly
+node scripts/analyze-flaky-tests.js --env qa
+
 # Write report to a custom location
 node scripts/analyze-flaky-tests.js --output path/to/report.md
 ```
+
+The `--env` filter matches each ledger run's `env` field. The report summary states which environment it
+covers (or `all environments` when unscoped).
 
 ## Storage
 
@@ -202,7 +213,7 @@ The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
 
 ## Report sections
 
-- **Summary** — run count, period, overall pass rate, failure counts.
+- **Summary** — run count, environment, period, overall pass rate, failure counts.
 - **Action Required** — recent regressions: streak or majority of recent window failing.
 - **Flaky tests** — intermittent failures sorted by frequency.
 - **Consistently failing** — tests broken in most runs.
@@ -222,6 +233,15 @@ committing, and pushing to `test-results` internally via git plumbing.
   displayName: 'Collect Test Results'
   condition: always()
 ```
+
+The weekly workflow (`.github/workflows/weekly-cypress-tests.yml`) can also generate the report on demand. Set
+`generate_flaky_report` to `true` and pick the scope with the `flaky_report_env` input:
+
+- `all` — combines every environment, writes `reports/flaky-tests.md`.
+- `dev` (default) — scopes to dev, writes `reports/flaky-tests-dev.md`.
+- `qa` — scopes to qa, writes `reports/flaky-tests-qa.md`.
+
+The report is uploaded as the `flaky-report-<run number>` artifact.
 
 ## Deduplication
 
