@@ -235,9 +235,10 @@ committing, and pushing to `test-results` internally via git plumbing.
 ```
 
 The weekly workflow (`.github/workflows/weekly-cypress-tests.yml`) can also generate the report on demand. Set
-`generate_flaky_report` to `true` and pick the scope with the `flaky_report_env` input:
+`generate_flaky_report` to `true` and pick the scope with the `flaky_report_env` input, which runs the matching
+`report:flaky:<env>` script:
 
-- `all` — combines every environment, writes `reports/flaky-tests.md`.
+- `all` — combines every environment, writes `reports/flaky-tests-all.md`.
 - `dev` (default) — scopes to dev, writes `reports/flaky-tests-dev.md`.
 - `qa` — scopes to qa, writes `reports/flaky-tests-qa.md`.
 

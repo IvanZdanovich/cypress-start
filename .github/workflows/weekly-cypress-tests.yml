@@ -243,16 +243,11 @@ jobs:
       - name: Generate flaky tests report
         env:
           FLAKY_ENV: ${{ inputs.flaky_report_env || 'dev' }}
-        run: |
-          if [ "$FLAKY_ENV" = "all" ]; then
-            node scripts/analyze-flaky-tests.js --output "reports/flaky-tests.md"
-          else
-            node scripts/analyze-flaky-tests.js --env "$FLAKY_ENV" --output "reports/flaky-tests-${FLAKY_ENV}.md"
-          fi
+        run: npm run report:flaky:"$FLAKY_ENV"
 
       - name: Upload flaky report
         uses: actions/upload-artifact@v7
         with:
           name: flaky-report-${{ github.run_number }}
-          path: ${{ (inputs.flaky_report_env || 'dev') == 'all' && 'reports/flaky-tests.md' || format('reports/flaky-tests-{0}.md', inputs.flaky_report_env || 'dev') }}
+          path: reports/flaky-tests-${{ inputs.flaky_report_env || 'dev' }}.md
           retention-days: 30

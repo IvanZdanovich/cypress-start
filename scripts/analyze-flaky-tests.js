@@ -43,7 +43,13 @@ function argValue(flag, fallback) {
   return idx !== -1 && idx + 1 < args.length ? args[idx + 1] : fallback;
 }
 
-const OUTPUT_PATH = path.resolve(WORKSPACE, argValue('--output', 'reports/flaky-tests.md'));
+// Optional environment filter: limit analysis to a single env (e.g. qa, dev).
+// When empty, the report covers all environments combined.
+const ENV_FILTER = argValue('--env', '').toLowerCase();
+// Default output is env-scoped so an --env run never overwrites the combined
+// report under the all-env filename. An explicit --output always wins.
+const DEFAULT_OUTPUT = ENV_FILTER ? `reports/flaky-tests-${ENV_FILTER}.md` : 'reports/flaky-tests.md';
+const OUTPUT_PATH = path.resolve(WORKSPACE, argValue('--output', DEFAULT_OUTPUT));
 const LAST_N = parseInt(argValue('--last', '0'), 10);
 // Recency window: how many of the most recent runs define "latest issues".
 const RECENT_WINDOW = parseInt(argValue('--recent', '5'), 10);
@@ -52,9 +58,6 @@ const STREAK_THRESHOLD = parseInt(argValue('--streak', '3'), 10);
 // Suppression: known/reviewed failures are moved to a separate section.
 const SUPPRESSIONS_PATH = path.resolve(__dirname, 'flaky-suppressions.json');
 const NO_SUPPRESS = args.includes('--no-suppress');
-// Optional environment filter: limit analysis to a single env (e.g. qa, dev).
-// When empty, the report covers all environments combined.
-const ENV_FILTER = argValue('--env', '').toLowerCase();
 
 /**
  * Read and parse the JSONL ledger from the orphan branch.
@@ -336,22 +339,76 @@ function countActiveFailures(run, suppressions = []) {
 
 /**
  * Aggregate summary statistics across all runs.
- * Pass rate is measured at the spec-file level: the share of test files that
- * did not fail, summed across all runs — (total files − failed files) / total files.
+ *
+ * Two distinct spec-file-level pass metrics are reported because they answer
+ * different questions and diverge when runs execute different numbers of files:
+ *
+ *   - averagePassRate: the mean of each run's own pass rate, every run weighted
+ *     equally regardless of how many files it ran. Answers "on a typical run,
+ *     what share of spec files pass?" — a small run and a large run count the same.
+ *
+ *   - overallRunProbabilityRate: the pooled pass rate across every spec-file
+ *     execution — (total files − failed files) / total files, summed over all
+ *     runs. Files are weighted by execution count, so it is the probability that
+ *     any single spec-file execution passes. Larger runs influence it more.
+ *
  * A file counts as failed when the run recorded at least one first-failure for it.
  * Suppressed (known/reviewed) failures are excluded from the failed-file count so
- * the pass rate reflects only actionable failures.
+ * both rates reflect only actionable failures.
  * Runs missing `specFiles` (legacy ledger rows) are excluded so they don't
- * understate the rate by contributing failures with a zero file count.
- * @returns {{ overallPassRate: string }}
+ * distort either rate by contributing failures with a zero file count.
+ * @returns {{ averagePassRate: string, overallRunProbabilityRate: string }}
  */
 function computeSummaryStats(runs, suppressions = []) {
   const rated = runs.filter((r) => (r.specFiles || 0) > 0);
   const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
   const failedFiles = rated.reduce((sum, r) => sum + countActiveFailures(r, suppressions), 0);
   const passedFiles = totalFiles - failedFiles;
-  const overallPassRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
-  return { overallPassRate };
+
+  // Pooled, execution-weighted: probability a single spec-file execution passes.
+  const overallRunProbabilityRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
+
+  // Per-run mean: each run's own pass rate averaged with equal weight.
+  const perRunRates = rated.map((r) => (r.specFiles - countActiveFailures(r, suppressions)) / r.specFiles);
+  const averagePassRate = perRunRates.length > 0 ? ((perRunRates.reduce((sum, rate) => sum + rate, 0) / perRunRates.length) * 100).toFixed(2) : '0';
+
+  return { averagePassRate, overallRunProbabilityRate };
+}
+
+/**
+ * Precise percentage of spec-file execution results that are flaky failures.
+ *
+ * Numerator: every failure occurrence, across all rated runs, whose test is
+ * classified flaky (10–79% lifetime fail rate), excluding suppressed failures.
+ * Denominator: total spec-file executions — the same pool the pass rates use
+ * (sum of `specFiles` over rated runs).
+ *
+ * Counting occurrences within rated runs — rather than reusing the precomputed
+ * lifetime `count` — keeps numerator and denominator on the same run set, so
+ * legacy rows (no `specFiles`) and suppressed runs never skew the ratio.
+ * Suppressed failures and suppressed runs are already removed upstream; the
+ * per-failure suppression guard here is defensive for direct callers.
+ *
+ * @param {Array<object>} runs
+ * @param {Set<string>} flakyKeys Failure keys classified as flaky.
+ * @param {Array} suppressions
+ * @returns {string} Percentage to two decimals, or '0' when no rated runs.
+ */
+function computeFlakyResultRate(runs, flakyKeys, suppressions = []) {
+  const rated = runs.filter((r) => (r.specFiles || 0) > 0);
+  const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
+  if (totalFiles === 0) return '0';
+
+  let flakyFailures = 0;
+  for (const run of rated) {
+    if (!Array.isArray(run.failures)) continue;
+    for (const failure of run.failures) {
+      if (isFailureSuppressed(failure, suppressions)) continue;
+      if (flakyKeys.has(failureKey(failure))) flakyFailures++;
+    }
+  }
+
+  return ((flakyFailures / totalFiles) * 100).toFixed(2);
 }
 
 /**
@@ -406,7 +463,7 @@ function failureMetadata(data) {
 /**
  * Build the summary header section.
  */
-function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap, excludedRuns) {
+function buildSummarySection(runs, failMap, buckets, actionable, stats, suppressedMap, excludedRuns) {
   const totalRuns = runs.length;
   const firstRun = runs[0]?.timestamp || 'N/A';
   const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
@@ -421,7 +478,10 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
     `- **Runs analyzed:** ${totalRuns}`,
     `- **Environment:** ${ENV_FILTER || 'all environments'}`,
     `- **Period:** ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}`,
-    `- **Overall pass rate:** ${overallPassRate}%`,
+    `- **Average pass rate:** ${stats.averagePassRate}%`,
+    `- **Overall test run probability rate:** ${stats.overallRunProbabilityRate}%`,
+    `- **Flaky result rate (excl. suppressed):** ${stats.flakyResultRate}%`,
+    `- **Flaky result rate (incl. suppressed):** ${stats.flakyResultRateAll}%`,
     `- **Unique failing tests:** ${failMap.size}`,
     `- **Flaky tests (10-79% fail rate):** ${buckets.flaky.length}`,
     `- **Consistently failing (>=80%):** ${buckets.consistent.length}`,
@@ -439,10 +499,17 @@ function buildSummarySection(runs, failMap, buckets, actionable, overallPassRate
   lines.push('');
   lines.push('> Note: only the **first failure per spec file** is tracked — specs run with');
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
-  lines.push('> are unreliable. Pass rate is measured at the **spec-file level**: the share of');
-  lines.push('> test files with no recorded first failure, summed across all recorded executions');
-  lines.push('> (each CI run, including repeated runs of the same commit). **Suppressed');
-  lines.push('> (known/reviewed) failures are excluded** from the pass rate and per-run failure counts.');
+  lines.push('> are unreliable. Both rates are measured at the **spec-file level**: the share of');
+  lines.push('> test files with no recorded first failure. **Average pass rate** is the mean of each');
+  lines.push('> run\'s own pass rate, every run weighted equally. **Overall test run probability rate**');
+  lines.push('> pools all spec-file executions across runs (including repeated runs of the same commit),');
+  lines.push('> so it is the probability a single spec-file execution passes and weights larger runs more.');
+  lines.push('> **Flaky result rate** is the share of all spec-file executions that are failures from');
+  lines.push('> flaky-classified tests (10–79% lifetime fail rate), over the same execution pool. The');
+  lines.push('> **excl. suppressed** figure omits suppressed failures (actionable flakiness); the');
+  lines.push('> **incl. suppressed** figure counts them (gross flakiness). Suppressed whole-run incidents');
+  lines.push('> are excluded from every metric — they are removed from the analysed run set entirely.');
+  lines.push('> **Suppressed (known/reviewed) failures are excluded** from every other rate and per-run failure counts.');
   lines.push('');
 
   return lines;
@@ -655,8 +722,23 @@ function buildSuppressedSection(suppressedMap, totalRuns, excludedRuns) {
  */
 function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = [], suppressions = []) {
   const totalRuns = runs.length;
-  const { overallPassRate } = computeSummaryStats(runs, suppressions);
+  const stats = computeSummaryStats(runs, suppressions);
   const buckets = classifyBuckets(failMap, totalRuns);
+
+  // Precise flaky-result rate: share of all spec-file executions that are flaky
+  // failures, excluding suppressed items. Derived from the flaky bucket keys.
+  const flakyKeys = new Set(buckets.flaky.map(([key]) => key));
+  stats.flakyResultRate = computeFlakyResultRate(runs, flakyKeys, suppressions);
+
+  // Gross variant: the same rate without excluding suppressed test failures.
+  // Reclassify over the full map (active + suppressed) so suppressed tests can
+  // qualify as flaky, and count their occurrences too (empty suppression list).
+  // Suppressed whole-run incidents stay excluded — they are removed from the run
+  // set upstream and are not test flakiness.
+  const fullMap = new Map(failMap);
+  for (const [key, { data }] of suppressedMap) fullMap.set(key, data);
+  const flakyKeysAll = new Set(classifyBuckets(fullMap, totalRuns).flaky.map(([key]) => key));
+  stats.flakyResultRateAll = computeFlakyResultRate(runs, flakyKeysAll, []);
 
   // Recency signals: catch tests that are failing *now* regardless of their
   // lifetime fail rate (a brand-new regression has a low overall rate).
@@ -664,7 +746,7 @@ function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns =
   const actionable = computeActionable(buckets.sorted, recency);
 
   const lines = [
-    ...buildSummarySection(runs, failMap, buckets, actionable, overallPassRate, suppressedMap, excludedRuns),
+    ...buildSummarySection(runs, failMap, buckets, actionable, stats, suppressedMap, excludedRuns),
     // --- Latest issues: surfaced first because they need action now ---
     ...buildActionableSection(actionable, recency, totalRuns),
     ...buildBucketSection(buckets.flaky, totalRuns, {
@@ -703,10 +785,11 @@ function main() {
 
   if (ENV_FILTER) {
     const before = runs.length;
+    const available = [...new Set(runs.map((r) => String(r.env || '').toLowerCase()).filter(Boolean))].sort();
     runs = runs.filter((r) => String(r.env || '').toLowerCase() === ENV_FILTER);
     console.log(`  Filtering to env '${ENV_FILTER}' (${runs.length} of ${before} runs)`);
     if (runs.length === 0) {
-      console.error(`No runs found for env '${ENV_FILTER}'. Check the env name or run without --env.`);
+      console.error(`No runs found for env '${ENV_FILTER}'. Available: ${available.join(', ') || 'none'}.`);
       process.exit(1);
     }
   }
@@ -750,6 +833,6 @@ function main() {
   console.log(`Report written to ${OUTPUT_PATH}`);
 }
 
-module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey, isFailureSuppressed, countActiveFailures, computeSummaryStats };
+module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey, isFailureSuppressed, countActiveFailures, computeSummaryStats, computeFlakyResultRate };
 
 if (require.main === module) main();
