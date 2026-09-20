@@ -501,7 +501,7 @@ function buildSummarySection(runs, failMap, buckets, actionable, stats, suppress
   lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
   lines.push('> are unreliable. Both rates are measured at the **spec-file level**: the share of');
   lines.push('> test files with no recorded first failure. **Average pass rate** is the mean of each');
-  lines.push('> run\'s own pass rate, every run weighted equally. **Overall test run probability rate**');
+  lines.push("> run's own pass rate, every run weighted equally. **Overall test run probability rate**");
   lines.push('> pools all spec-file executions across runs (including repeated runs of the same commit),');
   lines.push('> so it is the probability a single spec-file execution passes and weights larger runs more.');
   lines.push('> **Flaky result rate** is the share of all spec-file executions that are failures from');
@@ -833,6 +833,20 @@ function main() {
   console.log(`Report written to ${OUTPUT_PATH}`);
 }
 
-module.exports = { analyzeRecency, needsAction, aggregateFailures, generateReport, classify, loadSuppressions, matchesSuppression, partitionBySuppressions, failureKey, isFailureSuppressed, countActiveFailures, computeSummaryStats, computeFlakyResultRate };
+module.exports = {
+  analyzeRecency,
+  needsAction,
+  aggregateFailures,
+  generateReport,
+  classify,
+  loadSuppressions,
+  matchesSuppression,
+  partitionBySuppressions,
+  failureKey,
+  isFailureSuppressed,
+  countActiveFailures,
+  computeSummaryStats,
+  computeFlakyResultRate,
+};
 
 if (require.main === module) main();
