@@ -9,8 +9,8 @@ module.exports = defineConfig({
     ...baseConfig.e2e,
     baseUrl: 'https://www.saucedemo.com',
     specPattern: getSpecPattern(process.env.SPEC_PATTERN),
-    setupNodeEvents(on) {
-      setupScreenshotOrdering(on);
+    setupNodeEvents(on, config) {
+      setupScreenshotOrdering(on, config);
     },
     expose: {
       envName: 'dev',

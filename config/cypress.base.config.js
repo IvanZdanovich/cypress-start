@@ -15,21 +15,26 @@ const { defineConfig } = require('cypress');
  * - Rename failures: falls back to the original path so the screenshot
  *   is never silently lost
  */
-function setupScreenshotOrdering(on) {
+function setupScreenshotOrdering(on, config) {
   let screenshotCounter = 0;
+  let specScreenshotDir = config.screenshotsFolder;
 
   // Zero-pad width — 2 digits keeps ordering correct for up to 99 screenshots
   // per spec and avoids the 1, 10, 11, 2 … lexicographic mis-sort.
   const PAD_WIDTH = 2;
 
-  on('before:spec', () => {
+  on('before:spec', (spec) => {
     screenshotCounter = 0;
+
+    const relative = spec.relative.replace(/\\/g, '/').replace(/^cypress\//, '');
+    specScreenshotDir = path.join(config.screenshotsFolder, relative);
   });
 
   on('after:screenshot', async (details) => {
     screenshotCounter++;
 
-    const dir = path.dirname(details.path);
+    const dir = specScreenshotDir;
+    await fs.promises.mkdir(dir, { recursive: true });
     const ext = path.extname(details.path);
     const baseName = path.basename(details.path, ext);
     const paddedCounter = String(screenshotCounter).padStart(PAD_WIDTH, '0');
@@ -38,9 +43,7 @@ function setupScreenshotOrdering(on) {
     // Reserve space for: padded counter + "." separator + ext + optional ".N" collision suffix (up to 6).
     const MAX_FILENAME = 255;
     const reserved = PAD_WIDTH + 1 + ext.length + 6;
-    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME
-      ? baseName.slice(0, MAX_FILENAME - reserved)
-      : baseName;
+    const truncatedBaseName = baseName.length + reserved > MAX_FILENAME ? baseName.slice(0, MAX_FILENAME - reserved) : baseName;
 
     // Resolve a conflict-free target path
     let newPath = path.join(dir, `${paddedCounter}.${truncatedBaseName}${ext}`);
@@ -53,6 +56,17 @@ function setupScreenshotOrdering(on) {
 
     try {
       await fs.promises.rename(details.path, newPath);
+
+      // Only attempt to remove the original directory if the screenshot was
+      // moved OUT of it. Compare directory-to-directory (comparing a directory
+      // against the file path `newPath` would always be true and misleading).
+      // rmdir rejects on non-empty directories, which is safe to ignore here.
+      const originalDir = path.dirname(details.path);
+      const newDir = path.dirname(newPath);
+      if (newDir !== originalDir) {
+        await fs.promises.rmdir(originalDir).catch(() => {});
+      }
+
       return { path: newPath };
     } catch (err) {
       console.error(`[screenshot-ordering] Failed to rename screenshot (counter=${paddedCounter}): ${err.message}`);

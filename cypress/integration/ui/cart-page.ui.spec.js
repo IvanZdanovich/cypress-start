@@ -41,8 +41,8 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
     it('CartPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
     });
-    it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
-      cy.get(footerComp.twitter).should('have.attr', 'href', urls.external.twitter).and('have.attr', 'target', '_blank').and('be.visible');
+    it('CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed', () => {
+      cy.get(footerComp.x).should('have.attr', 'href', urls.external.x).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('CartPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
       cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');

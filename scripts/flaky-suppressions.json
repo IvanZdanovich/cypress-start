@@ -1,6 +1,31 @@
 {
   "$schema": "./flaky-suppressions.schema.json",
   "$comment": "Suppress known/reviewed failures from the flaky-test report. `suppressions` silences a specific test (file + context + it). `runSuppressions` excludes an entire CI run by commit SHA — use when an environment outage compromises all stats for a run.",
-  "suppressions": [],
+  "suppressions": [
+    {
+      "file": "cypress/integration/ui/cart-page.ui.spec.js",
+      "it": "CartPage.Footer.STANDARD: Then Twitter icon with link should be displayed",
+      "reason": "Twitter social link uses outdated twitter.com URL instead of x.com",
+      "ticket": "BUG-FOOTER-001",
+      "suppressedAt": "2026-09-13",
+      "lastFailedAt": "2026-09-13",
+      "env": "dev",
+      "lastCommit": "dd44a7a",
+      "context": "CartPage: Given STANDARD user on Cart page and no products are added to cart > CartPage.STANDARD: When user visits the page",
+      "expiresAt": "2026-10-13"
+    },
+    {
+      "file": "cypress/integration/ui/inventory-page.ui.spec.js",
+      "it": "InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed",
+      "reason": "Twitter social link uses outdated twitter.com URL instead of x.com",
+      "ticket": "BUG-FOOTER-001",
+      "suppressedAt": "2026-09-13",
+      "lastFailedAt": "2026-09-13",
+      "env": "dev",
+      "lastCommit": "dd44a7a",
+      "context": "InventoryPage: Given STANDARD user on Inventory page, no products are added to cart > InventoryPage.STANDARD: When user visits the page",
+      "expiresAt": "2026-10-13"
+    }
+  ],
   "runSuppressions": []
 }

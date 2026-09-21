@@ -35,7 +35,7 @@ const inventoryPage = {
 
 const footerComp = {
   linkedin: 'li.social_linkedin a',
-  twitter: 'li.social_twitter a',
+  x: 'li.social_x a',
   facebook: 'li.social_facebook a',
   copyRight: '[data-test="footer-copy"]',
 };

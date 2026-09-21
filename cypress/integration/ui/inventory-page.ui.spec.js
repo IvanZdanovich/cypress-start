@@ -1,5 +1,5 @@
 import { inventoryPage__examples as examples } from '../../integration-examples/ui/inventory-page.ui.examples';
-import { PRODUCT_COUNT, SORT_OPTIONS, DEFAULT_SORT, PRICE_FORMAT } from '../../constants/ui/inventory-page.ui.constraints';
+import { DEFAULT_SORT, PRICE_FORMAT, PRODUCT_COUNT, SORT_OPTIONS } from '../../constants/ui/inventory-page.ui.constraints';
 import { ANIMATION } from '../../constants/ui/common.ui.constraints';
 
 describe('InventoryPage: Given STANDARD user on Inventory page, no products are added to cart', { testIsolation: false }, () => {
@@ -33,8 +33,8 @@ describe('InventoryPage: Given STANDARD user on Inventory page, no products are 
     it('InventoryPage.Footer.STANDARD: Then LinkedIn icon with link should be displayed', () => {
       cy.get(footerComp.linkedin).should('have.attr', 'href', urls.external.linkedin).and('have.attr', 'target', '_blank').and('be.visible');
     });
-    it('InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed', { req: { bugs: ['BUG-FOOTER-001'] } }, () => {
-      cy.get(footerComp.twitter).should('have.attr', 'href', urls.external.twitter).and('have.attr', 'target', '_blank').and('be.visible');
+    it('InventoryPage.Footer.STANDARD: Then Twitter icon with link should be displayed', () => {
+      cy.get(footerComp.x).should('have.attr', 'href', urls.external.x).and('have.attr', 'target', '_blank').and('be.visible');
     });
     it('InventoryPage.Footer.STANDARD: Then Facebook icon with link should be displayed', () => {
       cy.get(footerComp.facebook).should('have.attr', 'href', urls.external.facebook).and('have.attr', 'target', '_blank').and('be.visible');
