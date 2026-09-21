@@ -180,7 +180,7 @@ function partitionBySuppressions(failMap, suppressions) {
  * Aggregate failure data across runs.
  * Each failure represents the first failure in a spec file.
  * @param {Array<object>} runs
- * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, lastCommit: string, lastEnv: string, errors: string[], file: string, context: string[], it: string }>}
+ * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, lastCommit: string, lastBuild: string, lastEnv: string, errors: string[], file: string, context: string[], it: string }>}
  */
 function aggregateFailures(runs) {
   const failMap = new Map();
@@ -195,6 +195,7 @@ function aggregateFailures(runs) {
           lastFailed: '',
           lastBranch: '',
           lastCommit: '',
+          lastBuild: '',
           lastEnv: '',
           errors: [],
           file: failure.file || '',
@@ -207,6 +208,7 @@ function aggregateFailures(runs) {
       entry.lastFailed = run.timestamp;
       entry.lastBranch = run.branch;
       entry.lastCommit = run.commit;
+      entry.lastBuild = run.buildId;
       entry.lastEnv = run.env;
       if (failure.error && !entry.errors.includes(failure.error)) {
         entry.errors.push(failure.error);
@@ -456,8 +458,12 @@ function commitLabel(value) {
   return value || 'N/A';
 }
 
+function buildLabel(value) {
+  return value ? `build ${value}` : 'build N/A';
+}
+
 function failureMetadata(data) {
-  return `${dateOnly(data.lastFailed)} (${envLabel(data.lastEnv)}, ${commitLabel(data.lastCommit)})`;
+  return `${dateOnly(data.lastFailed)} (${envLabel(data.lastEnv)}, ${commitLabel(data.lastCommit)}, ${buildLabel(data.lastBuild)})`;
 }
 
 /**
@@ -653,7 +659,7 @@ function buildRunHistorySection(runs, suppressions = []) {
     const num = runs.indexOf(r) + 1;
     const date = r.timestamp?.slice(0, 10) || '';
     const branch = clean(r.branch || '');
-    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}):`;
+    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}, ${buildLabel(r.buildId)}):`;
     if (r.specFiles > 0) {
       const runFailedFiles = countActiveFailures(r, suppressions);
       const runPassedFiles = r.specFiles - runFailedFiles;
@@ -687,7 +693,8 @@ function buildSuppressedSection(suppressedMap, totalRuns, excludedRuns) {
     lines.push('### Suppressed runs');
     lines.push('');
     for (const { run, rule } of excludedRuns) {
-      lines.push(`- ${dateOnly(run.timestamp)} (${envLabel(run.env)}) — \`${run.commit || rule.commit || 'N/A'}\`: ${clean(rule.reason || 'No reason recorded')}${rule.ticket ? ` — ${clean(rule.ticket)}` : ''}`);
+      const ticketSuffix = rule.ticket ? ` — ${clean(rule.ticket)}` : '';
+      lines.push(`- ${dateOnly(run.timestamp)} (${envLabel(run.env)}, ${buildLabel(run.buildId || rule.buildId)}) — \`${run.commit || rule.commit || 'N/A'}\`: ${clean(rule.reason || 'No reason recorded')}${ticketSuffix}`);
     }
     lines.push('');
   }
@@ -785,7 +792,7 @@ function main() {
 
   if (ENV_FILTER) {
     const before = runs.length;
-    const available = [...new Set(runs.map((r) => String(r.env || '').toLowerCase()).filter(Boolean))].sort();
+    const available = [...new Set(runs.map((r) => String(r.env || '').toLowerCase()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
     runs = runs.filter((r) => String(r.env || '').toLowerCase() === ENV_FILTER);
     console.log(`  Filtering to env '${ENV_FILTER}' (${runs.length} of ${before} runs)`);
     if (runs.length === 0) {

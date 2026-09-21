@@ -123,12 +123,14 @@ function formatFailure(data, totalRuns) {
   const lastFailed = data.lastFailed ? data.lastFailed.slice(0, 10) : 'N/A';
   const env = data.lastEnv || 'N/A';
   const commit = data.lastCommit || 'N/A';
-  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${env}, ${commit})${RESET}`;
+  const build = data.lastBuild ? `, build ${data.lastBuild}` : '';
+  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${env}, ${commit}${build})${RESET}`;
 }
 
 function formatSuppression(entry) {
   const file = path.basename(entry.file);
-  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'})${RESET}` : '';
+  const build = entry.lastBuild ? `, build ${entry.lastBuild}` : '';
+  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'}${build})${RESET}` : '';
   const expires = entry.expiresAt ? `  ${DIM}expires ${entry.expiresAt}${RESET}` : '';
   return `${file}  ${DIM}${truncate(entry.it, 50)}${RESET}  ${CYAN}${entry.ticket}${RESET}${lastFailed}${expires}`;
 }
@@ -139,16 +141,18 @@ function formatRun(run, idx, totalRuns) {
   const branch = truncate(run.branch || 'unknown', 30);
   const commit = run.commit || 'N/A';
   const env = run.env || 'N/A';
+  const build = run.buildId ? `, build ${run.buildId}` : '';
   const passed = run.stats?.passed ?? '?';
   const failed = run.stats?.failed ?? '?';
   const total = run.stats?.total ?? '?';
   const failColour = failed > 0 ? RED : GREEN;
-  return `${DIM}#${num}${RESET} ${date} ${CYAN}${branch}${RESET}@${DIM}${commit}${RESET} (${env}) ${GREEN}${passed}✓${RESET} ${failColour}${failed}✗${RESET}/${total}`;
+  return `${DIM}#${num}${RESET} ${date} ${CYAN}${branch}${RESET}@${DIM}${commit}${RESET} (${env}${build}) ${GREEN}${passed}✓${RESET} ${failColour}${failed}✗${RESET}/${total}`;
 }
 
 function formatRunSuppression(entry) {
   const added = entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : '';
-  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${entry.env || 'N/A'})${RESET}` : '';
+  const build = entry.buildId ? `, build ${entry.buildId}` : '';
+  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${entry.env || 'N/A'}${build})${RESET}` : '';
   return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${runDate}${added}`;
 }
 
@@ -381,6 +385,9 @@ async function addSuppressions(runs) {
     if (data.lastCommit) {
       entry.lastCommit = data.lastCommit;
     }
+    if (data.lastBuild) {
+      entry.lastBuild = data.lastBuild;
+    }
     if (data.context.length > 0) {
       entry.context = data.context.join(' > ');
     }
@@ -457,6 +464,7 @@ async function addRunSuppressions(runs) {
       commit: run.commit,
       runDate: run.timestamp ? run.timestamp.slice(0, 10) : undefined,
       env: run.env || undefined,
+      buildId: run.buildId || undefined,
       reason,
       ticket,
       suppressedAt: today,

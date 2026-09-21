@@ -46,6 +46,10 @@
             "type": "string",
             "description": "Commit identifier for the latest observed failure when the suppression was added"
           },
+          "lastBuild": {
+            "type": "string",
+            "description": "CI build id for the latest observed failure when the suppression was added"
+          },
           "expiresAt": {
             "type": "string",
             "format": "date",
@@ -79,6 +83,10 @@
           "env": {
             "type": "string",
             "description": "Environment of the compromised run"
+          },
+          "buildId": {
+            "type": "string",
+            "description": "CI build id of the compromised run (as stored in the ledger)"
           },
           "reason": {
             "type": "string",
