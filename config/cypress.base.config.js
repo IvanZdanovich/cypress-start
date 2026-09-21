@@ -57,10 +57,13 @@ function setupScreenshotOrdering(on, config) {
     try {
       await fs.promises.rename(details.path, newPath);
 
-      // Clean up the (now potentially empty) folder Cypress originally wrote
-      // to, left behind whenever it differs from our normalized specScreenshotDir.
+      // Only attempt to remove the original directory if the screenshot was
+      // moved OUT of it. Compare directory-to-directory (comparing a directory
+      // against the file path `newPath` would always be true and misleading).
+      // rmdir rejects on non-empty directories, which is safe to ignore here.
       const originalDir = path.dirname(details.path);
-      if (originalDir !== newPath && originalDir !== dir) {
+      const newDir = path.dirname(newPath);
+      if (newDir !== originalDir) {
         await fs.promises.rmdir(originalDir).catch(() => {});
       }
 
