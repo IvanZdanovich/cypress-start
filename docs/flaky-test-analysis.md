@@ -9,13 +9,13 @@ protected branches.
 
 ## How it works
 
-1. **Collect** (`scripts/collect-test-results.js`, CI-only) reads mochawesome JSON reports from `cypress/reports/separate-reports/`,
-   extracts stats and failures, and commits a new ledger line to the `test-results` orphan branch using git plumbing
-   (no working-tree changes)
+1. **Collect** (`scripts/collect-test-results.js`, CI-only) reads mochawesome JSON reports from
+   `cypress/reports/separate-reports/`, extracts stats and failures, and commits a new ledger line to the `test-results`
+   orphan branch using git plumbing (no working-tree changes)
 2. **Analyze** (`report:flaky`, local or CI) fetches `origin/test-results`, reads the ledger via
    `git show`, groups failures by test title, classifies each as flaky / consistent / rare, and writes
-   `reports/flaky-tests.md`. Pass `--env <env>` to scope analysis to a single environment; omit it to
-   combine all environments.
+   `reports/flaky-tests.md`. Pass `--env <env>` to scope analysis to a single environment; omit it to combine all
+   environments.
 
 ## Usage
 
@@ -28,6 +28,7 @@ npm run report:flaky
 # Scope the report to a single environment
 npm run report:flaky:qa   # writes reports/flaky-tests-qa.md
 npm run report:flaky:dev  # writes reports/flaky-tests-dev.md
+npm run report:flaky:all  # writes reports/flaky-tests-all.md
 
 # Analyze only the last 30 runs
 node scripts/analyze-flaky-tests.js --last 30
@@ -35,12 +36,24 @@ node scripts/analyze-flaky-tests.js --last 30
 # Filter to one environment directly
 node scripts/analyze-flaky-tests.js --env qa
 
+# Treat a different branch as the trunk for the excl./incl. non-main split
+node scripts/analyze-flaky-tests.js --main-branch develop
+
 # Write report to a custom location
 node scripts/analyze-flaky-tests.js --output path/to/report.md
 ```
 
-The `--env` filter matches each ledger run's `env` field. The report summary states which environment it
-covers (or `all environments` when unscoped).
+The `--env` filter matches each ledger run's `env` field. The report summary states which environment it covers (or
+`all environments` when unscoped). With `--env` set and no `--output`, the default filename is
+`reports/flaky-tests-<env>.md`, so an env-scoped run never overwrites the combined report.
+
+The `--main-branch` flag (default `main`, also `RESULTS_MAIN_BRANCH` env) names the trunk branch. Every headline rate is
+reported for two run scopes: **excl. non-main** (trunk-only) and **incl. non-main** (all branches).
+See [Branch breakdown](#branch-breakdown).
+
+Prefer env-scoped analysis for the Action Required section. Recency signals (streak, failing-now) read the ledger in run
+order, so an unscoped report can interleave `qa` and `dev` runs and blur a streak across environments. Scoping to one
+env keeps the timeline coherent.
 
 ## Storage
 
@@ -87,20 +100,20 @@ One JSON object per line, one line per CI run:
 }
 ```
 
-Only the **first failure per spec file** is recorded — tests within a file are dependent on previous ones, so
-subsequent failures are unreliable. Each failure includes `file`, `context` (describe/context block titles), and
+Only the **first failure per spec file** is recorded — tests within a file are dependent on previous ones, so subsequent
+failures are unreliable. Each failure includes `file`, `context` (describe/context block titles), and
 `it` (test title) for precise location.
 
 ## Retention
 
-The ledger is a **rolling window** of the most recent runs. After appending a new run, the collector keeps the
-newest `MAX_RUNS` lines (default **100** — the new run plus the previous 99) and prunes anything older, in the same
-atomic push. This bounds the ledger file size and keeps `git show` / analysis fast regardless of project age.
+The ledger is a **rolling window** of the most recent runs. After appending a new run, the collector keeps the newest
+`MAX_RUNS` lines (default **100** — the new run plus the previous 99) and prunes anything older, in the same atomic
+push. This bounds the ledger file size and keeps `git show` / analysis fast regardless of project age.
 
 - **Default:** 100 runs. Override with `--max-runs <N>` or the `RESULTS_MAX_RUNS` env var.
 - **Disable:** set `--max-runs 0` (or `RESULTS_MAX_RUNS=0`) for an unbounded ledger.
-- **Concurrency-safe:** pruning rides on the existing fetch → dedup → retry loop, so parallel pipelines converge on
-  the same trimmed state.
+- **Concurrency-safe:** pruning rides on the existing fetch → dedup → retry loop, so parallel pipelines converge on the
+  same trimmed state.
 - **Scope:** retention trims the ledger *file content*. Commit history is bounded separately (see below).
 
 ```bash
@@ -113,22 +126,52 @@ RESULTS_MAX_RUNS=50 node scripts/collect-test-results.js
 
 ## Commit history
 
-The `test-results` branch is kept as a **single rolling orphan commit** — never a growing parent chain — so its
-commit history is permanently bounded to one commit regardless of how many runs accumulate. This is safe because the
-ledger file is self-contained: it already holds the last `MAX_RUNS` runs, and every entry is self-describing
-(`runId`, `timestamp`, `commit`, `buildId`).
+The `test-results` branch is kept as a **single rolling orphan commit** — never a growing parent chain — so its commit
+history is permanently bounded to one commit regardless of how many runs accumulate. This is safe because the ledger
+file is self-contained: it already holds the last `MAX_RUNS` runs, and every entry is self-describing (`runId`,
+`timestamp`, `commit`, `buildId`).
 
 Each collect run rebuilds the branch tip via git plumbing (`commit-tree` with no parent) and replaces it with
-`git push --force-with-lease`. The lease is a compare-and-swap against the fetched tip: if a parallel pipeline pushed
-in between, the push is rejected (`stale info`) and the retry loop re-fetches, re-applies retention, and rebuilds —
-so the single-commit design loses neither data nor concurrency safety. Per-run audit trail is preserved in the entry
-fields, not in git history.
+`git push --force-with-lease`. The lease is a compare-and-swap against the fetched tip: if a parallel pipeline pushed in
+between, the push is rejected (`stale info`) and the retry loop re-fetches, re-applies retention, and rebuilds — so the
+single-commit design loses neither data nor concurrency safety. Per-run audit trail is preserved in the entry fields,
+not in git history.
 
 ## Classification
 
 - **Flaky** (10%–79% fail rate) — fails intermittently; investigate.
 - **Consistent** (≥ 80%) — fails in most runs; likely broken, not flaky.
 - **Rare** (< 10%) — failed once or twice; may be environment noise.
+
+The **flaky result rate** in the summary quantifies this at the execution level: the count of failure occurrences from
+flaky-classified tests, divided by total spec-file executions across rated runs, expressed as a percentage. It is
+reported in two variants: **excl. suppressed** counts only actionable failures, while **incl. suppressed** also counts
+suppressed failures for a gross view. Suppressed whole-run incidents and legacy (no `specFiles`) runs are excluded from
+both variants, keeping numerator and denominator on a consistent execution pool.
+
+## Branch breakdown
+
+Each CI run records the `branch` it executed on. The trunk branch is `main` by default (override with
+`--main-branch` or `RESULTS_MAIN_BRANCH`); any other branch — a feature or PR branch — is **non-main**.
+
+A run whose branch is **unmentioned** — empty, `unknown`, or a detached `HEAD` (how CI reports a checkout that isn't on
+a named branch) — is treated as the trunk. The collector resolves the real branch from CI env vars (Azure
+`BUILD_SOURCEBRANCH` / PR source, GitHub `GITHUB_REF_NAME`, etc.), so feature/PR runs are recorded with their actual
+branch rather than a useless `HEAD`.
+
+The report computes every headline rate (average pass rate, overall run probability, and both flaky result rates) over
+two run scopes:
+
+- **Excl. non-main** — trunk-only. Feature/PR-branch runs are dropped. **This is the primary target**: the flat summary
+  rates report these figures, so in-development branches never dilute the health signal for the released trunk.
+- **Incl. non-main** — all analysed runs, whatever branch they ran on.
+
+When the run set mixes main and non-main runs, the summary's **Branch breakdown** table places the two scopes side by
+side (headline trunk-only vs all branches). It is omitted when every analysed run is on the same branch, since the two
+scopes would be identical. Failure counts (unique/flaky/rare/action-required) span every analysed run regardless of
+branch; only the rates are scoped. Flaky classification itself stays global (lifetime fail rate across all runs); only
+the run set each rate is measured over changes between scopes. When no run is on the trunk at all, the headline falls
+back to all runs so the report is never empty.
 
 ## Suppressions
 
@@ -144,15 +187,15 @@ visibility.
 `runSuppressions`.
 
 **Test suppression** — identifies a failure by `file` + `it` (+ optional `context`) and carries `reason`, `ticket`,
-optional `lastFailedAt`, `env`, `lastCommit`, and `expiresAt` metadata.
+optional `lastFailedAt`, `lastBranch`, `env`, `lastCommit`, and `expiresAt` metadata.
 
-**Run suppression** — identifies a compromised ledger run by `commit` and carries `runDate`, `env`, `reason`, `ticket`,
-and `suppressedAt`. Analysis removes matching runs before aggregating failures, pass rate, run history, action-required
-signals, and flaky classification. Use this for whole-run incidents such as CI outages or environment failures, not for
-individual test bugs.
+**Run suppression** — identifies a compromised ledger run by `commit` and carries `runDate`, `branch`, `env`, `buildId`,
+`reason`, `ticket`, and `suppressedAt`. Analysis removes matching runs before aggregating failures, pass rate, run
+history, action-required signals, and flaky classification. Use this for whole-run incidents such as CI outages or
+environment failures, not for individual test bugs.
 
-**Auto-expiry** — test entries with an `expiresAt` date resurface in the main report after that date passes. Use this
-to force a re-check (e.g. 30 days after a backend fix is expected).
+**Auto-expiry** — test entries with an `expiresAt` date keep historical failures suppressed while the issue does not
+recur. If the test fails again after that date, the suppression lapses and all occurrences resurface in the main report.
 
 **Bypass** — `node scripts/analyze-flaky-tests.js --no-suppress` shows the full unfiltered report.
 
@@ -191,6 +234,7 @@ Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
       "ticket": "BUG-API-12",
       "suppressedAt": "2026-07-14",
       "lastFailedAt": "2026-07-14",
+      "lastBranch": "main",
       "env": "qa",
       "lastCommit": "f84924c",
       "expiresAt": "2026-08-14"
@@ -200,6 +244,7 @@ Add entries directly to the existing `scripts/flaky-suppressions.json` arrays:
     {
       "commit": "f84924c",
       "runDate": "2026-07-15",
+      "branch": "main",
       "env": "qa",
       "reason": "CI environment outage — run not representative",
       "ticket": "OPS-42",
@@ -213,14 +258,19 @@ The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
 
 ## Report sections
 
-- **Summary** — run count, environment, period, overall pass rate, failure counts.
+- **Summary** — run count (split by trunk vs non-main branches), environment, period, average pass rate, overall test
+  run probability rate, flaky result rate (excl. and incl. suppressed), failure counts. Headline rates are
+  **trunk-only** (`main`).
+- **Branch breakdown** — headline trunk-only rates contrasted with the all-branches (incl. non-main) rates; shown only
+  when runs mix branches.
 - **Action Required** — recent regressions: streak or majority of recent window failing.
 - **Flaky tests** — intermittent failures sorted by frequency.
 - **Consistently failing** — tests broken in most runs.
 - **Rare failures** — one-off failures.
 - **Error patterns** — recurring error messages across multiple tests.
 - **Run history** — last 20 runs with per-run stats.
-- **Suppressed** — known test issues and excluded runs with linked ticket or incident, date, environment, and commit metadata.
+- **Suppressed** — known test issues and excluded runs with linked ticket or incident, date, branch, environment, and
+  commit metadata.
 
 ## CI integration
 
@@ -234,35 +284,28 @@ committing, and pushing to `test-results` internally via git plumbing.
   condition: always()
 ```
 
-The weekly workflow (`.github/workflows/weekly-cypress-tests.yml`) can also generate the report on demand. Set
-`generate_flaky_report` to `true` and pick the scope with the `flaky_report_env` input, which runs the matching
-`report:flaky:<env>` script:
-
-- `all` — combines every environment, writes `reports/flaky-tests-all.md`.
-- `dev` (default) — scopes to dev, writes `reports/flaky-tests-dev.md`.
-- `qa` — scopes to qa, writes `reports/flaky-tests-qa.md`.
-
-The report is uploaded as the `flaky-report-<run number>` artifact.
+The `FlakyReport` stage in `foodalert-audit65-cypress.yml` generates the report. Its `flaky_report_env`
+parameter (`qa` default, or `dev` / `all`) selects the scope: the stage runs `report:flaky:<env>` and publishes
+`reports/flaky-tests-<env>.md` uniformly for every value.
 
 ## Deduplication
 
-Each run is identified by a unique `runId`. The `runId` is resolved with this precedence, chosen so
-that retries of the collection step never double-record yet distinct executions are never dropped:
+Each run is identified by a unique `runId`. The `runId` is resolved with this precedence, chosen so that retries of the
+collection step never double-record yet distinct executions are never dropped:
 
-1. **`RESULTS_RUN_ID`** — explicit override; the single source of truth when CI can inject a
-   guaranteed-unique, retry-stable id.
+1. **`RESULTS_RUN_ID`** — explicit override; the single source of truth when CI can inject a guaranteed-unique,
+   retry-stable id.
 2. **CI build id** — unique per execution and stable across step retries, so it (not the timestamp)
    guarantees uniqueness. The build id folds in the **re-run attempt** so re-runs stay distinct:
    Azure `BUILD_BUILDID`+`SYSTEM_JOBATTEMPT`, GitHub `GITHUB_RUN_ID`+`GITHUB_RUN_ATTEMPT`, GitLab
    `CI_PIPELINE_ID`, CircleCI `CIRCLE_WORKFLOW_ID`, Jenkins `BUILD_NUMBER`.
-3. **No build id** — fall back to a millisecond-precision timestamp plus the process id, so two
-   distinct executions on the same commit/env can never collide.
+3. **No build id** — fall back to a millisecond-precision timestamp plus the process id, so two distinct executions on
+   the same commit/env can never collide.
 
-Before appending, the script scans the ledger and skips the entry only if that exact `runId` is
-already present. Dedup is keyed on the per-execution identity — **not** on `commit + env` — so
-repeated runs of the same commit (daily scheduled runs against an unchanged `main`, or manual
-re-runs) are each recorded. Those repeated executions are exactly the signal flaky-test detection
-depends on.
+Before appending, the script scans the ledger and skips the entry only if that exact `runId` is already present. Dedup
+is keyed on the per-execution identity — **not** on `commit + env` — so repeated runs of the same commit (daily
+scheduled runs against an unchanged `main`, or manual re-runs) are each recorded. Those repeated executions are exactly
+the signal flaky-test detection depends on.
 
 ## Troubleshooting
 

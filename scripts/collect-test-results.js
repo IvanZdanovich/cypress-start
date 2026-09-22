@@ -86,7 +86,8 @@ function ciBranch() {
   return (
     strip(process.env.SYSTEM_PULLREQUEST_SOURCEBRANCH) || // Azure DevOps (PR builds)
     strip(process.env.BUILD_SOURCEBRANCH) || // Azure DevOps (full ref)
-    process.env.GITHUB_REF_NAME || // GitHub Actions
+    process.env.GITHUB_HEAD_REF || // GitHub Actions (PR source)
+    process.env.GITHUB_REF_NAME || // GitHub Actions (push/ref name)
     process.env.CI_COMMIT_REF_NAME || // GitLab CI
     process.env.CIRCLE_BRANCH || // CircleCI
     process.env.BRANCH_NAME || // Jenkins (multibranch)
