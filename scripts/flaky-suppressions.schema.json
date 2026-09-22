@@ -38,6 +38,10 @@
             "format": "date",
             "description": "Latest observed failure date when the suppression was added"
           },
+          "lastBranch": {
+            "type": "string",
+            "description": "Branch where the latest observed failure occurred when the suppression was added"
+          },
           "env": {
             "type": "string",
             "description": "Environment where the latest observed failure occurred"
@@ -79,6 +83,10 @@
             "type": "string",
             "format": "date",
             "description": "Date of the compromised run"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch of the compromised run (as stored in the ledger)"
           },
           "env": {
             "type": "string",

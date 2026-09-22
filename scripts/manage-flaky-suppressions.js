@@ -122,15 +122,17 @@ function formatFailure(data, totalRuns) {
   const file = path.basename(data.file);
   const lastFailed = data.lastFailed ? data.lastFailed.slice(0, 10) : 'N/A';
   const env = data.lastEnv || 'N/A';
+  const branch = data.lastBranch || 'N/A';
   const commit = data.lastCommit || 'N/A';
   const build = data.lastBuild ? `, build ${data.lastBuild}` : '';
-  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${env}, ${commit}${build})${RESET}`;
+  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${branch}, ${env}, ${commit}${build})${RESET}`;
 }
 
 function formatSuppression(entry) {
   const file = path.basename(entry.file);
   const build = entry.lastBuild ? `, build ${entry.lastBuild}` : '';
-  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'}${build})${RESET}` : '';
+  const branch = entry.lastBranch ? `${entry.lastBranch}, ` : '';
+  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${branch}${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'}${build})${RESET}` : '';
   const expires = entry.expiresAt ? `  ${DIM}expires ${entry.expiresAt}${RESET}` : '';
   return `${file}  ${DIM}${truncate(entry.it, 50)}${RESET}  ${CYAN}${entry.ticket}${RESET}${lastFailed}${expires}`;
 }
@@ -152,7 +154,8 @@ function formatRun(run, idx, totalRuns) {
 function formatRunSuppression(entry) {
   const added = entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : '';
   const build = entry.buildId ? `, build ${entry.buildId}` : '';
-  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${entry.env || 'N/A'}${build})${RESET}` : '';
+  const branch = entry.branch ? `${entry.branch}, ` : '';
+  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${branch}${entry.env || 'N/A'}${build})${RESET}` : '';
   return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${runDate}${added}`;
 }
 
@@ -379,6 +382,9 @@ async function addSuppressions(runs) {
     if (data.lastFailed) {
       entry.lastFailedAt = data.lastFailed.slice(0, 10);
     }
+    if (data.lastBranch) {
+      entry.lastBranch = data.lastBranch;
+    }
     if (data.lastEnv) {
       entry.env = data.lastEnv;
     }
@@ -463,6 +469,7 @@ async function addRunSuppressions(runs) {
     fileData.runSuppressions.push({
       commit: run.commit,
       runDate: run.timestamp ? run.timestamp.slice(0, 10) : undefined,
+      branch: run.branch || undefined,
       env: run.env || undefined,
       buildId: run.buildId || undefined,
       reason,
