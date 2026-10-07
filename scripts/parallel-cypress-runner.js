@@ -8,6 +8,7 @@
 
 const { spawn, exec } = require('child_process');
 const path = require('path');
+const { finished } = require('stream');
 const { glob } = require('glob');
 
 // Configuration
@@ -18,7 +19,7 @@ const IS_CI = process.env.CI === 'true';
 const CHUNK_STRATEGY = process.env.CHUNK_STRATEGY || 'unified'; // 'unified' or 'domain'
 
 // Pre-setup tests that must run first
-const PRE_SETUP_PATTERN = 'cypress/support/00-global-before.hook.spec.js';
+const PRE_SETUP_PATTERN = '';
 
 // Test domain patterns - used when SPEC_PATTERN is not provided
 const TEST_DOMAINS = {
@@ -73,6 +74,41 @@ function startXvfbServers(count) {
       }, 500);
     });
   });
+}
+
+const STDOUT_WRITE_CHUNK_SIZE = 64 * 1024;
+
+/**
+ * Write text to stdout and wait until each chunk is flushed, so piped output is not truncated on exit
+ * @param {string} text - Text to write
+ * @returns {Promise<void>}
+ */
+async function writeToStdout(text) {
+  const data = Buffer.from(text, 'utf8');
+  for (let offset = 0; offset < data.length; offset += STDOUT_WRITE_CHUNK_SIZE) {
+    const chunk = data.subarray(offset, offset + STDOUT_WRITE_CHUNK_SIZE);
+    await new Promise((resolve) => process.stdout.write(chunk, () => resolve()));
+  }
+}
+
+/**
+ * Wait until the given readable streams have finished emitting data
+ * @param {Array<import('stream').Readable|null|undefined>} streams - Streams to wait for
+ * @returns {Promise<void>}
+ */
+function waitForStreamsToFinish(streams) {
+  return Promise.all(
+    streams.filter(Boolean).map(
+      (stream) =>
+        new Promise((resolve) => {
+          if (stream.destroyed || stream.readableEnded) {
+            resolve();
+            return;
+          }
+          finished(stream, () => resolve());
+        }),
+    ),
+  );
 }
 
 /**
@@ -212,6 +248,9 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
     // Buffer output if requested
     if (bufferOutput) {
+      cypressProcess.stdout?.setEncoding('utf8');
+      cypressProcess.stderr?.setEncoding('utf8');
+
       cypressProcess.stdout?.on('data', (data) => {
         outputBuffer += data.toString();
       });
@@ -251,11 +290,12 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       }
     });
 
-    cypressProcess.on('error', (error) => {
+    cypressProcess.on('error', async (error) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       const errorMsg = `[${chunkName}] ✖ Process error: ${error.message}`;
 
       if (bufferOutput) {
+        await waitForStreamsToFinish([cypressProcess.stdout, cypressProcess.stderr]);
         outputBuffer += errorMsg + '\n';
         resolve({
           exitCode: 1,
@@ -367,7 +407,8 @@ async function runParallelTests() {
   const { exitCode: preSetupExitCode, preSetupFiles } = await executePreSetupTests();
   if (preSetupExitCode !== 0) {
     console.error('Exiting due to pre-setup test failure.');
-    process.exit(preSetupExitCode);
+    process.exitCode = preSetupExitCode;
+    return;
   }
 
   // Use pre-setup files discovered during execution to exclude them from parallel execution
@@ -486,7 +527,8 @@ async function runParallelTests() {
 
   if (executionTasks.length === 0) {
     console.log('No test files found. Exiting.');
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   // Execute tasks with concurrency control
@@ -555,19 +597,19 @@ async function runParallelTests() {
   console.log('='.repeat(80));
   console.log('');
 
-  taskResults.forEach(({ result }) => {
+  for (const { result } of taskResults) {
     console.log('─'.repeat(80));
     console.log(`Stream: ${result.chunkName} | Duration: ${result.duration}s | Status: ${result.exitCode === 0 ? 'PASSED' : 'FAILED'}`);
     console.log(`Files: ${result.specFiles.length}`);
     result.specFiles.forEach((file) => console.log(`  - ${file}`));
     console.log('─'.repeat(80));
     if (result.output) {
-      console.log(result.output);
+      await writeToStdout(result.output.endsWith('\n') ? result.output : `${result.output}\n`);
     } else {
       console.log('(No output captured)');
     }
     console.log('');
-  });
+  }
 
   // Calculate summary
   const failedTasks = taskResults.filter((r) => r.result.exitCode !== 0).length;
@@ -583,8 +625,8 @@ async function runParallelTests() {
   console.log(`Success Rate: ${executionTasks.length > 0 ? (((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1) : '0.0'}%`);
   console.log('='.repeat(80));
 
-  // Exit with error code if any tasks failed
-  process.exit(failedTasks > 0 ? 1 : 0);
+  // Set exit code instead of exiting so stdout/stderr are fully flushed before Node exits
+  process.exitCode = failedTasks > 0 ? 1 : 0;
 }
 
 // Execute main function

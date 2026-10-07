@@ -341,9 +341,16 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
 // --- Commands ---
 
 async function addSuppressions(runs) {
-  const totalRuns = runs.length;
-  const failMap = aggregateFailures(runs);
-  const { testSuppressions } = loadSuppressions();
+  const { testSuppressions, runCommits } = loadSuppressions();
+
+  // Exclude whole-run-suppressed runs (runSuppressions) before aggregating so
+  // failures that exist only because of a compromised run are not offered as
+  // suppression candidates. Mirrors analyze-flaky-tests.js, which drops these
+  // runs from every metric.
+  const activeRuns = runCommits.size > 0 ? runs.filter((r) => !runCommits.has(r.commit)) : runs;
+
+  const totalRuns = activeRuns.length;
+  const failMap = aggregateFailures(activeRuns);
   const { activeMap } = partitionBySuppressions(failMap, testSuppressions);
 
   const failures = [...activeMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
@@ -437,10 +444,19 @@ async function removeSuppressions() {
 async function addRunSuppressions(runs) {
   console.log(`\n  ${BOLD}Suppress Runs${RESET} — select compromised runs to exclude from all stats\n`);
 
-  // Most recent first so the likely-bad runs appear at the top
-  const displayed = [...runs].reverse();
+  // Hide runs that are already whole-run-suppressed so they are not offered as
+  // candidates again. Matched by commit SHA, same key used when excluding them
+  // from stats.
+  const { runCommits } = loadSuppressions();
 
-  const indices = await interactiveSelect(displayed, (run, idx) => formatRun(run, idx, runs.length), { title: 'Recent runs (newest first)', hint: 'select compromised runs to exclude from stats', emptyMessage: 'No runs in ledger.' });
+  // Most recent first so the likely-bad runs appear at the top
+  const displayed = [...runs].reverse().filter((run) => !runCommits.has(run.commit));
+
+  const indices = await interactiveSelect(displayed, (run, idx) => formatRun(run, idx, displayed.length), {
+    title: 'Recent runs (newest first)',
+    hint: 'select compromised runs to exclude from stats',
+    emptyMessage: 'No unsuppressed runs in ledger.',
+  });
 
   if (indices.length === 0) {
     console.log(`  ${DIM}No selections made.${RESET}`);
@@ -531,9 +547,12 @@ async function reviewSuppressions(runs) {
   }
 
   // Show current status summary
-  const totalRuns = runs.length;
-  const failMap = aggregateFailures(runs);
   const { testSuppressions, runCommits } = loadSuppressions();
+  // Exclude whole-run-suppressed runs so suppressed-run failures don't inflate
+  // the active/flaky counts (consistent with addSuppressions and the analyzer).
+  const activeRuns = runCommits.size > 0 ? runs.filter((r) => !runCommits.has(r.commit)) : runs;
+  const totalRuns = activeRuns.length;
+  const failMap = aggregateFailures(activeRuns);
   const { activeMap, suppressedMap } = partitionBySuppressions(failMap, testSuppressions);
   const flaky = [...activeMap.values()].filter((v) => classify(v.count, totalRuns) === 'flaky');
 
