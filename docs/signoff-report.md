@@ -81,7 +81,7 @@ tests" step, the `cypress-tests` job, even when tests fail:
 3. uploads `reports/signoff-report.html` as the `signoff-report-<run_number>-<run_attempt>` artifact.
 
 Set the optional repository variables `APP_NAME` and `APP_DESCRIPTION` to name the application in the report header;
-without them the report uses generic names.
+without them the report is titled "Cypress Start".
 
 For another CI system, run the same command after the Cypress step with an "always run" condition, point
 `--reports-dir` / `--screenshots-dir` at the folders that hold the run's mochawesome JSON and screenshots, and publish

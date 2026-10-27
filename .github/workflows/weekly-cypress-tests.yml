@@ -193,7 +193,7 @@ jobs:
         env:
           TARGET_ENV: ${{ inputs.target_env || 'dev' }}
           BROWSER: ${{ inputs.browser || 'chrome' }}
-          # Optional repository variables; the script falls back to generic names.
+          # Optional repository variables; the script falls back to "Cypress Start".
           APP_NAME: ${{ vars.APP_NAME }}
           APP_DESCRIPTION: ${{ vars.APP_DESCRIPTION }}
           # The report only needs the spec parser, not the Cypress binary.

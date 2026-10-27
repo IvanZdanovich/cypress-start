@@ -42,8 +42,8 @@ const SCREENSHOTS_DIR = path.resolve(WORKSPACE, argValue('--screenshots-dir', 'c
 const OUTPUT_DIR = path.resolve(WORKSPACE, argValue('--output-dir', 'reports'));
 
 const APP = {
-  name: process.env.APP_NAME || 'Application under test',
-  description: process.env.APP_DESCRIPTION || 'Cypress automated requirements',
+  name: process.env.APP_NAME || 'Cypress Start',
+  description: process.env.APP_DESCRIPTION || 'Cypress executable requirements',
 };
 const SUITE_NAMES = new Set(['describe', 'context']);
 const TEST_NAMES = new Set(['it', 'specify']);

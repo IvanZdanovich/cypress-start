@@ -47,7 +47,7 @@ h3 {
 }
 
 a {
-  color: var(--brand-red);
+  color: var(--brand-primary-strong);
   word-break: break-all;
 }
 
@@ -96,6 +96,7 @@ a {
 .card {
   padding: 8px 10px;
   border: 1px solid var(--border);
+  border-top: 3px solid var(--brand-primary);
   border-radius: 6px;
   background: var(--surface-muted);
 }
@@ -140,7 +141,8 @@ td {
 }
 
 th {
-  background: var(--surface-muted);
+  background: var(--surface-tint);
+  color: var(--brand-ink);
 }
 
 .num {
@@ -191,13 +193,13 @@ th {
   margin: 12px 0;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--brand-red);
+  border-left: 4px solid var(--status-failed);
   border-radius: 4px;
   break-inside: avoid-page;
 }
 
 .spec {
-  border-left-color: var(--brand-ink);
+  border-left-color: var(--brand-primary);
   break-inside: auto;
 }
 
@@ -397,7 +399,7 @@ body:has(#hide-passed:checked) li.check[data-manual='pass'] {
 }
 
 .manual:focus-visible {
-  outline: 2px solid var(--brand-red);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 1px;
 }
 
@@ -519,15 +521,16 @@ body:has(#hide-passed:checked) li.check[data-manual='pass'] {
 
 .toolbar button {
   padding: 2px 8px;
-  border: 1px solid var(--brand-ink);
+  border: 1px solid var(--brand-primary);
   border-radius: 4px;
   background: var(--surface);
+  color: var(--brand-primary-strong);
   cursor: pointer;
   font: inherit;
 }
 
 .toolbar button:hover {
-  background: var(--brand-ink);
+  background: var(--brand-primary);
   color: var(--surface);
 }
 
