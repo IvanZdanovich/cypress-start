@@ -1,7 +1,7 @@
 ---
 paths:
-  - 'cypress/integration-examples/**/*.js'
-  - 'cypress/e2e-examples/**/*.js'
+  - 'cypress/integration-examples/**/*.examples.js'
+  - 'cypress/e2e-examples/**/*.examples.js'
 ---
 
 # Output Shape
