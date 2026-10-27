@@ -1,7 +1,6 @@
 ---
 paths:
-  - 'cypress/constants/api/*.api.constraints.js'
-  - 'cypress/constants/ui/*.ui.constraints.js'
+  - 'cypress/constants/**/*.constraints.js'
 ---
 
 # Reasoning Principles

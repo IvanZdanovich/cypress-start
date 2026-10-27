@@ -273,8 +273,16 @@ rate scope. The report has one title and these sections in order:
 
 ## CI integration
 
-After the existing "Save Reports and Artifacts" step, add a single step. The script handles fetching, appending,
-committing, and pushing to `test-results` internally via git plumbing.
+`.github/workflows/weekly-cypress-tests.yml` already collects results after every run with:
+
+```bash
+node scripts/collect-test-results.js --reports-dir cypress/reports/separate-reports
+```
+
+The step runs even when tests fail and needs `contents: write` permission to push to `test-results`. The script
+handles fetching, appending, committing, and pushing internally via git plumbing.
+
+For another CI system, add one always-run step after the Cypress run. For example, in Azure Pipelines:
 
 ```yaml
 - script: |
@@ -283,9 +291,9 @@ committing, and pushing to `test-results` internally via git plumbing.
   condition: always()
 ```
 
-The `generate-flaky-report` job in `.github/workflows/weekly-cypress-tests.yml` generates the report. Its
-`flaky_report_env` input (`dev` default, or `qa` / `all`) selects the scope: the job runs `report:flaky:<env>` and
-uploads `reports/flaky-tests-<env>.md` for every value.
+The `generate-flaky-report` job in the GitHub workflow generates the report when the `generate_flaky_report` input is
+enabled. Its `flaky_report_env` input (`dev` default, or `qa` / `all`) selects the scope: the job runs
+`report:flaky:<env>` and uploads `reports/flaky-tests-<env>.md`.
 
 ## Deduplication
 

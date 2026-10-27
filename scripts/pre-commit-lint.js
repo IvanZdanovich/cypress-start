@@ -25,8 +25,7 @@ const nodeExecutable = process.execPath;
  *   5. Auto-tighten thresholds when quality improves
  *
  * Usage:
- *   node scripts/pre-commit-lint.js        # git hook / npm run precommit:check
- *   npm run lint:check                     # same, manual trigger
+ *   node scripts/pre-commit-lint.js        # git hook, or a manual run before committing
  */
 
 const thresholdsFilePath = path.join(__dirname, 'thresholds.json');

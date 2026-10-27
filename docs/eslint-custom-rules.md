@@ -17,8 +17,9 @@ matched that rule's scope gate, such as `.spec.js`, `.api.commands.js`, `/comman
 
 ## Running lint
 
-- `npm run lint` — report violations
-- `npm run lint -- --fix` — auto-fix the fixable rules (blank lines, title terminology, structure files, single-line unused selectors/test-data)
+- `npm run lint` — runs `eslint . --fix`: applies every available fix (blank lines, title terminology, structure files,
+  single-line unused selectors and examples), then reports the remaining violations.
+- `npx eslint <path>` — reports violations for one file or folder without changing files.
 
 ## Rules by concern
 
@@ -27,9 +28,11 @@ matched that rule's scope gate, such as `.spec.js`, `.api.commands.js`, `/comman
 - `verify-test-title-pattern` — `describe` titles match `Module.Sub: Given …`; `context` titles match
   `Module.Sub.ROLE: When …`; `it` titles match `Module.Sub.ROLE: Then …`. Descriptions are 1-200 characters with no
   trailing space. `STATE:`-prefixed contexts are exempt.
-- `verify-test-title-without-forbidden-symbols` — `describe` and `context` titles have no leading/trailing whitespace and
+- `verify-test-title-without-forbidden-symbols` — `describe` and `context` titles have no leading/trailing whitespace
+  and
   none of `! @ # $ % ^ & * ( ) + = { } [ ] | \ ; " ' < > ? /`.
-- `prevent-duplicated-titles` — every `describe` and `context` title, including `.skip` and `.only`, is unique within the
+- `prevent-duplicated-titles` — every `describe` and `context` title, including `.skip` and `.only`, is unique within
+  the
   linted file.
 - `standardize-test-titles` — title terms normalize to canonical common, UI, and API vocabulary. The mapping arrays in
   `eslint-plugin-custom-rules/standardize-test-titles.js` are the wording glossary. This rule is fixable.
@@ -67,7 +70,8 @@ skills define what belongs in each field.
 
 **Data and examples**
 
-- `prevent-examples-loops` — inside `describe`, `context`, and `it` blocks, no `.forEach`, `for...of`, or `for...in` over
+- `prevent-examples-loops` — inside `describe`, `context`, and `it` blocks, no `.forEach`, `for...of`, or `for...in`
+  over
   data-shaped operands such as names matching `testData`, `invalid`, `valid`, `Array`, `items`, `values`, or `data`.
   Hooks are excluded. Pick one randomized value in the examples file instead of looping in the spec.
 - `find-unused-examples` — flags first-level exported instances unused by any spec or command, with import aliases

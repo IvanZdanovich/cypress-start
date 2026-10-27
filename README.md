@@ -9,52 +9,55 @@
     </picture>
 </p>
 
+A Cypress and JavaScript starter framework in which the test spec is the requirement. Use it to start a new test
+project, or to add its lint rules, parallel runner, reports, and Claude Code skills to an existing one.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [Overview](#overview)
-- [What Makes This Framework Unique?](#what-makes-this-framework-unique)
+- [What Makes This Framework Different](#what-makes-this-framework-different)
 - [Features](#features)
 - [Running Tests](#running-tests)
-  - [Standard Test Run](#standard-test-run)
-  - [Parallel Test Execution](#parallel-test-execution)
-  - [Environment-Specific Test Run](#environment-specific-test-run)
-  - [Debug Mode](#debug-mode)
-  - [GitHub Actions Workflow](#github-actions-workflow)
+    - [Standard Test Run](#standard-test-run)
+    - [Parallel Test Execution](#parallel-test-execution)
+    - [Environment-Specific Test Run](#environment-specific-test-run)
+    - [Debug Mode](#debug-mode)
+    - [GitHub Actions Workflow](#github-actions-workflow)
 - [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
 
 ## Quick Start
 
-Create a new project from this template in seconds! The CLI offers three setup modes to match your needs:
-
 ### Prerequisites
 
 - Node.js >= 26
-- npm or yarn
+- npm
 - Git
 
-### 🚀 Create New Project with cypress-start CLI (Recommended)
+### Create a project with the cypress-start CLI
 
 ```bash
-# Using npx or npm
+# Create a new project folder
 npx cypress-start my-project
 
 # Or copy selected modules into the current directory
 npm exec --yes --package=cypress-start@latest -- cypress-start .
 ```
 
-**Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Best for
-new standalone projects.
+The CLI asks for one of three setup modes:
 
-**Mode 2 — Specific Files** cherry-picks modules (ESLint, Docs, Claude Skills, Parallel Runner, GitHub Actions, Docker)
-into an existing project directory. `package.json` is created or merged automatically; run `npm install` manually after.
-Use `npm exec --yes --package=cypress-start@latest -- cypress-start .` when you want the selected modules copied into the folder you are already in.
+**Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Use it for
+a new standalone project.
 
-**Mode 3 — Update Existing Project** refreshes a project you already created **in place** — no new subfolder. It pulls the
-latest template, adds/overwrites managed files, deletes files that are no longer part of the template, and merges
-`package.json` (keeping your custom scripts and credentials). Every change is staged with `git add -A` so you can review
-the diff and roll back individual edits before committing:
+**Mode 2 — Specific Files** copies selected modules (ESLint rules, Docs, Claude Skills, Parallel Runner, GitHub Actions,
+Docker) into an existing project directory. `package.json` is created or merged automatically; run `npm install`
+afterwards.
+
+**Mode 3 — Update Existing Project** refreshes a project you already created, in place. It pulls the latest template,
+adds or overwrites managed files, deletes files that are no longer part of the template, and merges `package.json`
+while keeping your custom scripts. Every change is staged with `git add -A`, so you can review and roll back individual
+edits before committing:
 
 ```bash
 # From inside the project (or: npm exec --yes --package=cypress-start@latest -- cypress-start ./path/to/project)
@@ -66,20 +69,13 @@ git restore --staged <file>       # unstage a file you want to keep as-is
 git restore <file>                # discard the update for that single file
 ```
 
-User-owned files are never touched: `package.json` is merged (not overwritten), and `cypress/sensitive-data/*-users.json`
-credentials are preserved. Obsolete-file deletion relies on the `.cypress-start-manifest.json` written on install/update.
-
-```bash
-cd my-project
-npm run test              # run all tests headless
-npm run test:parallel     # run tests in parallel
-npm run lint              # run ESLint checks
-npx cypress open          # open Cypress UI
-```
+The update never overwrites `package.json` (it merges it) or the `cypress/sensitive-data/*-users.json` credential
+files. Deleting obsolete files relies on the `.cypress-start-manifest.json` written on install and update.
 
 ### Alternative setup
 
-**GitHub Template:** navigate to https://github.com/IvanZdanovich/cypress-start → click **"Use this template"** → create repository → clone it.
+**GitHub template:** open https://github.com/IvanZdanovich/cypress-start, click **Use this template**, create the
+repository, and clone it.
 
 **Direct clone:**
 
@@ -89,9 +85,20 @@ cd my-project
 npm install
 ```
 
-**Copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json` and to `cypress/sensitive-data/qa-users.json` for test credentials.**
+### Add test credentials
 
----
+Before the first run, copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
+and `cypress/sensitive-data/qa-users.json`, and fill in the users for each environment.
+
+### First commands
+
+```bash
+cd my-project
+npm run test              # run all tests headless
+npm run test:parallel     # run tests in parallel
+npm run lint              # fix and report ESLint issues
+npm run debug             # open the Cypress UI
+```
 
 > **Open Source** — MIT licensed. Use it, fork it, contribute back.
 
@@ -99,60 +106,53 @@ npm install
 
 ## Overview
 
-Unlock rapid and reliable testing with a framework developed using Cypress and JavaScript. Designed to scale
-effortlessly, it is suitable for projects of any size.
-This framework includes examples of tests:
+The framework includes example tests for two public demo applications:
 
-- Integration and E2E UI tests for the [Swag Labs Demo application](https://www.saucedemo.com/).
-- Integration API tests for the [Restful Booker API playground](https://restful-booker.herokuapp.com/apidoc/)
+- Integration and E2E UI tests for the [Swag Labs demo application](https://www.saucedemo.com/).
+- Integration API tests for the [Restful Booker API playground](https://restful-booker.herokuapp.com/apidoc/).
 
-![Alt text](assets/execution-example.gif)
+![Cypress run of the example suite](assets/execution-example.gif)
 
 ---
 
-## What Makes This Framework Unique?
+## What Makes This Framework Different
 
-- **The Spec Is the Requirement**: Tests follow a Constraints → Examples → Specs traceability model. Boundary values
-  live in constraint files, named data instances in example files, and requirements as executable Given/When/Then titles
-  in spec files. There are no separate requirement documents, mapping matrices, or test-management tools — the spec is
-  the single source of truth. ([docs](docs/constraints-examples-specs-approach.md))
-- **No Abstractions**: No redundant abstraction layers such as Page Object Models or BDD frameworks. The framework
-  provides a clear structure and naming conventions while using Gherkin‑style syntax to make tests self‑descriptive,
-  readable, and understandable for non‑technical stakeholders.
-- **Efficiency**: Parallel test execution and optimized configurations ensure fast feedback cycles.
-- **Scalability**: Proper test organization and file isolation avoid manual test case structures. Straightforward
-  test‑data organization and custom static code analysis rules enforce naming conventions and test structure. The
-  framework aligns the entire team around well‑defined requirements and scales effortlessly with the project.
-- **Maintainability**: A clear project structure and comprehensive documentation ensure easy onboarding, effortless
-  maintenance, and smooth test creation.
-- **Robustness**: Designed with Cypress to handle complex test scenarios with ease.
-- **Lightweight and Easy Startup**: Quick setup with minimal configuration. A minimal number of third‑party dependencies
-  helps avoid conflicts and ensures fast build times.
-- **AI-Ready**: Ships a full set of [Claude Code](https://claude.ai/code) skills under `.claude/skills/` — covering
-  spec writing, constraint and example authoring, command creation, ESLint rules, bug tracking, localization, colour
-  themes, git strategy, and more. The AI follows project conventions automatically, without prompting.
+- **The spec is the requirement.** Tests follow a Constraints → Examples → Specs model. Boundary values live in
+  constraint files, named data instances in example files, and requirements as executable Given/When/Then titles in
+  spec files. There are no separate requirement documents, mapping matrices, or test-management tools.
+  ([docs](docs/constraints-examples-specs-approach.md))
+- **No extra abstraction layers.** No Page Object Model and no BDD framework. Selectors are plain objects, reused flows
+  are Cypress custom commands, and Given/When/Then lives in test titles, so reports stay readable for non-technical
+  readers. The reasons are in the [FAQ](docs/faq.md).
+- **Conventions enforced by tools.** Custom ESLint rules check title grammar, spec file paths, command names, and
+  `req` metadata on every lint run and commit.
+- **Fast feedback.** Setup runs once per block in `before` hooks, sessions are cached, and specs run in parallel
+  streams.
+- **Few dependencies.** Cypress, mochawesome, ESLint with Prettier, and a handful of small helpers.
+- **AI-ready.** [Claude Code](https://claude.ai/code) skills under `.claude/skills/` and path-scoped rules under
+  `.claude/rules/` teach an AI agent the project conventions.
 
 ---
 
 ## Features
 
-- **Interactive CLI Setup:** Three setup modes — Full Setup (complete framework), Specific Files (cherry-pick modules),
-  or Update Existing Project
-- **Parallel Test Execution:** Run tests in parallel with configurable stream count ([docs](docs/parallel-execution.md))
-- **Localization Testing:** Type-safe localization with auto-generated typed `l10n` map from locale
-  files ([docs](docs/localization-testing.md))
-- **Color Theme Testing:** Type-safe color themes with auto-generated typed `colours` map from theme
-  files ([docs](docs/colour-theme-testing.md))
-- **Coverage Gap Analysis:** Compares implemented tests against the expected structure, reporting missing paths, skipped
-  tests, and coverage percentages with CI threshold enforcement ([docs](docs/coverage-gap-analysis.md))
-- **Flaky Test Analysis:** Persists CI test outcomes across runs in an orphan-branch ledger, then classifies tests as
-  flaky, consistent, or rare ([docs](docs/flaky-test-analysis.md))
-- **Custom ESLint Rules:** Enforces test structure and naming conventions ([docs](docs/eslint-custom-rules.md))
-- **Pre-commit Quality Checks:** Automated linting before every commit ([docs](docs/pre-commit-check.md))
-- **CI/CD Integration:** GitHub Actions workflow with dynamic test filtering and Docker support
-- **Claude Code Skills:** 16 project-specific skills covering the full development workflow — spec writing, data
-  authoring, command creation, linting, bug tracking, localization, colour themes, and git strategy. Invoked
-  automatically by [Claude Code](https://claude.ai/code) when the task matches, or explicitly via `/skill-name`.
+- **Interactive CLI setup:** Full Setup, Specific Files, or Update Existing Project.
+- **Parallel test execution:** Configurable stream count and chunking strategy ([docs](docs/parallel-execution.md)).
+- **Localization testing:** Typed `l10n` map generated from flat locale files ([docs](docs/localization-testing.md)).
+- **Colour theme testing:** Typed `colours` map generated from flat theme files ([docs](docs/colour-theme-testing.md)).
+- **Coverage gap analysis:** Compares implemented tests with the expected structure and reports missing paths, skipped
+  tests, and coverage percentages, with an optional CI threshold ([docs](docs/coverage-gap-analysis.md)).
+- **Flaky test analysis:** Stores CI test outcomes across runs on an orphan branch, then classifies failing tests as
+  flaky, consistent, or rare ([docs](docs/flaky-test-analysis.md)).
+- **Sign-off report:** Builds an interactive HTML checklist of every requirement from the specs and the latest run
+  ([docs](docs/signoff-report.md)).
+- **Custom ESLint rules:** Enforce test structure and naming conventions ([docs](docs/eslint-custom-rules.md)).
+- **Pre-commit checks:** Sync, spec-path, and lint checks before every commit ([docs](docs/pre-commit-check.md)).
+- **CI/CD integration:** GitHub Actions workflow with test filtering, optional reports, and Docker support.
+- **Claude Code guidance:** 12 skills (Constraints → Examples → Specs, constraints, examples, bug tracking,
+  localization, colour themes, non-functional testing, functional JavaScript, and authoring skills, rules, agents, and
+  docs) plus 7 path-scoped rules for API, UI, and E2E specs, commands, constraints, examples, and guidance files.
+  Claude Code loads a skill when the task matches, or when you call it with `/skill-name`.
 
 ---
 
@@ -160,15 +160,15 @@ This framework includes examples of tests:
 
 ### Standard Test Run
 
-To run tests with default settings in headless mode:
+Run all tests headless with the default settings:
 
 ```bash
 npm run test
 ```
 
-### Parallel Test Execution
+`npm run test` first runs `pretest`, which activates the locale and colour theme files and regenerates their types.
 
-To run tests in parallel for faster execution:
+### Parallel Test Execution
 
 ```bash
 # Default (3 parallel streams)
@@ -180,77 +180,71 @@ PARALLEL_STREAMS=6 npm run test:parallel
 
 ### Environment-Specific Test Run
 
-Run tests with specific environment parameters in headless mode.
-
-**Environment Parameters:**
+Set these environment variables to change the run:
 
 - `LANGUAGE`: Language code (default: `en`)
-- `TARGET_ENV`: Target environment (default: `dev`)
-- `COLOUR_THEME`: Color theme (default: `default`)
-- `BROWSER`: Browser for execution (default: `chrome`, options: `chrome`, `edge`)
+- `TARGET_ENV`: Target environment, `qa` or `dev` (default: `qa`; the Docker image and CI workflow default to `dev`)
+- `COLOUR_THEME`: Colour theme (default: `default`)
+- `BROWSER`: Browser for `npm run test:parallel` and Docker runs (default: `chrome`; the CI workflow offers `chrome` and
+  `edge`). `npm run test` uses Cypress's default Electron browser.
+
+**macOS/Linux:**
+
+```bash
+LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev npm run test
+BROWSER=edge TARGET_ENV=dev npm run test:parallel
+```
 
 **Windows (PowerShell):**
 
 ```powershell
-$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; $env:BROWSER="chrome"; npm run test
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; npm run test
 ```
 
 **Windows (CMD):**
 
 ```cmd
-set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& set BROWSER=chrome&& npm run test
-```
-
-**macOS/Linux:**
-
-```bash
-LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev BROWSER=chrome npm run test
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& npm run test
 ```
 
 ### Debug Mode
 
-For interactive debugging with the Cypress UI:
-
-**Windows (PowerShell):**
-
-```powershell
-$env:LANGUAGE="en"; $env:TARGET_ENV="dev"; $env:COLOUR_THEME="default"; npm run pretest; npx cypress open
-```
-
-**Windows (CMD):**
-
-```cmd
-set LANGUAGE=en&& set TARGET_ENV=dev&& set COLOUR_THEME=default&& npm run pretest&& npx cypress open
-```
-
-**macOS/Linux:**
+Open the Cypress UI in Chrome with the English locale and default theme:
 
 ```bash
-LANGUAGE=en COLOUR_THEME=default npm run pretest && TARGET_ENV=dev caffeinate -i npx cypress open
+npm run debug
 ```
+
+To debug against another environment, set `TARGET_ENV` first, for example `TARGET_ENV=dev npm run debug` on
+macOS/Linux or `$env:TARGET_ENV="dev"; npm run debug` in PowerShell.
 
 ---
 
 ### GitHub Actions Workflow
 
-Automated CI/CD workflow with weekly scheduled runs or manual triggers.
+`.github/workflows/weekly-cypress-tests.yml` runs every Sunday at 02:00 UTC and can be started manually.
 
-**Quick Start:**
+To start it manually:
 
-1. Go to **Actions** tab → Select **"Weekly Cypress Tests"**
-2. Click **"Run workflow"** → Configure parameters → Click **"Run workflow"**
+1. Open the **Actions** tab and select **Weekly Cypress Tests**.
+2. Click **Run workflow**, set the inputs, and click **Run workflow**.
 
-**Available Parameters:**
+**Inputs:**
 
 - `language` — Language code (default: `en`)
 - `target_env` — Target environment (default: `dev`)
-- `colour_theme` — Color theme (default: `default`)
+- `colour_theme` — Colour theme (default: `default`)
 - `parallel_streams` — Number of parallel streams, 1–4 (default: `2`)
-- `browser` — Browser to use: `chrome`, `edge` (default: `chrome`)
-- `test_scope` — Scope of tests to run: `all`, `integration`, `e2e` (default: `all`)
-- `test_type` — Type of tests to run: `all`, `api`, `ui` (default: `all`)
+- `browser` — `chrome` or `edge` (default: `chrome`)
+- `test_scope` — `all`, `integration`, or `e2e` (default: `all`)
+- `test_type` — `all`, `api`, or `ui` (default: `all`)
+- `run_cypress_tests` — run the Cypress tests (default: `true`)
+- `generate_coverage_report` — build the coverage gap report (default: `false`)
+- `generate_flaky_report` — build the flaky test report (default: `false`)
+- `flaky_report_env` — scope of the flaky report: `dev`, `qa`, or `all` (default: `dev`)
+- `generate_signoff_report` — build the HTML sign-off report (default: `false`)
 
-**Test Filtering:**
+**Test filtering:**
 
 - `all` scope + `all` type → all tests in the workspace
 - `all` scope + `api` type → all API tests (integration only)
@@ -261,35 +255,37 @@ Automated CI/CD workflow with weekly scheduled runs or manual triggers.
 - `e2e` scope + `all` type → all E2E tests
 - `e2e` scope + `ui` type → E2E UI tests only
 
-**Viewing Results:** Check the **Actions** tab for run status. Download artifacts (reports, screenshots, videos) after
-completion.
+**Results:** check the **Actions** tab for run status, and download the reports and screenshots from the run's
+artifacts.
 
 ---
 
 ## Documentation
 
-**Test Development:**
+**Test development:**
 
 - [Constraints → Examples → Specs](docs/constraints-examples-specs-approach.md)
-- [CES vs. Traditional RM Tools](docs/comparison-spec-vs-rm-tool.md)
-- [FAQ](docs/faq.md)
+- [CES vs. traditional RM tools](docs/comparison-spec-vs-rm-tool.md)
+- [FAQ — why the framework works this way](docs/faq.md)
+- [Timeouts](docs/timeouts.md)
 
-**Features & Tools:**
+**Features and tools:**
 
-- [Parallel Execution Guide](docs/parallel-execution.md)
-- [Localization Testing](docs/localization-testing.md)
-- [Color Theme Testing](docs/colour-theme-testing.md)
-- [Coverage Gap Analysis](docs/coverage-gap-analysis.md)
-- [Flaky Test Analysis](docs/flaky-test-analysis.md)
+- [Parallel execution](docs/parallel-execution.md)
+- [Localization testing](docs/localization-testing.md)
+- [Colour theme testing](docs/colour-theme-testing.md)
+- [Coverage gap analysis](docs/coverage-gap-analysis.md)
+- [Flaky test analysis](docs/flaky-test-analysis.md)
+- [Sign-off report](docs/signoff-report.md)
 
-**Quality & Standards:**
+**Quality and standards:**
 
-- [Custom ESLint Rules](docs/eslint-custom-rules.md)
-- [Pre-commit Check](docs/pre-commit-check.md)
+- [Custom ESLint rules](docs/eslint-custom-rules.md)
+- [Pre-commit check](docs/pre-commit-check.md)
 
-**Git & Collaboration:**
+**Git and collaboration:**
 
-- [Git Strategy](docs/git-strategy.md)
+- [Git strategy](docs/git-strategy.md)
 
 ---
 
@@ -297,22 +293,22 @@ completion.
 
 ### Common Issues
 
-- **Sensitive data is not provided** Ensure dev-users.json and qa-users.json with credentials are provided in sensitive-data folder
-- **Pretest script fails:** Ensure you have the correct language and theme files in the appropriate directories.
-- **Test isolation issues:** Check that `testIsolation: false` is set on the relevant `describe` blocks.
-- **Localization errors:** Verify that the language file contains all required keys.
-- **ESLint errors:** Run `npm run lint` to identify specific issues.
+- **User data not found for role:** `cypress/sensitive-data/<env>-users.json` is missing or has no entry for the role.
+  Create it from `env-users.example.json`; see [Add test credentials](#add-test-credentials).
+- **`Invalid TARGET_ENV`:** `TARGET_ENV` must be `qa` or `dev`.
+- **Pretest script fails:** the locale or theme file for `LANGUAGE` or `COLOUR_THEME` is missing. Check
+  `cypress/localization/<lang>-localization.json` and `cypress/colours/<theme>-theme-colours.json`.
+- **Localization or colour key errors:** run `npm run l10n:validate` or `npm run colours:validate` to list missing keys,
+  and `npm run sync` to align the files.
+- **State leaks between tests:** check that `{ testIsolation: false }` is set on the `describe` block and that each
+  context restores the state the next one expects.
+- **ESLint errors:** run `npm run lint` to fix what can be fixed and list the rest.
 
 ### Updating Dependencies
 
-To update all dependencies to their latest versions:
+Update all dependencies to their latest versions, then reinstall:
 
 ```bash
 npx npm-check-updates -u
-```
-
-Then reinstall the dependencies:
-
-```bash
 npm install
 ```

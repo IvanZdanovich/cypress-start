@@ -1,15 +1,17 @@
 # Parallel execution
 
-Executes Cypress tests in parallel streams within a single container. Pre-setup runs sequentially first; main tests run in parallel with buffered output displayed sequentially after completion. Configurable via `PARALLEL_STREAMS` (default: 3).
+Use this page to run the Cypress suite in parallel streams, locally or in Docker. `npm run test:parallel` runs
+`scripts/parallel-cypress-runner.js`, which splits spec files into chunks, runs up to `PARALLEL_STREAMS` chunks at once
+(default 3), and prints each stream's buffered output in order when all streams finish.
 
 ## Execution Flow
 
 ```
-1. Pre-Setup Phase (Sequential)
-   └─ Run: cypress/support/00-global-before.hook.spec.js
+1. Pre-setup phase (sequential, optional)
+   └─ Runs specs matching PRE_SETUP_PATTERN; skipped when the pattern is empty (default)
 
-2. Discovery Phase
-   └─ Find all test files matching pattern(s)
+2. Discovery phase
+   └─ Find all spec files matching SPEC_PATTERN or the default domain patterns
    └─ Filter out pre-setup files (already executed)
 
 3. Chunking Phase (based on CHUNK_STRATEGY)
@@ -126,21 +128,23 @@ docker run cypress-tests npm run test
 ### Custom Pattern (when SPEC_PATTERN is set)
 
 Discovers all files matching the provided glob pattern. Files are classified by domain for reporting, then combined into
-unified chunks.
-
-**Note:** Pre-setup tests (`00-global-before.hook.spec.js`) are automatically detected and run first, regardless of
-SPEC_PATTERN.
+unified chunks. Files that match no domain pattern trigger a warning and run as a separate `custom` group.
 
 ## Configuration
 
 ### Environment Variables
 
 - **`PARALLEL_STREAMS`** — number of parallel execution streams. Default `3`, e.g. `6`.
-- **`CHUNK_STRATEGY`** — chunking strategy (unified or domain). Default `unified`, e.g. `domain`.
-- **`SPEC_PATTERN`** — custom glob pattern for test discovery. Default all domains, e.g. `cypress/integration/**/*.spec.js`.
-- **`BROWSER`** — browser for test execution. Default `chrome`, e.g. `chrome`, `firefox`, `edge`.
-- **`WORKSPACE_ROOT`** — project root directory. Default `process.cwd()`, e.g. `/tests`.
-  - **`CI`** — CI environment flag (enables Xvfb). Default `false`, e.g. `true`.
+- **`CHUNK_STRATEGY`** — chunking strategy, `unified` or `domain`. Default `unified`.
+- **`SPEC_PATTERN`** — custom glob pattern for test discovery. Default all domains, e.g.
+  `cypress/integration/**/*.spec.js`.
+- **`BROWSER`** — browser passed to `cypress run`. Default `chrome`. The CI workflow offers `chrome` and `edge`.
+- **`WORKSPACE_ROOT`** — project root directory. Default `process.cwd()`, e.g. `/e2e` in Docker.
+- **`CI`** — when `true`, the runner starts one Xvfb display per stream. The Docker image sets it.
+
+To run setup specs before the parallel phase, set `PRE_SETUP_PATTERN` at the top of
+`scripts/parallel-cypress-runner.js` to their glob. If a pre-setup spec fails, the runner stops before the parallel
+phase.
 
 ### Recommended Stream Counts
 
@@ -156,13 +160,12 @@ SPEC_PATTERN.
 
 ## How It Works
 
-### 1. Pre-Setup Tests (Sequential)
+### 1. Pre-setup specs (sequential, optional)
 
-- Pattern: `cypress/support/00-global-before.hook.spec.js`
-- Runs first, before parallel execution
-- If fails, aborts entire execution
+- Pattern: `PRE_SETUP_PATTERN` in `scripts/parallel-cypress-runner.js`; empty by default, so the phase is skipped
+- Runs first, before parallel execution, with real-time output
+- If it fails, aborts the entire execution
 - Uses folder name `pre-setup` for artifacts
-- Real-time output display
 
 ### 2. Test Discovery
 
@@ -266,26 +269,14 @@ flaky-test analysis. Task (stream) failures are shown alongside for context.
 
 ## Troubleshooting
 
-### Pre-Setup Tests Not Found
+### Pre-setup specs not found
 
-**Symptom:**
+**Symptom:** `Can't run because no spec files were found` for the pre-setup pattern.
 
-```
-Can't run because no spec files were found.
-We searched for specs matching this glob pattern:
-  > cypress/support/00-global-before.hook.spec.js
-```
+**Cause:** `PRE_SETUP_PATTERN` points to a file that does not exist.
 
-**Cause:** Custom SPEC_PATTERN is being applied to pre-setup tests.
-
-**Solution:** The runner automatically handles this by unsetting SPEC_PATTERN for pre-setup tests. Ensure you're using
-the latest version of `parallel-cypress-runner.js`.
-
-### Screenshots/Reports Being Overwritten
-
-**Cause:** Using an older version without stream-specific artifact folders.
-
-**Solution:** Update to latest `parallel-cypress-runner.js` which creates unique folders per stream.
+**Solution:** Fix the glob, or set `PRE_SETUP_PATTERN` back to `''` to skip the phase. The runner unsets `SPEC_PATTERN`
+for every stream, so a custom `SPEC_PATTERN` never overrides the pre-setup pattern.
 
 ### Tests Failing in Parallel but Not Sequential
 
@@ -316,7 +307,6 @@ the latest version of `parallel-cypress-runner.js`.
 
 ## Best Practices
 
-- **Run pre-setup tests first** — ensures proper environment setup
 - **Use appropriate stream count** — match available resources
 - **Keep tests independent** — no shared state or dependencies
 - **Use unique test data** — random names/IDs prevent conflicts

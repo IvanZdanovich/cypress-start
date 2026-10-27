@@ -30,8 +30,11 @@ node scripts/analyze-coverage-gaps.js --type=all --threshold=80 || exit 1
 ### NPM scripts
 
 ```bash
-npm run report:coverage           # Markdown report for all types
-npm run report:coverage:check     # Fail if below threshold
+npm run report:coverage                   # all types → reports/coverage-gaps.md
+npm run report:coverage:integration-ui    # → reports/coverage-integration-ui.md
+npm run report:coverage:integration-api   # → reports/coverage-integration-api.md
+npm run report:coverage:e2e-ui            # → reports/coverage-e2e-ui.md
+npm run report:coverage:check             # exits 1 when coverage is below 80%
 ```
 
 ## Options
@@ -48,7 +51,8 @@ npm run report:coverage:check     # Fail if below threshold
     - `app-structure/modules.json` (Integration API)
     - `app-structure/workflows.json` (E2E UI)
 
-2. **Parse test files** — use the AST to extract structure paths from test titles, inherit skipped suite state, and count total and active tests
+2. **Parse test files** — use the AST to extract structure paths from test titles, inherit skipped suite state, and
+   count total and active tests
 
 3. **Compare** — identify missing, extra, and inconsistent paths
 
@@ -72,13 +76,16 @@ per type.
 - **Path coverage** = what has active automation (does every expected scenario have an active test?)
 - **Test coverage** = how well declared tests are running (active tests / total tests).
 
-An `it.skip`, an empty test body, or any test inside `describe.skip` or `context.skip` is pending. A skipped-only path is missing from path coverage and is also listed separately so declared scope is not mistaken for running automation.
+An `it.skip`, an empty test body, or any test inside `describe.skip` or `context.skip` is pending. A skipped-only path
+is missing from path coverage and is also listed separately so declared scope is not mistaken for running automation.
 
 ## Troubleshooting
 
-- **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and title format.
+- **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and
+  title format.
 - **Expected structure not found** — missing JSON file. Check `app-structure/`.
-- **Inconsistent results** — stale files or title formatting. Run `npm run lint --fix` and verify patterns.
+- **Inconsistent results** — stale structure files or title formatting. Run `npm run lint`, which fixes structure files,
+  and verify title patterns.
 
 ## Related
 

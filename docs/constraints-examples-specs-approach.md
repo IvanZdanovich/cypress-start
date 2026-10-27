@@ -38,7 +38,8 @@ If a literal appears mid-chain with no owning layer, it is an orphan no requirem
     - Rule: [examples](../.claude/rules/examples.md)
 - **3. Specs** — requirement titles + assertions; `req` metadata; per-file cleanup.
     - Location: `cypress/integration/{api,ui}/`, `cypress/e2e/ui/`
-    - Rules: [api-specs](../.claude/rules/api-specs.md), [ui-specs](../.claude/rules/ui-specs.md), [e2e-specs](../.claude/rules/e2e-specs.md)
+    -
+    Rules: [api-specs](../.claude/rules/api-specs.md), [ui-specs](../.claude/rules/ui-specs.md), [e2e-specs](../.claude/rules/e2e-specs.md)
 
 In an examples file the **key name** is the example (which case is tested) and the **object
 value** is the test data (the payload that makes it executable). Both roles share one file so a
@@ -54,68 +55,71 @@ three layers.
 
 ```javascript
 // cypress/constants/api/rb.booking.api.constraints.js
-export const PRICE = { MIN: 1, MAX: 100_000 };
+export const PRICE = Object.freeze({
+    MIN: 1,
+    MAX: 100_000,
+    ZERO: 0,
+});
 ```
 
-**Layer 2 — example** composes a named instance from that constraint (never a raw literal):
+**Layer 2 — example** composes a named instance from that constraint, never from a raw literal. The key names the
+tested case; the value is the payload:
 
 ```javascript
-// cypress/integration-examples/api/rb.booking.api.examples.js
-import { PRICE } from '../../constants/api/rb.booking.api.constraints';
+// cypress/integration-examples/api/restful-booker.booking.api.examples.js
+import {PRICE} from '../../constants/api/rb.booking.api.constraints';
 
-export const booking_examples = {
-  namePrefix: 'API.Booking',
-  validBookings: {
-    // key names the tested case; value is the executable payload
-    allFieldsWithMinimalPrice: {
-      bookingId: String,
-      firstname: `API.Booking.${utils.generateRandomString(6)}`,
-      lastname: utils.generateRandomString(8),
-      totalprice: PRICE.MIN,
-      depositpaid: true,
-      bookingdates: { checkin: utils.getFutureDate(1), checkout: utils.getFutureDate(7) },
+const namePrefix = `RbBk_${utils.generateRandomString(6)}_`;
+
+export const booking__examples = {
+    namePrefix,
+    validBookings: {
+        minimalPrice: {
+            bookingId: undefined,
+            firstname: `${namePrefix}${utils.generateRandomString(4)}`,
+            lastname: `${namePrefix}${utils.generateRandomString(6)}`,
+            totalPrice: PRICE.MIN,
+            depositPaid: true,
+            bookingDates: {checkin: utils.getFutureDate(3), checkout: utils.getFutureDate(5)},
+            additionalNeeds: 'None',
+        },
     },
-  },
 };
 ```
 
-**Layer 3 — spec** references the instance, and the title + assertion express the requirement.
-The `context`/`it` titles reference the constraint (`PRICE.MIN`) rather than a raw `1`:
+**Layer 3 — spec** sends the instance and asserts against the constraint. The title states what the value means (
+"minimal price"), not the literal `1`:
 
 ```javascript
-// cypress/integration/api/rb.booking.api.spec.js
-import { booking_examples as testData } from '../../integration-examples/api/rb.booking.api.examples';
-import { PRICE } from '../../constants/api/rb.booking.api.constraints';
+// cypress/integration/api/restful-booker.booking.api.spec.js
+import {booking__examples as examples} from '../../integration-examples/api/restful-booker.booking.api.examples';
+import {HTTP_STATUS} from '../../constants/api/common.api.constraints';
+import {PRICE} from '../../constants/api/rb.booking.api.constraints';
 
-describe('RestfulBooker.Booking: Given no preconditions', { testIsolation: false }, () => {
-  context(`RestfulBooker.Booking.Create.POST: When booking with price of ${PRICE.MIN} is provided`, () => {
-    it(
-      `RestfulBooker.Booking.Create.POST: Then return 200 and totalprice equals ${PRICE.MIN}`,
-      { req: { p: 'P1' } },
-      () => {
-        cy.restfullBooker__createBooking__POST(testData.validBookings.allFieldsWithMinimalPrice)
-          .then((res) => {
-            expect(res.status).to.eq(200);
-            expect(res.body.booking.totalprice).to.eq(PRICE.MIN);
-          });
-      },
-    );
-  });
+describe('RestfulBooker.Booking: Given no preconditions', {testIsolation: false}, () => {
+    context('RestfulBooker.Booking.Create.POST: When booking with minimal price is provided', () => {
+        it('RestfulBooker.Booking.Create.POST: Then return 200 status code and booking is created with minimal price', () => {
+            cy.restfullBooker__createBooking__POST(examples.validBookings.minimalPrice).then((response) => {
+                expect(response.status).to.eq(HTTP_STATUS.OK);
+                expect(response.body.booking.totalprice).to.eq(PRICE.MIN);
+            });
+        });
+    });
 });
 ```
 
 The chain resolves end to end:
 
 ```
-PRICE.MIN = 1                                          ← constraint
-  → validBookings.allFieldsWithMinimalPrice.totalprice ← example
-    → context/it titles + assertion (expect … eq PRICE.MIN) ← spec
+PRICE.MIN = 1                                    ← constraint
+  → validBookings.minimalPrice.totalPrice        ← example
+    → assertion expect(…).to.eq(PRICE.MIN)       ← spec
 ```
 
-Each named example instance maps 1-to-1 to a `context` block, so the case tested and the requirement stated always
-agree. The `{ req: {...} }` object on each `it` carries requirement metadata (priority, extra preconditions, story
-`refs`, `bugs`, a free-text `note` about the checks) — its field-by-field schema and the ESLint rules that enforce it
-are documented in [Custom ESLint Rules](eslint-custom-rules.md).
+Each named example instance maps to one `context` block, so the case tested and the requirement stated agree. An
+optional `{ req: { ... } }` object on `it`, `context`, or `describe` adds requirement metadata: priority `p`,
+`preconditions`, ticket `refs`, `bugs`, and a `note`. The `verify-req-config` rule validates its shape; see
+[Custom ESLint Rules](eslint-custom-rules.md).
 
 ## Outputs
 
@@ -144,4 +148,4 @@ disagree, the skill and rules win.
 
 - [Bug tracking](../.claude/skills/bug-tracking/SKILL.md)
 - [Localization testing](../.claude/skills/localization-testing/SKILL.md)
-- [FAQ](FAQ.md)
+- [FAQ](faq.md)
