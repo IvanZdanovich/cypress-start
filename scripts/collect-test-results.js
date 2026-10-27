@@ -505,13 +505,14 @@ function main() {
 
   console.log('');
   console.log(`  Run recorded: ${runId}`);
-  console.log(`  Specs:   ${specCount}`);
-  console.log(`  Total:   ${aggregatedStats.total}`);
-  console.log(`  Passed:  ${aggregatedStats.passed}`);
-  console.log(`  Failed:  ${aggregatedStats.failed}`);
-  console.log(`  Pending: ${aggregatedStats.pending}`);
+  console.log(`  Spec files:        ${specCount}`);
+  console.log(`  Failed spec files: ${failures.length}`);
+  console.log(`  Tests total:       ${aggregatedStats.total}`);
+  console.log(`  Tests passed:      ${aggregatedStats.passed}`);
+  console.log(`  Tests failed:      ${aggregatedStats.failed}`);
+  console.log(`  Tests pending:     ${aggregatedStats.pending}`);
   if (failures.length > 0) {
-    console.log(`  First failures (${failures.length} spec(s)):`);
+    console.log(`  First failure per failed spec file (${failures.length}):`);
     for (const f of failures) {
       console.log(`    - ${f.file}`);
       console.log(`      context: ${f.context.join(' > ')}`);
@@ -521,4 +522,8 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = { ciBranch, gitBranchFromRef, gitMeta, ciBuildId, extractTests, parseReport };

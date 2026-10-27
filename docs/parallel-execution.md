@@ -138,9 +138,9 @@ SPEC_PATTERN.
 - **`PARALLEL_STREAMS`** — number of parallel execution streams. Default `3`, e.g. `6`.
 - **`CHUNK_STRATEGY`** — chunking strategy (unified or domain). Default `unified`, e.g. `domain`.
 - **`SPEC_PATTERN`** — custom glob pattern for test discovery. Default all domains, e.g. `cypress/integration/**/*.spec.js`.
-- **`BROWSER`** — browser for test execution. Default `chrome`, e.g. `chrome`, `edge`.
+- **`BROWSER`** — browser for test execution. Default `chrome`, e.g. `chrome`, `firefox`, `edge`.
 - **`WORKSPACE_ROOT`** — project root directory. Default `process.cwd()`, e.g. `/tests`.
-- **`CI`** — CI environment flag (enables Xvfb). Default `false`, e.g. `true`.
+  - **`CI`** — CI environment flag (enables Xvfb). Default `false`, e.g. `true`.
 
 ### Recommended Stream Counts
 
@@ -260,6 +260,9 @@ concurrently. Remaining tasks will queue and execute as streams become available
 
 - **`0`** — all tests passed.
 - **`1`** — pre-setup tests failed, or one or more parallel tasks failed.
+
+The execution summary counts at the **spec-file level** (parsed from Cypress's `N of M failed` line), matching the
+flaky-test analysis. Task (stream) failures are shown alongside for context.
 
 ## Troubleshooting
 

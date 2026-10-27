@@ -82,7 +82,6 @@ function extractSelectorKeys(sourceCode) {
   lines.forEach((line, index) => {
     const trimmedLine = line.trim();
 
-    // Detect object declarations (e.g., const loginPage = {)
     const objectMatch = trimmedLine.match(/^const\s+(\w+)\s*=\s*\{/);
     if (objectMatch) {
       currentObject = objectMatch[1];

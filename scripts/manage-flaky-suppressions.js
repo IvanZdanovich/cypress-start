@@ -340,6 +340,81 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
 
 // --- Commands ---
 
+/**
+ * Today's date as `YYYY-MM-DD` (UTC). The only clock read in this module.
+ */
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Add whole days to an ISO `YYYY-MM-DD` date and return the new ISO date.
+ * Pure: the base date is passed in.
+ */
+function addDaysIso(isoDate, days) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Return a copy of `items` without the entries at the given indices.
+ */
+function withoutIndices(items, indices) {
+  const drop = new Set(indices);
+  return items.filter((_, i) => !drop.has(i));
+}
+
+/**
+ * Prompt for the ticket, reason and expiry shared by every selected suppression.
+ * @param {string} today ISO date used as the expiry base.
+ * @returns {Promise<{ticket: string, reason: string, expiresAt: string|null}>}
+ */
+async function promptSuppressionDetails(today) {
+  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, JIRA-1234)');
+  const reason = await prompt('Reason', 'Known issue under investigation');
+  const expiresIn = await prompt('Expires in days (empty = no expiry)', '');
+  const days = parseInt(expiresIn, 10);
+  const expiresAt = expiresIn && !isNaN(days) ? addDaysIso(today, days) : null;
+  return { ticket, reason, expiresAt };
+}
+
+/**
+ * Build a flaky-suppressions.json test entry from an aggregated failure.
+ * Optional fields are written only when the failure carries them.
+ */
+function buildSuppressionEntry(data, { ticket, reason, expiresAt, today }) {
+  const entry = {
+    file: data.file,
+    it: data.it,
+    reason,
+    ticket,
+    suppressedAt: today,
+  };
+  if (data.lastFailed) {
+    entry.lastFailedAt = data.lastFailed.slice(0, 10);
+  }
+  if (data.lastBranch) {
+    entry.lastBranch = data.lastBranch;
+  }
+  if (data.lastEnv) {
+    entry.env = data.lastEnv;
+  }
+  if (data.lastCommit) {
+    entry.lastCommit = data.lastCommit;
+  }
+  if (data.lastBuild) {
+    entry.lastBuild = data.lastBuild;
+  }
+  if (data.context.length > 0) {
+    entry.context = data.context.join(' > ');
+  }
+  if (expiresAt) {
+    entry.expiresAt = expiresAt;
+  }
+  return entry;
+}
+
 async function addSuppressions(runs) {
   const { testSuppressions, runCommits } = loadSuppressions();
 
@@ -353,7 +428,7 @@ async function addSuppressions(runs) {
   const failMap = aggregateFailures(activeRuns);
   const { activeMap } = partitionBySuppressions(failMap, testSuppressions);
 
-  const failures = [...activeMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
+  const failures = [...activeMap.entries()].toSorted((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
 
   console.log(`\n  ${BOLD}Add Suppressions${RESET} — select failures to suppress\n`);
 
@@ -364,51 +439,12 @@ async function addSuppressions(runs) {
     return;
   }
 
-  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, A65-1234)');
-  const reason = await prompt('Reason', 'Known issue under investigation');
-  const expiresIn = await prompt('Expires in days (empty = no expiry)', '');
-  const today = new Date().toISOString().slice(0, 10);
-  let expiresAt = null;
-  if (expiresIn && !isNaN(parseInt(expiresIn, 10))) {
-    const d = new Date();
-    d.setDate(d.getDate() + parseInt(expiresIn, 10));
-    expiresAt = d.toISOString().slice(0, 10);
-  }
+  const today = todayIso();
+  const details = await promptSuppressionDetails(today);
 
   const fileData = loadSuppressionsFile();
 
-  for (const idx of indices) {
-    const { data } = failures[idx];
-    const entry = {
-      file: data.file,
-      it: data.it,
-      reason,
-      ticket,
-      suppressedAt: today,
-    };
-    if (data.lastFailed) {
-      entry.lastFailedAt = data.lastFailed.slice(0, 10);
-    }
-    if (data.lastBranch) {
-      entry.lastBranch = data.lastBranch;
-    }
-    if (data.lastEnv) {
-      entry.env = data.lastEnv;
-    }
-    if (data.lastCommit) {
-      entry.lastCommit = data.lastCommit;
-    }
-    if (data.lastBuild) {
-      entry.lastBuild = data.lastBuild;
-    }
-    if (data.context.length > 0) {
-      entry.context = data.context.join(' > ');
-    }
-    if (expiresAt) {
-      entry.expiresAt = expiresAt;
-    }
-    fileData.suppressions.push(entry);
-  }
+  fileData.suppressions.push(...indices.map((idx) => buildSuppressionEntry(failures[idx].data, { ...details, today })));
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Added ${indices.length} suppression(s) to flaky-suppressions.json\n`);
@@ -431,11 +467,7 @@ async function removeSuppressions() {
     return;
   }
 
-  // Remove in reverse order to preserve indices
-  const sorted = [...indices].sort((a, b) => b - a);
-  for (const idx of sorted) {
-    fileData.suppressions.splice(idx, 1);
-  }
+  fileData.suppressions = withoutIndices(fileData.suppressions, indices);
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Removed ${indices.length} suppression(s) from flaky-suppressions.json\n`);
@@ -450,7 +482,7 @@ async function addRunSuppressions(runs) {
   const { runCommits } = loadSuppressions();
 
   // Most recent first so the likely-bad runs appear at the top
-  const displayed = [...runs].reverse().filter((run) => !runCommits.has(run.commit));
+  const displayed = runs.toReversed().filter((run) => !runCommits.has(run.commit));
 
   const indices = await interactiveSelect(displayed, (run, idx) => formatRun(run, idx, displayed.length), {
     title: 'Recent runs (newest first)',
@@ -463,9 +495,9 @@ async function addRunSuppressions(runs) {
     return;
   }
 
-  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, A65-1234)');
+  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, JIRA-1234)');
   const reason = await prompt('Reason', 'CI environment outage — run not representative');
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const fileData = loadSuppressionsFile();
 
@@ -517,10 +549,7 @@ async function removeRunSuppressions() {
     return;
   }
 
-  const sorted = [...indices].sort((a, b) => b - a);
-  for (const idx of sorted) {
-    fileData.runSuppressions.splice(idx, 1);
-  }
+  fileData.runSuppressions = withoutIndices(fileData.runSuppressions, indices);
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Removed ${indices.length} run suppression(s) from flaky-suppressions.json\n`);
@@ -528,7 +557,7 @@ async function removeRunSuppressions() {
 
 async function reviewSuppressions(runs) {
   const fileData = loadSuppressionsFile();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   // Check for expired suppressions
   const expired = fileData.suppressions.filter((s) => s.expiresAt && s.expiresAt < today);

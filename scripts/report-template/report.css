@@ -1,0 +1,563 @@
+/* Layout and components for the sign-off report (screen and print). */
+@page {
+  size: A4;
+  margin: 14mm 12mm 16mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--brand-ink);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  margin-top: 24px;
+  padding-bottom: 4px;
+  border-bottom: 3px solid transparent;
+  border-image: var(--brand-gradient) 1;
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+}
+
+a {
+  color: var(--brand-red);
+  word-break: break-all;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 4px solid transparent;
+  border-image: var(--brand-gradient) 1;
+}
+
+.brand-header img {
+  height: 36px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 24px;
+  margin: 12px 0 0;
+}
+
+.meta dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.meta dd {
+  margin: 0 0 4px;
+  word-break: break-all;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.card {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+
+.card .value {
+  display: block;
+  font-size: 16pt;
+  font-weight: 700;
+}
+
+.card .label {
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.bar {
+  display: flex;
+  height: 10px;
+  margin: 10px 0 4px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--surface-muted);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+th,
+td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--surface-muted);
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 8px;
+  color: var(--surface);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-passed {
+  background: var(--status-passed);
+}
+
+.status-failed {
+  background: var(--status-failed);
+}
+
+.status-skipped {
+  background: var(--status-skipped);
+}
+
+.status-notExecuted {
+  background: var(--status-not-executed);
+}
+
+.priority-P1 {
+  background: var(--priority-p1);
+}
+
+.priority-P2 {
+  background: var(--priority-p2);
+}
+
+.priority-P3 {
+  background: var(--priority-p3);
+}
+
+.failure,
+.spec {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand-red);
+  border-radius: 4px;
+  break-inside: avoid-page;
+}
+
+.spec {
+  border-left-color: var(--brand-ink);
+  break-inside: auto;
+}
+
+.path {
+  margin: 2px 0 6px;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+pre {
+  margin: 6px 0;
+  padding: 6px 8px;
+  overflow-x: auto;
+  border-radius: 4px;
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 7.5pt;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error {
+  color: var(--status-failed);
+}
+
+.shot {
+  display: block;
+  max-width: 320px;
+  max-height: 220px;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+}
+
+.ref {
+  display: inline-block;
+  margin: 0 2px 2px 0;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 7.5pt;
+  white-space: nowrap;
+}
+
+.ref.bug {
+  border-color: var(--status-failed);
+  color: var(--status-failed);
+}
+
+.spec > summary {
+  cursor: pointer;
+}
+
+.spec > summary h3 {
+  display: inline;
+}
+
+.spec.complete {
+  border-left-color: var(--status-passed);
+}
+
+.spec.manual-failed {
+  border-left-color: var(--status-failed);
+}
+
+.checks {
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 8pt;
+}
+
+.checks .checks {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.checks li.check {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.checks .context {
+  margin-top: 4px;
+  padding: 2px 0;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.checks .group-root > .context {
+  margin-top: 8px;
+  color: var(--brand-ink);
+}
+
+.checks li.check[data-manual='pass'] .check-title {
+  color: var(--text-muted);
+}
+
+.checks li.check[data-manual='fail'] {
+  background: color-mix(in srgb, var(--status-failed) 10%, transparent);
+}
+
+.checks li.check[data-manual='fail'] .check-title {
+  color: var(--status-failed);
+}
+
+body:has(#hide-passed:checked) li.check[data-manual='pass'] {
+  display: none;
+}
+
+.filter-empty {
+  display: none;
+}
+
+.mark {
+  display: inline-block;
+  min-width: 52px;
+  flex: none;
+  padding: 0 4px;
+  border-radius: 3px;
+  color: var(--surface);
+  font-family: var(--font-body);
+  font-size: 7pt;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.mark-passed {
+  background: var(--status-passed);
+}
+
+.mark-failed {
+  background: var(--status-failed);
+}
+
+.mark-skipped {
+  background: var(--status-skipped);
+}
+
+.mark-notExecuted {
+  background: var(--status-not-executed);
+}
+
+.mark[data-reason] {
+  position: relative;
+  cursor: help;
+}
+
+.mark[data-reason]:hover::after,
+.mark[data-reason]:focus::after {
+  content: attr(data-reason);
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: var(--brand-ink);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+  color: var(--surface);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.manual,
+.manual-placeholder,
+.manual-demo {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  margin: 1px 0 0;
+  align-self: flex-start;
+}
+
+.manual,
+.manual-demo {
+  display: inline-grid;
+  place-content: center;
+  border: 1.5px solid var(--brand-ink);
+  border-radius: 3px;
+  appearance: none;
+  background: var(--surface);
+  color: var(--surface);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.manual {
+  cursor: pointer;
+}
+
+.manual:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 1px;
+}
+
+.manual:checked,
+.manual-demo {
+  border-color: var(--status-passed);
+  background: var(--status-passed);
+}
+
+.manual:checked::after,
+.manual-demo::after {
+  content: '✔';
+}
+
+.manual[data-state='fail'],
+.manual-demo.fail {
+  border-color: var(--status-failed);
+  background: var(--status-failed);
+}
+
+.manual[data-state='fail']::after,
+.manual-demo.fail::after {
+  content: '✖';
+}
+
+.req {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+.progress {
+  margin: 6px 0;
+  font-size: var(--font-size-small);
+}
+
+.progress-bar {
+  display: flex;
+  height: 6px;
+  margin-top: 2px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-muted);
+}
+
+.progress-bar span {
+  width: 0;
+  height: 100%;
+}
+
+.progress-bar .fill-pass {
+  background: var(--status-passed);
+}
+
+.progress-bar .fill-fail {
+  background: var(--status-failed);
+}
+
+.progress-failed {
+  color: var(--status-failed);
+}
+
+.field {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.field input,
+.field textarea {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 4px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--brand-ink);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+}
+
+.field textarea {
+  min-height: 48px;
+  border: 1px dashed var(--border);
+  resize: vertical;
+}
+
+.notes {
+  margin-top: 8px;
+}
+
+.signoff {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+  break-inside: avoid;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  margin: 8px 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: var(--font-size-small);
+}
+
+.toolbar .spacer {
+  flex: 1;
+}
+
+.toolbar button {
+  padding: 2px 8px;
+  border: 1px solid var(--brand-ink);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  font: inherit;
+}
+
+.toolbar button:hover {
+  background: var(--brand-ink);
+  color: var(--surface);
+}
+
+@media print {
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .spec {
+    break-before: auto;
+  }
+
+  .screen-only {
+    display: none;
+  }
+
+  .spec > summary {
+    list-style: none;
+  }
+
+  .spec > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .field input:not(.filled)::-webkit-datetime-edit {
+    color: transparent;
+  }
+
+  .field input::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+}

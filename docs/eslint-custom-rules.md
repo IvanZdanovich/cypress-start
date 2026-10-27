@@ -59,7 +59,7 @@ The `req` object allows only these fields:
 - `p` — priority value `'P1'`, `'P2'`, or `'P3'`. `P2` is the default and is conventionally omitted.
 - `preconditions` — non-empty array of non-empty strings.
 - `refs` — non-empty array of valid HTTP/HTTPS URLs.
-- `bugs` — non-empty array of bug IDs or valid URLs. Bug IDs use `BUG-[A-Z0-9]+-NNN`, for example `BUG-AUDIT65-001`.
+- `bugs` — non-empty array of bug IDs or valid URLs. Bug IDs use `BUG-[A-Z0-9]+-NNN`, for example `BUG-LOGIN-001`.
 - `note` — non-empty string explaining the checks.
 
 Unknown keys, empty arrays, and empty notes are errors. The rule validates field shape only; the spec-writing docs and
@@ -83,6 +83,10 @@ skills define what belongs in each field.
 
 - `verify-todos-have-links` — `TODO`, `FIXME`, `ToDo`, and `FixMe` comments include a bug-tracker URL containing a
   `/browse/PROJ-123`-style key. In spec files, prefer `req.bugs` over inline TODOs.
+- `verify-spec-file-paths` — every file under `cypress/integration/` and `cypress/e2e/` matches its folder:
+  `cypress/integration/api/**/*.api.spec.js`, `cypress/integration/ui/**/*.ui.spec.js`, or
+  `cypress/e2e/ui/**/*.ui.spec.js`. Files ending in `.spec.skip.js` are excluded, and hidden files such as `.DS_Store`
+  are ignored. Non-`.js` files are found by a directory scan and reported on the first linted spec in those folders.
 
 ## Suppressing custom rules
 

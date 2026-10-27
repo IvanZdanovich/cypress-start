@@ -43,7 +43,7 @@ node scripts/analyze-flaky-tests.js --main-branch develop
 node scripts/analyze-flaky-tests.js --output path/to/report.md
 ```
 
-The `--env` filter matches each ledger run's `env` field. The report summary states which environment it covers (or
+The `--env` filter matches each ledger run's `env` field. The report header states which environment it covers (or
 `all environments` when unscoped). With `--env` set and no `--output`, the default filename is
 `reports/flaky-tests-<env>.md`, so an env-scoped run never overwrites the combined report.
 
@@ -166,9 +166,9 @@ two run scopes:
   rates report these figures, so in-development branches never dilute the health signal for the released trunk.
 - **Incl. non-main** — all analysed runs, whatever branch they ran on.
 
-When the run set mixes main and non-main runs, the summary's **Branch breakdown** table places the two scopes side by
-side (headline trunk-only vs all branches). It is omitted when every analysed run is on the same branch, since the two
-scopes would be identical. Failure counts (unique/flaky/rare/action-required) span every analysed run regardless of
+When the run set mixes main and non-main runs, the **Branch breakdown** line in Quality Metrics adds the all-branches
+rates beside the trunk-only headline. It is omitted when every analysed run is on the same branch, since the two scopes
+would be identical. Failure counts (unique/flaky/rare/action-required) span every analysed run regardless of
 branch; only the rates are scoped. Flaky classification itself stays global (lifetime fail rate across all runs); only
 the run set each rate is measured over changes between scopes. When no run is on the trunk at all, the headline falls
 back to all runs so the report is never empty.
@@ -258,19 +258,18 @@ The schema (`scripts/flaky-suppressions.schema.json`) provides IDE validation.
 
 ## Report sections
 
-- **Summary** — run count (split by trunk vs non-main branches), environment, period, average pass rate, overall test
-  run probability rate, flaky result rate (excl. and incl. suppressed), failure counts. Headline rates are
-  **trunk-only** (`main`).
-- **Branch breakdown** — headline trunk-only rates contrasted with the all-branches (incl. non-main) rates; shown only
-  when runs mix branches.
-- **Action Required** — recent regressions: streak or majority of recent window failing.
-- **Flaky tests** — intermittent failures sorted by frequency.
-- **Consistently failing** — tests broken in most runs.
-- **Rare failures** — one-off failures.
-- **Error patterns** — recurring error messages across multiple tests.
-- **Run history** — last 20 runs with per-run stats.
-- **Suppressed** — known test issues and excluded runs with linked ticket or incident, date, branch, environment, and
-  commit metadata.
+The header names the period, the run count split by trunk and non-main branches, the environment, and the headline
+rate scope. The report has one title and these sections in order:
+
+- **Executive Summary** — status line, Average pass rate, Flaky result rate (excl. suppressed), Action required, and
+  Unique failing tests. Headline rates are **trunk-only** (`main`). It ends with a pointer to this page for metric
+  definitions.
+- **Quality Metrics** — Overall test run probability rate, Flaky result rate (incl. suppressed), failing tests by class,
+  suppressed counts, the Branch breakdown line when runs mix branches, and Run History of the last 20 runs.
+- **Failed/Flaky Tests** — Action Required (streak or majority of the recent window failing), Flaky Tests, Consistently
+  Failing Tests, Rare Failures, and Error Patterns. Suppressed tests and runs, with ticket or incident, date, branch,
+  environment, and commit, are collapsed at the bottom.
+- **Recommendations & Next Actions** — numbered actions naming the regressed, broken, and flaky spec files.
 
 ## CI integration
 
@@ -284,9 +283,9 @@ committing, and pushing to `test-results` internally via git plumbing.
   condition: always()
 ```
 
-The `FlakyReport` stage in `foodalert-audit65-cypress.yml` generates the report. Its `flaky_report_env`
-parameter (`qa` default, or `dev` / `all`) selects the scope: the stage runs `report:flaky:<env>` and publishes
-`reports/flaky-tests-<env>.md` uniformly for every value.
+The `generate-flaky-report` job in `.github/workflows/weekly-cypress-tests.yml` generates the report. Its
+`flaky_report_env` input (`dev` default, or `qa` / `all`) selects the scope: the job runs `report:flaky:<env>` and
+uploads `reports/flaky-tests-<env>.md` for every value.
 
 ## Deduplication
 
@@ -318,4 +317,5 @@ the signal flaky-test detection depends on.
 
 - [Parallel execution](parallel-execution.md) — test runner that produces mochawesome reports
 - [Coverage gap analysis](coverage-gap-analysis.md) — structural coverage analysis
+- [Sign-off report](signoff-report.md) — branded manual-testing checklist built from the same reports
 - [Pre-commit check](pre-commit-check.md) — quality gates

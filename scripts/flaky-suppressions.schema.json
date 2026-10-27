@@ -31,7 +31,7 @@
           },
           "ticket": {
             "type": "string",
-            "description": "Linked ticket or bug ID (e.g., 'BUG-API-12', 'A65-4321')"
+            "description": "Linked ticket or bug ID (e.g., 'BUG-API-12', 'JIRA-4321')"
           },
           "lastFailedAt": {
             "type": "string",

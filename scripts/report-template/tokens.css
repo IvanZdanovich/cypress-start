@@ -1,0 +1,26 @@
+/* Brand tokens for the sign-off report: colours and typography. */
+:root {
+  --brand-ink: #111111;
+  --brand-red: #e8202a;
+  --brand-orange: #f26b2a;
+  --brand-gradient: linear-gradient(90deg, var(--brand-red), var(--brand-orange));
+  --surface: #ffffff;
+  --surface-muted: #f6f6f7;
+  --border: #dedfe3;
+  --text: #1f2024;
+  --text-muted: #63666f;
+  --status-passed: #1f8a4c;
+  --status-failed: #c62828;
+  --status-skipped: #b26a00;
+  --status-not-executed: #6b6f7a;
+  --priority-p1: #c62828;
+  --priority-p2: #b26a00;
+  --priority-p3: #3c6e9e;
+  --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-size-base: 10.5pt;
+  --font-size-small: 8.5pt;
+  --font-size-h1: 20pt;
+  --font-size-h2: 14pt;
+  --font-size-h3: 11.5pt;
+}

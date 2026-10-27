@@ -64,6 +64,17 @@ git add .
 git commit -m "your message"
 ```
 
+## Troubleshooting
+
+The hook is installed by `npm install` (postinstall) or `npm run hooks:setup`. It finds the repo root and Node.js when
+it runs, so it still works after you move the repo, in `git worktree` checkouts, and in GUI git clients (WebStorm,
+SourceTree, GitHub Desktop) that don't add nvm, Volta, or fnm to `PATH`.
+
+- **Hook never runs.** A global `core.hooksPath` (often set by husky in another project) makes git ignore
+  `.git/hooks`. `npm run hooks:setup` prints a warning and the command to fix it for this repo.
+- **`Node.js not found`.** Make `node` available to your git client, then run `npm run hooks:setup` again.
+- **`ESLint is not installed`.** Run `npm install` in the repo root.
+
 ## Emergency bypass
 
 Emergency bypass (fix the issues in a follow-up commit): `git commit --no-verify -m "message"`

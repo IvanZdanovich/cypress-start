@@ -53,7 +53,8 @@
     "report:unsuppress": "node scripts/manage-flaky-suppressions.js --remove",
     "report:suppress-run": "node scripts/manage-flaky-suppressions.js --add-runs",
     "report:unsuppress-run": "node scripts/manage-flaky-suppressions.js --remove-runs",
-    "report:review": "node scripts/manage-flaky-suppressions.js --review"
+    "report:review": "node scripts/manage-flaky-suppressions.js --review",
+    "report:signoff": "node scripts/generate-signoff-report.js"
   },
   "private": false,
   "keywords": [
@@ -81,17 +82,18 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.5",
     "cross-env": "^10.1.0",
-    "cypress": "^16.1.0",
-    "eslint": "^10.11.0",
+    "cypress": "^16.2.0",
+    "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.1",
     "eslint-plugin-cypress": "^7.0.2",
-    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-prettier": "^5.5.7",
+    "espree": "^11.2.0",
     "glob": "^13.0.6",
     "mochawesome": "^8.1.1",
-    "prettier": "^3.9.8"
+    "prettier": "^3.9.10"
   },
   "overrides": {
     "diff": "^5.2.0",

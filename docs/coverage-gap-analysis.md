@@ -52,18 +52,20 @@ npm run report:coverage:check     # Fail if below threshold
 
 3. **Compare** — identify missing, extra, and inconsistent paths
 
-4. **Report** — coverage percentages, component-level breakdown, recommendations
+4. **Report** — one Markdown file with the standard sections below
 
 ## Report sections
 
-- **Summary** — overall coverage percentages.
-- **Missing coverage** — expected paths without active automation, grouped by component.
-- **Skipped-only paths** — paths declared by tests whose suites or tests are skipped.
-- **Extra coverage** — active paths not in expected structure.
-- **Parse errors** — files that could not be parsed while the rest of the analysis continued.
-- **Structural inconsistencies** — paths with different child structures.
-- **Coverage by component** — per-component breakdown with status indicators.
-- **Recommendations** — priority actions based on results.
+The report has one title and these sections in order. With several test types, each section holds one `###` subsection
+per type.
+
+- **Executive Summary** — status line and headline metrics: Path Coverage, Test Coverage, and Missing, Skipped-only and
+  Extra Paths. A combined report shows one row per test type.
+- **Coverage Metrics** — path and test counts, plus a per-component table of path and test coverage.
+- **Coverage Gaps** — Missing Paths grouped by component, Skipped-only Paths, Extra Paths, Structural Inconsistencies,
+  and Parse Errors.
+- **Recommendations & Next Actions** — priority components with the most missing paths, followed by an action per gap
+  kind found.
 
 ## Path coverage vs test coverage
 

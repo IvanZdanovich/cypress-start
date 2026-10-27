@@ -3,77 +3,119 @@ name: define-examples
 description: Use when creating or updating example files that compose named test-data instances from constraints for specs and commands.
 ---
 
+# Intent
+
+Produce example files that compose every named test-data instance a spec needs, with the fields that distinguish each case visible inline.
+When entries conflict or none applies, choose the option that keeps case data visible and traceable from constraint to spec.
+
 # Reasoning Principles
 
-SINGLE_OWNER: examples own instance composition, specs reference without reconstruction — otherwise setup and assertion data drift apart across the specs that rebuild it
-SEGMENTATION: one example file per spec mirror — otherwise a shared file couples unrelated specs and hides which data a spec depends on
-DERIVATION: compute values from structure and read dependencies at access time, never restate them — otherwise copied values silently rot when the source changes
-TRACEABILITY: boundary values flow from constraints into examples into specs — otherwise a value invented in the example breaks the constraint-to-spec chain
-VISIBILITY: each case shows the fields that make it distinct; only structure identical across siblings may be factored — otherwise builders, defaults, and broad spreads hide the data that explains the requirement
-RUNTIME_ONLY_GETTERS: getters exist only for values not known until setup response time — otherwise static example data becomes needlessly lazy and hard to inspect
-PREPARED_REQUESTS: every request a spec sends is a named instance composed here in advance — path params, query, headers, body — otherwise the spec assembles ad-hoc payloads that fork from constraints and cannot be audited from examples alone
+OWN_COMPOSITION_IN_EXAMPLES — Own instance composition in example files and let specs reference instances without rebuilding them.
+Setup and assertion data drift apart across specs that rebuild them. The cost is an example edit for every new case.
+
+MIRROR_ONE_FILE_PER_SPEC — Mirror one example file per spec.
+A shared file couples unrelated specs and hides which data each spec depends on.
+
+DERIVE_VALUES_FROM_SOURCE — Derive values from structure and read dependencies at access time, never restating them.
+Copied values go stale without warning when the source changes.
+
+TRACE_BOUNDARIES_TO_CONSTRAINTS — Trace boundary values from constraints, through examples, into specs.
+A value invented in the example breaks the constraint-to-spec chain, so a tightened rule goes untested.
+
+SHOW_DISTINCT_FIELDS — Show the fields that make each case distinct, and factor out only structure that is identical across siblings.
+Builders, defaults, and broad spreads hide the data that explains the requirement. The cost is some repetition between siblings.
+
+LIMIT_GETTERS_TO_RUNTIME_VALUES — Limit getters to values not known until the setup response arrives.
+Static data behind getters becomes lazy and hard to inspect.
+
+PREPARE_EVERY_REQUEST — Prepare every request a spec sends as a named instance here, with its path params, query, headers, and body.
+Otherwise the spec builds ad-hoc payloads that fork from constraints and cannot be audited from examples alone.
 
 # Output Shape
 
-## Location & Naming
+PLACE_BY_LAYER — Place each example file in the layer folder that mirrors its spec, using the kebab-case patterns below.
+Consumers find examples by spec path, so a file placed elsewhere gets duplicated.
 
-SCOPE: `cypress/integration-examples/{api,ui}/`, `cypress/e2e-examples/ui/`
-API: `cypress/integration-examples/api/<kebab-domain>[.<kebab-scenario>].api.examples.js`
-UI: `cypress/integration-examples/ui/<page-name>[.<component-or-scenario>].ui.examples.js`
-E2E: `cypress/e2e-examples/ui/<workflow-name>.ui.examples.js`
-FILE_NAMES: kebab-case, spec mirror
-EXPORT_NAME: `_examples` suffix
-INSTANCE_KEY: `{purpose}{QualifierSuffix?}` — single `lowerCamelCase` token (`^[a-z][a-zA-Z0-9]*$`)
-CONTAINER_KEY: entity + instance type, validity, role, or lifecycle (`validQuestions`, `invalidQuestions`, `sourceQuestions`, `dependentAnswers`, `answerRequests`)
-NAME_STYLE: test intent (`withAllFields`, `firstnameAtMaxLength`, `missingFirstname`) — a reader infers the tested aspect from the key alone
-FIELD_MIRROR: property keys mirror exact API/UI field names — no renaming step between example and spec
-NO_SUFFIX_PARALLELS: nested keyed instances over flat parallel keys (`questions: { hygiene, structure }` not `hygieneId`, `structureId`) — nesting keeps related instances co-located
-NO_GENERIC: never `item1`, `data1`, `test1`, `standard`, `default` — generic keys carry no test intent
+```
+API  cypress/integration-examples/api/<kebab-domain>[.<kebab-scenario>].api.examples.js
+UI   cypress/integration-examples/ui/<page-name>[.<component-or-scenario>].ui.examples.js
+E2E  cypress/e2e-examples/ui/<workflow-name>.ui.examples.js
+```
 
-## Instance Composition
+SUFFIX_EXPORT_WITH_EXAMPLES — Suffix the export name with `_examples`.
+The suffix separates example data from constraints and helpers at the import site.
 
-FULLY_CONSTRUCTED_INSTANCES: each named instance is fully composed in the example file with its static, constrained, randomized, setup, and assertion fields visible inline — otherwise the reader cannot see how that case's data is built
-REQUEST_INSTANCES: compose each request the spec sends as a named instance holding its full command-argument object, grouped by operation (`answerRequests`, `createRequests`) — otherwise request data scatters across spec contexts and forks from constraints
-GROUP_BY_INSTANCE_TYPE: group sibling examples by entity plus instance type, validity, role, or lifecycle before the named case — otherwise unrelated valid, invalid, source, and dependent data become mixed
+NAME_INSTANCE_BY_INTENT — Name each instance key as one `lowerCamelCase` token, `{purpose}{QualifierSuffix?}`, that states the test intent.
+Examples are `withAllFields`, `firstnameAtMaxLength`, and `missingFirstname`. A reader then infers the tested aspect from the key alone.
 
-## Getters
+REPLACE_GENERIC_KEYS — Replace generic keys such as `item1`, `data1`, `test1`, `standard`, or `default` with intent names.
+They carry no test intent, so a failure report says nothing about the case.
 
-DYNAMIC_ID_GETTERS_ONLY: getters are allowed only for runtime-populated identifiers or server-generated values not known until setup response time, such as `id`, `questionId`, `auditId`, or `userId`
-DYNAMIC_SOURCE_PLACEHOLDER: the source instance owns the mutable placeholder field (`id: undefined` or equivalent); dependent instances read it with a getter and are never reassigned by the spec
-NO_STATIC_GETTERS: static, constraint-derived, randomized, label, request-body, expected, and copied values are plain fields evaluated once — otherwise setup and assertion values drift between reads
-GETTER_SCOPE: put the getter on the one dynamic field itself, never on the enclosing case object — otherwise each read rebuilds static fields and hides which field is dynamic
-NO_THIS_BINDING: a getter reads its dependency through a module-scope `const` or the exported object name, never `this` — otherwise destructuring, spreading, or copying can make the getter return `undefined`
+NAME_CONTAINER_BY_TYPE — Name containers by entity plus instance type, validity, role, or lifecycle, and group sibling instances under them.
+Examples are `validQuestions`, `invalidQuestions`, `sourceQuestions`, `dependentAnswers`, and `answerRequests`. Without grouping, valid, invalid, source, and dependent data mix.
 
-## Derivation & Factoring
+MIRROR_FIELD_NAMES — Mirror the exact API or UI field names in property keys.
+A rename step between example and spec is a place for silent mismatches.
 
-DERIVE_AGGREGATES: compute aggregates from structure (`Object.keys(...).length`), never hardcode — the count stays correct as fields change
-COMPOSED_NESTING: each nested instance holds every field including dynamic placeholders
-NO_HIDDEN_COMPOSITION: never hide case-differentiating data behind factories, builders, `base`, `default`, or broad object spreads — otherwise the field differences that explain the requirement become invisible at the named instance
-ENVELOPE_FACTORY: factor only the request envelope shared by sibling instances into one helper; pass each differing field as an argument at the call site — otherwise repeated envelope code hides the fields that define the case
-CASE_FIELD_INLINE: keep every field that differs between sibling requests literally visible at the call; a factory may hide only fields identical across all siblings — otherwise factoring erases the difference that defines each case
-SHARED_CONSTS_ONLY: extract a const only when the exact value is genuinely shared by multiple siblings and does not hide case-specific fields
-BOUNDARIES: imported constraints for boundary values
-RANDOM_SOURCE: `utils` for generated names, dates, numbers
-CLEANUP_PREFIX: spec-specific root `namePrefix`
+NEST_RELATED_INSTANCES — Nest related instances under one key, as in `questions: { hygiene, structure }`, instead of parallel keys like `hygieneId` and `structureId`.
+Nesting keeps related instances together, while parallel keys drift apart.
 
-## Spec Consumption
+COMPOSE_INSTANCES_INLINE — Compose each named instance fully in the example file, with static, constrained, randomized, setup, and assertion fields visible inline.
+Each instance holds every field its spec needs, including dynamic placeholders in nested instances. Otherwise the reader cannot see how the case data is built.
 
-INSTANCE_COMPLETENESS: every instance holds all fields needed for setup and assertion
-EXPLICIT_CASE_DATA: each case shows its concrete request, setup, and assertion values directly in the named instance — otherwise the spec cannot be audited from examples alone
-SPEC_CALLS: pass `examples.instanceType.instanceName` directly without rebuilding
-SPEC_DYNAMIC_ASSIGNMENT: specs assign runtime IDs only to source placeholders; specs never rebuild dependent instances or manually copy IDs into them
+GROUP_REQUESTS_BY_OPERATION — Group each request the spec sends by operation, such as `createRequests`, as a named instance with its full command-argument object.
+Otherwise request data scatters across spec contexts and forks from constraints.
+
+USE_GETTERS_FOR_RUNTIME_IDS — Use getters only for identifiers or server values known after setup, such as `id`, `questionId`, `auditId`, or `userId`.
+Static, constraint-derived, randomized, label, request-body, expected, and copied values stay plain fields evaluated once. A getter on them lets setup and assertion values drift between reads.
+
+HOLD_PLACEHOLDER_IN_SOURCE — Hold the mutable placeholder, such as `id: undefined`, on the source instance, and let dependents read it through a getter.
+The spec never reassigns dependent instances, so one assignment updates every reader.
+
+PUT_GETTER_ON_FIELD — Put the getter on the one dynamic field, never on the enclosing case object.
+A getter on the object rebuilds static fields on every read and hides which field is dynamic.
+
+READ_WITHOUT_THIS — Read the dependency of a getter through a module-scope `const` or the exported object name, never through `this`.
+Destructuring, spreading, or copying changes `this`, and the getter then returns `undefined`.
+
+COMPUTE_AGGREGATES — Compute aggregates from structure, such as `Object.keys(...).length`, and never hardcode them.
+The count then stays correct as fields change.
+
+EXPOSE_CASE_DATA — Expose case-differentiating data at the named instance, never behind factories, builders, `base`, `default`, or broad object spreads.
+Hidden differences make the requirement invisible to a reader of the example.
+
+FACTOR_ONLY_SHARED_ENVELOPE — Factor only the request envelope shared by siblings into one helper, and pass each differing field as an argument at the call.
+A factory may hide only fields identical across all siblings. Hiding more erases the difference that defines each case.
+
+EXTRACT_SHARED_CONSTS_ONLY — Extract a const only when several siblings share the exact value and it hides no case-specific field.
+Otherwise the const becomes a hidden default.
+
+IMPORT_BOUNDARY_VALUES — Import boundary values from constraint files.
+A boundary typed into the example is not updated when the constraint changes.
+
+GENERATE_RANDOM_WITH_UTILS — Generate random names, dates, and numbers with `utils`.
+A local generator produces collisions or formats that cleanup cannot match.
+
+SET_ROOT_NAME_PREFIX — Set a spec-specific root `namePrefix` that spec cleanup uses.
+Without it, cleanup cannot find the records this spec created.
+
+PASS_INSTANCES_DIRECTLY — Pass `examples.instanceType.instanceName` from specs directly, without rebuilding it.
+A rebuilt copy forks from the example and hides the data under test.
+
+ASSIGN_IDS_TO_SOURCES_ONLY — Assign runtime IDs in specs only to source placeholders, never rebuilding dependents or copying IDs into them.
+Copied IDs go stale when setup runs again.
 
 # Validation
 
-NAMING_CHECK: keys match `^[a-z][a-zA-Z0-9]*$`, export uses `_examples` suffix
-GROUPING_CHECK: instances are grouped by entity plus type, validity, role, or lifecycle before individual case names
-MIRROR_CHECK: property keys mirror API/UI field names
-GETTER_CHECK: getters appear only for runtime dynamic identifiers, server-generated values, or an envelope factory's `body` that reads them; static, constrained, randomized, expected, and display values are plain fields
-GETTER_SCOPE_CHECK: each getter sits on the single dynamic field, never wrapping a whole case object; no getter body contains `this` — the dependency is read via a module-scope `const` or the file's own exported object name
-HIDDEN_COMPOSITION_CHECK: no factory, builder, generic default, broad base object, or broad spread hides case-differentiating data; a factory fills only the envelope shared identically by siblings
-REQUEST_CHECK: every request the spec sends resolves to a named example instance grouped by operation and carrying the full command-argument object
-COMPACT_CHECK: sibling requests sharing an envelope factor it once and expose only their differing fields per instance
-DERIVE_CHECK: aggregates compute from structure
-TRACE_CHECK: boundaries import from constraints, specs reference directly
-COMPLETENESS_CHECK: every instance includes all fields for its spec context
-CLEANUP_CHECK: root `namePrefix` present and used by spec cleanup
+NAMING_CHECK — Verify every instance key matches `^[a-z][a-zA-Z0-9]*$` and the export name ends with `_examples`.
+GROUPING_CHECK — Confirm instances are grouped by entity plus type, validity, role, or lifecycle before individual case names.
+MIRROR_CHECK — Verify property keys match the API or UI field names exactly.
+GETTER_CHECK — Confirm getters appear only for runtime identifiers, server-generated values, or an envelope factory `body` that reads them.
+GETTER_SCOPE_CHECK — Verify each getter sits on one dynamic field and no getter body contains `this`.
+HIDDEN_COMPOSITION_CHECK — Confirm no factory, builder, default, base object, or broad spread hides case-differentiating data.
+REQUEST_CHECK — Verify every request the spec sends resolves to a named instance grouped by operation with the full command-argument object.
+COMPACT_CHECK — Confirm sibling requests that share an envelope factor it once and expose only their differing fields.
+DERIVE_CHECK — Verify every aggregate is computed from structure and none is hardcoded.
+TRACE_CHECK — Confirm boundary values are imported from constraints and specs reference instances directly.
+COMPLETENESS_CHECK — Verify every instance includes all fields needed for its spec context.
+CLEANUP_CHECK — Confirm a root `namePrefix` is present and used by spec cleanup.
