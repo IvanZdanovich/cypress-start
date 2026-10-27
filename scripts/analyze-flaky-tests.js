@@ -626,8 +626,8 @@ function buildQualityMetricsSection({ runs, buckets, stats, suppressedMap, exclu
 /** Compose the header suffix tags for an actionable entry. */
 function actionableTags(rec) {
   const tags = [];
-  if (rec.streak >= STREAK_THRESHOLD) tags.push(`🔴 ${rec.streak} in a row`);
-  if (rec.isNew) tags.push('🆕 new regression');
+  if (rec.streak >= STREAK_THRESHOLD) tags.push(`${rec.streak} in a row`);
+  if (rec.isNew) tags.push('new regression');
   if (!rec.failingNow) tags.push('recovered on latest run');
   return tags;
 }

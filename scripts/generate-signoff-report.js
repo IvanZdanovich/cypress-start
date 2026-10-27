@@ -43,7 +43,7 @@ const OUTPUT_DIR = path.resolve(WORKSPACE, argValue('--output-dir', 'reports'));
 
 const APP = {
   name: process.env.APP_NAME || 'Cypress Start',
-  description: process.env.APP_DESCRIPTION || 'Cypress executable requirements',
+  description: process.env.APP_DESCRIPTION || 'Executable Requirements',
 };
 const SUITE_NAMES = new Set(['describe', 'context']);
 const TEST_NAMES = new Set(['it', 'specify']);
@@ -508,7 +508,7 @@ function buildModel() {
   const specs = files.map((file) => buildSpec(file, joinChecks(file, staticSpecs.get(file) || [], runtime))).sort(compareSpecs);
   const metadata = buildMetadata(runtime);
   return {
-    title: `${APP.name} Test Sign-off Report`,
+    title: `${APP.name} Sign-off Report`,
     app: APP,
     reportId: metadata.reportId,
     meta: metadata.meta,
@@ -520,7 +520,7 @@ function buildModel() {
 }
 
 async function main() {
-  console.log('\n📋 Sign-off Report\n');
+  console.log('\nSign-off Report\n');
   console.log(`  Reports dir:     ${REPORTS_DIR}`);
   console.log(`  Screenshots dir: ${SCREENSHOTS_DIR}`);
 
@@ -532,10 +532,10 @@ async function main() {
   const { coverage } = model;
   console.log(`  Reports read:    ${model.reportCount}`);
   console.log(`  Specs: ${coverage.specs}, checks: ${coverage.checks} (passed ${coverage.passed}, failed ${coverage.failed}, skipped ${coverage.skipped}, not executed ${coverage.notExecuted})`);
-  console.log(`  ✅ ${path.relative(WORKSPACE, htmlPath)}\n`);
+  console.log(`  Report written:  ${path.relative(WORKSPACE, htmlPath)}\n`);
 }
 
 main().catch((error) => {
-  console.error(`  ❌ Sign-off report failed: ${error.message}`);
+  console.error(`  Sign-off report failed: ${error.message}`);
   process.exit(1);
 });
