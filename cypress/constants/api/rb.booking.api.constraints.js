@@ -4,7 +4,7 @@
  *   used by both spec files and examples files.
  *
  *   Import in specs and test data:
- *     import { PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+ *     import { PRICE, LONG_STAY_MIN_DAYS, DATE_FORMAT, REQUIRED_FIELDS, BAD_CREDENTIALS_REASON } from '../../constants/api/rb.booking.api.constraints';
  *
  *   For HTTP status codes and error messages, import directly from common:
  *     import { HTTP_STATUS, ERROR_MESSAGE } from '../../constants/api/common.api.constraints';
@@ -29,11 +29,5 @@ export const DATE_FORMAT = 'YYYY-MM-DD';
  */
 export const REQUIRED_FIELDS = Object.freeze(['firstname', 'lastname', 'totalPrice', 'depositPaid', 'bookingDates.checkin', 'bookingDates.checkout']);
 
-/** Maps camelCase JS example keys to their lowercase API response field names. */
-export const FIELD_MAP = Object.freeze({
-  firstname: 'firstname',
-  lastname: 'lastname',
-  totalPrice: 'totalprice',
-  depositPaid: 'depositpaid',
-  additionalNeeds: 'additionalneeds',
-});
+/** Reason returned by the auth endpoint when the username or password is wrong. */
+export const BAD_CREDENTIALS_REASON = 'Bad credentials';

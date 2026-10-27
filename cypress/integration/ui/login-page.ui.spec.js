@@ -40,7 +40,7 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
     });
   });
 
-  context('LoginPage.STANDARD: When user logouts', () => {
+  context('LoginPage.STANDARD: When user logs out', () => {
     before(() => {
       cy.headerComp__logOut();
     });
@@ -202,29 +202,29 @@ describe('LoginPage: Given authenticate page opened', { testIsolation: false }, 
     });
   });
 
-  context('LoginPage.STANDARD: When user tries to use locked account', () => {
+  context('LoginPage.LOCKED: When user tries to use locked account', () => {
     before(() => {
       cy.loginPage__logIn(lockedUser);
     });
-    it('LoginPage.STANDARD: Then error message text says user is locked out', () => {
+    it('LoginPage.LOCKED: Then error message text says user is locked out', () => {
       cy.get(loginPage.errorMessage).should('have.text', l10n['loginPage.errors.userIsLockedOut']).and('be.visible');
     });
-    it('LoginPage.STANDARD: Then error banner background is error colour', () => {
+    it('LoginPage.LOCKED: Then error banner background is error colour', () => {
       cy.get(loginPage.error).should('have.css', 'background-color', colours['text.error']);
     });
-    it('LoginPage.STANDARD: Then error collapse button is displayed', () => {
+    it('LoginPage.LOCKED: Then error collapse button is displayed', () => {
       cy.get(loginPage.errorClose).should('be.visible').and('be.enabled');
     });
-    it('LoginPage.STANDARD: Then username field border is highlighted with error colour', () => {
+    it('LoginPage.LOCKED: Then username field border is highlighted with error colour', () => {
       cy.get(loginPage.username).should('have.css', 'border-bottom-color', colours['text.error']);
     });
-    it('LoginPage.STANDARD: Then username field contains error icon', () => {
+    it('LoginPage.LOCKED: Then username field contains error icon', () => {
       cy.get(loginPage.username).parent().find(loginPage.errorIcon).should('be.visible');
     });
-    it('LoginPage.STANDARD: Then password field border is highlighted with error colour', () => {
+    it('LoginPage.LOCKED: Then password field border is highlighted with error colour', () => {
       cy.get(loginPage.password).should('have.css', 'border-bottom-color', colours['text.error']);
     });
-    it('LoginPage.STANDARD: Then password field contains error icon', () => {
+    it('LoginPage.LOCKED: Then password field contains error icon', () => {
       cy.get(loginPage.password).parent().find(loginPage.errorIcon).should('be.visible');
     });
   });

@@ -1,6 +1,7 @@
 {
   "LoginPage": {
-    "STANDARD": {}
+    "STANDARD": {},
+    "LOCKED": {}
   },
   "CartPage": {
     "STANDARD": {},

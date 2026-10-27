@@ -1,4 +1,4 @@
-import { FIELD_MAP, LONG_STAY_MIN_DAYS, PRICE, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
+import { LONG_STAY_MIN_DAYS, PRICE, REQUIRED_FIELDS } from '../../constants/api/rb.booking.api.constraints';
 
 const namePrefix = `RbBk_${utils.generateRandomString(6)}_`;
 
@@ -10,21 +10,24 @@ const _partialCheckoutDate = utils.getFutureDate(30);
 // Pre-selected non-existing ID so all tests targeting a missing booking use the same consistent value.
 const _nonExistingId = utils.getRandomElement([999999, 888888, 777777]);
 
-// Pre-computed single-field partial update so the spec needs no inline random selection.
-const _partialFieldChoices = {
-  firstname: `${namePrefix}${utils.generateRandomString(4)}`,
-  lastname: `${namePrefix}${utils.generateRandomString(6)}`,
-  totalPrice: utils.getRandomNumber(300, 700),
-  additionalNeeds: 'Partial update test',
-};
-const [_partialFieldName, _partialFieldValue] = utils.getRandomEntry(_partialFieldChoices);
+// Pre-selected single-field partial update; each candidate states its request key and API response key.
+const _partialField = utils.getRandomElement([
+  { name: 'firstname', apiFieldName: 'firstname', value: `${namePrefix}${utils.generateRandomString(4)}` },
+  { name: 'lastname', apiFieldName: 'lastname', value: `${namePrefix}${utils.generateRandomString(6)}` },
+  { name: 'totalPrice', apiFieldName: 'totalprice', value: utils.getRandomNumber(300, 700) },
+  { name: 'additionalNeeds', apiFieldName: 'additionalneeds', value: 'Partial update test' },
+]);
 
 // Pre-selected required field so the spec needs no inline random selection.
 // removeProperty clones internally and handles dotted paths (e.g. 'bookingDates.checkin').
 const _missingRequiredFieldName = utils.getRandomElement(REQUIRED_FIELDS);
 
-// Pre-selected empty-string field so the spec needs no inline random selection.
-const _emptyStringFieldName = utils.getRandomElement(['firstname', 'lastname', 'additionalNeeds']);
+// Pre-selected empty-string field; the optional additionalNeeds may be dropped by the API instead of stored empty.
+const _emptyStringField = utils.getRandomElement([
+  { name: 'firstname', apiFieldName: 'firstname', expectedValues: [''] },
+  { name: 'lastname', apiFieldName: 'lastname', expectedValues: [''] },
+  { name: 'additionalNeeds', apiFieldName: 'additionalneeds', expectedValues: ['', undefined, null] },
+]);
 
 export const booking__examples = {
   namePrefix,
@@ -95,7 +98,7 @@ export const booking__examples = {
       bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
       additionalNeeds: 'Payment on arrival',
     },
-    // API accepts zero price as valid (promotional bookings) — see BUG-BOOKING-004
+    // API accepts zero price as valid (promotional bookings).
     zeroPrice: {
       bookingId: undefined,
       firstname: `${namePrefix}${utils.generateRandomString(4)}`,
@@ -192,9 +195,9 @@ export const booking__examples = {
 
     // Pre-selected empty-string field; full payload composed inline so the case is fully visible.
     emptyStringField: {
-      name: _emptyStringFieldName,
-      apiFieldName: FIELD_MAP[_emptyStringFieldName] ?? _emptyStringFieldName,
-      expectedValues: _emptyStringFieldName === 'additionalNeeds' ? ['', undefined, null] : [''],
+      name: _emptyStringField.name,
+      apiFieldName: _emptyStringField.apiFieldName,
+      expectedValues: _emptyStringField.expectedValues,
       data: {
         bookingId: undefined,
         firstname: `${namePrefix}${utils.generateRandomString(4)}`,
@@ -203,7 +206,7 @@ export const booking__examples = {
         depositPaid: true,
         bookingDates: { checkin: utils.getFutureDate(7), checkout: utils.getFutureDate(14) },
         additionalNeeds: null,
-        [_emptyStringFieldName]: '',
+        [_emptyStringField.name]: '',
       },
     },
   },
@@ -212,6 +215,7 @@ export const booking__examples = {
     username: 'invalid_user',
     password: 'invalid_password',
   },
+  invalidToken: 'invalid_token',
 
   updates: {
     full: {
@@ -235,14 +239,15 @@ export const booking__examples = {
     partialCheckoutOnly: {
       bookingDates: { checkin: _partialCheckinDate, checkout: _partialCheckoutDate },
     },
-    // Pool of single-field changes; spec picks one at random.
-    partialFieldChoices: _partialFieldChoices,
     // Pre-selected single-field change ready to pass directly to PATCH.
     partialField: {
-      name: _partialFieldName,
-      value: _partialFieldValue,
-      apiFieldName: FIELD_MAP[_partialFieldName] ?? _partialFieldName,
-      updateData: { [_partialFieldName]: _partialFieldValue },
+      name: _partialField.name,
+      value: _partialField.value,
+      apiFieldName: _partialField.apiFieldName,
+      updateData: { [_partialField.name]: _partialField.value },
+    },
+    partialForNonExistingId: {
+      firstname: `${namePrefix}${utils.generateRandomString(4)}`,
     },
   },
 

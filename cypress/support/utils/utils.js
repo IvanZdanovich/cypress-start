@@ -1,4 +1,4 @@
-import { TEXT } from '../../constants/ui/common.ui.constraints';
+import { ALLOWED_TEXT_SYMBOLS } from '../../constants/ui/common.ui.constraints';
 import { DATE_FORMAT } from '../../constants/api/rb.booking.api.constraints';
 
 const getRandomIndex = (arrayLength) => {
@@ -15,7 +15,7 @@ const getRandomNumber = (min, maxNotIncluded) => {
   return Math.floor(Math.random() * (maxNotIncluded - min) + min);
 };
 
-const generateRandomString = (length, chars = TEXT.allowedSymbols) => {
+const generateRandomString = (length, chars = ALLOWED_TEXT_SYMBOLS) => {
   if (typeof length !== 'number' || length <= 0) {
     throw new Error('Length must be a positive number');
   }

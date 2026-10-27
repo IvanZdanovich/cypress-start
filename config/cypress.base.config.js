@@ -142,7 +142,6 @@ function getSpecPattern(customSpec) {
 module.exports = {
   defineConfig,
   baseConfig,
-  timeouts,
   getSpecPattern,
   setupScreenshotOrdering,
 };

@@ -8,9 +8,7 @@
  */
 
 /** Total number of product cards rendered on the Inventory page. */
-export const PRODUCT_COUNT = Object.freeze({
-  total: 6,
-});
+export const PRODUCT_COUNT = 6;
 
 /**
  * HTML <select> option values for the sort dropdown.
@@ -31,6 +29,4 @@ export const DEFAULT_SORT = SORT_OPTIONS.nameAscending;
  * Format: a dollar sign followed by one or more digits, a dot, and exactly two decimal digits.
  * Example matches: "$9.99", "$29.00", "$100.50".
  */
-export const PRICE_FORMAT = Object.freeze({
-  pattern: /^\$\d+\.\d{2}$/,
-});
+export const PRICE_FORMAT = /^\$\d+\.\d{2}$/;

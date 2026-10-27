@@ -16,6 +16,7 @@ project, or to add its lint rules, parallel runner, reports, and Claude Code ski
 
 - [Quick Start](#quick-start)
 - [Overview](#overview)
+- [Project Structure](#project-structure)
 - [What Makes This Framework Different](#what-makes-this-framework-different)
 - [Features](#features)
 - [Running Tests](#running-tests)
@@ -23,9 +24,13 @@ project, or to add its lint rules, parallel runner, reports, and Claude Code ski
     - [Parallel Test Execution](#parallel-test-execution)
     - [Environment-Specific Test Run](#environment-specific-test-run)
     - [Debug Mode](#debug-mode)
+    - [Docker Run](#docker-run)
     - [GitHub Actions Workflow](#github-actions-workflow)
+- [Reports](#reports)
+- [Other Commands](#other-commands)
 - [Documentation](#documentation)
 - [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ## Quick Start
 
@@ -85,6 +90,8 @@ cd my-project
 npm install
 ```
 
+`npm install` also installs the pre-commit hook (skipped on CI). To install it again, run `npm run hooks:setup`.
+
 ### Add test credentials
 
 Before the first run, copy `cypress/sensitive-data/env-users.example.json` to `cypress/sensitive-data/dev-users.json`
@@ -100,8 +107,6 @@ npm run lint              # fix and report ESLint issues
 npm run debug             # open the Cypress UI
 ```
 
-> **Open Source** — MIT licensed. Use it, fork it, contribute back.
-
 ---
 
 ## Overview
@@ -112,6 +117,31 @@ The framework includes example tests for two public demo applications:
 - Integration API tests for the [Restful Booker API playground](https://restful-booker.herokuapp.com/apidoc/).
 
 ![Cypress run of the example suite](assets/execution-example.gif)
+
+---
+
+## Project Structure
+
+```text
+cypress/
+  constants/{api,ui}/          # *.constraints.js — boundaries, formats, enums
+  integration-examples/        # *.examples.js — named test data for integration specs
+  e2e-examples/                # *.examples.js — named test data for E2E specs
+  integration/{api,ui}/        # integration specs (*.api.spec.js, *.ui.spec.js)
+  e2e/ui/                      # E2E specs (*.ui.spec.js)
+  commands/{api,ui}/           # Cypress custom commands
+  selectors/                   # selector objects
+  localization/                # locale files (<lang>-localization.json)
+  colours/                     # theme files (<theme>-theme-colours.json)
+  sensitive-data/              # per-environment users (not committed)
+  support/                     # support file, generated l10n and colour types, utils
+config/                        # base, dev, and qa Cypress configs
+eslint-plugin-custom-rules/    # project ESLint rules
+scripts/                       # parallel runner, reports, l10n, colours, git hooks
+bug-log/                       # logged product bugs referenced from specs
+docs/                          # feature and convention docs
+.claude/                       # Claude Code skills and rules
+```
 
 ---
 
@@ -187,24 +217,29 @@ Set these environment variables to change the run:
 - `COLOUR_THEME`: Colour theme (default: `default`)
 - `BROWSER`: Browser for `npm run test:parallel` and Docker runs (default: `chrome`; the CI workflow offers `chrome` and
   `edge`). `npm run test` uses Cypress's default Electron browser.
+- `SPEC_PATTERN`: Glob of specs to run, for example `cypress/integration/api/**/*.api.spec.js` (default: all
+  integration and E2E specs).
+- `CHUNK_STRATEGY`: How `npm run test:parallel` splits specs across streams — `unified` (one shared pool) or `domain`
+  (integration API, integration UI, and E2E run as separate groups) (default: `unified`).
 
 **macOS/Linux:**
 
 ```bash
 LANGUAGE=en COLOUR_THEME=default TARGET_ENV=dev npm run test
 BROWSER=edge TARGET_ENV=dev npm run test:parallel
+SPEC_PATTERN="cypress/integration/ui/**/*.ui.spec.js" npm run test
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="qa"; npm run test
+$env:LANGUAGE="en"; $env:COLOUR_THEME="default"; $env:TARGET_ENV="dev"; npm run test
 ```
 
 **Windows (CMD):**
 
 ```cmd
-set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=qa&& npm run test
+set LANGUAGE=en&& set COLOUR_THEME=default&& set TARGET_ENV=dev&& npm run test
 ```
 
 ### Debug Mode
@@ -218,11 +253,30 @@ npm run debug
 To debug against another environment, set `TARGET_ENV` first, for example `TARGET_ENV=dev npm run debug` on
 macOS/Linux or `$env:TARGET_ENV="dev"; npm run debug` in PowerShell.
 
----
+### Docker Run
+
+The image runs `npm run test:parallel`. The image does not contain `cypress/sensitive-data/`, so mount it at run time.
+Mount `cypress/reports/` to keep the results:
+
+```bash
+docker build --build-arg TARGET_ENV=dev --build-arg PARALLEL_STREAMS=3 -t cypress-tests .
+
+docker run --rm \
+  -v "$(pwd)/cypress/sensitive-data:/e2e/cypress/sensitive-data:ro" \
+  -v "$(pwd)/cypress/reports:/e2e/cypress/reports" \
+  -e BROWSER=chrome \
+  -e SPEC_PATTERN="cypress/integration/**/*.spec.js" \
+  cypress-tests
+```
+
+Build arguments set the defaults for `LANGUAGE`, `TARGET_ENV`, `COLOUR_THEME`, `PARALLEL_STREAMS`, `BROWSER`,
+`SPEC_PATTERN`, and `CHUNK_STRATEGY`. Override any of them at run time with `-e`, except `LANGUAGE` and
+`COLOUR_THEME`: their files are generated during the build, so change them with `--build-arg`.
 
 ### GitHub Actions Workflow
 
-`.github/workflows/weekly-cypress-tests.yml` runs every Sunday at 02:00 UTC and can be started manually.
+`.github/workflows/weekly-cypress-tests.yml` runs every Sunday at 02:00 UTC and can be started manually. It runs the
+tests in the Docker image above.
 
 To start it manually:
 
@@ -260,6 +314,35 @@ artifacts.
 
 ---
 
+## Reports
+
+Test runs write mochawesome JSON reports and screenshots to `cypress/reports/`. The report scripts write to `reports/`.
+
+| Command                         | Output                                                                                  |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| `npm run report:coverage`       | Coverage gaps for all test types → `reports/coverage-gaps.md`                           |
+| `npm run report:coverage:check` | Fails when coverage is below 80%                                                        |
+| `npm run report:flaky`          | Flaky test report → `reports/flaky-tests.md` (`:dev`, `:qa`, and `:all` variants exist) |
+| `npm run report:signoff`        | HTML sign-off checklist from the latest run → `reports/signoff-report.html`             |
+
+Per-type coverage commands and flaky-test suppression commands are described in
+[Coverage gap analysis](docs/coverage-gap-analysis.md) and [Flaky test analysis](docs/flaky-test-analysis.md).
+
+---
+
+## Other Commands
+
+| Command                                                                   | Purpose                                                         |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `npm run l10n:add`, `l10n:remove`, `l10n:rename`, `l10n:list`             | Manage localization keys ([docs](docs/localization-testing.md)) |
+| `npm run colours:add`, `colours:remove`, `colours:rename`, `colours:list` | Manage colour keys ([docs](docs/colour-theme-testing.md))       |
+| `npm run l10n:validate`, `npm run colours:validate`                       | Check locale or theme files without writing                     |
+| `npm run sync`                                                            | Align locale and theme files: add missing keys and sort         |
+| `npm run format`, `npm run format:check`                                  | Format files with Prettier, or only check the formatting        |
+| `npm run hooks:setup`                                                     | Install the pre-commit hook                                     |
+
+---
+
 ## Documentation
 
 **Test development:**
@@ -294,12 +377,13 @@ artifacts.
 ### Common Issues
 
 - **User data not found for role:** `cypress/sensitive-data/<env>-users.json` is missing or has no entry for the role.
-  Create it from `env-users.example.json`; see [Add test credentials](#add-test-credentials).
+  Create it from `env-users.example.json`; see [Add test credentials](#add-test-credentials). In Docker, check that
+  the folder is mounted; see [Docker Run](#docker-run).
 - **`Invalid TARGET_ENV`:** `TARGET_ENV` must be `qa` or `dev`.
 - **Pretest script fails:** the locale or theme file for `LANGUAGE` or `COLOUR_THEME` is missing. Check
   `cypress/localization/<lang>-localization.json` and `cypress/colours/<theme>-theme-colours.json`.
-- **Localization or colour key errors:** run `npm run l10n:validate` or `npm run colours:validate` to list missing keys,
-  and `npm run sync` to align the files.
+- **Localization or colour key errors:** run `npm run l10n:validate` or `npm run colours:validate` to list the
+  problems, and `npm run sync` to align the files.
 - **State leaks between tests:** check that `{ testIsolation: false }` is set on the `describe` block and that each
   context restores the state the next one expects.
 - **ESLint errors:** run `npm run lint` to fix what can be fixed and list the rest.
@@ -312,3 +396,11 @@ Update all dependencies to their latest versions, then reinstall:
 npx npm-check-updates -u
 npm install
 ```
+
+---
+
+## License
+
+[MIT](LICENSE). Use it, fork it, and contribute back through
+[pull requests](https://github.com/IvanZdanovich/cypress-start/pulls) or
+[issues](https://github.com/IvanZdanovich/cypress-start/issues).

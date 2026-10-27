@@ -456,11 +456,11 @@ suite still covers the whole range.
 
 ```javascript
 // cypress/integration-examples/ui/cart-page.ui.examples.js
-const _indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, PRODUCT_COUNT.total), PRODUCT_COUNT.total - 1);
+const _indicesOfProducts = utils.generateArrayOfRandomIndices(utils.getRandomNumber(1, PRODUCT_COUNT), PRODUCT_COUNT - 1);
 
 export const cartPage__examples = {
     indicesOfProducts: _indicesOfProducts,
-    randomIndex: utils.getRandomNumber(0, _indicesOfProducts.length),
+    removedProductIndex: utils.getRandomNumber(0, _indicesOfProducts.length),
 };
 ```
 

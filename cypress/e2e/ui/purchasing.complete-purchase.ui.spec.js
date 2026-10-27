@@ -1,8 +1,9 @@
 import { completePurchase__examples as examples } from '../../e2e-examples/ui/purchasing.complete-purchase.ui.examples';
-import { PRICE_DECIMAL_PLACES } from '../../constants/ui/common.ui.constraints';
+import { PRICE_DECIMAL_PLACES } from '../../constants/ui/checkout-overview-page.ui.constraints';
 
 describe('CompletePurchase: Given No preconditions', { testIsolation: false }, () => {
   let standardUser;
+  const chosenProducts = [];
 
   before(() => {
     cy.common__getUserDataByRole(userRoles.STANDARD).then((user) => {
@@ -20,11 +21,11 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
 
   context('CompletePurchase.STANDARD: When user adds multiple products to the shopping cart', () => {
     before(() => {
-      cy.inventoryPage__collectAndAddProductsToCart(examples.indicesOfProducts, examples.chosenProducts, examples.buggyProductData);
+      cy.inventoryPage__collectAndAddProductsToCart(examples.indicesOfProducts, chosenProducts, examples.buggyProductData);
       cy.get(headerComp.openCart).click();
     });
     it('CompletePurchase.STANDARD: Then all selected products should appear in the cart with correct titles, descriptions and prices', () => {
-      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
+      cy.cartPage__validateProductDetails(chosenProducts, examples.buggyProductData);
     });
   });
 
@@ -35,10 +36,10 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
       cy.get(checkoutPage.continue).click();
     });
     it('CompletePurchase.STANDARD: Then user should see an order summary page with product details', () => {
-      cy.cartPage__validateProductDetails(examples.chosenProducts, examples.buggyProductData);
+      cy.cartPage__validateProductDetails(chosenProducts, examples.buggyProductData);
     });
     it('CompletePurchase.STANDARD: Then user should see total price calculation', () => {
-      cy.checkoutOverviewPage__validatePriceSummary(examples.chosenProducts, PRICE_DECIMAL_PLACES);
+      cy.checkoutOverviewPage__validatePriceSummary(chosenProducts, PRICE_DECIMAL_PLACES);
     });
   });
 
@@ -46,8 +47,10 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     before(() => {
       cy.get(checkoutOverviewPage.finish).click();
     });
-    it('CompletePurchase.STANDARD: Then user should see a thank you notification and order confirmation', () => {
+    it('CompletePurchase.STANDARD: Then user should see a thank you notification title', () => {
       cy.get(checkoutCompletePage.confirmation.title).should('have.text', l10n['checkoutCompletePage.messageTitle']);
+    });
+    it('CompletePurchase.STANDARD: Then user should see an order confirmation message', () => {
       cy.get(checkoutCompletePage.confirmation.message).should('have.text', l10n['checkoutCompletePage.message']);
     });
   });
@@ -56,9 +59,13 @@ describe('CompletePurchase: Given No preconditions', { testIsolation: false }, (
     before(() => {
       cy.get(checkoutCompletePage.backHome).click();
     });
-    it('CompletePurchase.STANDARD: Then user should be redirected to the inventory page with product catalog and reset shopping cart', () => {
+    it('CompletePurchase.STANDARD: Then user should be redirected to the Inventory page URL', () => {
       cy.url().should('eq', urls.pages.inventory);
+    });
+    it('CompletePurchase.STANDARD: Then Inventory page title with product catalog is displayed', () => {
       cy.get(inventoryPage.title).should('have.text', l10n['inventoryPage.title']);
+    });
+    it('CompletePurchase.STANDARD: Then shopping cart is reset and Cart badge is not displayed', () => {
       cy.get(headerComp.cartBadge).should('not.exist');
     });
   });
