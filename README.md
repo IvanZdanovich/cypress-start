@@ -55,14 +55,15 @@ The CLI asks for one of three setup modes:
 **Mode 1 — Full Setup** clones the complete framework, initializes a fresh git repo, and runs `npm install`. Use it for
 a new standalone project.
 
-**Mode 2 — Specific Files** copies selected modules (ESLint rules, Docs, Claude Skills, Parallel Runner, GitHub Actions,
-Docker) into an existing project directory. `package.json` is created or merged automatically; run `npm install`
-afterwards.
+**Mode 2 — Specific Files** copies selected modules (ESLint rules and pre-commit hook, Docs, Claude Skills, Parallel
+Runner, GitHub Actions, Test Reports, Docker) into an existing project directory. `package.json` is created or merged
+automatically; run `npm install` afterwards.
 
 **Mode 3 — Update Existing Project** refreshes a project you already created, in place. It pulls the latest template,
 adds or overwrites managed files, deletes files that are no longer part of the template, and merges `package.json`
-while keeping your custom scripts. Every change is staged with `git add -A`, so you can review and roll back individual
-edits before committing:
+while keeping your custom scripts. Your credentials and project data files (`bug-log/bug-log.json`,
+`scripts/flaky-suppressions.json`, `scripts/thresholds.json`) are created if missing but never overwritten. Every change
+is staged with `git add -A`, so you can review and roll back individual edits before committing:
 
 ```bash
 # From inside the project (or: npm exec --yes --package=cypress-start@latest -- cypress-start ./path/to/project)

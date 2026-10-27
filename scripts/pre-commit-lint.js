@@ -94,6 +94,11 @@ function getStagedJsFiles(repoRoot) {
  * Prints its output inline and returns true if it passed.
  */
 function runSyncCheck(scriptPath, checkArgs, fixCommand, label, repoRoot) {
+  // Projects set up with only some cypress-start modules may not have the sync scripts.
+  if (!fs.existsSync(scriptPath)) {
+    console.log(`\nSkipping ${label} sync check (${path.relative(repoRoot, scriptPath)} not found).`);
+    return true;
+  }
   console.log(`\nRunning ${label} sync check...`);
   const result = spawnSync(nodeExecutable, [scriptPath, ...checkArgs], { encoding: 'utf8', cwd: repoRoot, env: sanitizedEnv });
   if (result.stdout) process.stdout.write(result.stdout);

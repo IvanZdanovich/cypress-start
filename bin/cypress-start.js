@@ -29,10 +29,13 @@ const OPTIONAL_MODULES = {
   eslintCustomRules: {
     name: 'ESLint Custom Rules',
     description: 'Custom ESLint rules for test title standardization, validation, and JSON structure definitions',
-    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/setup-git-hooks.js', '.prettierrc.js'],
+    // setup-git-hooks.js and pre-commit-lint.js both require git-exec-lib.js; the hook runs pre-commit-lint.js.
+    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/setup-git-hooks.js', 'scripts/pre-commit-lint.js', 'scripts/git-exec-lib.js', 'scripts/thresholds.json', '.prettierrc.js'],
     scripts: {
       lint: 'eslint . --format stylish --fix',
-      postinstall: 'node scripts/setup-git-hooks.js',
+      'hooks:setup': 'node scripts/setup-git-hooks.js',
+      // Guarded so `npm install` keeps working if the hook script is later removed.
+      postinstall: "node -e \"const fs=require('fs');if(fs.existsSync('scripts/setup-git-hooks.js')){require('child_process').spawnSync(process.execPath,['scripts/setup-git-hooks.js'],{stdio:'inherit'})}\"",
     },
     devDependencies: ['@eslint/eslintrc', '@eslint/js', 'eslint', 'eslint-config-prettier', 'eslint-plugin-chai-friendly', 'eslint-plugin-cypress', 'eslint-plugin-prettier', 'prettier'],
   },
@@ -55,8 +58,40 @@ const OPTIONAL_MODULES = {
   },
   githubWorkflow: {
     name: 'GitHub Actions Workflow',
-    description: 'CI/CD workflows for automated test execution on GitHub',
+    description: 'CI/CD workflows for automated test execution on GitHub (optional report steps need the Test Reports module)',
     files: ['.github/workflows/'],
+  },
+  testReports: {
+    name: 'Test Reports',
+    description: 'Coverage gap analysis, flaky test analysis with suppressions, and the HTML sign-off report',
+    files: [
+      'scripts/analyze-coverage-gaps.js',
+      'scripts/analyze-flaky-tests.js',
+      'scripts/collect-test-results.js',
+      'scripts/manage-flaky-suppressions.js',
+      'scripts/flaky-suppressions.json',
+      'scripts/flaky-suppressions.schema.json',
+      'scripts/generate-signoff-report.js',
+      'scripts/report-template/',
+      'scripts/git-exec-lib.js',
+      // Expected app structure that the coverage gap analysis compares specs against.
+      'eslint-plugin-custom-rules/app-structure/',
+    ],
+    scripts: {
+      'report:coverage': 'node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md',
+      'report:coverage:check': 'node scripts/analyze-coverage-gaps.js --type=all --threshold=80',
+      'report:flaky': 'node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md',
+      'report:flaky:all': 'node scripts/analyze-flaky-tests.js --output reports/flaky-tests-all.md',
+      'report:flaky:qa': 'node scripts/analyze-flaky-tests.js --env qa --output reports/flaky-tests-qa.md',
+      'report:flaky:dev': 'node scripts/analyze-flaky-tests.js --env dev --output reports/flaky-tests-dev.md',
+      'report:suppress': 'node scripts/manage-flaky-suppressions.js --add',
+      'report:unsuppress': 'node scripts/manage-flaky-suppressions.js --remove',
+      'report:suppress-run': 'node scripts/manage-flaky-suppressions.js --add-runs',
+      'report:unsuppress-run': 'node scripts/manage-flaky-suppressions.js --remove-runs',
+      'report:review': 'node scripts/manage-flaky-suppressions.js --review',
+      'report:signoff': 'node scripts/generate-signoff-report.js',
+    },
+    devDependencies: ['espree'],
   },
   docker: {
     name: 'Docker Support',
@@ -160,6 +195,15 @@ function isExcludedFromUpdate(relPath) {
   return /^cypress\/sensitive-data\//.test(normalized) && !normalized.endsWith('env-users.example.json');
 }
 
+// Data files the project edits over time (logged bugs, flaky suppressions,
+// auto-tightened lint thresholds). An update creates them when missing but never
+// overwrites an existing copy.
+const SEED_ONLY_FILES = new Set(['bug-log/bug-log.json', 'scripts/flaky-suppressions.json', 'scripts/thresholds.json']);
+
+function isSeedOnlyFile(relPath) {
+  return SEED_ONLY_FILES.has(relPath.split(path.sep).join('/'));
+}
+
 // Recursively lists template-managed files (relative, forward-slash paths),
 // skipping VCS/dependency directories and user-owned files.
 function buildTemplateFileList(rootPath) {
@@ -202,7 +246,7 @@ function writeManifest(projectPath, files, version) {
   const manifest = {
     version: version || null,
     updatedAt: new Date().toISOString(),
-    files: [...files].sort(),
+    files: [...new Set(files)].sort(),
   };
   fs.writeFileSync(path.join(projectPath, MANIFEST_FILE), JSON.stringify(manifest, null, 2) + '\n');
 }
@@ -443,7 +487,9 @@ async function copySpecificFiles(projectName, selectedModules) {
                 installedFiles.push(`${filePath.replace(/\/$/, '')}/${rel}`);
               }
             } else {
-              fs.copyFileSync(sourcePath, destPath);
+              if (!(isSeedOnlyFile(filePath) && fs.existsSync(destPath))) {
+                fs.copyFileSync(sourcePath, destPath);
+              }
               installedFiles.push(filePath);
             }
           }
@@ -487,7 +533,7 @@ function syncTemplateFiles(projectPath, templatePath) {
     const srcContent = fs.readFileSync(src);
 
     if (fs.existsSync(dest)) {
-      if (fs.readFileSync(dest).equals(srcContent)) {
+      if (isSeedOnlyFile(rel) || fs.readFileSync(dest).equals(srcContent)) {
         continue;
       }
       fs.writeFileSync(dest, srcContent);
@@ -1012,6 +1058,7 @@ module.exports = {
   copySpecificFiles,
   copyOrUpdatePackageJson,
   isExcludedFromUpdate,
+  isSeedOnlyFile,
   buildTemplateFileList,
   readManifest,
   writeManifest,

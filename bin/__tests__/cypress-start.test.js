@@ -321,6 +321,70 @@ test('syncTemplateFiles adds new files and only rewrites changed ones', async ()
   });
 });
 
+test('syncTemplateFiles seeds project data files but never overwrites them', async () => {
+  await withTmpCwd((tmp) => {
+    const template = path.join(tmp, 'template');
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(path.join(template, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(template, 'bug-log'), { recursive: true });
+    fs.mkdirSync(path.join(project, 'scripts'), { recursive: true });
+
+    fs.writeFileSync(path.join(template, 'scripts', 'thresholds.json'), '{"template":true}');
+    fs.writeFileSync(path.join(template, 'bug-log', 'bug-log.json'), '[]');
+    fs.writeFileSync(path.join(project, 'scripts', 'thresholds.json'), '{"project":true}');
+
+    const result = syncTemplateFiles(project, template);
+
+    assert.equal(fs.readFileSync(path.join(project, 'scripts', 'thresholds.json'), 'utf8'), '{"project":true}');
+    assert.equal(fs.readFileSync(path.join(project, 'bug-log', 'bug-log.json'), 'utf8'), '[]');
+    assert.equal(result.added, 1);
+    assert.equal(result.updated, 0);
+    assert.deepEqual(result.newFiles, ['bug-log/bug-log.json', 'scripts/thresholds.json']);
+  });
+});
+
+test('every optional module file exists in the template', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    for (const file of module.files) {
+      assert.ok(fs.existsSync(path.join(root, file)), `${key}: ${file} is missing`);
+    }
+  }
+});
+
+test('local requires/imports of each optional module resolve to files the module ships', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  const listFiles = (rel) => (fs.statSync(path.join(root, rel)).isDirectory() ? buildTemplateFileList(path.join(root, rel)).map((f) => `${rel.replace(/\/$/, '')}/${f}`) : [rel]);
+  const resolveLocal = (fromRel, spec) => {
+    const base = path.join(path.dirname(fromRel), spec).split(path.sep).join('/');
+    return [base, `${base}.js`, `${base}/index.js`].find((candidate) => fs.existsSync(path.join(root, candidate)) && fs.statSync(path.join(root, candidate)).isFile());
+  };
+
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    const shipped = new Set(module.files.flatMap(listFiles));
+    for (const file of [...shipped].filter((f) => /\.(c|m)?js$/.test(f))) {
+      const source = fs.readFileSync(path.join(root, file), 'utf8');
+      const specs = [...source.matchAll(/(?:require\(\s*|from\s+)['"](\.{1,2}\/[^'"]+)['"]/g)].map((match) => match[1]);
+      for (const spec of specs) {
+        const target = resolveLocal(file, spec);
+        assert.ok(target && shipped.has(target), `${key}: ${file} needs ${spec}, which the module does not ship`);
+      }
+    }
+  }
+});
+
+test('optional module scripts and devDependencies match the template package.json', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'), 'utf8'));
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    for (const [name, command] of Object.entries(module.scripts || {})) {
+      assert.equal(command, pkg.scripts[name], `${key}: script "${name}" differs from package.json`);
+    }
+    for (const dep of module.devDependencies || []) {
+      assert.ok(pkg.devDependencies[dep], `${key}: devDependency "${dep}" is not in package.json`);
+    }
+  }
+});
+
 test('deleteObsoleteFiles removes files gone from the template and prunes empty dirs', async () => {
   await withTmpCwd((tmp) => {
     const project = path.join(tmp, 'project');
