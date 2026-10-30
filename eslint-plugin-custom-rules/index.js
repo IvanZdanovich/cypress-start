@@ -14,5 +14,6 @@ module.exports = {
     'find-unused-selectors': require('./find-unused-selectors.js'),
     'find-unused-examples': require('./find-unused-examples.js'),
     'verify-req-config': require('./verify-req-config.js'),
+    'verify-spec-file-paths': require('./verify-spec-file-paths.js'),
   },
 };

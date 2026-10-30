@@ -17,8 +17,9 @@ matched that rule's scope gate, such as `.spec.js`, `.api.commands.js`, `/comman
 
 ## Running lint
 
-- `npm run lint` — report violations
-- `npm run lint -- --fix` — auto-fix the fixable rules (blank lines, title terminology, structure files, single-line unused selectors/test-data)
+- `npm run lint` — runs `eslint . --fix`: applies every available fix (blank lines, title terminology, structure files,
+  single-line unused selectors and examples), then reports the remaining violations.
+- `npx eslint <path>` — reports violations for one file or folder without changing files.
 
 ## Rules by concern
 
@@ -27,9 +28,11 @@ matched that rule's scope gate, such as `.spec.js`, `.api.commands.js`, `/comman
 - `verify-test-title-pattern` — `describe` titles match `Module.Sub: Given …`; `context` titles match
   `Module.Sub.ROLE: When …`; `it` titles match `Module.Sub.ROLE: Then …`. Descriptions are 1-200 characters with no
   trailing space. `STATE:`-prefixed contexts are exempt.
-- `verify-test-title-without-forbidden-symbols` — `describe` and `context` titles have no leading/trailing whitespace and
+- `verify-test-title-without-forbidden-symbols` — `describe` and `context` titles have no leading/trailing whitespace
+  and
   none of `! @ # $ % ^ & * ( ) + = { } [ ] | \ ; " ' < > ? /`.
-- `prevent-duplicated-titles` — every `describe` and `context` title, including `.skip` and `.only`, is unique within the
+- `prevent-duplicated-titles` — every `describe` and `context` title, including `.skip` and `.only`, is unique within
+  the
   linted file.
 - `standardize-test-titles` — title terms normalize to canonical common, UI, and API vocabulary. The mapping arrays in
   `eslint-plugin-custom-rules/standardize-test-titles.js` are the wording glossary. This rule is fixable.
@@ -59,7 +62,7 @@ The `req` object allows only these fields:
 - `p` — priority value `'P1'`, `'P2'`, or `'P3'`. `P2` is the default and is conventionally omitted.
 - `preconditions` — non-empty array of non-empty strings.
 - `refs` — non-empty array of valid HTTP/HTTPS URLs.
-- `bugs` — non-empty array of bug IDs or valid URLs. Bug IDs use `BUG-[A-Z0-9]+-NNN`, for example `BUG-AUDIT65-001`.
+- `bugs` — non-empty array of bug IDs or valid URLs. Bug IDs use `BUG-[A-Z0-9]+-NNN`, for example `BUG-LOGIN-001`.
 - `note` — non-empty string explaining the checks.
 
 Unknown keys, empty arrays, and empty notes are errors. The rule validates field shape only; the spec-writing docs and
@@ -67,7 +70,8 @@ skills define what belongs in each field.
 
 **Data and examples**
 
-- `prevent-examples-loops` — inside `describe`, `context`, and `it` blocks, no `.forEach`, `for...of`, or `for...in` over
+- `prevent-examples-loops` — inside `describe`, `context`, and `it` blocks, no `.forEach`, `for...of`, or `for...in`
+  over
   data-shaped operands such as names matching `testData`, `invalid`, `valid`, `Array`, `items`, `values`, or `data`.
   Hooks are excluded. Pick one randomized value in the examples file instead of looping in the spec.
 - `find-unused-examples` — flags first-level exported instances unused by any spec or command, with import aliases
@@ -83,6 +87,10 @@ skills define what belongs in each field.
 
 - `verify-todos-have-links` — `TODO`, `FIXME`, `ToDo`, and `FixMe` comments include a bug-tracker URL containing a
   `/browse/PROJ-123`-style key. In spec files, prefer `req.bugs` over inline TODOs.
+- `verify-spec-file-paths` — every file under `cypress/integration/` and `cypress/e2e/` matches its folder:
+  `cypress/integration/api/**/*.api.spec.js`, `cypress/integration/ui/**/*.ui.spec.js`, or
+  `cypress/e2e/ui/**/*.ui.spec.js`. Files ending in `.spec.skip.js` are excluded, and hidden files such as `.DS_Store`
+  are ignored. Non-`.js` files are found by a directory scan and reported on the first linted spec in those folders.
 
 ## Suppressing custom rules
 

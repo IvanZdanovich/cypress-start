@@ -5,7 +5,7 @@ Cypress.Commands.add('commonAPI__getTokenByRole__POST', (role) => {
       `api-token-${role}`,
       () => {
         cy.common__getUserDataByRole(role)
-          .then((user) => cy.restfullBooker__getAuthToken__POST(user))
+          .then((user) => cy.restfullBooker__getAuthToken__POST({ body: user }))
           .then((response) => {
             cy.log(`Access token received for role: ${role}`);
             cy.window().then((win) => win.localStorage.setItem(`${role}-token`, response.body.token));

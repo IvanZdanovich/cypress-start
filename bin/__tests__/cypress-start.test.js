@@ -9,11 +9,13 @@ const path = require('path');
 
 const {
   OPTIONAL_MODULES,
+  MANIFEST_FILE,
   validateProjectName,
   copyDirectory,
   copySpecificFiles,
   copyOrUpdatePackageJson,
   isExcludedFromUpdate,
+  isSeedOnlyFile,
   buildTemplateFileList,
   readManifest,
   writeManifest,
@@ -218,6 +220,42 @@ test('copySpecificFiles supports copying selected modules into the current direc
   });
 });
 
+test('copySpecificFiles does not overwrite an existing seed-only file in the target directory', async () => {
+  await withTmpCwd(async (tmp) => {
+    const template = path.join(tmp, 'template-source');
+
+    fs.mkdirSync(path.join(template, 'scripts'), { recursive: true });
+    // thresholds.json is a seed-only file
+    fs.writeFileSync(path.join(template, 'scripts', 'thresholds.json'), '{"template":true}\n');
+    fs.writeFileSync(path.join(template, 'package.json'), JSON.stringify({ version: '1.0.0', devDependencies: {} }, null, 2) + '\n');
+
+    runGit(template, ['init']);
+    runGit(template, ['config', 'user.email', 'test@example.com']);
+    runGit(template, ['config', 'user.name', 'Test User']);
+    runGit(template, ['add', '-A']);
+    runGit(template, ['commit', '-m', 'template']);
+
+    // Pre-seed the project with its own thresholds.json
+    fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'scripts', 'thresholds.json'), '{"project":true}\n');
+
+    const previousTemplateUrl = process.env.CYPRESS_START_TEMPLATE_URL;
+    process.env.CYPRESS_START_TEMPLATE_URL = template;
+    try {
+      await copySpecificFiles('.', { eslintCustomRules: true });
+    } finally {
+      if (previousTemplateUrl === undefined) {
+        delete process.env.CYPRESS_START_TEMPLATE_URL;
+      } else {
+        process.env.CYPRESS_START_TEMPLATE_URL = previousTemplateUrl;
+      }
+    }
+
+    // The project's thresholds.json must not have been overwritten
+    assert.equal(fs.readFileSync(path.join(tmp, 'scripts', 'thresholds.json'), 'utf8'), '{"project":true}\n');
+  });
+});
+
 // --- update helpers --------------------------------------------------------
 
 test('isExcludedFromUpdate protects user-owned files but allows template files', () => {
@@ -233,6 +271,22 @@ test('isExcludedFromUpdate protects user-owned files but allows template files',
   // The example file should stay in sync with the template.
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/env-users.example.json'), false);
   assert.equal(isExcludedFromUpdate('cypress/e2e/ui/login.spec.js'), false);
+});
+
+test('MANIFEST_FILE constant equals the expected filename', () => {
+  assert.equal(MANIFEST_FILE, '.cypress-start-manifest.json');
+});
+
+test('isSeedOnlyFile identifies the three project-owned data files and nothing else', () => {
+  assert.equal(isSeedOnlyFile('bug-log/bug-log.json'), true);
+  assert.equal(isSeedOnlyFile('scripts/flaky-suppressions.json'), true);
+  assert.equal(isSeedOnlyFile('scripts/thresholds.json'), true);
+  // normalises back-slashes on Windows-style paths
+  assert.equal(isSeedOnlyFile('scripts' + path.sep + 'thresholds.json'), true);
+  // unrelated files must return false
+  assert.equal(isSeedOnlyFile('cypress.config.js'), false);
+  assert.equal(isSeedOnlyFile('package.json'), false);
+  assert.equal(isSeedOnlyFile('scripts/analyze-flaky-tests.js'), false);
 });
 
 test('buildTemplateFileList lists managed files and skips excluded paths', async () => {
@@ -273,6 +327,18 @@ test('writeManifest / readManifest round-trip the installed file list', async ()
     assert.equal(manifest.version, '2.0.4');
     assert.deepEqual(manifest.files, ['a.js', 'b.js']);
     assert.equal(typeof manifest.updatedAt, 'string');
+  });
+});
+
+test('writeManifest deduplicates file paths so the manifest contains no duplicates', async () => {
+  await withTmpCwd((tmp) => {
+    const projectPath = path.join(tmp, 'project');
+    fs.mkdirSync(projectPath, { recursive: true });
+
+    writeManifest(projectPath, ['a.js', 'b.js', 'a.js', 'b.js'], '1.0.0');
+    const manifest = readManifest(projectPath);
+
+    assert.deepEqual(manifest.files, ['a.js', 'b.js']);
   });
 });
 
@@ -319,6 +385,70 @@ test('syncTemplateFiles adds new files and only rewrites changed ones', async ()
     assert.equal(fs.readFileSync(path.join(project, 'nested', 'changed.js'), 'utf8'), 'new-content');
     assert.deepEqual(result.newFiles, ['added.js', 'nested/changed.js', 'same.js']);
   });
+});
+
+test('syncTemplateFiles seeds project data files but never overwrites them', async () => {
+  await withTmpCwd((tmp) => {
+    const template = path.join(tmp, 'template');
+    const project = path.join(tmp, 'project');
+    fs.mkdirSync(path.join(template, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(template, 'bug-log'), { recursive: true });
+    fs.mkdirSync(path.join(project, 'scripts'), { recursive: true });
+
+    fs.writeFileSync(path.join(template, 'scripts', 'thresholds.json'), '{"template":true}');
+    fs.writeFileSync(path.join(template, 'bug-log', 'bug-log.json'), '[]');
+    fs.writeFileSync(path.join(project, 'scripts', 'thresholds.json'), '{"project":true}');
+
+    const result = syncTemplateFiles(project, template);
+
+    assert.equal(fs.readFileSync(path.join(project, 'scripts', 'thresholds.json'), 'utf8'), '{"project":true}');
+    assert.equal(fs.readFileSync(path.join(project, 'bug-log', 'bug-log.json'), 'utf8'), '[]');
+    assert.equal(result.added, 1);
+    assert.equal(result.updated, 0);
+    assert.deepEqual(result.newFiles, ['bug-log/bug-log.json', 'scripts/thresholds.json']);
+  });
+});
+
+test('every optional module file exists in the template', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    for (const file of module.files) {
+      assert.ok(fs.existsSync(path.join(root, file)), `${key}: ${file} is missing`);
+    }
+  }
+});
+
+test('local requires/imports of each optional module resolve to files the module ships', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  const listFiles = (rel) => (fs.statSync(path.join(root, rel)).isDirectory() ? buildTemplateFileList(path.join(root, rel)).map((f) => `${rel.replace(/\/$/, '')}/${f}`) : [rel]);
+  const resolveLocal = (fromRel, spec) => {
+    const base = path.join(path.dirname(fromRel), spec).split(path.sep).join('/');
+    return [base, `${base}.js`, `${base}/index.js`].find((candidate) => fs.existsSync(path.join(root, candidate)) && fs.statSync(path.join(root, candidate)).isFile());
+  };
+
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    const shipped = new Set(module.files.flatMap(listFiles));
+    for (const file of [...shipped].filter((f) => /\.(c|m)?js$/.test(f))) {
+      const source = fs.readFileSync(path.join(root, file), 'utf8');
+      const specs = [...source.matchAll(/(?:require\(\s*|from\s+)['"](\.{1,2}\/[^'"]+)['"]/g)].map((match) => match[1]);
+      for (const spec of specs) {
+        const target = resolveLocal(file, spec);
+        assert.ok(target && shipped.has(target), `${key}: ${file} needs ${spec}, which the module does not ship`);
+      }
+    }
+  }
+});
+
+test('optional module scripts and devDependencies match the template package.json', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json'), 'utf8'));
+  for (const [key, module] of Object.entries(OPTIONAL_MODULES)) {
+    for (const [name, command] of Object.entries(module.scripts || {})) {
+      assert.equal(command, pkg.scripts[name], `${key}: script "${name}" differs from package.json`);
+    }
+    for (const dep of module.devDependencies || []) {
+      assert.ok(pkg.devDependencies[dep], `${key}: devDependency "${dep}" is not in package.json`);
+    }
+  }
 });
 
 test('deleteObsoleteFiles removes files gone from the template and prunes empty dirs', async () => {
@@ -529,4 +659,10 @@ test('installFullIntoExistingDirectory copies all template files into an existin
     // bin/ must not be copied
     assert.equal(fs.existsSync(path.join(project, 'bin')), false, 'bin/ must not be copied into project');
   });
+});
+
+test('every file listed in OPTIONAL_MODULES exists in the template', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  const missing = Object.entries(OPTIONAL_MODULES).flatMap(([key, mod]) => (mod.files || []).filter((f) => !fs.existsSync(path.join(root, f))).map((f) => `${key}: ${f}`));
+  assert.deepEqual(missing, []);
 });

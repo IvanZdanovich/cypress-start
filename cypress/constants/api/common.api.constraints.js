@@ -25,5 +25,4 @@ export const ERROR_MESSAGE = Object.freeze({
   NOT_FOUND: 'Not Found',
   FORBIDDEN: 'Forbidden',
   METHOD_NOT_ALLOWED: 'Method Not Allowed',
-  BAD_CREDENTIALS: 'Bad credentials',
 });

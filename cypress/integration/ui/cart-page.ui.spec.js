@@ -116,14 +116,14 @@ describe('CartPage: Given STANDARD user on Cart page and no products are added t
   context('CartPage.STANDARD: When user clicks delete button on random item', () => {
     before(() => {
       cy.get(cartPage.items)
-        .eq(examples.randomIndex)
+        .eq(examples.removedProductIndex)
         .find(cartPage.item.title)
         .invoke('text')
         .then((title) => {
           removedProductTitle = title;
         });
       cy.then(() => {
-        cy.get(cartPage.items).eq(examples.randomIndex).find(cartPage.item.remove).click();
+        cy.get(cartPage.items).eq(examples.removedProductIndex).find(cartPage.item.remove).click();
       });
     });
     it('CartPage.STANDARD: Then the number of products is decreased', () => {

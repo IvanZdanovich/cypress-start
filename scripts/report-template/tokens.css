@@ -1,0 +1,28 @@
+/* Brand tokens for the sign-off report: colours (Cypress palette, matching logo.png) and typography. */
+:root {
+  --brand-ink: #1b1e2e;
+  --brand-primary: #4956e3;
+  --brand-primary-strong: #3a46cc;
+  --brand-accent: #1fa971;
+  --brand-gradient: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+  --surface: #ffffff;
+  --surface-muted: #f3f4fa;
+  --surface-tint: #eef0fd;
+  --border: #e1e3ed;
+  --text: #2e3247;
+  --text-muted: #5a5f7a;
+  --status-passed: #00814d;
+  --status-failed: #c62b49;
+  --status-skipped: #a85200;
+  --status-not-executed: #5a5f7a;
+  --priority-p1: #c62b49;
+  --priority-p2: #a85200;
+  --priority-p3: #3a46cc;
+  --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-size-base: 10.5pt;
+  --font-size-small: 8.5pt;
+  --font-size-h1: 20pt;
+  --font-size-h2: 14pt;
+  --font-size-h3: 11.5pt;
+}

@@ -4,9 +4,6 @@ cypress/colours/colours.json
 cypress/support/l10n.d.ts
 cypress/support/colours.d.ts
 
-# compiled output
-dist
-
 # separate reports
 cypress/reports/**
 !cypress/reports/mochawesome/.gitkeep
@@ -15,9 +12,8 @@ cypress/reports/**
 # generated coverage / requirements reports
 reports/**
 
-# asset folders
+# Cypress runtime output
 cypress/downloads
-cypress/fixtures/assets
 
 #development data
 development-data
@@ -37,13 +33,5 @@ cypress/sensitive-data/**
 .DS_Store
 Thumbs.db
 
-# temporary fixtures
-**/preconditions/temp/**
-
 # local files
-certs/local/**
-target
 .env
-
-# VS
-/.vs

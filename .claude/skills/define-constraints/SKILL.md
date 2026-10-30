@@ -3,59 +3,87 @@ name: define-constraints
 description: Use when creating or updating API or UI constraint files for reusable boundaries, formats, enums, required fields, durations, or system constants.
 ---
 
+# Intent
+
+Produce constraint files where every boundary value lives once, in the file of the module or page that owns it.
+When entries conflict or none applies, choose the option that keeps one owner per value and a visible import path.
+
 # Reasoning Principles
 
-SINGLE_OWNER: keep each boundary value in one constraint and let consumers import it — otherwise the same value copied across examples and specs drifts apart
-SEGMENTATION: one domain concept per constant, one module or page per file — otherwise a file mixing concepts forces unrelated specs to reload it and blurs which spec owns which rule
-CROSS_LAYER_TRUTH: derive a UI display boundary from its API-validated counterpart, never restate it — otherwise two independent copies of the same rule diverge silently when the API tightens
-TIER_BEFORE_NAME: classify a rule's ownership tier before choosing its filename — otherwise naming first lands the value in a file where no consumer expects it
+KEEP_VALUE_IN_ONE_CONSTRAINT — Keep each boundary value in one constraint and let consumers import it.
+A value copied across examples and specs drifts apart when one copy changes. The cost is an import in every consumer.
+
+SPLIT_BY_CONCEPT — Split constraints into one domain concept per constant and one module or page per file.
+A file that mixes concepts forces unrelated specs to load it and hides which spec owns which rule.
+
+DERIVE_UI_FROM_API — Derive a UI display boundary from its API-validated counterpart and never restate it.
+Two independent copies of one rule diverge without warning when the API tightens. The cost is a cross-layer import.
+
+CLASSIFY_TIER_BEFORE_NAMING — Classify the ownership tier of a rule before choosing its filename.
+Naming first puts the value in a file where no consumer expects it.
 
 # Output Shape
 
-## Location & Access
+PLACE_IN_CONSTANTS_FOLDERS — Place API constraints in `cypress/constants/api/*.api.constraints.js` and UI constraints in `cypress/constants/ui/*.ui.constraints.js`.
+Consumers and reviewers look only in these folders, so a constraint elsewhere is missed and duplicated.
 
-SCOPE: `cypress/constants/api/*.api.constraints.js`, `cypress/constants/ui/*.ui.constraints.js`
-ACCESS: direct named imports, never exposed as globals — the import path shows the owning module or page
-IMPORT_STYLE: `import { CONSTANT } from '../../constants/api/module-name.api.constraints';`
+IMPORT_BY_NAME — Import constraints by name from their owning file, never through globals.
+The import path then shows the owning module or page, as in the example below.
 
-## Tiers
+```js
+import { CONSTANT } from '../../constants/api/module-name.api.constraints';
+```
 
-TIER_MODULE_PAGE: boundary owned by one module or page → `module-name.api.constraints.js`, `page-name.ui.constraints.js`
-TIER_COMMON: protocol-level with no domain owner → `common.api.constraints.js`, `common.ui.constraints.js`
-TIER_DECISION: ask "which module or page owns this rule?" → if none, common
-COMMON_SCOPE: protocol-level constants consumed by two or more modules with no single domain owner — HTTP status codes, generic wire-level error messages
-COMMON_NOT_FOR: a constant used by only one module moves to that module's own file
+FILE_OWNED_RULES_BY_OWNER — File a boundary owned by one module or page in that owner's file, such as `module-name.api.constraints.js` or `page-name.ui.constraints.js`.
+Ask which module or page owns the rule. Only when none does, the rule goes to the common tier.
 
-## Export Kinds
+RESERVE_COMMON_FOR_PROTOCOL — Reserve `common.api.constraints.js` and `common.ui.constraints.js` for protocol-level values used by two or more modules with no domain owner.
+Examples are HTTP status codes and generic wire-level error messages. A constant used by only one module moves to that module's file, or common becomes a dumping ground.
 
-ONE_KIND: each export has exactly one kind — pick the kind first, then apply its keys
-KIND_RANGE: `Object.freeze({ MIN, MAX })`; add `ZERO` when zero carries distinct test meaning
-KIND_LENGTH: `Object.freeze({ MIN_LENGTH, MAX_LENGTH })`
-KIND_ENUM: `Object.freeze({ ... })` camelCase keys mapping name → value
-KIND_FIELD_LIST: `Object.freeze([...])` of string field paths, exported as `REQUIRED_FIELDS`
-KIND_SCALAR_FORMAT: primitive string — the format pattern itself, e.g. `DATE_FORMAT`
-KIND_SCALAR_COUNT: primitive number — the single boundary value
-SCALAR_VS_OBJECT: scalar export for a single standalone boundary; frozen object only when two or more related keys belong together
-OUT_OF_RANGE: derive inline in examples (e.g. `-PRICE.MAX`) for ad-hoc invalid data
-ZERO_AS_BELOW_MIN: when `ZERO < MIN`, `ZERO` serves as `BELOW_MIN` — do not add a separate `BELOW_MIN` key
-EXPORT_SHAPE: constraint exports use `export const NAME = value`; grouped ranges, lengths, enums, and field lists use `Object.freeze(...)`, standalone formats and counts stay primitive
+PICK_ONE_KIND_PER_EXPORT — Pick exactly one kind for each export first, then apply the keys of that kind.
+Mixed kinds make consumers guess which keys exist. The kinds and their shapes are listed below.
 
-## Naming & Cross-Layer
+```
+range        Object.freeze({ MIN, MAX })            add ZERO when zero has its own test meaning
+length       Object.freeze({ MIN_LENGTH, MAX_LENGTH })
+enum         Object.freeze({ ... })                 camelCase keys mapping name to value
+field list   Object.freeze([...])                   string field paths, exported as REQUIRED_FIELDS
+format       primitive string                       the pattern itself, such as DATE_FORMAT
+count        primitive number                       the single boundary value
+```
 
-API_EXPORTS: named ES constants, SCREAMING_SNAKE_CASE
-UI_EXPORTS: named ES constants, SCREAMING_SNAKE_CASE
-FILE_NAMES: kebab-case, one module, page, or component per file
-UI_KEY_STYLE: camelCase object keys use the constraint kind words (`total`, `min`, `max`) over vague names like `limit` or `defaultValue`
-UI_BOUNDARY_TYPES: durations, character limits, item counts, display options
-RUNTIME_VALUES: functions for localized labels and theme-dependent values
-CROSS_LAYER: when a UI constant represents the display face of an API-validated field, import the API constraint and derive from it — do not duplicate the boundary value
-UI_DERIVATION_SHAPE: UI display constants spread the imported API constraint and add presentation-only fields such as `decimalPlaces` or `currencySymbol`
+EXPORT_SCALAR_FOR_SINGLE_VALUE — Export a primitive for a single standalone boundary, and a frozen object only when two or more related keys belong together.
+Wrapping one value in an object adds a lookup with no grouping benefit.
+
+FREEZE_GROUPED_EXPORTS — Freeze ranges, lengths, enums, and field lists with `Object.freeze(...)`, and declare each constraint as `export const NAME = value`.
+An unfrozen object can be changed by one spec and corrupt the value for every later spec in the run.
+
+DERIVE_OUT_OF_RANGE_INLINE — Derive one-off invalid data inline in examples, such as `-PRICE.MAX`, instead of adding a constraint for it.
+A constraint per invalid value bloats the file with values no rule owns.
+
+USE_ZERO_AS_BELOW_MIN — Use `ZERO` as the below-minimum value when `ZERO < MIN`, and do not add a separate `BELOW_MIN` key.
+Two keys for one value split the consumers between them.
+
+NAME_EXPORTS_IN_SCREAMING_SNAKE — Name API and UI exports in `SCREAMING_SNAKE_CASE` and files in kebab-case, one module, page, or component per file.
+Consistent names let a search find every constraint and its owner.
+
+NAME_UI_KEYS_BY_KIND — Name camelCase UI keys with the kind words `total`, `min`, and `max`, not vague words like `limit` or `defaultValue`.
+A vague key leaves the reader unsure which side of the boundary it holds.
+
+LIMIT_UI_CONSTRAINTS_TO_DISPLAY — Limit UI constraints to durations, character limits, item counts, and display options.
+Other values belong to an API constraint or to the example that uses them.
+
+EXPORT_RUNTIME_AS_FUNCTIONS — Export localized labels and theme-dependent values as functions, not constants.
+A constant reads the locale or theme once at import time and stays stale after a switch.
+
+SPREAD_API_CONSTRAINT_IN_UI — Spread the imported API constraint in a UI display constant and add only presentation fields such as `decimalPlaces` or `currencySymbol`.
+This keeps the boundary value owned by the API layer.
 
 # Validation
 
-PATH_CHECK: files exist under `cypress/constants`
-NAMING_CHECK: SCREAMING_SNAKE_CASE constants, meaningful camelCase keys, kebab-case files
-FREEZE_CHECK: enum and field-list objects wrapped in `Object.freeze()`
-CONSUMER_CHECK: every constant consumed by at least one example/spec or carrying a named shared-domain purpose; otherwise remove it as unused inventory
-IMPORT_CHECK: consumers use direct imports, never global access
-BOUNDARY_LITERAL_CHECK: boundary literals in specs require review against constraint ownership; current ESLint config does not enforce `no-magic-numbers`, so absence of a lint warning is not evidence that a literal is acceptable
+PATH_CHECK — Verify every constraint file exists under `cypress/constants/api` or `cypress/constants/ui`.
+NAMING_CHECK — Confirm constants use `SCREAMING_SNAKE_CASE`, keys use meaningful camelCase, and files use kebab-case.
+FREEZE_CHECK — Verify every range, length, enum, and field-list export is wrapped in `Object.freeze()`.
+CONSUMER_CHECK — Confirm every constant has at least one example or spec consumer or a named shared-domain purpose, and remove it otherwise.
+IMPORT_CHECK — Confirm every consumer uses a direct named import and none reads a constraint through a global.
+BOUNDARY_LITERAL_CHECK — Verify each boundary literal in specs against constraint ownership, since ESLint does not enforce `no-magic-numbers` and silence proves nothing.

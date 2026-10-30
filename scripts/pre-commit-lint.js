@@ -1,8 +1,16 @@
-const { ESLint } = require('eslint');
+let ESLint;
+try {
+  ({ ESLint } = require('eslint'));
+} catch {
+  console.error('\nFAIL ESLint is not installed. Run `npm install` in the repo root, then commit again.');
+  console.error('   Emergency bypass (fix afterward): git commit --no-verify -m "your message"\n');
+  process.exit(1);
+}
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { gitExecutable, sanitizedEnv } = require('./git-exec-lib');
+const { findInvalidSpecPaths } = require('../eslint-plugin-custom-rules/verify-spec-file-paths.js');
 
 const nodeExecutable = process.execPath;
 
@@ -17,8 +25,7 @@ const nodeExecutable = process.execPath;
  *   5. Auto-tighten thresholds when quality improves
  *
  * Usage:
- *   node scripts/pre-commit-lint.js        # git hook / npm run precommit:check
- *   npm run lint:check                     # same, manual trigger
+ *   node scripts/pre-commit-lint.js        # git hook, or a manual run before committing
  */
 
 const thresholdsFilePath = path.join(__dirname, 'thresholds.json');
@@ -66,14 +73,15 @@ function getRepoRoot() {
  * fast and prevents accidentally staging changes the user never intended to commit.
  */
 function getStagedJsFiles(repoRoot) {
-  const result = spawnSync(gitExecutable, ['diff', '--cached', '--name-only', '--diff-filter=ACM'], { encoding: 'utf8', cwd: repoRoot, env: sanitizedEnv });
-  if (result.error) {
-    console.error(`git diff --cached failed: ${result.error.message}`);
-    return [];
+  // -z: NUL-separated, unquoted paths — otherwise git quotes non-ASCII/special
+  // file names (core.quotePath) and they would be silently skipped.
+  const result = spawnSync(gitExecutable, ['diff', '--cached', '--name-only', '-z', '--diff-filter=ACM'], { encoding: 'utf8', cwd: repoRoot, env: sanitizedEnv });
+  if (result.error || result.status !== 0) {
+    console.error(`git diff --cached failed: ${result.error?.message || result.stderr}`);
+    process.exit(1);
   }
   return result.stdout
-    .trim()
-    .split('\n')
+    .split('\0')
     .filter((f) => f.length > 0 && /\.(js|jsx|ts|tsx)$/.test(f) && !f.endsWith('.d.ts'))
     .filter((f) => !/^(node_modules|cypress\/reports|dist|build)\//.test(f))
     .map((f) => path.join(repoRoot, f))
@@ -86,6 +94,11 @@ function getStagedJsFiles(repoRoot) {
  * Prints its output inline and returns true if it passed.
  */
 function runSyncCheck(scriptPath, checkArgs, fixCommand, label, repoRoot) {
+  // Projects set up with only some cypress-start modules may not have the sync scripts.
+  if (!fs.existsSync(scriptPath)) {
+    console.log(`\nSkipping ${label} sync check (${path.relative(repoRoot, scriptPath)} not found).`);
+    return true;
+  }
   console.log(`\nRunning ${label} sync check...`);
   const result = spawnSync(nodeExecutable, [scriptPath, ...checkArgs], { encoding: 'utf8', cwd: repoRoot, env: sanitizedEnv });
   if (result.stdout) process.stdout.write(result.stdout);
@@ -108,6 +121,15 @@ async function run() {
   if (!coloursPassed || !l10nPassed) process.exit(1);
 
   // ── Step 1: Collect staged files only ────────────────────────────────────
+  // Spec placement is checked across the whole tree: the rule only sees the
+  // files ESLint lints, and a commit may stage no JS file at all.
+  const invalidSpecPaths = findInvalidSpecPaths(repoRoot);
+  if (invalidSpecPaths.length > 0) {
+    console.error('\nFAIL Spec file path check (custom/verify-spec-file-paths):');
+    invalidSpecPaths.forEach((message) => console.error(`   ${message}`));
+    process.exit(1);
+  }
+
   const files = getStagedJsFiles(repoRoot);
   if (files.length === 0) {
     console.log('\nNo staged JS/TS files to lint.');

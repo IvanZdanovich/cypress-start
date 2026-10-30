@@ -9,7 +9,6 @@ RUN apt-get update && \
 
 # Copy dependency files
 COPY package*.json ./
-COPY .dockerignore ./
 
 # Copy scripts directory (needed for postinstall script)
 COPY scripts/ ./scripts/

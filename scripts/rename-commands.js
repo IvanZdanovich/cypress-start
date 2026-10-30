@@ -28,43 +28,40 @@ function replaceCommandInContent(content, oldName, newName) {
   return updatedContent;
 }
 
+// Pure: apply every mapping to the content and report which ones changed it
+function applyMappings(content, mappings) {
+  const changes = [];
+  let updated = content;
+
+  for (const [oldName, newName] of Object.entries(mappings)) {
+    const next = replaceCommandInContent(updated, oldName, newName);
+    if (next !== updated) {
+      changes.push(`${oldName} → ${newName}`);
+      updated = next;
+    }
+  }
+
+  return { content: updated, changes };
+}
+
 // Function to process a single file
 function processFile(filePath) {
   const relativePath = filePath.replace(path.join(__dirname, '..'), '');
-  let content = fs.readFileSync(filePath, 'utf8');
-  let modified = false;
-  const changes = [];
+  const { content, changes } = applyMappings(fs.readFileSync(filePath, 'utf8'), commandMappings);
 
-  Object.entries(commandMappings).forEach(([oldName, newName]) => {
-    const oldContent = content;
-    content = replaceCommandInContent(content, oldName, newName);
-    if (content !== oldContent) {
-      modified = true;
-      changes.push(`${oldName} → ${newName}`);
-    }
-  });
-
-  if (modified) {
+  if (changes.length > 0) {
     fs.writeFileSync(filePath, content, 'utf8');
     console.log(`  ${relativePath}`);
-    changes.forEach((change) => console.log(`  ${change}`));
+    for (const change of changes) console.log(`  ${change}`);
   }
 }
 
-// Function to recursively find all files in a directory
-function getAllFiles(dirPath, arrayOfFiles = []) {
-  const files = fs.readdirSync(dirPath);
-
-  files.forEach((file) => {
-    const fullPath = path.join(dirPath, file);
-    if (fs.statSync(fullPath).isDirectory()) {
-      arrayOfFiles = getAllFiles(fullPath, arrayOfFiles);
-    } else if (file.endsWith('.js') || file.endsWith('.spec.js')) {
-      arrayOfFiles.push(fullPath);
-    }
-  });
-
-  return arrayOfFiles;
+// Function to recursively find all .js files in a directory
+function getAllFiles(dirPath) {
+  return fs
+    .readdirSync(dirPath, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.js'))
+    .map((entry) => path.join(entry.parentPath, entry.name));
 }
 
 // Main execution
@@ -76,7 +73,7 @@ const allFiles = getAllFiles(cypressDir);
 console.log(`Processing ${allFiles.length} files...\n`);
 
 // Process each file
-allFiles.forEach(processFile);
+for (const file of allFiles) processFile(file);
 
 console.log('\nCommand renaming complete!');
 console.log('\nTransformations applied.');

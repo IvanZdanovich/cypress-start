@@ -122,13 +122,17 @@ function formatFailure(data, totalRuns) {
   const file = path.basename(data.file);
   const lastFailed = data.lastFailed ? data.lastFailed.slice(0, 10) : 'N/A';
   const env = data.lastEnv || 'N/A';
+  const branch = data.lastBranch || 'N/A';
   const commit = data.lastCommit || 'N/A';
-  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${env}, ${commit})${RESET}`;
+  const build = data.lastBuild ? `, build ${data.lastBuild}` : '';
+  return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${branch}, ${env}, ${commit}${build})${RESET}`;
 }
 
 function formatSuppression(entry) {
   const file = path.basename(entry.file);
-  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'})${RESET}` : '';
+  const build = entry.lastBuild ? `, build ${entry.lastBuild}` : '';
+  const branch = entry.lastBranch ? `${entry.lastBranch}, ` : '';
+  const lastFailed = entry.lastFailedAt ? `  ${DIM}last ${entry.lastFailedAt} (${branch}${entry.env || 'N/A'}, ${entry.lastCommit || 'N/A'}${build})${RESET}` : '';
   const expires = entry.expiresAt ? `  ${DIM}expires ${entry.expiresAt}${RESET}` : '';
   return `${file}  ${DIM}${truncate(entry.it, 50)}${RESET}  ${CYAN}${entry.ticket}${RESET}${lastFailed}${expires}`;
 }
@@ -139,16 +143,19 @@ function formatRun(run, idx, totalRuns) {
   const branch = truncate(run.branch || 'unknown', 30);
   const commit = run.commit || 'N/A';
   const env = run.env || 'N/A';
+  const build = run.buildId ? `, build ${run.buildId}` : '';
   const passed = run.stats?.passed ?? '?';
   const failed = run.stats?.failed ?? '?';
   const total = run.stats?.total ?? '?';
   const failColour = failed > 0 ? RED : GREEN;
-  return `${DIM}#${num}${RESET} ${date} ${CYAN}${branch}${RESET}@${DIM}${commit}${RESET} (${env}) ${GREEN}${passed}✓${RESET} ${failColour}${failed}✗${RESET}/${total}`;
+  return `${DIM}#${num}${RESET} ${date} ${CYAN}${branch}${RESET}@${DIM}${commit}${RESET} (${env}${build}) ${GREEN}${passed}✓${RESET} ${failColour}${failed}✗${RESET}/${total}`;
 }
 
 function formatRunSuppression(entry) {
   const added = entry.suppressedAt ? `  ${DIM}added ${entry.suppressedAt}${RESET}` : '';
-  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${entry.env || 'N/A'})${RESET}` : '';
+  const build = entry.buildId ? `, build ${entry.buildId}` : '';
+  const branch = entry.branch ? `${entry.branch}, ` : '';
+  const runDate = entry.runDate ? `  ${DIM}run ${entry.runDate} (${branch}${entry.env || 'N/A'}${build})${RESET}` : '';
   return `${CYAN}${entry.commit}${RESET}  ${DIM}${entry.reason}${RESET}  ${YELLOW}${entry.ticket}${RESET}${runDate}${added}`;
 }
 
@@ -333,13 +340,95 @@ function interactiveSelect(items, renderItem, { title, hint = 'select items that
 
 // --- Commands ---
 
+/**
+ * Today's date as `YYYY-MM-DD` (UTC). The only clock read in this module.
+ */
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Add whole days to an ISO `YYYY-MM-DD` date and return the new ISO date.
+ * Pure: the base date is passed in.
+ */
+function addDaysIso(isoDate, days) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Return a copy of `items` without the entries at the given indices.
+ */
+function withoutIndices(items, indices) {
+  const drop = new Set(indices);
+  return items.filter((_, i) => !drop.has(i));
+}
+
+/**
+ * Prompt for the ticket, reason and expiry shared by every selected suppression.
+ * @param {string} today ISO date used as the expiry base.
+ * @returns {Promise<{ticket: string, reason: string, expiresAt: string|null}>}
+ */
+async function promptSuppressionDetails(today) {
+  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, JIRA-1234)');
+  const reason = await prompt('Reason', 'Known issue under investigation');
+  const expiresIn = await prompt('Expires in days (empty = no expiry)', '');
+  const days = parseInt(expiresIn, 10);
+  const expiresAt = expiresIn && !isNaN(days) ? addDaysIso(today, days) : null;
+  return { ticket, reason, expiresAt };
+}
+
+/**
+ * Build a flaky-suppressions.json test entry from an aggregated failure.
+ * Optional fields are written only when the failure carries them.
+ */
+function buildSuppressionEntry(data, { ticket, reason, expiresAt, today }) {
+  const entry = {
+    file: data.file,
+    it: data.it,
+    reason,
+    ticket,
+    suppressedAt: today,
+  };
+  if (data.lastFailed) {
+    entry.lastFailedAt = data.lastFailed.slice(0, 10);
+  }
+  if (data.lastBranch) {
+    entry.lastBranch = data.lastBranch;
+  }
+  if (data.lastEnv) {
+    entry.env = data.lastEnv;
+  }
+  if (data.lastCommit) {
+    entry.lastCommit = data.lastCommit;
+  }
+  if (data.lastBuild) {
+    entry.lastBuild = data.lastBuild;
+  }
+  if (data.context.length > 0) {
+    entry.context = data.context.join(' > ');
+  }
+  if (expiresAt) {
+    entry.expiresAt = expiresAt;
+  }
+  return entry;
+}
+
 async function addSuppressions(runs) {
-  const totalRuns = runs.length;
-  const failMap = aggregateFailures(runs);
-  const { testSuppressions } = loadSuppressions();
+  const { testSuppressions, runCommits } = loadSuppressions();
+
+  // Exclude whole-run-suppressed runs (runSuppressions) before aggregating so
+  // failures that exist only because of a compromised run are not offered as
+  // suppression candidates. Mirrors analyze-flaky-tests.js, which drops these
+  // runs from every metric.
+  const activeRuns = runCommits.size > 0 ? runs.filter((r) => !runCommits.has(r.commit)) : runs;
+
+  const totalRuns = activeRuns.length;
+  const failMap = aggregateFailures(activeRuns);
   const { activeMap } = partitionBySuppressions(failMap, testSuppressions);
 
-  const failures = [...activeMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
+  const failures = [...activeMap.entries()].toSorted((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count).map(([key, data]) => ({ key, data }));
 
   console.log(`\n  ${BOLD}Add Suppressions${RESET} — select failures to suppress\n`);
 
@@ -350,45 +439,12 @@ async function addSuppressions(runs) {
     return;
   }
 
-  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, A65-1234)');
-  const reason = await prompt('Reason', 'Known issue under investigation');
-  const expiresIn = await prompt('Expires in days (empty = no expiry)', '');
-  const today = new Date().toISOString().slice(0, 10);
-  let expiresAt = null;
-  if (expiresIn && !isNaN(parseInt(expiresIn, 10))) {
-    const d = new Date();
-    d.setDate(d.getDate() + parseInt(expiresIn, 10));
-    expiresAt = d.toISOString().slice(0, 10);
-  }
+  const today = todayIso();
+  const details = await promptSuppressionDetails(today);
 
   const fileData = loadSuppressionsFile();
 
-  for (const idx of indices) {
-    const { data } = failures[idx];
-    const entry = {
-      file: data.file,
-      it: data.it,
-      reason,
-      ticket,
-      suppressedAt: today,
-    };
-    if (data.lastFailed) {
-      entry.lastFailedAt = data.lastFailed.slice(0, 10);
-    }
-    if (data.lastEnv) {
-      entry.env = data.lastEnv;
-    }
-    if (data.lastCommit) {
-      entry.lastCommit = data.lastCommit;
-    }
-    if (data.context.length > 0) {
-      entry.context = data.context.join(' > ');
-    }
-    if (expiresAt) {
-      entry.expiresAt = expiresAt;
-    }
-    fileData.suppressions.push(entry);
-  }
+  fileData.suppressions.push(...indices.map((idx) => buildSuppressionEntry(failures[idx].data, { ...details, today })));
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Added ${indices.length} suppression(s) to flaky-suppressions.json\n`);
@@ -411,11 +467,7 @@ async function removeSuppressions() {
     return;
   }
 
-  // Remove in reverse order to preserve indices
-  const sorted = [...indices].sort((a, b) => b - a);
-  for (const idx of sorted) {
-    fileData.suppressions.splice(idx, 1);
-  }
+  fileData.suppressions = withoutIndices(fileData.suppressions, indices);
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Removed ${indices.length} suppression(s) from flaky-suppressions.json\n`);
@@ -424,19 +476,28 @@ async function removeSuppressions() {
 async function addRunSuppressions(runs) {
   console.log(`\n  ${BOLD}Suppress Runs${RESET} — select compromised runs to exclude from all stats\n`);
 
-  // Most recent first so the likely-bad runs appear at the top
-  const displayed = [...runs].reverse();
+  // Hide runs that are already whole-run-suppressed so they are not offered as
+  // candidates again. Matched by commit SHA, same key used when excluding them
+  // from stats.
+  const { runCommits } = loadSuppressions();
 
-  const indices = await interactiveSelect(displayed, (run, idx) => formatRun(run, idx, runs.length), { title: 'Recent runs (newest first)', hint: 'select compromised runs to exclude from stats', emptyMessage: 'No runs in ledger.' });
+  // Most recent first so the likely-bad runs appear at the top
+  const displayed = runs.toReversed().filter((run) => !runCommits.has(run.commit));
+
+  const indices = await interactiveSelect(displayed, (run, idx) => formatRun(run, idx, displayed.length), {
+    title: 'Recent runs (newest first)',
+    hint: 'select compromised runs to exclude from stats',
+    emptyMessage: 'No unsuppressed runs in ledger.',
+  });
 
   if (indices.length === 0) {
     console.log(`  ${DIM}No selections made.${RESET}`);
     return;
   }
 
-  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, A65-1234)');
+  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, JIRA-1234)');
   const reason = await prompt('Reason', 'CI environment outage — run not representative');
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   const fileData = loadSuppressionsFile();
 
@@ -456,7 +517,9 @@ async function addRunSuppressions(runs) {
     fileData.runSuppressions.push({
       commit: run.commit,
       runDate: run.timestamp ? run.timestamp.slice(0, 10) : undefined,
+      branch: run.branch || undefined,
       env: run.env || undefined,
+      buildId: run.buildId || undefined,
       reason,
       ticket,
       suppressedAt: today,
@@ -486,10 +549,7 @@ async function removeRunSuppressions() {
     return;
   }
 
-  const sorted = [...indices].sort((a, b) => b - a);
-  for (const idx of sorted) {
-    fileData.runSuppressions.splice(idx, 1);
-  }
+  fileData.runSuppressions = withoutIndices(fileData.runSuppressions, indices);
 
   saveSuppressionsFile(fileData);
   console.log(`\n  ${GREEN}✓${RESET} Removed ${indices.length} run suppression(s) from flaky-suppressions.json\n`);
@@ -497,7 +557,7 @@ async function removeRunSuppressions() {
 
 async function reviewSuppressions(runs) {
   const fileData = loadSuppressionsFile();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
 
   // Check for expired suppressions
   const expired = fileData.suppressions.filter((s) => s.expiresAt && s.expiresAt < today);
@@ -516,9 +576,12 @@ async function reviewSuppressions(runs) {
   }
 
   // Show current status summary
-  const totalRuns = runs.length;
-  const failMap = aggregateFailures(runs);
   const { testSuppressions, runCommits } = loadSuppressions();
+  // Exclude whole-run-suppressed runs so suppressed-run failures don't inflate
+  // the active/flaky counts (consistent with addSuppressions and the analyzer).
+  const activeRuns = runCommits.size > 0 ? runs.filter((r) => !runCommits.has(r.commit)) : runs;
+  const totalRuns = activeRuns.length;
+  const failMap = aggregateFailures(activeRuns);
   const { activeMap, suppressedMap } = partitionBySuppressions(failMap, testSuppressions);
   const flaky = [...activeMap.values()].filter((v) => classify(v.count, totalRuns) === 'flaky');
 

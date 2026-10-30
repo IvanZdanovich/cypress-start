@@ -18,11 +18,13 @@
  *   node scripts/analyze-flaky-tests.js [--output <path>] [--last <N>] [--recent <N>] [--streak <N>] [--env <env>] [--no-suppress]
  *
  * Defaults:
- *   --output  reports/flaky-tests.md
- *   --last    0 (all runs; set a number to limit to the N most recent runs)
- *   --recent  5 (size of the recent-run window that defines "latest issues")
- *   --streak  3 (consecutive trailing failures that flag a regression)
- *   --env     unset (all environments; set to e.g. qa or dev to scope the report)
+ *   --output       reports/flaky-tests.md
+ *   --last         0 (all runs; set a number to limit to the N most recent runs)
+ *   --recent       5 (size of the recent-run window that defines "latest issues")
+ *   --streak       3 (consecutive trailing failures that flag a regression)
+ *   --env          unset (all environments; set to e.g. qa or dev to scope the report)
+ *   --main-branch  main (branch treated as the trunk when splitting metrics into
+ *                  "excl. non-main" vs "incl. non-main"; also RESULTS_MAIN_BRANCH env)
  *
  * Flags:
  *   --no-suppress  Ignore flaky-suppressions.json and show all failures unsuppressed
@@ -55,6 +57,10 @@ const LAST_N = parseInt(argValue('--last', '0'), 10);
 const RECENT_WINDOW = parseInt(argValue('--recent', '5'), 10);
 // A trailing streak of this many consecutive failures signals a likely regression.
 const STREAK_THRESHOLD = parseInt(argValue('--streak', '3'), 10);
+// The trunk branch. Runs on any other branch (feature/PR branches) are "non-main"
+// and every rate is reported twice: excluding them (trunk-only signal) and
+// including them (gross signal across all branches).
+const MAIN_BRANCH = argValue('--main-branch', process.env.RESULTS_MAIN_BRANCH || 'main');
 // Suppression: known/reviewed failures are moved to a separate section.
 const SUPPRESSIONS_PATH = path.resolve(__dirname, 'flaky-suppressions.json');
 const NO_SUPPRESS = args.includes('--no-suppress');
@@ -124,8 +130,11 @@ function failureKey(failure) {
 
 /**
  * Load suppression rules from flaky-suppressions.json.
- * Returns active (non-expired) test-level suppressions and the set of
- * run commits that should be excluded entirely from analysis.
+ *
+ * All test-level suppressions are returned regardless of `expiresAt`. Expiry is
+ * NOT resolved here against today's clock; it is resolved per failure in
+ * `ruleStillMasks()` against the failure's own most-recent occurrence, so an
+ * expired-but-not-recurring known issue keeps its historical failures masked.
  * @returns {{ testSuppressions: Array, runSuppressions: Array, runCommits: Set<string> }}
  */
 function loadSuppressions() {
@@ -133,9 +142,8 @@ function loadSuppressions() {
 
   try {
     const data = JSON.parse(fs.readFileSync(SUPPRESSIONS_PATH, 'utf8'));
-    const today = new Date().toISOString().slice(0, 10);
 
-    const testSuppressions = (data.suppressions || []).filter((s) => !s.expiresAt || s.expiresAt >= today);
+    const testSuppressions = data.suppressions || [];
     const runSuppressions = data.runSuppressions || [];
     const runCommits = new Set(runSuppressions.map((r) => r.commit));
 
@@ -153,9 +161,32 @@ function matchesSuppression(data, rule) {
   return data.file.includes(rule.file) && data.it === rule.it && (!rule.context || data.context.join(' > ').includes(rule.context));
 }
 
+/** Reduce an ISO timestamp to its YYYY-MM-DD date part, or 'N/A' when empty. */
+function dateOnly(value) {
+  return value ? String(value).slice(0, 10) : 'N/A';
+}
+
+/**
+ * Decide whether an (optionally expiring) suppression still masks a failure.
+ *
+ * A suppression covers a KNOWN issue with a planned fix by `expiresAt`. Expiry
+ * is deliberately NOT evaluated against today's clock — it is evaluated against
+ * the failure's own most-recent occurrence (`data.lastFailed`). While the issue
+ * only fails on/before `expiresAt` it stays masked, so the already-triaged
+ * historical failures never resurface as noise. The moment it fails AGAIN after
+ * `expiresAt` — the fix missed its deadline — the suppression lapses and every
+ * occurrence of that test is unmasked so it becomes actionable again.
+ */
+function ruleStillMasks(rule, data) {
+  if (!rule.expiresAt) return true;
+  return dateOnly(data.lastFailed) <= rule.expiresAt;
+}
+
 /**
  * Partition failMap into active and suppressed entries in a single pass.
  * Returns empty suppressedMap immediately when no suppressions are active.
+ * A matched-but-lapsed suppression (recurred after `expiresAt`) is routed to
+ * activeMap so the whole test resurfaces as actionable.
  * @returns {{ activeMap: Map, suppressedMap: Map<string, {data, rule}> }}
  */
 function partitionBySuppressions(failMap, suppressions) {
@@ -165,7 +196,10 @@ function partitionBySuppressions(failMap, suppressions) {
   const suppressedMap = new Map();
 
   for (const [key, data] of failMap) {
-    const rule = suppressions.find((s) => matchesSuppression(data, s));
+    // Several rules may match the same test (e.g. an old lapsed rule plus a
+    // fresh re-suppression). Use any rule that still masks — picking only the
+    // first match would let a stale, lapsed rule shadow a newer valid one.
+    const rule = suppressions.find((s) => matchesSuppression(data, s) && ruleStillMasks(s, data));
     if (rule) {
       suppressedMap.set(key, { data, rule });
     } else {
@@ -180,7 +214,7 @@ function partitionBySuppressions(failMap, suppressions) {
  * Aggregate failure data across runs.
  * Each failure represents the first failure in a spec file.
  * @param {Array<object>} runs
- * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, lastCommit: string, lastEnv: string, errors: string[], file: string, context: string[], it: string }>}
+ * @returns {Map<string, { count: number, lastFailed: string, lastBranch: string, lastCommit: string, lastBuild: string, lastEnv: string, errors: string[], file: string, context: string[], it: string }>}
  */
 function aggregateFailures(runs) {
   const failMap = new Map();
@@ -195,6 +229,7 @@ function aggregateFailures(runs) {
           lastFailed: '',
           lastBranch: '',
           lastCommit: '',
+          lastBuild: '',
           lastEnv: '',
           errors: [],
           file: failure.file || '',
@@ -207,6 +242,7 @@ function aggregateFailures(runs) {
       entry.lastFailed = run.timestamp;
       entry.lastBranch = run.branch;
       entry.lastCommit = run.commit;
+      entry.lastBuild = run.buildId;
       entry.lastEnv = run.env;
       if (failure.error && !entry.errors.includes(failure.error)) {
         entry.errors.push(failure.error);
@@ -328,13 +364,15 @@ function isFailureSuppressed(failure, suppressions) {
 }
 
 /**
- * Count the failed spec files recorded in a run, excluding any that match an
- * active suppression rule. Suppressed (known/reviewed) failures should not
- * count against pass rate or per-run failure totals.
+ * Count the failed spec files recorded in a run, excluding any whose test key
+ * is effectively suppressed. `suppressedKeys` is the set of failure keys that
+ * `partitionBySuppressions` routed to the suppressed bucket — a lapsed
+ * suppression (recurred after expiry) is absent from it, so its failures count.
  */
-function countActiveFailures(run, suppressions = []) {
+function countActiveFailures(run, suppressedKeys) {
   if (!Array.isArray(run.failures)) return 0;
-  return run.failures.filter((f) => !isFailureSuppressed(f, suppressions)).length;
+  if (!suppressedKeys || suppressedKeys.size === 0) return run.failures.length;
+  return run.failures.filter((f) => !suppressedKeys.has(failureKey(f))).length;
 }
 
 /**
@@ -359,17 +397,17 @@ function countActiveFailures(run, suppressions = []) {
  * distort either rate by contributing failures with a zero file count.
  * @returns {{ averagePassRate: string, overallRunProbabilityRate: string }}
  */
-function computeSummaryStats(runs, suppressions = []) {
+function computeSummaryStats(runs, suppressedKeys = new Set()) {
   const rated = runs.filter((r) => (r.specFiles || 0) > 0);
   const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
-  const failedFiles = rated.reduce((sum, r) => sum + countActiveFailures(r, suppressions), 0);
+  const failedFiles = rated.reduce((sum, r) => sum + countActiveFailures(r, suppressedKeys), 0);
   const passedFiles = totalFiles - failedFiles;
 
   // Pooled, execution-weighted: probability a single spec-file execution passes.
   const overallRunProbabilityRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
 
   // Per-run mean: each run's own pass rate averaged with equal weight.
-  const perRunRates = rated.map((r) => (r.specFiles - countActiveFailures(r, suppressions)) / r.specFiles);
+  const perRunRates = rated.map((r) => (r.specFiles - countActiveFailures(r, suppressedKeys)) / r.specFiles);
   const averagePassRate = perRunRates.length > 0 ? ((perRunRates.reduce((sum, rate) => sum + rate, 0) / perRunRates.length) * 100).toFixed(2) : '0';
 
   return { averagePassRate, overallRunProbabilityRate };
@@ -391,10 +429,10 @@ function computeSummaryStats(runs, suppressions = []) {
  *
  * @param {Array<object>} runs
  * @param {Set<string>} flakyKeys Failure keys classified as flaky.
- * @param {Array} suppressions
+ * @param {Set<string>} suppressedKeys Effectively-suppressed failure keys.
  * @returns {string} Percentage to two decimals, or '0' when no rated runs.
  */
-function computeFlakyResultRate(runs, flakyKeys, suppressions = []) {
+function computeFlakyResultRate(runs, flakyKeys, suppressedKeys = new Set()) {
   const rated = runs.filter((r) => (r.specFiles || 0) > 0);
   const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
   if (totalFiles === 0) return '0';
@@ -403,7 +441,7 @@ function computeFlakyResultRate(runs, flakyKeys, suppressions = []) {
   for (const run of rated) {
     if (!Array.isArray(run.failures)) continue;
     for (const failure of run.failures) {
-      if (isFailureSuppressed(failure, suppressions)) continue;
+      if (suppressedKeys.has(failureKey(failure))) continue;
       if (flakyKeys.has(failureKey(failure))) flakyFailures++;
     }
   }
@@ -416,13 +454,9 @@ function computeFlakyResultRate(runs, flakyKeys, suppressions = []) {
  * @returns {{ sorted: Array, flaky: Array, consistent: Array, rare: Array }}
  */
 function classifyBuckets(failMap, totalRuns) {
-  const sorted = [...failMap.entries()].sort((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count);
-  return {
-    sorted,
-    flaky: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'flaky'),
-    consistent: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'consistent'),
-    rare: sorted.filter(([, v]) => classify(v.count, totalRuns) === 'rare'),
-  };
+  const sorted = [...failMap.entries()].toSorted((a, b) => (b[1].lastFailed || '').localeCompare(a[1].lastFailed || '') || b[1].count - a[1].count);
+  const { flaky = [], consistent = [], rare = [] } = Object.groupBy(sorted, ([, v]) => classify(v.count, totalRuns));
+  return { sorted, flaky, consistent, rare };
 }
 
 /**
@@ -432,7 +466,7 @@ function classifyBuckets(failMap, totalRuns) {
 function computeActionable(sorted, recency) {
   return sorted
     .filter(([key]) => needsAction(recency.get(key)))
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       const ra = recency.get(a[0]);
       const rb = recency.get(b[0]);
       return rb.streak - ra.streak || rb.recentFails - ra.recentFails;
@@ -444,10 +478,6 @@ function firstError(data) {
   return data.errors.length > 0 ? truncate(clean(data.errors[0]), 120) : '';
 }
 
-function dateOnly(value) {
-  return value ? String(value).slice(0, 10) : 'N/A';
-}
-
 function envLabel(value) {
   return value || 'N/A';
 }
@@ -456,118 +486,191 @@ function commitLabel(value) {
   return value || 'N/A';
 }
 
-function failureMetadata(data) {
-  return `${dateOnly(data.lastFailed)} (${envLabel(data.lastEnv)}, ${commitLabel(data.lastCommit)})`;
+function buildLabel(value) {
+  return value ? `build ${value}` : 'build N/A';
 }
 
 /**
- * Build the summary header section.
+ * A run's branch is "unmentioned" when nothing meaningful was recorded: an
+ * empty value, the placeholder `unknown`, or a detached `HEAD` (how CI reports
+ * a checkout that isn't on a named branch). Such a run is treated as the trunk —
+ * absence of an explicit feature/PR branch means it ran on main.
  */
-function buildSummarySection(runs, failMap, buckets, actionable, stats, suppressedMap, excludedRuns) {
-  const totalRuns = runs.length;
-  const firstRun = runs[0]?.timestamp || 'N/A';
-  const lastRun = runs[totalRuns - 1]?.timestamp || 'N/A';
+function isBranchUnmentioned(value) {
+  return ['', 'unknown', 'head'].includes(
+    String(value || '')
+      .trim()
+      .toLowerCase(),
+  );
+}
 
-  const lines = [
+function branchLabel(value) {
+  return isBranchUnmentioned(value) ? MAIN_BRANCH : value;
+}
+
+/**
+ * Is this run recorded on the trunk (main) branch? Non-main runs come from
+ * feature/PR branches and are split out of the trunk-only metrics. A run with
+ * no meaningful branch recorded counts as the trunk (see isBranchUnmentioned).
+ */
+function isMainBranch(run) {
+  return isBranchUnmentioned(run.branch) || String(run.branch) === MAIN_BRANCH;
+}
+
+function failureMetadata(data) {
+  return `${dateOnly(data.lastFailed)} (${branchLabel(data.lastBranch)}, ${envLabel(data.lastEnv)}, ${commitLabel(data.lastCommit)}, ${buildLabel(data.lastBuild)})`;
+}
+
+/** Branch-breakdown line contrasting the trunk-only headline with every analysed branch; empty unless runs mix branches. */
+function buildBranchBreakdownSection(branchBreakdown) {
+  if (!branchBreakdown.show) return [];
+
+  const { allStats } = branchBreakdown;
+  const runs = branchBreakdown.mainRuns + branchBreakdown.nonMainRuns;
+  return [
+    `- **Branch breakdown (incl. non-main, ${runs} runs):** Average pass rate ${allStats.averagePassRate}%, Overall test run probability rate ${allStats.overallRunProbabilityRate}%, Flaky result rate ${allStats.flakyResultRate}% (excl. suppressed) / ${allStats.flakyResultRateAll}% (incl. suppressed)`,
+  ];
+}
+
+/** One-line verdict for the Executive Summary, worst signal first. */
+function statusLine(buckets, actionable) {
+  if (actionable.length > 0) return 'Action required. Recent regressions need investigation.';
+  if (buckets.consistent.length > 0) return 'Failing. Some tests fail in most runs.';
+  if (buckets.flaky.length > 0) return 'Unstable. Some tests fail intermittently.';
+  if (buckets.rare.length > 0) return 'Stable. Only rare failures were recorded.';
+  return 'Stable. No failures were recorded.';
+}
+
+/** Report title and run metadata. */
+function buildHeaderSection({ runs, branchBreakdown, generatedAt }) {
+  const firstRun = runs[0]?.timestamp || 'N/A';
+  const lastRun = runs.at(-1)?.timestamp || 'N/A';
+  const headlineScope = branchBreakdown.hasMain === false ? `all branches (no \`${MAIN_BRANCH}\` runs in scope)` : `trunk-only (\`${MAIN_BRANCH}\`)`;
+  return [
     '# Flaky Test Analysis Report',
     '',
-    `Generated: ${new Date().toISOString()}`,
+    `**Generated**: ${generatedAt}  `,
+    `**Period**: ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}  `,
+    `**Runs analyzed**: ${runs.length} (${branchBreakdown.mainRuns} on \`${MAIN_BRANCH}\`, ${branchBreakdown.nonMainRuns} on non-main branches)  `,
+    `**Environment**: ${ENV_FILTER || 'all environments'}  `,
+    `**Headline rates**: ${headlineScope}`,
     '',
-    '## Summary',
-    '',
-    `- **Runs analyzed:** ${totalRuns}`,
-    `- **Environment:** ${ENV_FILTER || 'all environments'}`,
-    `- **Period:** ${firstRun.slice(0, 10)} to ${lastRun.slice(0, 10)}`,
-    `- **Average pass rate:** ${stats.averagePassRate}%`,
-    `- **Overall test run probability rate:** ${stats.overallRunProbabilityRate}%`,
-    `- **Flaky result rate (excl. suppressed):** ${stats.flakyResultRate}%`,
-    `- **Flaky result rate (incl. suppressed):** ${stats.flakyResultRateAll}%`,
-    `- **Unique failing tests:** ${failMap.size}`,
-    `- **Flaky tests (10-79% fail rate):** ${buckets.flaky.length}`,
-    `- **Consistently failing (>=80%):** ${buckets.consistent.length}`,
-    `- **Rare failures (<10%):** ${buckets.rare.length}`,
-    `- **⚠️ Action required (recent regressions):** ${actionable.length}`,
   ];
+}
 
-  if (suppressedMap.size > 0) {
-    lines.push(`- **🔇 Suppressed (known issues):** ${suppressedMap.size}`);
-  }
-  if (excludedRuns.length > 0) {
-    lines.push(`- **🔇 Suppressed runs:** ${excludedRuns.length}`);
-  }
+/**
+ * Build the Executive Summary: status line and headline metrics only.
+ * @param {object} input Named inputs.
+ */
+function buildSummarySection({ failMap, buckets, actionable, stats }) {
+  return [
+    '## Executive Summary',
+    '',
+    `**Status**: ${statusLine(buckets, actionable)}`,
+    '',
+    `- **Average pass rate:** ${stats.averagePassRate}%`,
+    `- **Flaky result rate (excl. suppressed):** ${stats.flakyResultRate}%`,
+    `- **Action required (recent regressions):** ${actionable.length}`,
+    `- **Unique failing tests:** ${failMap.size}`,
+    '',
+    'Metric definitions: `docs/flaky-test-analysis.md`.',
+    '',
+  ];
+}
 
-  lines.push('');
-  lines.push('> Note: only the **first failure per spec file** is tracked — specs run with');
-  lines.push('> `testIsolation: false`, so later tests depend on earlier ones and their failures');
-  lines.push('> are unreliable. Both rates are measured at the **spec-file level**: the share of');
-  lines.push('> test files with no recorded first failure. **Average pass rate** is the mean of each');
-  lines.push("> run's own pass rate, every run weighted equally. **Overall test run probability rate**");
-  lines.push('> pools all spec-file executions across runs (including repeated runs of the same commit),');
-  lines.push('> so it is the probability a single spec-file execution passes and weights larger runs more.');
-  lines.push('> **Flaky result rate** is the share of all spec-file executions that are failures from');
-  lines.push('> flaky-classified tests (10–79% lifetime fail rate), over the same execution pool. The');
-  lines.push('> **excl. suppressed** figure omits suppressed failures (actionable flakiness); the');
-  lines.push('> **incl. suppressed** figure counts them (gross flakiness). Suppressed whole-run incidents');
-  lines.push('> are excluded from every metric — they are removed from the analysed run set entirely.');
-  lines.push('> **Suppressed (known/reviewed) failures are excluded** from every other rate and per-run failure counts.');
+/**
+ * Build the "Run History" sub-section (last 20 runs, newest first).
+ * Suppressed (known/reviewed) failures are excluded from each run's failed
+ * count so the per-run pass rate matches the summary.
+ */
+function buildRunHistorySection(runs, suppressedKeys = new Set()) {
+  const lines = ['### Run History', ''];
+
+  const recentRuns = runs.slice(-20);
+  for (let i = recentRuns.length - 1; i >= 0; i--) {
+    const r = recentRuns[i];
+    const num = runs.indexOf(r) + 1;
+    const date = r.timestamp?.slice(0, 10) || '';
+    const branch = clean(branchLabel(r.branch));
+    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}, ${buildLabel(r.buildId)}):`;
+    if (r.specFiles > 0) {
+      const runFailedFiles = countActiveFailures(r, suppressedKeys);
+      const runPassedFiles = r.specFiles - runFailedFiles;
+      const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
+      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
+    } else {
+      lines.push(`${prefix} legacy run — spec-file pass rate unavailable (no specFiles recorded)`);
+    }
+  }
   lines.push('');
 
   return lines;
+}
+
+/** Build the Quality Metrics section: detailed rates, failure classes, branch breakdown and run history. */
+function buildQualityMetricsSection({ runs, buckets, stats, suppressedMap, excludedRuns, branchBreakdown, suppressedKeys }) {
+  const suppressed = suppressedMap.size > 0 || excludedRuns.length > 0 ? [`- **Suppressed:** ${suppressedMap.size} test(s), ${excludedRuns.length} run(s)`] : [];
+  return [
+    '## Quality Metrics',
+    '',
+    `- **Overall test run probability rate:** ${stats.overallRunProbabilityRate}%`,
+    `- **Flaky result rate (incl. suppressed):** ${stats.flakyResultRateAll}%`,
+    `- **Failing tests by class:** ${buckets.flaky.length} flaky (10–79%), ${buckets.consistent.length} consistently failing (≥80%), ${buckets.rare.length} rare (<10%)`,
+    ...suppressed,
+    ...buildBranchBreakdownSection(branchBreakdown),
+    '',
+    ...buildRunHistorySection(runs, suppressedKeys),
+  ];
 }
 
 /** Compose the header suffix tags for an actionable entry. */
 function actionableTags(rec) {
   const tags = [];
-  if (rec.streak >= STREAK_THRESHOLD) tags.push(`🔴 ${rec.streak} in a row`);
-  if (rec.isNew) tags.push('🆕 new regression');
+  if (rec.streak >= STREAK_THRESHOLD) tags.push(`${rec.streak} in a row`);
+  if (rec.isNew) tags.push('new regression');
   if (!rec.failingNow) tags.push('recovered on latest run');
   return tags;
 }
 
+/** One failure entry: a bullet naming the test, with its detail lines nested below. */
+function failureEntryLines(data, details, tags = []) {
+  const ctx = clean(data.context.join(' > '));
+  const title = [ctx, clean(data.it)].filter(Boolean).join(' > ');
+  const tagSuffix = tags.length > 0 ? ` — ${tags.join(', ')}` : '';
+  return [`- **${clean(data.file)}** — ${title}${tagSuffix}`, ...details.map((line) => `  - ${line}`)];
+}
+
 /**
- * Build the "Action Required" section (recent regressions surfaced first).
+ * Build the "Action Required" sub-section (recent regressions surfaced first).
  */
 function buildActionableSection(actionable, recency, totalRuns) {
   if (actionable.length === 0) return [];
 
-  const lines = [
-    '## ⚠️ Action Required — Recent Regressions',
-    '',
-    `Tests failing **now**: a streak of ≥${STREAK_THRESHOLD} consecutive failures, or`,
-    `a majority of the last ${RECENT_WINDOW} runs failing. These likely reflect a real change`,
-    'rather than lifetime flakiness — investigate the recent commits.',
-    '',
-  ];
+  const lines = ['### Action Required — Recent Regressions', '', `Failing **now**: a streak of ≥${STREAK_THRESHOLD} consecutive failures, or a majority of the last ${RECENT_WINDOW} runs. Investigate the recent commits.`, ''];
 
   for (const [key, data] of actionable) {
     const rec = recency.get(key);
-    const ctx = clean(data.context.join(' > '));
     const error = firstError(data);
     const rate = ((data.count / totalRuns) * 100).toFixed(1);
-    const tags = actionableTags(rec);
-    const tagSuffix = tags.length > 0 ? ` — ${tags.join(', ')}` : '';
-
-    lines.push(`### ${clean(data.file)}${tagSuffix}`);
-    lines.push('');
-    if (ctx) lines.push(`- **Context:** ${ctx}`);
-    lines.push(`- **it:** ${clean(data.it)}`);
-    lines.push(`- **Current streak:** ${rec.streak} consecutive failure(s)`);
-    lines.push(`- **Recent window:** ${rec.recentFails}/${rec.recentTotal} of last ${RECENT_WINDOW} runs failed`);
-    lines.push(`- **Lifetime:** ${data.count}/${totalRuns} runs (${rate}%)`);
-    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
-    if (error) lines.push(`- **Error:** ${error}`);
-    lines.push('');
+    lines.push(
+      ...failureEntryLines(
+        data,
+        [`**Streak:** ${rec.streak} · **Recent window:** ${rec.recentFails}/${rec.recentTotal} · **Lifetime:** ${data.count}/${totalRuns} (${rate}%)`, `**Last failed:** ${failureMetadata(data)}`, ...(error ? [`**Error:** ${error}`] : [])],
+        actionableTags(rec),
+      ),
+    );
   }
+  lines.push('');
 
   return lines;
 }
 
 /**
- * Build one failure-bucket section (Flaky / Consistently Failing / Rare).
+ * Build one failure-bucket sub-section (Flaky / Consistently Failing / Rare).
  * @param {Array} entries Failure entries for this bucket.
  * @param {number} totalRuns Number of analyzed runs.
  * @param {object} opts
- * @param {string} opts.heading   Section heading text.
+ * @param {string} opts.heading   Sub-section heading text.
  * @param {string} opts.intro     One-line description under the heading.
  * @param {boolean} opts.showRate Include the percentage in the failures line.
  * @param {boolean} opts.showError Include the error line.
@@ -575,23 +678,15 @@ function buildActionableSection(actionable, recency, totalRuns) {
 function buildBucketSection(entries, totalRuns, { heading, intro, showRate, showError }) {
   if (entries.length === 0) return [];
 
-  const lines = [`## ${heading}`, '', intro, ''];
+  const lines = [`### ${heading}`, '', intro, ''];
 
   for (const [, data] of entries) {
     const rate = ((data.count / totalRuns) * 100).toFixed(1);
-    const ctx = clean(data.context.join(' > '));
     const error = showError ? firstError(data) : '';
     const failures = showRate ? `${data.count}/${totalRuns} (${rate}%)` : `${data.count}/${totalRuns}`;
-
-    lines.push(`### ${clean(data.file)}`);
-    lines.push('');
-    if (ctx) lines.push(`- **Context:** ${ctx}`);
-    lines.push(`- **it:** ${clean(data.it)}`);
-    lines.push(`- **Failures:** ${failures}`);
-    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
-    if (error) lines.push(`- **Error:** ${error}`);
-    lines.push('');
+    lines.push(...failureEntryLines(data, [`**Failures:** ${failures} · **Last failed:** ${failureMetadata(data)}`, ...(error ? [`**Error:** ${error}`] : [])]));
   }
+  lines.push('');
 
   return lines;
 }
@@ -607,61 +702,20 @@ function groupErrorPatterns(sorted) {
       errorGroups.get(normalized).push(label);
     }
   }
-  return [...errorGroups.entries()].filter(([, tests]) => tests.length > 1).sort((a, b) => b[1].length - a[1].length);
+  return [...errorGroups.entries()].filter(([, tests]) => tests.length > 1).toSorted((a, b) => b[1].length - a[1].length);
 }
 
 /**
- * Build the "Error Patterns" section (recurring errors across spec files).
+ * Build the "Error Patterns" sub-section (recurring errors across spec files).
  */
-function buildErrorPatternsSection(sorted, failMap) {
-  if (failMap.size === 0) return [];
+function buildErrorPatternsSection(groupedErrors) {
+  if (groupedErrors.length === 0) return [];
 
-  const lines = ['## Error Patterns', ''];
-  const groupedErrors = groupErrorPatterns(sorted);
-
-  if (groupedErrors.length === 0) {
-    lines.push('No recurring error patterns detected across multiple tests.');
-    lines.push('');
-    return lines;
-  }
-
-  lines.push('Recurring error patterns across multiple spec files:');
-  lines.push('');
+  const lines = ['### Error Patterns', '', 'Recurring errors across multiple spec files:', ''];
   for (const [pattern, tests] of groupedErrors.slice(0, 10)) {
-    lines.push(`### ${truncate(pattern, 100)}`);
-    lines.push('');
-    lines.push(`Affects ${tests.length} spec(s):`);
-    for (const t of tests.slice(0, 5)) lines.push(`- ${truncate(t, 120)}`);
-    if (tests.length > 5) lines.push(`- ...and ${tests.length - 5} more`);
-    lines.push('');
-  }
-
-  return lines;
-}
-
-/**
- * Build the "Run History" section (last 20 runs, newest first).
- * Suppressed (known/reviewed) failures are excluded from each run's failed
- * count so the per-run pass rate matches the summary.
- */
-function buildRunHistorySection(runs, suppressions = []) {
-  const lines = ['## Run History', ''];
-
-  const recentRuns = runs.slice(-20);
-  for (let i = recentRuns.length - 1; i >= 0; i--) {
-    const r = recentRuns[i];
-    const num = runs.indexOf(r) + 1;
-    const date = r.timestamp?.slice(0, 10) || '';
-    const branch = clean(r.branch || '');
-    const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}):`;
-    if (r.specFiles > 0) {
-      const runFailedFiles = countActiveFailures(r, suppressions);
-      const runPassedFiles = r.specFiles - runFailedFiles;
-      const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
-      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
-    } else {
-      lines.push(`${prefix} legacy run — spec-file pass rate unavailable (no specFiles recorded)`);
-    }
+    lines.push(`- **${clean(truncate(pattern, 100))}** — ${tests.length} spec(s)`);
+    for (const t of tests.slice(0, 5)) lines.push(`  - ${clean(truncate(t, 120))}`);
+    if (tests.length > 5) lines.push(`  - ...and ${tests.length - 5} more`);
   }
   lines.push('');
 
@@ -669,84 +723,35 @@ function buildRunHistorySection(runs, suppressions = []) {
 }
 
 /**
- * Build the collapsed "Suppressed — Known Issues" section.
+ * Build the collapsed "Suppressed — Known Issues and Runs" block.
  */
 function buildSuppressedSection(suppressedMap, totalRuns, excludedRuns) {
   if (suppressedMap.size === 0 && excludedRuns.length === 0) return [];
 
-  const lines = [
-    '## 🔇 Suppressed — Known Issues and Runs',
-    '',
-    'These entries are suppressed from actionable sections because they have been',
-    'reviewed and linked to a tracked ticket or incident. Edit `scripts/flaky-suppressions.json`',
-    'to add, remove, or expire test suppressions, or restore suppressed runs.',
-    '',
-  ];
+  const lines = ['<details>', '<summary>Suppressed — Known Issues and Runs</summary>', '', 'Reviewed and linked to a tracked ticket or incident. Edit `scripts/flaky-suppressions.json` to change them.', ''];
 
-  if (excludedRuns.length > 0) {
-    lines.push('### Suppressed runs');
-    lines.push('');
-    for (const { run, rule } of excludedRuns) {
-      lines.push(`- ${dateOnly(run.timestamp)} (${envLabel(run.env)}) — \`${run.commit || rule.commit || 'N/A'}\`: ${clean(rule.reason || 'No reason recorded')}${rule.ticket ? ` — ${clean(rule.ticket)}` : ''}`);
-    }
-    lines.push('');
+  for (const { run, rule } of excludedRuns) {
+    const ticketSuffix = rule.ticket ? ` — ${clean(rule.ticket)}` : '';
+    lines.push(
+      `- **Run** ${dateOnly(run.timestamp)} (${branchLabel(run.branch || rule.branch)}, ${envLabel(run.env)}, ${buildLabel(run.buildId || rule.buildId)}) — \`${run.commit || rule.commit || 'N/A'}\`: ${clean(rule.reason || 'No reason recorded')}${ticketSuffix}`,
+    );
   }
 
-  if (suppressedMap.size === 0) return lines;
-
-  lines.push('### Suppressed tests');
-  lines.push('');
-
-  const sortedSuppressed = [...suppressedMap.entries()].sort((a, b) => b[1].data.count - a[1].data.count);
+  const sortedSuppressed = [...suppressedMap.entries()].toSorted((a, b) => b[1].data.count - a[1].data.count);
 
   for (const [, { data, rule }] of sortedSuppressed) {
     const rate = ((data.count / totalRuns) * 100).toFixed(1);
-    const ctx = clean(data.context.join(' > '));
-    lines.push(`#### ${clean(data.file)}`);
-    lines.push('');
-    if (ctx) lines.push(`- **Context:** ${ctx}`);
-    lines.push(`- **it:** ${clean(data.it)}`);
-    lines.push(`- **Failures:** ${data.count}/${totalRuns} (${rate}%)`);
-    lines.push(`- **Last failed:** ${failureMetadata(data)}`);
-    lines.push(`- **Reason:** ${rule.reason}`);
-    lines.push(`- **Ticket:** ${rule.ticket}`);
-    if (rule.expiresAt) lines.push(`- **Expires:** ${rule.expiresAt}`);
-    lines.push('');
+    const expires = rule.expiresAt ? ` · **Expires:** ${rule.expiresAt}` : '';
+    lines.push(...failureEntryLines(data, [`**Failures:** ${data.count}/${totalRuns} (${rate}%) · **Last failed:** ${failureMetadata(data)}`, `**Reason:** ${rule.reason} · **Ticket:** ${rule.ticket || 'N/A'}${expires}`]));
   }
 
+  lines.push('', '</details>', '');
   return lines;
 }
 
-/**
- * Generate the markdown report.
- */
-function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = [], suppressions = []) {
-  const totalRuns = runs.length;
-  const stats = computeSummaryStats(runs, suppressions);
-  const buckets = classifyBuckets(failMap, totalRuns);
-
-  // Precise flaky-result rate: share of all spec-file executions that are flaky
-  // failures, excluding suppressed items. Derived from the flaky bucket keys.
-  const flakyKeys = new Set(buckets.flaky.map(([key]) => key));
-  stats.flakyResultRate = computeFlakyResultRate(runs, flakyKeys, suppressions);
-
-  // Gross variant: the same rate without excluding suppressed test failures.
-  // Reclassify over the full map (active + suppressed) so suppressed tests can
-  // qualify as flaky, and count their occurrences too (empty suppression list).
-  // Suppressed whole-run incidents stay excluded — they are removed from the run
-  // set upstream and are not test flakiness.
-  const fullMap = new Map(failMap);
-  for (const [key, { data }] of suppressedMap) fullMap.set(key, data);
-  const flakyKeysAll = new Set(classifyBuckets(fullMap, totalRuns).flaky.map(([key]) => key));
-  stats.flakyResultRateAll = computeFlakyResultRate(runs, flakyKeysAll, []);
-
-  // Recency signals: catch tests that are failing *now* regardless of their
-  // lifetime fail rate (a brand-new regression has a low overall rate).
-  const recency = analyzeRecency(runs, failMap);
-  const actionable = computeActionable(buckets.sorted, recency);
-
-  const lines = [
-    ...buildSummarySection(runs, failMap, buckets, actionable, stats, suppressedMap, excludedRuns),
+/** Build the Failed/Flaky Tests section: every bucket as a sub-section, suppressed items collapsed last. */
+function buildFailedFlakySection({ failMap, buckets, actionable, recency, totalRuns, groupedErrors, suppressedMap, excludedRuns }) {
+  const body = [
     // --- Latest issues: surfaced first because they need action now ---
     ...buildActionableSection(actionable, recency, totalRuns),
     ...buildBucketSection(buckets.flaky, totalRuns, {
@@ -767,10 +772,96 @@ function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns =
       showRate: false,
       showError: true,
     }),
-    ...buildErrorPatternsSection(buckets.sorted, failMap),
-    ...buildRunHistorySection(runs, suppressions),
-    // --- Suppressed known issues (collapsed at the bottom) ---
-    ...buildSuppressedSection(suppressedMap, totalRuns, excludedRuns),
+    ...buildErrorPatternsSection(groupedErrors),
+  ];
+  const empty = failMap.size === 0 ? ['No active failures were recorded.', ''] : [];
+  return ['## Failed/Flaky Tests', '', ...body, ...empty, ...buildSuppressedSection(suppressedMap, totalRuns, excludedRuns)];
+}
+
+const fileList = (entries) => [...new Set(entries.map(([, data]) => `\`${clean(data.file)}\``))].join(', ');
+
+/** Build the Recommendations & Next Actions section from the failure buckets. */
+function buildRecommendationsSection({ buckets, actionable, groupedErrors, suppressedMap }) {
+  const actions = [
+    actionable.length > 0 ? `Investigate the Action Required regressions against the commits since their last pass: ${fileList(actionable)}.` : '',
+    buckets.consistent.length > 0 ? `Fix the consistently failing tests, or suppress them with a ticket: ${fileList(buckets.consistent)}.` : '',
+    buckets.flaky.length > 0 ? `Stabilise the flaky tests, highest fail rate first: ${fileList(buckets.flaky.toSorted((a, b) => b[1].count - a[1].count).slice(0, 5))}.` : '',
+    groupedErrors.length > 0 ? 'Fix the shared root cause behind each recurring error pattern.' : '',
+    suppressedMap.size > 0 ? 'Run `npm run report:review` to review the suppressions and drop expired ones.' : '',
+  ].filter(Boolean);
+  const list = actions.length > 0 ? actions.map((action, index) => `${index + 1}. ${action}`) : ['No action needed. Keep collecting runs to confirm stability.'];
+  return ['## Recommendations & Next Actions', '', ...list, ''];
+}
+
+/**
+ * Bundle the four headline rates for a single run set: the two spec-file pass
+ * rates plus the flaky result rate in its excl./incl. suppressed variants.
+ * Reused to compute the same figures over the trunk-only run set and the
+ * all-branches run set, so the report can contrast excl. vs incl. non-main.
+ */
+function computeBranchStats(runs, suppressedKeys, flakyKeys, flakyKeysAll) {
+  const stats = computeSummaryStats(runs, suppressedKeys);
+  stats.flakyResultRate = computeFlakyResultRate(runs, flakyKeys, suppressedKeys);
+  stats.flakyResultRateAll = computeFlakyResultRate(runs, flakyKeysAll, new Set());
+  return stats;
+}
+
+/**
+ * Generate the markdown report.
+ * @param {string} [generatedAt] ISO timestamp shown in the header — passed in so the report stays pure.
+ */
+function generateReport(runs, failMap, suppressedMap = new Map(), excludedRuns = [], generatedAt = 'N/A') {
+  const totalRuns = runs.length;
+  // The effectively-suppressed key set — lapsed suppressions are already absent.
+  const suppressedKeys = new Set(suppressedMap.keys());
+  const buckets = classifyBuckets(failMap, totalRuns);
+
+  // Precise flaky-result rate: share of all spec-file executions that are flaky
+  // failures, excluding suppressed items. Derived from the flaky bucket keys.
+  const flakyKeys = new Set(buckets.flaky.map(([key]) => key));
+
+  // Gross variant: the same rate without excluding suppressed test failures.
+  // Reclassify over the full map (active + suppressed) so suppressed tests can
+  // qualify as flaky, and count their occurrences too (empty suppressed set).
+  // Suppressed whole-run incidents stay excluded — they are removed from the run
+  // set upstream and are not test flakiness.
+  const fullMap = new Map(failMap);
+  for (const [key, { data }] of suppressedMap) fullMap.set(key, data);
+  const flakyKeysAll = new Set(classifyBuckets(fullMap, totalRuns).flaky.map(([key]) => key));
+
+  // Trunk-only (excl. non-main) is the PRIMARY target for the headline rates:
+  // trunk health should not be diluted by in-development feature/PR-branch runs.
+  // The all-branches (incl. non-main) figures are also computed for the Branch
+  // breakdown comparison. Flaky classification stays global; only the run set the
+  // rates are measured over changes. When no run is on main, the headline falls
+  // back to all runs so the report is never empty.
+  const allStats = computeBranchStats(runs, suppressedKeys, flakyKeys, flakyKeysAll);
+  const mainRuns = runs.filter(isMainBranch);
+  const hasMain = mainRuns.length > 0;
+  const stats = hasMain ? computeBranchStats(mainRuns, suppressedKeys, flakyKeys, flakyKeysAll) : allStats;
+  const nonMainRuns = runs.length - mainRuns.length;
+  const branchBreakdown = {
+    mainRuns: mainRuns.length,
+    nonMainRuns,
+    mainStats: stats,
+    allStats,
+    // Only worth contrasting when the run set actually mixes main and non-main.
+    show: hasMain && nonMainRuns > 0,
+    hasMain,
+  };
+
+  // Recency signals: catch tests that are failing *now* regardless of their
+  // lifetime fail rate (a brand-new regression has a low overall rate).
+  const recency = analyzeRecency(runs, failMap);
+  const actionable = computeActionable(buckets.sorted, recency);
+  const groupedErrors = groupErrorPatterns(buckets.sorted);
+
+  const lines = [
+    ...buildHeaderSection({ runs, branchBreakdown, generatedAt }),
+    ...buildSummarySection({ failMap, buckets, actionable, stats }),
+    ...buildQualityMetricsSection({ runs, buckets, stats, suppressedMap, excludedRuns, branchBreakdown, suppressedKeys }),
+    ...buildFailedFlakySection({ failMap, buckets, actionable, recency, totalRuns, groupedErrors, suppressedMap, excludedRuns }),
+    ...buildRecommendationsSection({ buckets, actionable, groupedErrors, suppressedMap }),
   ];
 
   return lines.join('\n');
@@ -785,7 +876,7 @@ function main() {
 
   if (ENV_FILTER) {
     const before = runs.length;
-    const available = [...new Set(runs.map((r) => String(r.env || '').toLowerCase()).filter(Boolean))].sort();
+    const available = [...new Set(runs.map((r) => String(r.env || '').toLowerCase()).filter(Boolean))].toSorted((a, b) => a.localeCompare(b));
     runs = runs.filter((r) => String(r.env || '').toLowerCase() === ENV_FILTER);
     console.log(`  Filtering to env '${ENV_FILTER}' (${runs.length} of ${before} runs)`);
     if (runs.length === 0) {
@@ -812,7 +903,7 @@ function main() {
 
   const fullFailMap = aggregateFailures(runs);
   const { activeMap: failMap, suppressedMap } = partitionBySuppressions(fullFailMap, testSuppressions);
-  const report = generateReport(runs, failMap, suppressedMap, excludedRuns, testSuppressions);
+  const report = generateReport(runs, failMap, suppressedMap, excludedRuns, new Date().toISOString());
 
   fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, report);
@@ -847,6 +938,9 @@ module.exports = {
   countActiveFailures,
   computeSummaryStats,
   computeFlakyResultRate,
+  computeBranchStats,
+  isMainBranch,
+  MAIN_BRANCH,
 };
 
 if (require.main === module) main();

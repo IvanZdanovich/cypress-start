@@ -8,6 +8,7 @@
 
 const { spawn, exec } = require('child_process');
 const path = require('path');
+const { finished } = require('stream');
 const { glob } = require('glob');
 
 // Configuration
@@ -18,7 +19,7 @@ const IS_CI = process.env.CI === 'true';
 const CHUNK_STRATEGY = process.env.CHUNK_STRATEGY || 'unified'; // 'unified' or 'domain'
 
 // Pre-setup tests that must run first
-const PRE_SETUP_PATTERN = 'cypress/support/00-global-before.hook.spec.js';
+const PRE_SETUP_PATTERN = '';
 
 // Test domain patterns - used when SPEC_PATTERN is not provided
 const TEST_DOMAINS = {
@@ -75,6 +76,45 @@ function startXvfbServers(count) {
   });
 }
 
+const STDOUT_WRITE_CHUNK_SIZE = 64 * 1024;
+
+// ANSI colour codes (ESC[...m) that Cypress wraps its run summary in. ESC is
+// built from its char code so the pattern holds no control-character escape.
+const ANSI_SGR_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+
+/**
+ * Write text to stdout and wait until each chunk is flushed, so piped output is not truncated on exit
+ * @param {string} text - Text to write
+ * @returns {Promise<void>}
+ */
+async function writeToStdout(text) {
+  const data = Buffer.from(text, 'utf8');
+  for (let offset = 0; offset < data.length; offset += STDOUT_WRITE_CHUNK_SIZE) {
+    const chunk = data.subarray(offset, offset + STDOUT_WRITE_CHUNK_SIZE);
+    await new Promise((resolve) => process.stdout.write(chunk, () => resolve()));
+  }
+}
+
+/**
+ * Wait until the given readable streams have finished emitting data
+ * @param {Array<import('stream').Readable|null|undefined>} streams - Streams to wait for
+ * @returns {Promise<void>}
+ */
+function waitForStreamsToFinish(streams) {
+  return Promise.all(
+    streams.filter(Boolean).map(
+      (stream) =>
+        new Promise((resolve) => {
+          if (stream.destroyed || stream.readableEnded) {
+            resolve();
+            return;
+          }
+          finished(stream, () => resolve());
+        }),
+    ),
+  );
+}
+
 /**
  * Cleanup Xvfb servers on exit
  */
@@ -102,7 +142,7 @@ async function discoverTestFiles(pattern) {
     });
 
     // Convert to relative paths from workspace root
-    return files.map((file) => path.relative(WORKSPACE_ROOT, file)).sort();
+    return files.map((file) => path.relative(WORKSPACE_ROOT, file)).toSorted();
   } catch (error) {
     console.error(`Error discovering files for pattern ${pattern}:`, error.message);
     return [];
@@ -118,56 +158,52 @@ async function discoverTestFiles(pattern) {
 function splitIntoChunks(files, numChunks) {
   const chunks = Array.from({ length: numChunks }, () => []);
 
-  files.forEach((file, index) => {
+  for (const [index, file] of files.entries()) {
     chunks[index % numChunks].push(file);
-  });
+  }
 
   // Filter out empty chunks
   return chunks.filter((chunk) => chunk.length > 0);
 }
 
+// Domain key → spec path pattern (matched against forward-slash paths).
+const DOMAIN_PATTERNS = [
+  ['integrationApi', /^cypress\/integration\/api\/.*\.api\.spec\.js$/],
+  ['integrationUi', /^cypress\/integration\/ui\/.*\.ui\.spec\.js$/],
+  ['e2eUi', /^cypress\/e2e\/.*\.ui\.spec\.js$/],
+];
+
 /**
- * Classify files into domains based on their paths and patterns
+ * Classify files into domains based on their paths and patterns. Pure: no logging.
  * @param {string[]} files - Array of file paths
- * @returns {Object} Object with domain keys and arrays of files
+ * @returns {{ domainFiles: Object<string, string[]>, unmatchedFiles: string[] }}
  */
 function classifyFilesIntoDomains(files) {
-  const domainFiles = {
-    integrationApi: [],
-    integrationUi: [],
-    e2eUi: [],
-  };
-
-  const unmatchedFiles = [];
-
-  files.forEach((file) => {
-    // Normalize path for consistent matching
+  const groups = Object.groupBy(files, (file) => {
     const normalizedPath = file.replace(/\\/g, '/');
-
-    // Check against each domain pattern
-    if (/^cypress\/integration\/api\/.*\.api\.spec\.js$/.exec(normalizedPath)) {
-      domainFiles.integrationApi.push(file);
-    } else if (/^cypress\/integration\/ui\/.*\.ui\.spec\.js$/.exec(normalizedPath)) {
-      domainFiles.integrationUi.push(file);
-    } else if (/^cypress\/e2e\/.*\.ui\.spec\.js$/.exec(normalizedPath)) {
-      domainFiles.e2eUi.push(file);
-    } else {
-      unmatchedFiles.push(file);
-    }
+    return DOMAIN_PATTERNS.find(([, pattern]) => pattern.test(normalizedPath))?.[0] ?? 'unmatched';
   });
 
-  // Warn about files that don't match any domain pattern
-  if (unmatchedFiles.length > 0) {
-    console.warn(`Warning: ${unmatchedFiles.length} file(s) did not match any domain pattern and will be ignored:`);
-    unmatchedFiles.forEach((file) => console.warn(`  - ${file}`));
-    console.warn('  Expected patterns:');
-    console.warn('    - cypress/integration/api/**/*.api.spec.js');
-    console.warn('    - cypress/integration/ui/**/*.ui.spec.js');
-    console.warn('    - cypress/e2e/**/*.ui.spec.js');
-    console.warn('');
-  }
+  return {
+    domainFiles: Object.fromEntries(DOMAIN_PATTERNS.map(([key]) => [key, groups[key] ?? []])),
+    unmatchedFiles: groups.unmatched ?? [],
+  };
+}
 
-  return domainFiles;
+/**
+ * Warn about files that don't match any domain pattern
+ * @param {string[]} unmatchedFiles
+ */
+function warnUnmatchedFiles(unmatchedFiles) {
+  if (unmatchedFiles.length === 0) return;
+
+  console.warn(`Warning: ${unmatchedFiles.length} file(s) did not match any domain pattern and will be ignored:`);
+  for (const file of unmatchedFiles) console.warn(`  - ${file}`);
+  console.warn('  Expected patterns:');
+  console.warn('    - cypress/integration/api/**/*.api.spec.js');
+  console.warn('    - cypress/integration/ui/**/*.ui.spec.js');
+  console.warn('    - cypress/e2e/**/*.ui.spec.js');
+  console.warn('');
 }
 
 /**
@@ -212,6 +248,9 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
 
     // Buffer output if requested
     if (bufferOutput) {
+      cypressProcess.stdout?.setEncoding('utf8');
+      cypressProcess.stderr?.setEncoding('utf8');
+
       cypressProcess.stdout?.on('data', (data) => {
         outputBuffer += data.toString();
       });
@@ -251,11 +290,12 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       }
     });
 
-    cypressProcess.on('error', (error) => {
+    cypressProcess.on('error', async (error) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       const errorMsg = `[${chunkName}] ✖ Process error: ${error.message}`;
 
       if (bufferOutput) {
+        await waitForStreamsToFinish([cypressProcess.stdout, cypressProcess.stderr]);
         outputBuffer += errorMsg + '\n';
         resolve({
           exitCode: 1,
@@ -276,6 +316,36 @@ function executeCypressChunk(specFiles, chunkName, displayNumber, bufferOutput =
       }
     });
   });
+}
+
+/**
+ * Find "<failed> of <total> failed" in whitespace-separated tokens.
+ * @param {string} text Output with ANSI colour codes stripped
+ * @returns {number|null} Failed count, or null when the summary is missing
+ */
+function parseFailedSpecCount(text) {
+  const tokens = text.split(/\s+/);
+  const isCount = (token) => /^\d+$/.test(token);
+  for (let i = 0; i + 3 < tokens.length; i++) {
+    if (tokens[i + 1] === 'of' && tokens[i + 3] === 'failed' && isCount(tokens[i]) && isCount(tokens[i + 2])) {
+      return parseInt(tokens[i], 10);
+    }
+  }
+  return null;
+}
+
+/**
+ * Count failed spec files in a chunk from Cypress's run-summary line
+ * ("✖  2 of 10 failed (20%)"), which is spec-file level. When the line is
+ * missing from a failed chunk, counts it as 1 failed spec file.
+ * @param {{exitCode: number, output: string, specFiles: string[]}} result
+ * @returns {number} Failed spec files in the chunk
+ */
+function countFailedSpecFiles(result) {
+  if (result.exitCode === 0) return 0;
+  const plain = (result.output || '').replace(ANSI_SGR_PATTERN, '');
+  const failed = parseFailedSpecCount(plain);
+  return failed ?? 1;
 }
 
 /**
@@ -367,7 +437,8 @@ async function runParallelTests() {
   const { exitCode: preSetupExitCode, preSetupFiles } = await executePreSetupTests();
   if (preSetupExitCode !== 0) {
     console.error('Exiting due to pre-setup test failure.');
-    process.exit(preSetupExitCode);
+    process.exitCode = preSetupExitCode;
+    return;
   }
 
   // Use pre-setup files discovered during execution to exclude them from parallel execution
@@ -384,28 +455,21 @@ async function runParallelTests() {
     const filteredFiles = files.filter((file) => !preSetupFilesSet.has(file));
 
     // Classify files into domains for better organization
-    const classifiedDomains = classifyFilesIntoDomains(filteredFiles);
+    const { domainFiles: classifiedDomains, unmatchedFiles } = classifyFilesIntoDomains(filteredFiles);
+    warnUnmatchedFiles(unmatchedFiles);
 
     // Only include domains that have files
-    let totalClassified = 0;
     for (const [domainKey, filesInDomain] of Object.entries(classifiedDomains)) {
       if (filesInDomain.length > 0) {
         domainFiles[domainKey] = filesInDomain;
-        totalClassified += filesInDomain.length;
         console.log(`  ${TEST_DOMAINS[domainKey].name}: ${filesInDomain.length} file(s)`);
       }
     }
 
     // If some files couldn't be classified, add them to a generic domain
-    if (totalClassified < filteredFiles.length) {
-      const unclassifiedFiles = filteredFiles.filter((file) => {
-        return !Object.values(classifiedDomains).some((domainFileList) => domainFileList.includes(file));
-      });
-
-      if (unclassifiedFiles.length > 0) {
-        domainFiles['custom'] = unclassifiedFiles;
-        console.log(`  Custom Pattern Tests: ${unclassifiedFiles.length} file(s) (unclassified)`);
-      }
+    if (unmatchedFiles.length > 0) {
+      domainFiles['custom'] = unmatchedFiles;
+      console.log(`  Custom Pattern Tests: ${unmatchedFiles.length} file(s) (unclassified)`);
     }
 
     console.log(`  Total: ${files.length} file(s) found, ${filteredFiles.length} after filtering pre-setup`);
@@ -441,23 +505,13 @@ async function runParallelTests() {
       console.log(`    Chunks: ${chunks.length}`);
       console.log(`    Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
 
-      chunks.forEach((chunk, index) => {
-        const chunkName = `${domainKey}-${index + 1}`;
-        executionTasks.push({
-          name: chunkName,
-          domain: domainKey,
-          files: chunk,
-        });
-      });
+      executionTasks.push(...chunks.map((chunk, index) => ({ name: `${domainKey}-${index + 1}`, domain: domainKey, files: chunk })));
     }
 
     console.log(`  Total tasks: ${executionTasks.length}`);
   } else {
     // Unified strategy: collect all files from all domains into a single array
-    const allFiles = [];
-    for (const [, files] of Object.entries(domainFiles)) {
-      allFiles.push(...files);
-    }
+    const allFiles = Object.values(domainFiles).flat();
 
     if (allFiles.length > 0) {
       // Split all files into chunks without domain separation
@@ -468,14 +522,8 @@ async function runParallelTests() {
       console.log(`  Chunks created: ${chunks.length}`);
       console.log(`  Files per chunk: ${chunks.map((c) => c.length).join(', ')}`);
 
-      chunks.forEach((chunk, index) => {
-        const chunkName = `stream-${index + 1}`;
-        executionTasks.push({
-          name: chunkName,
-          domain: 'mixed', // Indicates mixed domain content
-          files: chunk,
-        });
-      });
+      // 'mixed' indicates mixed domain content
+      executionTasks.push(...chunks.map((chunk, index) => ({ name: `stream-${index + 1}`, domain: 'mixed', files: chunk })));
     }
   }
 
@@ -486,7 +534,8 @@ async function runParallelTests() {
 
   if (executionTasks.length === 0) {
     console.log('No test files found. Exiting.');
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   // Execute tasks with concurrency control
@@ -555,22 +604,24 @@ async function runParallelTests() {
   console.log('='.repeat(80));
   console.log('');
 
-  taskResults.forEach(({ result }) => {
+  for (const { result } of taskResults) {
     console.log('─'.repeat(80));
     console.log(`Stream: ${result.chunkName} | Duration: ${result.duration}s | Status: ${result.exitCode === 0 ? 'PASSED' : 'FAILED'}`);
     console.log(`Files: ${result.specFiles.length}`);
     result.specFiles.forEach((file) => console.log(`  - ${file}`));
     console.log('─'.repeat(80));
     if (result.output) {
-      console.log(result.output);
+      await writeToStdout(result.output.endsWith('\n') ? result.output : `${result.output}\n`);
     } else {
       console.log('(No output captured)');
     }
     console.log('');
-  });
+  }
 
   // Calculate summary
   const failedTasks = taskResults.filter((r) => r.result.exitCode !== 0).length;
+  const totalSpecFiles = taskResults.reduce((sum, r) => sum + r.result.specFiles.length, 0);
+  const failedSpecFiles = taskResults.reduce((sum, r) => sum + countFailedSpecFiles(r.result), 0);
   const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
 
   console.log('');
@@ -578,13 +629,14 @@ async function runParallelTests() {
   console.log('Execution Summary');
   console.log('='.repeat(80));
   console.log(`Total Duration: ${totalDuration}s`);
-  console.log(`Total Tasks: ${executionTasks.length}`);
-  console.log(`Failed Tasks: ${failedTasks}`);
-  console.log(`Success Rate: ${executionTasks.length > 0 ? (((executionTasks.length - failedTasks) / executionTasks.length) * 100).toFixed(1) : '0.0'}%`);
+  console.log(`Total Tasks: ${executionTasks.length} (failed: ${failedTasks})`);
+  console.log(`Total Spec Files: ${totalSpecFiles}`);
+  console.log(`Failed Spec Files: ${failedSpecFiles}`);
+  console.log(`Success Rate (spec files): ${totalSpecFiles > 0 ? (((totalSpecFiles - failedSpecFiles) / totalSpecFiles) * 100).toFixed(1) : '0.0'}%`);
   console.log('='.repeat(80));
 
-  // Exit with error code if any tasks failed
-  process.exit(failedTasks > 0 ? 1 : 0);
+  // Set exit code instead of exiting so stdout/stderr are fully flushed before Node exits
+  process.exitCode = failedTasks > 0 ? 1 : 0;
 }
 
 // Execute main function

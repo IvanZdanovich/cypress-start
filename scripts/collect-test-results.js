@@ -71,11 +71,70 @@ function git(args) {
 }
 
 /**
+ * Resolve the branch name from the CI environment.
+ *
+ * CI checks out a specific commit in a DETACHED HEAD state, so
+ * `git rev-parse --abbrev-ref HEAD` returns the literal `HEAD` rather than the
+ * branch. Each provider exposes the true ref via env vars instead. Azure's
+ * `BUILD_SOURCEBRANCH` is the full ref (`refs/heads/feature/x`), so the
+ * `refs/heads/` prefix is stripped; PR builds fall back to the source branch.
+ * Returns an empty string when no CI branch var is set (local runs).
+ */
+function ciBranch() {
+  const strip = (ref) => (ref ? ref.replace(/^refs\/heads\//, '').replace(/^refs\/pull\//, 'pull/') : '');
+
+  return (
+    strip(process.env.SYSTEM_PULLREQUEST_SOURCEBRANCH) || // Azure DevOps (PR builds)
+    strip(process.env.BUILD_SOURCEBRANCH) || // Azure DevOps (full ref)
+    process.env.GITHUB_HEAD_REF || // GitHub Actions (PR source)
+    process.env.GITHUB_REF_NAME || // GitHub Actions (push/ref name)
+    process.env.CI_COMMIT_REF_NAME || // GitLab CI
+    process.env.CIRCLE_BRANCH || // CircleCI
+    process.env.BRANCH_NAME || // Jenkins (multibranch)
+    ''
+  );
+}
+
+/**
+ * Recover the branch name from git when HEAD is detached.
+ *
+ * CI checks out a detached commit but still fetches the branch into
+ * `refs/remotes/origin/<branch>`, so a remote ref usually points exactly at
+ * HEAD. This works even when the CI branch env vars are unavailable — e.g. when
+ * the collector runs inside a Docker container that doesn't forward them.
+ * Returns an empty string when no remote ref points at HEAD (e.g. a synthetic
+ * PR merge commit).
+ */
+function gitBranchFromRef() {
+  const refs = git(['for-each-ref', '--points-at', 'HEAD', '--format=%(refname:short)', 'refs/remotes/origin']);
+  if (!refs) return '';
+  return (
+    refs
+      .split('\n')
+      .map((r) => r.trim())
+      // Keep only real branches (origin/<name>); this drops the symbolic
+      // `origin/HEAD` ref, whose short form is the bare remote name `origin`.
+      .filter((r) => r.startsWith('origin/'))
+      .map((r) => r.replace(/^origin\//, ''))
+      .find((r) => r && r !== 'HEAD') || ''
+  );
+}
+
+/**
  * Read git metadata for the current HEAD.
+ *
+ * Prefers the local branch name; when git reports a detached `HEAD` (the CI
+ * checkout default), falls back to the CI-provided branch, then to a git remote
+ * ref that points at HEAD, so feature/PR runs are recorded with their real
+ * branch rather than a useless `HEAD`. Only records `unknown` when every source
+ * fails — never the literal `HEAD`.
  */
 function gitMeta() {
+  const localBranch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+  const branch = (localBranch && localBranch !== 'HEAD' && localBranch) || ciBranch() || gitBranchFromRef() || 'unknown';
+
   return {
-    branch: git(['rev-parse', '--abbrev-ref', 'HEAD']) || 'unknown',
+    branch,
     commit: git(['rev-parse', '--short', 'HEAD']) || 'unknown',
   };
 }
@@ -446,13 +505,14 @@ function main() {
 
   console.log('');
   console.log(`  Run recorded: ${runId}`);
-  console.log(`  Specs:   ${specCount}`);
-  console.log(`  Total:   ${aggregatedStats.total}`);
-  console.log(`  Passed:  ${aggregatedStats.passed}`);
-  console.log(`  Failed:  ${aggregatedStats.failed}`);
-  console.log(`  Pending: ${aggregatedStats.pending}`);
+  console.log(`  Spec files:        ${specCount}`);
+  console.log(`  Failed spec files: ${failures.length}`);
+  console.log(`  Tests total:       ${aggregatedStats.total}`);
+  console.log(`  Tests passed:      ${aggregatedStats.passed}`);
+  console.log(`  Tests failed:      ${aggregatedStats.failed}`);
+  console.log(`  Tests pending:     ${aggregatedStats.pending}`);
   if (failures.length > 0) {
-    console.log(`  First failures (${failures.length} spec(s)):`);
+    console.log(`  First failure per failed spec file (${failures.length}):`);
     for (const f of failures) {
       console.log(`    - ${f.file}`);
       console.log(`      context: ${f.context.join(' > ')}`);
@@ -462,4 +522,8 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = { ciBranch, gitBranchFromRef, gitMeta, ciBuildId, extractTests, parseReport };

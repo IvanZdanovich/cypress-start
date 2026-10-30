@@ -110,26 +110,14 @@ function parseArgs() {
  * Recursively find all test files in a directory
  */
 function findTestFiles(dir, pattern) {
-  let results = [];
-
   if (!fs.existsSync(dir)) {
-    return results;
+    return [];
   }
 
-  const files = fs.readdirSync(dir);
-
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      results = results.concat(findTestFiles(filePath, pattern));
-    } else if (pattern.test(file)) {
-      results.push(filePath);
-    }
-  }
-
-  return results;
+  return fs
+    .readdirSync(dir, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile() && pattern.test(entry.name))
+    .map((entry) => path.join(entry.parentPath, entry.name));
 }
 
 /**
@@ -196,7 +184,7 @@ function parseTestFile(filePath) {
     return null;
   };
 
-  const getCallback = (node) => [...node.arguments].reverse().find((argument) => ['ArrowFunctionExpression', 'FunctionExpression'].includes(argument.type));
+  const getCallback = (node) => node.arguments.findLast((argument) => ['ArrowFunctionExpression', 'FunctionExpression'].includes(argument.type));
 
   const getStringValue = (node) => {
     if (node?.type === 'Literal' && typeof node.value === 'string') {
@@ -315,23 +303,16 @@ function parseAllTestFiles(testDir, testPattern) {
   const fullTestDir = path.join(rootDir, testDir);
   const testFiles = findTestFiles(fullTestDir, testPattern);
 
-  let allTestBlocks = [];
-  const parseErrors = [];
-
-  for (const file of testFiles) {
-    const result = parseTestFile(file);
-    allTestBlocks = allTestBlocks.concat(result.testBlocks);
-    if (result.parseError) {
-      parseErrors.push(result.parseError);
-    }
-  }
+  const parsedFiles = testFiles.map(parseTestFile);
+  const allTestBlocks = parsedFiles.flatMap((result) => result.testBlocks);
+  const parseErrors = parsedFiles.map((result) => result.parseError).filter(Boolean);
 
   const allStructure = buildStructureWithCounts(allTestBlocks);
   const activeStructure = buildStructureWithCounts(allTestBlocks.filter((block) => !block.isSkipped));
   const skippedOnlyPaths = Object.entries(allStructure.pathCounts)
     .filter(([, counts]) => counts.active === 0 && counts.skipped > 0)
     .map(([structurePath]) => structurePath)
-    .sort();
+    .toSorted();
 
   return {
     structure: allStructure.structure,
@@ -393,20 +374,13 @@ function countTestBlocks(obj, pathCounts, pathPrefix = '') {
  * Get all paths in structure as flat array
  */
 function getAllPaths(obj, prefix = '') {
-  const paths = [];
   const keys = Object.keys(obj).filter((k) => k !== '__counts');
 
   if (keys.length === 0) {
     return prefix ? [prefix] : [];
   }
 
-  for (const key of keys) {
-    const currentPath = prefix ? `${prefix}.${key}` : key;
-    const subPaths = getAllPaths(obj[key], currentPath);
-    paths.push(...subPaths);
-  }
-
-  return paths;
+  return keys.flatMap((key) => getAllPaths(obj[key], prefix ? `${prefix}.${key}` : key));
 }
 
 /**
@@ -487,17 +461,14 @@ function detectInconsistencies(expected, actual, pathPrefix = '') {
  * Group paths by top-level component/module
  */
 function groupByTopLevel(paths) {
-  const grouped = {};
+  return Object.groupBy(paths, (p) => p.split('.')[0]);
+}
 
-  for (const path of paths) {
-    const topLevel = path.split('.')[0];
-    if (!grouped[topLevel]) {
-      grouped[topLevel] = [];
-    }
-    grouped[topLevel].push(path);
-  }
-
-  return grouped;
+/**
+ * Group paths by top-level component and order groups by size (largest first)
+ */
+function sortedGroupsByTopLevel(paths) {
+  return Object.entries(groupByTopLevel(paths)).toSorted(([, a], [, b]) => b.length - a.length);
 }
 
 /**
@@ -548,8 +519,8 @@ function calculateCoverageByComponent(expected, activeActual, actualWithCounts, 
   }
 
   // Sort by status (normal first), then percent ascending, then by name
-  return Object.entries(coverage)
-    .sort(([keyA, a], [keyB, b]) => {
+  return Object.fromEntries(
+    Object.entries(coverage).toSorted(([keyA, a], [keyB, b]) => {
       // Put extra-only components at the end
       if (a.status !== b.status) {
         return a.status === 'extra-only' ? 1 : -1;
@@ -560,11 +531,8 @@ function calculateCoverageByComponent(expected, activeActual, actualWithCounts, 
       }
       // Finally by name
       return keyA.localeCompare(keyB);
-    })
-    .reduce((acc, [key, value]) => {
-      acc[key] = value;
-      return acc;
-    }, {});
+    }),
+  );
 }
 
 /**
@@ -618,8 +586,7 @@ function generateCLIReport(result) {
     console.log(colorize(`\nMISSING COVERAGE (${gaps.missing.length} paths)`, 'red'));
     console.log(colorize('-'.repeat(60), 'dim'));
 
-    const grouped = groupByTopLevel(gaps.missing);
-    const sortedGroups = Object.entries(grouped).sort(([, a], [, b]) => b.length - a.length);
+    const sortedGroups = sortedGroupsByTopLevel(gaps.missing);
 
     for (const [component, paths] of sortedGroups.slice(0, 10)) {
       console.log(colorize(`\n${component} (${paths.length} missing)`, 'yellow'));
@@ -739,183 +706,191 @@ function generateCLIReport(result) {
   console.log('');
 }
 
-/**
- * Generate Markdown report
- */
-function generateMarkdownReport(result) {
-  const { name, summary, gaps, coverageByComponent, parseErrors } = result;
-  const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+const hasItems = (list) => Array.isArray(list) && list.length > 0;
 
-  let md = `# Test Coverage Gap Analysis Report\n\n`;
-  md += `**Generated**: ${timestamp}  \n`;
-  md += `**Type**: ${name}\n\n`;
+const formatCodeList = (keys) => keys.map((k) => '`' + k + '`').join(', ');
 
-  // Summary
-  md += `## Summary\n\n`;
-  md += `- **Total Expected**: ${summary.totalExpected}\n`;
-  md += `- **Active Paths**: ${summary.totalActual}\n`;
-  md += `- **Declared Paths**: ${summary.totalDeclared}\n`;
+const formatPercent = (percent) => (percent === null ? 'N/A' : `${percent}%`);
 
-  if (summary.totalTests !== undefined) {
-    md += `- **Total Tests**: ${summary.totalTests}\n`;
-    md += `- **Active Tests**: ${summary.activeTests}\n`;
-    md += `- **Skipped Tests**: ${summary.skippedTests}\n`;
-  }
+const mdHeading = (level, text) => `${'#'.repeat(level)} ${text}\n\n`;
 
-  md += `- **Path Coverage**: ${summary.coveragePercent}%\n`;
+function getCoverageStatusMessage(coveragePercent) {
+  if (coveragePercent === null) return 'No expected paths are defined.';
+  if (coveragePercent >= 90) return 'All critical paths are well covered.';
+  if (coveragePercent >= 70) return 'Core paths are covered, but gaps exist.';
+  return 'Major gaps in coverage must be addressed.';
+}
 
-  if (summary.testCoveragePercent !== undefined) {
-    md += `- **Test Coverage**: ${summary.testCoveragePercent}% (active/total)\n`;
-  }
+/** Report header: the single title plus run metadata. */
+function buildMdHeader(results, timestamp) {
+  const typeLine = results.length === 1 ? `  \n**Type**: ${results[0].name}` : '';
+  return `# Test Coverage Gap Analysis Report\n\n**Generated**: ${timestamp}${typeLine}\n\n`;
+}
 
-  md += `- **Missing**: ${summary.missing}\n`;
-  md += `- **Extra**: ${summary.extra}\n`;
-  md += `- **Skipped-only paths**: ${summary.skippedOnly}\n\n`;
+/** Status of the weakest view, so a combined report never hides a critical test type. */
+function buildMdStatusLine(results) {
+  const rated = results.filter((result) => result.summary.coveragePercent !== null);
+  const lowest = rated.reduce((low, result) => (result.summary.coveragePercent < low.summary.coveragePercent ? result : low), rated[0]);
+  const percent = lowest ? lowest.summary.coveragePercent : null;
+  const scope = lowest && results.length > 1 ? ` Lowest Path Coverage: ${lowest.name} (${formatPercent(percent)}).` : '';
+  return `**Status**: ${getCoverageLabel(percent)}. ${getCoverageStatusMessage(percent)}${scope}\n\n`;
+}
 
-  const statusLabel = getCoverageLabel(summary.coveragePercent);
-  let statusMessage;
-  if (summary.coveragePercent >= 90) {
-    statusMessage = 'All critical paths are well covered.';
-  } else if (summary.coveragePercent >= 70) {
-    statusMessage = 'Core paths are covered, but gaps exist.';
-  } else {
-    statusMessage = 'Major gaps in coverage must be addressed.';
-  }
-  md += `**Status**: ${statusLabel}. ${statusMessage}\n\n`;
+const formatTestCoverage = (summary) => (summary.totalTests > 0 ? `${summary.testCoveragePercent}%` : 'N/A');
 
-  // Missing coverage
-  if (gaps.missing.length > 0) {
-    md += `## Missing Coverage (${gaps.missing.length} paths)\n\n`;
-
-    const grouped = groupByTopLevel(gaps.missing);
-    const sortedGroups = Object.entries(grouped).sort(([, a], [, b]) => b.length - a.length);
-
-    for (const [component, paths] of sortedGroups) {
-      md += `### ${component} (${paths.length} missing)\n\n`;
-      paths.forEach((p) => {
-        md += `- Missing: \`${p}\`\n`;
-      });
-      md += `\n`;
-    }
-  } else {
-    md += `## Missing Coverage\n\n`;
-    md += `No missing coverage. All expected paths are covered.\n\n`;
-  }
-
-  if (gaps.skippedOnly.length > 0) {
-    md += `## Skipped-only Paths (${gaps.skippedOnly.length} paths)\n\n`;
-    md += `These declared paths have tests, but none are active:\n\n`;
-    gaps.skippedOnly.forEach((p) => {
-      md += `- Skipped-only: \`${p}\`\n`;
-    });
-    md += `\n`;
-  }
-
-  // Extra coverage
-  if (gaps.extra.length > 0) {
-    md += `## Extra Coverage (${gaps.extra.length} paths)\n\n`;
-    md += `These paths exist in actual tests but are not in the expected structure:\n\n`;
-    gaps.extra.forEach((p) => {
-      md += `- Extra: \`${p}\`\n`;
-    });
-    md += `\n`;
-  }
-
-  if (parseErrors.length > 0) {
-    md += `## Parse Errors (${parseErrors.length} files)\n\n`;
-    parseErrors.forEach(({ filePath, message }) => {
-      md += `- **${filePath}** — ${message}\n`;
-    });
-    md += `\n`;
-  }
-
-  // Structural inconsistencies
-  if (result.inconsistencies && result.inconsistencies.length > 0) {
-    md += `## Structural Inconsistencies (${result.inconsistencies.length} paths)\n\n`;
-    md += `These paths exist in both expected and actual structures but have different sub-structures:\n\n`;
-
-    result.inconsistencies.forEach((item) => {
-      md += `### Inconsistency: \`${item.path}\`\n\n`;
-      md += `**Issue**: ${item.issue}\n\n`;
-
-      if (item.onlyInExpected && item.onlyInExpected.length > 0) {
-        const expectedList = item.onlyInExpected.map((k) => '`' + k + '`').join(', ');
-        md += `**Only in expected**: ${expectedList}\n\n`;
-      }
-
-      if (item.onlyInActual && item.onlyInActual.length > 0) {
-        const actualList = item.onlyInActual.map((k) => '`' + k + '`').join(', ');
-        md += `**Only in actual**: ${actualList}\n\n`;
-      }
-
-      if (item.expectedChildren) {
-        const childrenList = item.expectedChildren.length > 0 ? item.expectedChildren.map((k) => '`' + k + '`').join(', ') : 'none (leaf node)';
-        md += `**Expected children**: ${childrenList}\n\n`;
-      }
-
-      if (item.actualChildren) {
-        const childrenList = item.actualChildren.length > 0 ? item.actualChildren.map((k) => '`' + k + '`').join(', ') : 'none (leaf node)';
-        md += `**Actual children**: ${childrenList}\n\n`;
-      }
-    });
-
-    md += `\n`;
-  }
-
-  // Coverage by component
-  md += `## Coverage by Component\n\n`;
-
-  for (const [component, stats] of Object.entries(coverageByComponent)) {
-    if (stats.status === 'extra-only') {
-      // Component not in expected structure
-      const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
-      const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
-      md += `### ${component} — Extra\n\n`;
-      md += `- **Expected Paths**: 0\n`;
-      md += `- **Active Paths**: ${stats.actualPaths}\n`;
-      md += `- **Path Coverage**: N/A\n`;
-      md += `- **Tests (Active/Total)**: ${testInfo}\n`;
-      md += `- **Test Coverage**: ${testCov}\n\n`;
-    } else {
-      const status = getCoverageLabel(stats.percent);
-      const actualDisplay = stats.extra > 0 ? `${stats.actualPaths} (+${stats.extra} extra)` : String(stats.actualPaths);
-      const testInfo = stats.tests.total > 0 ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
-      const testCov = stats.tests.total > 0 ? `${stats.tests.coveragePercent}%` : 'N/A';
-      md += `### ${component} — ${status}\n\n`;
-      md += `- **Expected Paths**: ${stats.expected}\n`;
-      md += `- **Active Paths**: ${actualDisplay}\n`;
-      md += `- **Path Coverage**: ${stats.percent}%\n`;
-      md += `- **Tests (Active/Total)**: ${testInfo}\n`;
-      md += `- **Test Coverage**: ${testCov}\n\n`;
-    }
-  }
-
-  // Recommendations
-  md += `## Recommendations\n\n`;
-  if (gaps.missing.length > 0) {
-    const topMissing = Object.entries(groupByTopLevel(gaps.missing))
-      .sort(([, a], [, b]) => b.length - a.length)
-      .slice(0, 5);
-
-    md += `### Priority Areas\n\n`;
-    topMissing.forEach(([component, paths], index) => {
-      md += `${index + 1}. **${component}** - ${paths.length} missing test path(s)\n`;
-    });
-    md += `\n`;
-
-    md += `### Next Steps\n\n`;
-    md += `1. Review missing coverage in priority components\n`;
-    md += `2. Create test cases for critical user paths\n`;
-    md += `3. Update expected structure if some paths are no longer needed\n`;
-    md += `4. Re-run analysis after adding tests\n\n`;
-  } else {
-    md += `Expected active coverage is complete. Consider:\n\n`;
-    md += `1. Maintaining this coverage level as features evolve\n`;
-    md += `2. Reviewing and updating expected structure for new features\n`;
-    md += `3. Ensuring test quality matches coverage quantity\n\n`;
-  }
-
+/** Headline metrics of one view, shown once in the Executive Summary. */
+function buildMdHeadlineList(summary) {
+  let md = `- **Path Coverage**: ${formatPercent(summary.coveragePercent)}\n`;
+  md += `- **Test Coverage**: ${formatTestCoverage(summary)}\n`;
+  md += `- **Missing Paths**: ${summary.missing}\n`;
+  md += `- **Skipped-only Paths**: ${summary.skippedOnly}\n`;
+  md += `- **Extra Paths**: ${summary.extra}\n\n`;
   return md;
+}
+
+/** Executive Summary table row of one view in a combined report. */
+function buildMdCombinedSummaryEntry(result) {
+  const { summary } = result;
+  return `| ${result.name} | ${getCoverageLabel(summary.coveragePercent)} | ${formatPercent(summary.coveragePercent)} | ${formatTestCoverage(summary)} | ${summary.missing} | ${summary.skippedOnly} | ${summary.extra} |\n`;
+}
+
+function buildMdHeadlineTable(results) {
+  const header = `| Test Type | Status | Path Coverage | Test Coverage | Missing Paths | Skipped-only Paths | Extra Paths |\n| --- | --- | --- | --- | --- | --- | --- |\n`;
+  return `${header}${results.map(buildMdCombinedSummaryEntry).join('')}\n`;
+}
+
+function buildMdExecutiveSummary(results) {
+  const metrics = results.length === 1 ? buildMdHeadlineList(results[0].summary) : buildMdHeadlineTable(results);
+  return `${mdHeading(2, 'Executive Summary')}${buildMdStatusLine(results)}${metrics}`;
+}
+
+/** Path and test counts behind the headline percentages. */
+function buildMdCounts(summary) {
+  let md = `- **Paths**: ${summary.totalExpected} expected, ${summary.totalActual} active, ${summary.totalDeclared} declared\n`;
+  md += `- **Tests**: ${summary.totalTests} total, ${summary.activeTests} active, ${summary.skippedTests} skipped\n\n`;
+  return md;
+}
+
+function buildMdComponentRow(component, stats) {
+  const hasTests = stats.tests.total > 0;
+  const isExtraOnly = stats.status === 'extra-only';
+
+  // Extra-only components are not in the expected structure.
+  const status = isExtraOnly ? 'Extra' : getCoverageLabel(stats.percent);
+  const expected = isExtraOnly ? 0 : stats.expected;
+  const active = !isExtraOnly && stats.extra > 0 ? `${stats.actualPaths} (+${stats.extra} extra)` : String(stats.actualPaths);
+  const pathCoverage = isExtraOnly ? 'N/A' : `${stats.percent}%`;
+  const tests = hasTests ? `${stats.tests.active}/${stats.tests.total}` : 'N/A';
+  const testCoverage = hasTests ? `${stats.tests.coveragePercent}%` : 'N/A';
+  return `| ${component} | ${status} | ${expected} | ${active} | ${pathCoverage} | ${tests} | ${testCoverage} |\n`;
+}
+
+function buildMdComponents(coverageByComponent) {
+  const entries = Object.entries(coverageByComponent);
+  if (entries.length === 0) return '';
+  const header = `| Component | Status | Expected Paths | Active Paths | Path Coverage | Tests (Active/Total) | Test Coverage |\n| --- | --- | --- | --- | --- | --- | --- |\n`;
+  return `${header}${entries.map(([component, stats]) => buildMdComponentRow(component, stats)).join('')}\n`;
+}
+
+/** Heading of one view inside a standard section; omitted when the report has a single view. */
+const viewHeading = (results, result) => (results.length > 1 ? mdHeading(3, result.name) : '');
+
+function buildMdCoverageMetrics(results) {
+  const views = results.map((result) => `${viewHeading(results, result)}${buildMdCounts(result.summary)}${buildMdComponents(result.coverageByComponent)}`);
+  return `${mdHeading(2, 'Coverage Metrics')}${views.join('')}`;
+}
+
+const formatPathItem = (p) => `- \`${p}\``;
+
+function buildMdMissingItems(missing) {
+  return sortedGroupsByTopLevel(missing)
+    .map(([component, paths]) => `**${component}** (${paths.length} missing)\n\n${paths.map((p) => formatPathItem(p) + '\n').join('')}\n`)
+    .join('');
+}
+
+/** A gap sub-section listing each item on its own line; empty string when there are no items. */
+function buildMdItemSection({ items, heading, level, intro, formatItem }) {
+  if (!hasItems(items)) return '';
+  const introLine = intro ? `${intro}\n\n` : '';
+  const itemLines = items.map((item) => formatItem(item) + '\n').join('');
+  return `${mdHeading(level, heading)}${introLine}${itemLines}\n`;
+}
+
+const formatChildren = (children) => (children.length > 0 ? formatCodeList(children) : 'none (leaf node)');
+
+function buildMdInconsistency(item) {
+  const details = [
+    hasItems(item.onlyInExpected) ? `only in expected: ${formatCodeList(item.onlyInExpected)}` : '',
+    hasItems(item.onlyInActual) ? `only in actual: ${formatCodeList(item.onlyInActual)}` : '',
+    item.expectedChildren ? `expected children: ${formatChildren(item.expectedChildren)}` : '',
+    item.actualChildren ? `actual children: ${formatChildren(item.actualChildren)}` : '',
+  ].filter(Boolean);
+  const suffix = details.length > 0 ? `; ${details.join('; ')}` : '';
+  return `- \`${item.path}\` — ${item.issue}${suffix}`;
+}
+
+/** Missing, skipped-only, extra, structural and parse gaps of one view. */
+function buildMdViewGaps(result, level) {
+  const { gaps, inconsistencies, parseErrors } = result;
+  const sections = [
+    hasItems(gaps.missing) ? `${mdHeading(level, 'Missing Paths')}${buildMdMissingItems(gaps.missing)}` : '',
+    buildMdItemSection({ items: gaps.skippedOnly, heading: 'Skipped-only Paths', level, intro: 'Declared paths whose tests are all skipped:', formatItem: formatPathItem }),
+    buildMdItemSection({ items: gaps.extra, heading: 'Extra Paths', level, intro: 'Active paths that are not in the expected structure:', formatItem: formatPathItem }),
+    buildMdItemSection({ items: inconsistencies, heading: 'Structural Inconsistencies', level, intro: null, formatItem: buildMdInconsistency }),
+    buildMdItemSection({ items: parseErrors, heading: 'Parse Errors', level, intro: null, formatItem: ({ filePath, message }) => `- **${filePath}** — ${message}` }),
+  ].join('');
+  return sections || 'No gaps. Every expected path has an active test.\n\n';
+}
+
+function buildMdCoverageGaps(results) {
+  const level = results.length > 1 ? 4 : 3;
+  const views = results.map((result) => `${viewHeading(results, result)}${buildMdViewGaps(result, level)}`);
+  return `${mdHeading(2, 'Coverage Gaps')}${views.join('')}`;
+}
+
+const formatNumberedItem = (item, index) => `${index + 1}. ${item}\n`;
+
+/** Numbered, data-driven actions of one view: priority components first, then the other gap kinds. */
+function buildMdViewActions(result) {
+  const { gaps, inconsistencies, parseErrors } = result;
+  const expectedFile = CONFIG[result.type]?.expectedFile ?? 'the expected structure';
+  const priority = sortedGroupsByTopLevel(gaps.missing)
+    .slice(0, 5)
+    .map(([component, paths]) => `**${component}** (${paths.length})`)
+    .join(', ');
+  const actions = [
+    priority ? `Add active tests for the priority components with the most missing paths: ${priority}.` : '',
+    priority ? `Remove paths from \`${expectedFile}\` that are no longer needed.` : '',
+    hasItems(gaps.skippedOnly) ? 'Activate the skipped-only tests, or remove them when the scope is dropped.' : '',
+    hasItems(gaps.extra) ? `Add the extra paths to \`${expectedFile}\`, or correct the test titles.` : '',
+    hasItems(inconsistencies) ? 'Align the structural inconsistencies between the expected structure and the test titles.' : '',
+    hasItems(parseErrors) ? 'Fix the parse errors so those specs count toward coverage.' : '',
+  ].filter(Boolean);
+  if (actions.length === 0) return 'No gaps. Keep the expected structure current as features evolve.\n\n';
+  return `${actions.map(formatNumberedItem).join('')}\n`;
+}
+
+function buildMdRecommendations(results) {
+  const views = results.map((result) => `${viewHeading(results, result)}${buildMdViewActions(result)}`);
+  return `${mdHeading(2, 'Recommendations & Next Actions')}${views.join('')}Re-run the analysis after adding tests or updating the expected structure.\n`;
+}
+
+/**
+ * Generate one Markdown report for one or more test types: a single title and
+ * Executive Summary, then each standard section with one subsection per test type.
+ * @param {object[]} results analyzeTestType results.
+ * @param {string} timestamp Shown in the header — passed in so the report stays pure.
+ */
+function generateMarkdownReport(results, timestamp) {
+  return [buildMdHeader(results, timestamp), buildMdExecutiveSummary(results), buildMdCoverageMetrics(results), buildMdCoverageGaps(results), buildMdRecommendations(results)].join('');
+}
+
+/** Write a Markdown report, creating the output directory when needed. */
+function writeMarkdownFile(output, md) {
+  const outputPath = path.resolve(output);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, md, 'utf-8');
+  console.log(colorize(`\nMarkdown report written to: ${outputPath}`, 'green'));
 }
 
 /**
@@ -1031,65 +1006,13 @@ function main() {
   }
 
   if (args.format === 'markdown' || args.format === 'both') {
-    if (args.output && results.length > 1) {
-      // Combine all results into one markdown file
-      let combinedMd = `# Test Coverage Gap Analysis Report\n\n`;
-      combinedMd += `**Generated**: ${new Date().toISOString().replace('T', ' ').substring(0, 19)}\n\n`;
-      combinedMd += `## Summary Across All Test Types\n\n`;
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-      results.forEach((result) => {
-        const status = getCoverageLabel(result.summary.coveragePercent);
-        const testInfo = result.summary.totalTests > 0 ? `${result.summary.activeTests}/${result.summary.totalTests}` : 'N/A';
-        const testCov = result.summary.totalTests > 0 ? `${result.summary.testCoveragePercent}%` : 'N/A';
-        combinedMd += `### ${result.name} — ${status}\n\n`;
-        combinedMd += `- **Expected Paths**: ${result.summary.totalExpected}\n`;
-        combinedMd += `- **Active Paths**: ${result.summary.totalActual}\n`;
-        combinedMd += `- **Declared Paths**: ${result.summary.totalDeclared}\n`;
-        combinedMd += `- **Path Coverage**: ${result.summary.coveragePercent}%\n`;
-        combinedMd += `- **Tests (Active/Total)**: ${testInfo}\n`;
-        combinedMd += `- **Test Coverage**: ${testCov}\n`;
-        combinedMd += `- **Missing**: ${result.summary.missing}\n`;
-        combinedMd += `- **Extra**: ${result.summary.extra}\n`;
-        combinedMd += `- **Skipped-only paths**: ${result.summary.skippedOnly}\n\n`;
-      });
-
-      combinedMd += `---\n\n`;
-
-      // Add individual reports
-      results.forEach((result) => {
-        combinedMd += generateMarkdownReport(result);
-        combinedMd += `\n---\n\n`;
-      });
-
-      const outputPath = path.resolve(args.output);
-      const outputDir = path.dirname(outputPath);
-
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-
-      fs.writeFileSync(outputPath, combinedMd, 'utf-8');
-      console.log(colorize(`\nCombined markdown report written to: ${outputPath}`, 'green'));
-    } else {
-      // Single type or no output file - generate individual reports
-      results.forEach((result) => {
-        const md = generateMarkdownReport(result);
-
-        if (args.output) {
-          const outputPath = path.resolve(args.output);
-          const outputDir = path.dirname(outputPath);
-
-          if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-          }
-
-          fs.writeFileSync(outputPath, md, 'utf-8');
-          console.log(colorize(`\nMarkdown report written to: ${outputPath}`, 'green'));
-        } else if (args.format === 'markdown') {
-          // Output to stdout if no file specified
-          console.log(md);
-        }
-      });
+    if (args.output) {
+      writeMarkdownFile(args.output, generateMarkdownReport(results, timestamp));
+    } else if (args.format === 'markdown') {
+      // Output to stdout if no file specified
+      console.log(generateMarkdownReport(results, timestamp));
     }
   }
 

@@ -29,10 +29,13 @@ const OPTIONAL_MODULES = {
   eslintCustomRules: {
     name: 'ESLint Custom Rules',
     description: 'Custom ESLint rules for test title standardization, validation, and JSON structure definitions',
-    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/setup-git-hooks.js', '.prettierrc.js'],
+    // setup-git-hooks.js and pre-commit-lint.js both require git-exec-lib.js; the hook runs pre-commit-lint.js.
+    files: ['eslint-plugin-custom-rules/', 'eslint.config.mjs', 'scripts/setup-git-hooks.js', 'scripts/pre-commit-lint.js', 'scripts/git-exec-lib.js', 'scripts/thresholds.json', '.prettierrc.js'],
     scripts: {
       lint: 'eslint . --format stylish --fix',
-      postinstall: 'node scripts/setup-git-hooks.js',
+      'hooks:setup': 'node scripts/setup-git-hooks.js',
+      // Guarded so `npm install` keeps working if the hook script is later removed.
+      postinstall: "node -e \"const fs=require('fs');if(fs.existsSync('scripts/setup-git-hooks.js')){require('child_process').spawnSync(process.execPath,['scripts/setup-git-hooks.js'],{stdio:'inherit'})}\"",
     },
     devDependencies: ['@eslint/eslintrc', '@eslint/js', 'eslint', 'eslint-config-prettier', 'eslint-plugin-chai-friendly', 'eslint-plugin-cypress', 'eslint-plugin-prettier', 'prettier'],
   },
@@ -55,8 +58,40 @@ const OPTIONAL_MODULES = {
   },
   githubWorkflow: {
     name: 'GitHub Actions Workflow',
-    description: 'CI/CD workflows for automated test execution on GitHub',
+    description: 'CI/CD workflows for automated test execution on GitHub (optional report steps need the Test Reports module)',
     files: ['.github/workflows/'],
+  },
+  testReports: {
+    name: 'Test Reports',
+    description: 'Coverage gap analysis, flaky test analysis with suppressions, and the HTML sign-off report',
+    files: [
+      'scripts/analyze-coverage-gaps.js',
+      'scripts/analyze-flaky-tests.js',
+      'scripts/collect-test-results.js',
+      'scripts/manage-flaky-suppressions.js',
+      'scripts/flaky-suppressions.json',
+      'scripts/flaky-suppressions.schema.json',
+      'scripts/generate-signoff-report.js',
+      'scripts/report-template/',
+      'scripts/git-exec-lib.js',
+      // Expected app structure that the coverage gap analysis compares specs against.
+      'eslint-plugin-custom-rules/app-structure/',
+    ],
+    scripts: {
+      'report:coverage': 'node scripts/analyze-coverage-gaps.js --type=all --format=markdown --output=reports/coverage-gaps.md',
+      'report:coverage:check': 'node scripts/analyze-coverage-gaps.js --type=all --threshold=80',
+      'report:flaky': 'node scripts/analyze-flaky-tests.js --output reports/flaky-tests.md',
+      'report:flaky:all': 'node scripts/analyze-flaky-tests.js --output reports/flaky-tests-all.md',
+      'report:flaky:qa': 'node scripts/analyze-flaky-tests.js --env qa --output reports/flaky-tests-qa.md',
+      'report:flaky:dev': 'node scripts/analyze-flaky-tests.js --env dev --output reports/flaky-tests-dev.md',
+      'report:suppress': 'node scripts/manage-flaky-suppressions.js --add',
+      'report:unsuppress': 'node scripts/manage-flaky-suppressions.js --remove',
+      'report:suppress-run': 'node scripts/manage-flaky-suppressions.js --add-runs',
+      'report:unsuppress-run': 'node scripts/manage-flaky-suppressions.js --remove-runs',
+      'report:review': 'node scripts/manage-flaky-suppressions.js --review',
+      'report:signoff': 'node scripts/generate-signoff-report.js',
+    },
+    devDependencies: ['espree'],
   },
   docker: {
     name: 'Docker Support',
@@ -110,7 +145,7 @@ function printBanner() {
   console.log(`
 ${COLORS.bright}${COLORS.blue}╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║        🚀 Cypress Testing Framework Starter 🚀            ║
+║             Cypress Testing Framework Starter             ║
 ║                                                           ║
 ║     Professional test automation framework template       ║
 ║         with full or custom module selection              ║
@@ -160,6 +195,15 @@ function isExcludedFromUpdate(relPath) {
   return /^cypress\/sensitive-data\//.test(normalized) && !normalized.endsWith('env-users.example.json');
 }
 
+// Data files the project edits over time (logged bugs, flaky suppressions,
+// auto-tightened lint thresholds). An update creates them when missing but never
+// overwrites an existing copy.
+const SEED_ONLY_FILES = new Set(['bug-log/bug-log.json', 'scripts/flaky-suppressions.json', 'scripts/thresholds.json']);
+
+function isSeedOnlyFile(relPath) {
+  return SEED_ONLY_FILES.has(relPath.split(path.sep).join('/'));
+}
+
 // Recursively lists template-managed files (relative, forward-slash paths),
 // skipping VCS/dependency directories and user-owned files.
 function buildTemplateFileList(rootPath) {
@@ -202,7 +246,7 @@ function writeManifest(projectPath, files, version) {
   const manifest = {
     version: version || null,
     updatedAt: new Date().toISOString(),
-    files: [...files].sort(),
+    files: [...new Set(files)].sort(),
   };
   fs.writeFileSync(path.join(projectPath, MANIFEST_FILE), JSON.stringify(manifest, null, 2) + '\n');
 }
@@ -249,12 +293,12 @@ async function validateProjectName(projectName, options = {}) {
   const { allowExistingDirectory = false } = options;
 
   if (!projectName) {
-    log(`❌ ${allowExistingDirectory ? 'Target directory' : 'Project name'} is required!`, 'red');
+    log(`${allowExistingDirectory ? 'Target directory' : 'Project name'} is required!`, 'red');
     return false;
   }
 
   if (/[^a-zA-Z0-9._\-]/.test(projectName)) {
-    log('❌ Project name must only contain letters, numbers, dots, dashes, or underscores.', 'red');
+    log('Project name must only contain letters, numbers, dots, dashes, or underscores.', 'red');
     return false;
   }
 
@@ -263,7 +307,7 @@ async function validateProjectName(projectName, options = {}) {
     if (allowExistingDirectory && fs.statSync(projectPath).isDirectory()) {
       return true;
     }
-    log(`❌ Directory "${projectName}" already exists!`, 'red');
+    log(`Directory "${projectName}" already exists!`, 'red');
     return false;
   }
 
@@ -326,9 +370,9 @@ async function cloneTemplate(projectName) {
 
   try {
     runRequiredCommand('git', ['clone', '--depth', '1', getTemplateUrl(), projectName], { stdio: 'inherit' }, 'Failed to clone template');
-    log('✅ Template cloned successfully', 'green');
+    log('Template cloned successfully', 'green');
   } catch (error) {
-    log('❌ Failed to clone template. Please check your internet connection.', 'red');
+    log('Failed to clone template. Please check your internet connection.', 'red');
     throw error;
   }
 }
@@ -341,7 +385,7 @@ async function copyOrUpdatePackageJson(projectPath, selectedModules, tempPath) {
 
   // Read source package.json to get versions
   if (!fs.existsSync(tempPackageJsonPath)) {
-    log('⚠️  Source package.json not found', 'yellow');
+    log('Source package.json not found', 'yellow');
     return;
   }
 
@@ -402,7 +446,7 @@ async function copyOrUpdatePackageJson(projectPath, selectedModules, tempPath) {
 
   // Write package.json
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
-  log('✅ Package.json configured', 'green');
+  log('Package.json configured', 'green');
 }
 
 async function copySpecificFiles(projectName, selectedModules) {
@@ -443,7 +487,9 @@ async function copySpecificFiles(projectName, selectedModules) {
                 installedFiles.push(`${filePath.replace(/\/$/, '')}/${rel}`);
               }
             } else {
-              fs.copyFileSync(sourcePath, destPath);
+              if (!(isSeedOnlyFile(filePath) && fs.existsSync(destPath))) {
+                fs.copyFileSync(sourcePath, destPath);
+              }
               installedFiles.push(filePath);
             }
           }
@@ -462,13 +508,13 @@ async function copySpecificFiles(projectName, selectedModules) {
     // Clean up temp directory
     fs.rmSync(tempPath, { recursive: true, force: true });
 
-    log('✅ Selected files copied successfully', 'green');
+    log('Selected files copied successfully', 'green');
   } catch (error) {
     // Clean up on error
     if (fs.existsSync(tempPath)) {
       fs.rmSync(tempPath, { recursive: true, force: true });
     }
-    log('❌ Failed to copy files. Please check your internet connection.', 'red');
+    log('Failed to copy files. Please check your internet connection.', 'red');
     throw error;
   }
 }
@@ -487,7 +533,7 @@ function syncTemplateFiles(projectPath, templatePath) {
     const srcContent = fs.readFileSync(src);
 
     if (fs.existsSync(dest)) {
-      if (fs.readFileSync(dest).equals(srcContent)) {
+      if (isSeedOnlyFile(rel) || fs.readFileSync(dest).equals(srcContent)) {
         continue;
       }
       fs.writeFileSync(dest, srcContent);
@@ -556,13 +602,13 @@ async function updateProject(target) {
   logStep('1/5', 'Preparing update...');
 
   if (!fs.existsSync(projectPath) || !fs.statSync(projectPath).isDirectory()) {
-    log(`❌ Target directory "${projectPath}" does not exist.`, 'red');
+    log(`Target directory "${projectPath}" does not exist.`, 'red');
     throw new Error('Target directory not found');
   }
 
   const gitAvailable = isGitRepository(projectPath);
   if (!gitAvailable) {
-    log("⚠️  Target is not a git repository. Changes will still be applied, but you won't be able to review or roll them back via git staging.", 'yellow');
+    log("Target is not a git repository. Changes will still be applied, but you won't be able to review or roll them back via git staging.", 'yellow');
     const proceed = await question(`${COLORS.magenta}Continue anyway? (y/n):${COLORS.reset} `);
     if (proceed.trim().toLowerCase() !== 'y') {
       throw new Error('Update cancelled - target is not a git repository');
@@ -570,7 +616,7 @@ async function updateProject(target) {
   } else {
     const status = spawnSync('git', ['status', '--porcelain'], { cwd: projectPath, stdio: 'pipe' });
     if (status.stdout && status.stdout.toString().trim().length > 0) {
-      log('⚠️  You have uncommitted changes. Committing or stashing them first makes it easier to isolate the update diff.', 'yellow');
+      log('You have uncommitted changes. Committing or stashing them first makes it easier to isolate the update diff.', 'yellow');
       const proceed = await question(`${COLORS.magenta}Continue anyway? (y/n):${COLORS.reset} `);
       if (proceed.trim().toLowerCase() !== 'y') {
         throw new Error('Update cancelled - working tree is not clean');
@@ -605,7 +651,7 @@ async function updateProject(target) {
     logStep('4/5', 'Removing obsolete files...');
     const previousManifest = readManifest(projectPath);
     if (!previousManifest) {
-      log('  ⚠️  No previous manifest found - skipping deletion to avoid removing your files.', 'yellow');
+      log('  No previous manifest found - skipping deletion to avoid removing your files.', 'yellow');
     }
     const deleted = deleteObsoleteFiles(projectPath, previousManifest?.files, newFiles);
     log(`  ✓ ${deleted} obsolete file(s) removed`, 'green');
@@ -617,7 +663,7 @@ async function updateProject(target) {
       runRequiredCommand('git', ['add', '-A'], { cwd: projectPath, stdio: 'pipe' }, 'Failed to stage update changes');
       log('  ✓ All changes staged', 'green');
     } else {
-      log('  ⏭️  Skipped (not a git repository)', 'yellow');
+      log('  Skipped (not a git repository)', 'yellow');
     }
 
     return { projectPath, gitAvailable, added, updated, deleted, templateVersion };
@@ -641,7 +687,7 @@ async function cleanupGitHistory(projectName) {
 
   // Initialize new git repository
   spawnSync('git', ['init'], { cwd: projectPath, stdio: 'inherit' });
-  log('✅ Fresh git repository initialized', 'green');
+  log('Fresh git repository initialized', 'green');
 }
 
 async function setupSensitiveData(projectName, setupMode, options = {}) {
@@ -656,7 +702,7 @@ async function setupSensitiveData(projectName, setupMode, options = {}) {
   const createdFiles = createSensitiveDataFilesFromExample(projectPath, options);
 
   if (createdFiles.length > 0) {
-    log('✅ Credentials files created from example', 'green');
+    log('Credentials files created from example', 'green');
   }
 }
 
@@ -664,16 +710,16 @@ function runNpmInstall(projectPath, followUpMessage) {
   try {
     const result = spawnSync('npm', ['install'], { cwd: projectPath, stdio: 'inherit' });
     if (result.error || result.status !== 0) {
-      log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
+      log('Warning: Failed to install dependencies automatically', 'yellow');
       if (followUpMessage) {
         log(followUpMessage, 'yellow');
       }
       return false;
     }
-    log('✅ Dependencies installed successfully', 'green');
+    log('Dependencies installed successfully', 'green');
     return true;
   } catch {
-    log('⚠️  Warning: Failed to install dependencies automatically', 'yellow');
+    log('Warning: Failed to install dependencies automatically', 'yellow');
     if (followUpMessage) {
       log(followUpMessage, 'yellow');
     }
@@ -728,12 +774,16 @@ async function installFullIntoExistingDirectory(projectPath) {
   }
 }
 
+function centerText(text, width) {
+  return text.padStart(Math.floor((width + text.length) / 2)).padEnd(width);
+}
+
 function printSuccessMessage(projectName, setupMode, selectedModules) {
   const projectPath = path.resolve(projectName);
 
   let modulesInfo = '';
   if (setupMode === 'full') {
-    modulesInfo = `${COLORS.bright}📦 Installed Configuration:${COLORS.reset} Full Setup - All modules included\n\n`;
+    modulesInfo = `${COLORS.bright}Installed Configuration:${COLORS.reset} Full Setup - All modules included\n\n`;
   } else if (setupMode === 'specific') {
     const includedModules = [];
     const excludedModules = [];
@@ -746,7 +796,7 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
       }
     }
 
-    modulesInfo = `${COLORS.bright}📦 Configuration:${COLORS.reset} Specific Files Only\n\n`;
+    modulesInfo = `${COLORS.bright}Configuration:${COLORS.reset} Specific Files Only\n\n`;
 
     if (includedModules.length > 0) {
       modulesInfo += `  ${COLORS.green}✓ Included modules:${COLORS.reset}\n`;
@@ -766,7 +816,7 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
   }
 
   const docsSection = selectedModules?.documentation
-    ? `${COLORS.bright}📚 Documentation:${COLORS.reset}
+    ? `${COLORS.bright}Documentation:${COLORS.reset}
   - Constraints, Examples & Specs: ${COLORS.blue}docs/constraints-examples-specs-approach.md${COLORS.reset}
   - ESLint Custom Rules: ${COLORS.blue}docs/eslint-custom-rules.md${COLORS.reset}
   - Localization Testing: ${COLORS.blue}docs/localization-testing.md${COLORS.reset}
@@ -781,7 +831,7 @@ function printSuccessMessage(projectName, setupMode, selectedModules) {
     const lintScript = selectedModules?.eslintCustomRules !== false ? `     npm run lint             ${COLORS.yellow}# Run ESLint checks${COLORS.reset}\n` : '';
     const parallelScript = selectedModules?.parallelRunner !== false ? `     npm run test:parallel     ${COLORS.yellow}# Run tests in parallel${COLORS.reset}\n` : '';
 
-    nextSteps = `${COLORS.bright}🚀 Next steps:${COLORS.reset}
+    nextSteps = `${COLORS.bright}Next steps:${COLORS.reset}
 
   ${COLORS.cyan}1. Navigate to your project:${COLORS.reset}
      cd ${projectName}
@@ -800,7 +850,7 @@ ${docsSection}`;
         : `  ${COLORS.cyan}1. Navigate to the directory:${COLORS.reset}
      cd ${projectName}`;
 
-    nextSteps = `${COLORS.bright}🚀 Next steps:${COLORS.reset}
+    nextSteps = `${COLORS.bright}Next steps:${COLORS.reset}
 
 ${navigationStep}
 
@@ -820,17 +870,17 @@ ${docsSection}`;
 ${COLORS.green}${COLORS.bright}
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║             ✅ ${setupMode === 'full' ? 'Project Created' : 'Files Copied'} Successfully! ✅            ║
+║${centerText(setupMode === 'full' ? 'Project Created Successfully!' : 'Files Copied Successfully!', 59)}║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 ${COLORS.reset}
-${COLORS.bright}📁 Location:${COLORS.reset} ${projectPath}
+${COLORS.bright}Location:${COLORS.reset} ${projectPath}
 
-${modulesInfo}${nextSteps}${COLORS.bright}🔗 Useful Links:${COLORS.reset}
+${modulesInfo}${nextSteps}${COLORS.bright}Useful Links:${COLORS.reset}
   - GitHub: ${COLORS.blue}https://github.com/IvanZdanovich/cypress-start${COLORS.reset}
   - Cypress Docs: ${COLORS.blue}https://docs.cypress.io${COLORS.reset}
 
-${COLORS.green}Happy Testing! 🎉${COLORS.reset}
+${COLORS.green}Happy Testing!${COLORS.reset}
   `);
 }
 
@@ -838,7 +888,7 @@ function printUpdateSuccess(result) {
   const { projectPath, gitAvailable, added, updated, deleted, templateVersion } = result;
 
   const rollbackSection = gitAvailable
-    ? `${COLORS.bright}↩️  Review & roll back individual changes:${COLORS.reset}
+    ? `${COLORS.bright}Review & roll back individual changes:${COLORS.reset}
   All changes are staged. Inspect them and undo anything you want to keep:
 
   ${COLORS.cyan}Review the staged diff:${COLORS.reset}
@@ -852,7 +902,7 @@ function printUpdateSuccess(result) {
      git restore --staged .
      git restore .
 `
-    : `${COLORS.yellow}⚠️  This folder is not a git repository, so changes were applied in place
+    : `${COLORS.yellow}This folder is not a git repository, so changes were applied in place
   without staging. Review them manually before committing.${COLORS.reset}
 `;
 
@@ -860,24 +910,24 @@ function printUpdateSuccess(result) {
 ${COLORS.green}${COLORS.bright}
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║            ✅ Project Updated Successfully! ✅             ║
+║               Project Updated Successfully!               ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 ${COLORS.reset}
-${COLORS.bright}📁 Location:${COLORS.reset} ${projectPath}
-${COLORS.bright}🏷️  Template version:${COLORS.reset} ${templateVersion || 'unknown'}
+${COLORS.bright}Location:${COLORS.reset} ${projectPath}
+${COLORS.bright}Template version:${COLORS.reset} ${templateVersion || 'unknown'}
 
-${COLORS.bright}📊 Summary:${COLORS.reset}
+${COLORS.bright}Summary:${COLORS.reset}
   ${COLORS.green}• ${added} file(s) added${COLORS.reset}
   ${COLORS.blue}• ${updated} file(s) updated${COLORS.reset}
   ${COLORS.yellow}• ${deleted} obsolete file(s) removed${COLORS.reset}
 
 ${rollbackSection}
-${COLORS.bright}🔗 Useful Links:${COLORS.reset}
+${COLORS.bright}Useful Links:${COLORS.reset}
   - GitHub: ${COLORS.blue}https://github.com/IvanZdanovich/cypress-start${COLORS.reset}
   - Cypress Docs: ${COLORS.blue}https://docs.cypress.io${COLORS.reset}
 
-${COLORS.green}Happy Testing! 🎉${COLORS.reset}
+${COLORS.green}Happy Testing!${COLORS.reset}
   `);
 }
 
@@ -901,7 +951,7 @@ async function main() {
         projectName = answer.trim() || '.';
       }
 
-      log('\n♻️  Update mode selected - refreshing the project in place', 'cyan');
+      log('\nUpdate mode selected - refreshing the project in place', 'cyan');
 
       const result = await updateProject(projectName);
 
@@ -925,7 +975,7 @@ async function main() {
       const exists = fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory();
 
       if (setupMode === 'full' && exists) {
-        log(`\n⚠️  Directory "${projectName}" already exists.`, 'yellow');
+        log(`\nDirectory "${projectName}" already exists.`, 'yellow');
         const answer = await question(`${COLORS.magenta}Install the full framework here and keep your existing git history? (y/n):${COLORS.reset} `);
         if (answer.trim().toLowerCase() === 'y') {
           installInPlace = true;
@@ -946,12 +996,12 @@ async function main() {
       for (const key of Object.keys(OPTIONAL_MODULES)) {
         selectedModules[key] = true;
       }
-      log('\n✅ Full setup selected - all modules will be included', 'green');
+      log('\nFull setup selected - all modules will be included', 'green');
 
       if (installInPlace) {
         // Install into the existing directory, preserving .git
         await installFullIntoExistingDirectory(path.resolve(projectName));
-        log('\n✅ Framework installed into existing directory', 'green');
+        log('\nFramework installed into existing directory', 'green');
       } else {
         // Execute full setup steps (5 steps) for a fresh directory
         await cloneTemplate(projectName);
@@ -966,18 +1016,18 @@ async function main() {
 
         // Final step
         logStep('5/5', 'Finalizing setup...');
-        log('✅ Setup complete', 'green');
+        log('Setup complete', 'green');
       }
     } else if (setupMode === 'specific') {
       // Let user select modules
-      log('\n⚙️  Starting module selection...', 'cyan');
+      log('\nStarting module selection...', 'cyan');
       selectedModules = await selectModules();
-      log('\n✅ Module selection complete', 'green');
+      log('\nModule selection complete', 'green');
 
       // Execute specific files setup steps (only 2 steps - no git, no npm)
       await copySpecificFiles(projectName, selectedModules);
 
-      log('\n✅ Files copied successfully!', 'green');
+      log('\nFiles copied successfully!', 'green');
     }
 
     rl?.close();
@@ -985,7 +1035,7 @@ async function main() {
     // Print success message
     printSuccessMessage(projectName, setupMode, selectedModules);
   } catch (error) {
-    console.error(`\n${COLORS.red}${COLORS.bright}❌ Error:${COLORS.reset} ${error.message}`);
+    console.error(`\n${COLORS.red}${COLORS.bright}Error:${COLORS.reset} ${error.message}`);
     rl?.close();
     process.exit(1);
   }
@@ -1012,6 +1062,7 @@ module.exports = {
   copySpecificFiles,
   copyOrUpdatePackageJson,
   isExcludedFromUpdate,
+  isSeedOnlyFile,
   buildTemplateFileList,
   readManifest,
   writeManifest,

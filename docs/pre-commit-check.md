@@ -1,14 +1,17 @@
 # Pre-commit check
 
-The pre-commit hook runs automatically on every `git commit`, executing `scripts/pre-commit-lint.js` to keep lint
-quality from regressing before code lands.
+The pre-commit hook runs on every `git commit`. It executes `scripts/pre-commit-lint.js`, which blocks a commit when
+generated assets are stale, a spec file is misplaced, or lint quality in the staged files gets worse.
 
 ## How it works
 
 - `scripts/colours.js sync --check` and `scripts/l10n.js sync --check` run first. If either generated asset is stale,
-  the hook stops before ESLint ratios are evaluated.
+  the hook stops before ESLint runs.
+- The spec file path check runs next across the whole tree, not only staged files. Any file under `cypress/integration/`
+  or `cypress/e2e/` that does not match `*.api.spec.js` or `*.ui.spec.js` for its folder blocks the commit.
 - Only staged JS/TS files are linted. The script reads `git diff --cached --name-only --diff-filter=ACM`, excludes
-  `.d.ts` files and ignored build/report directories, then resolves the remaining paths from the repo root.
+  `.d.ts` files and ignored build/report directories, then resolves the remaining paths from the repo root. With no
+  staged JS/TS files, the hook exits successfully.
 - ESLint runs once with `fix: true` on those staged files.
 - `ESLint.outputFixes()` writes fixable changes to disk.
 - Files changed by auto-fix are re-staged with `git add -- <file...>` so the commit contains the fixed content.
@@ -39,21 +42,22 @@ Thresholds only tighten automatically. A wider threshold requires an intentional
 
 ## Commands
 
-- **`npm run precommit:check`** — run the hook logic manually before committing.
-- **`npm run lint:check`** — alias, identical to `precommit:check`.
-- **`npm run lint`** — run date-slot verification, then auto-fix and report all ESLint issues across the repo with no
-  staged-file ratio check.
-- **`npm run sync`** — regenerate colour and localization assets when the initial sync checks fail.
+- **`node scripts/pre-commit-lint.js`** — run the hook logic manually before committing.
+- **`npm run lint`** — auto-fix and report ESLint issues across the whole repo, with no staged-file ratio check.
+- **`npm run sync`** — regenerate colour and localization assets when the sync checks fail.
+- **`npm run hooks:setup`** — install or repair the git hook.
 
 ## Fixing failures
 
 Fixable ESLint issues are already corrected and re-staged by the hook. Issues that remain after auto-fix usually come
 from structural custom rules and need source edits.
 
-- `custom/verify-test-title-against-structure` usually resolves with `npm run lint -- --fix`, which updates
+- `custom/verify-test-title-against-structure` usually resolves with `npm run lint`, which runs with `--fix` and updates
   `eslint-plugin-custom-rules/app-structure/{components,modules,workflows}.json` from current titles.
 - `custom/verify-test-title-pattern` resolves by renaming the flagged `describe`, `context`, or `it` title to the
   expected Given/When/Then form.
+- `custom/verify-spec-file-paths` resolves by renaming or moving the flagged file so it matches its folder, or by
+  renaming a work-in-progress spec to `*.spec.skip.js`.
 - Sync check failures resolve by running `npm run sync`, then staging the generated files.
 
 Recommended recovery path:
@@ -64,12 +68,26 @@ git add .
 git commit -m "your message"
 ```
 
+## Troubleshooting
+
+The hook is installed by `npm install` (postinstall) or `npm run hooks:setup`. It finds the repo root and Node.js when
+it runs, so it still works after you move the repo, in `git worktree` checkouts, and in GUI git clients (WebStorm,
+SourceTree, GitHub Desktop) that don't add nvm, Volta, or fnm to `PATH`.
+
+- **Hook never runs.** A global `core.hooksPath` (often set by husky in another project) makes git ignore
+  `.git/hooks`. `npm run hooks:setup` prints a warning and the command to fix it for this repo.
+- **`Node.js not found`.** Make `node` available to your git client, then run `npm run hooks:setup` again.
+- **`ESLint is not installed`.** Run `npm install` in the repo root.
+
 ## Emergency bypass
 
-Emergency bypass (fix the issues in a follow-up commit): `git commit --no-verify -m "message"`
+Use `--no-verify` only in a real emergency, when the blocking issue cannot be fixed immediately:
 
-Use `--no-verify` only for a genuine emergency where the blocking issue cannot be fixed immediately. The follow-up
-commit should resolve the skipped issue and pass the hook normally.
+```bash
+git commit --no-verify -m "message"
+```
+
+Fix the skipped issue in a follow-up commit that passes the hook normally.
 
 ## Related
 

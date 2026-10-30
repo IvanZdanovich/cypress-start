@@ -30,8 +30,11 @@ node scripts/analyze-coverage-gaps.js --type=all --threshold=80 || exit 1
 ### NPM scripts
 
 ```bash
-npm run report:coverage           # Markdown report for all types
-npm run report:coverage:check     # Fail if below threshold
+npm run report:coverage                   # all types → reports/coverage-gaps.md
+npm run report:coverage:integration-ui    # → reports/coverage-integration-ui.md
+npm run report:coverage:integration-api   # → reports/coverage-integration-api.md
+npm run report:coverage:e2e-ui            # → reports/coverage-e2e-ui.md
+npm run report:coverage:check             # exits 1 when coverage is below 80%
 ```
 
 ## Options
@@ -48,35 +51,41 @@ npm run report:coverage:check     # Fail if below threshold
     - `app-structure/modules.json` (Integration API)
     - `app-structure/workflows.json` (E2E UI)
 
-2. **Parse test files** — use the AST to extract structure paths from test titles, inherit skipped suite state, and count total and active tests
+2. **Parse test files** — use the AST to extract structure paths from test titles, inherit skipped suite state, and
+   count total and active tests
 
 3. **Compare** — identify missing, extra, and inconsistent paths
 
-4. **Report** — coverage percentages, component-level breakdown, recommendations
+4. **Report** — one Markdown file with the standard sections below
 
 ## Report sections
 
-- **Summary** — overall coverage percentages.
-- **Missing coverage** — expected paths without active automation, grouped by component.
-- **Skipped-only paths** — paths declared by tests whose suites or tests are skipped.
-- **Extra coverage** — active paths not in expected structure.
-- **Parse errors** — files that could not be parsed while the rest of the analysis continued.
-- **Structural inconsistencies** — paths with different child structures.
-- **Coverage by component** — per-component breakdown with status indicators.
-- **Recommendations** — priority actions based on results.
+The report has one title and these sections in order. With several test types, each section holds one `###` subsection
+per type.
+
+- **Executive Summary** — status line and headline metrics: Path Coverage, Test Coverage, and Missing, Skipped-only and
+  Extra Paths. A combined report shows one row per test type.
+- **Coverage Metrics** — path and test counts, plus a per-component table of path and test coverage.
+- **Coverage Gaps** — Missing Paths grouped by component, Skipped-only Paths, Extra Paths, Structural Inconsistencies,
+  and Parse Errors.
+- **Recommendations & Next Actions** — priority components with the most missing paths, followed by an action per gap
+  kind found.
 
 ## Path coverage vs test coverage
 
 - **Path coverage** = what has active automation (does every expected scenario have an active test?)
 - **Test coverage** = how well declared tests are running (active tests / total tests).
 
-An `it.skip`, an empty test body, or any test inside `describe.skip` or `context.skip` is pending. A skipped-only path is missing from path coverage and is also listed separately so declared scope is not mistaken for running automation.
+An `it.skip`, an empty test body, or any test inside `describe.skip` or `context.skip` is pending. A skipped-only path
+is missing from path coverage and is also listed separately so declared scope is not mistaken for running automation.
 
 ## Troubleshooting
 
-- **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and title format.
+- **0 actual paths** — files not matching the pattern, or titles not following conventions. Verify file location and
+  title format.
 - **Expected structure not found** — missing JSON file. Check `app-structure/`.
-- **Inconsistent results** — stale files or title formatting. Run `npm run lint --fix` and verify patterns.
+- **Inconsistent results** — stale structure files or title formatting. Run `npm run lint`, which fixes structure files,
+  and verify title patterns.
 
 ## Related
 

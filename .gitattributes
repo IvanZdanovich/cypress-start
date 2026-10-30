@@ -1,0 +1,7 @@
+# Normalize all text files to LF in the repo and on checkout.
+# Git's text=auto detects binary files automatically — no need for explicit per-extension rules.
+* text=auto eol=lf
+
+# Windows batch scripts are the only exception that must use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf

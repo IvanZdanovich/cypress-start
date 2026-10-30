@@ -82,6 +82,11 @@ on:
           - all
           - dev
           - qa
+      generate_signoff_report:
+        description: 'Generate the HTML sign-off report after tests'
+        required: false
+        default: false
+        type: boolean
       run_cypress_tests:
         description: 'Run Cypress tests'
         required: false
@@ -172,6 +177,42 @@ jobs:
           GIT_COMMITTER_NAME: 'github-actions[bot]'
           GIT_COMMITTER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
         run: node scripts/collect-test-results.js --reports-dir cypress/reports/separate-reports
+
+      # The sign-off report joins the spec sources with this run's mochawesome JSON and
+      # screenshots (both under the mounted cypress/reports), so it runs in this job,
+      # even when tests fail.
+      - name: Set up Node.js for sign-off report
+        if: ${{ always() && inputs.generate_signoff_report == true }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+          cache: 'npm'
+
+      - name: Generate sign-off report
+        if: ${{ always() && inputs.generate_signoff_report == true }}
+        env:
+          TARGET_ENV: ${{ inputs.target_env || 'dev' }}
+          BROWSER: ${{ inputs.browser || 'chrome' }}
+          # Optional repository variables; the script falls back to "Cypress Start".
+          APP_NAME: ${{ vars.APP_NAME }}
+          APP_DESCRIPTION: ${{ vars.APP_DESCRIPTION }}
+          # The report only needs the spec parser, not the Cypress binary.
+          CYPRESS_INSTALL_BINARY: '0'
+        run: |
+          npm ci
+          npm run report:signoff -- \
+            --reports-dir cypress/reports/separate-reports \
+            --screenshots-dir cypress/reports/screenshots \
+            --output-dir reports
+
+      - name: Upload sign-off report
+        if: ${{ always() && inputs.generate_signoff_report == true }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: signoff-report-${{ github.run_number }}-${{ github.run_attempt }}
+          path: reports/signoff-report.html
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Clean up sensitive files
         if: always()

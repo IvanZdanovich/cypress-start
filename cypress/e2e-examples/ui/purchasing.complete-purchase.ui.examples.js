@@ -1,9 +1,8 @@
 import { PRODUCT_COUNT } from '../../constants/ui/inventory-page.ui.constraints';
-import { BUGGY_PRODUCT } from '../../constants/ui/product-catalog.ui.constants';
+import { BUGGY_PRODUCT } from '../../constants/ui/product-catalog.ui.constraints';
 
 export const completePurchase__examples = {
-  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, PRODUCT_COUNT.total), PRODUCT_COUNT.total - 1),
-  chosenProducts: [],
+  indicesOfProducts: utils.generateArrayOfRandomIndices(utils.getRandomNumber(2, PRODUCT_COUNT), PRODUCT_COUNT - 1),
   deliveryInfo: {
     firstName: utils.generateRandomString(utils.getRandomNumber(5, 15)),
     lastName: utils.generateRandomString(utils.getRandomNumber(5, 15)),
