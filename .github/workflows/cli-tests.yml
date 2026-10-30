@@ -1,0 +1,35 @@
+name: CLI Tests
+
+# Path-filtered so projects scaffolded without bin/ never trigger it.
+on:
+  push:
+    paths:
+      - 'bin/**'
+  pull_request:
+    paths:
+      - 'bin/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cli-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+
+      - name: Configure git identity for template-repo fixtures
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Run CLI tests
+        run: npm run test:cli

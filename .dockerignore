@@ -4,14 +4,8 @@ node_modules
 # Ignore .github directory
 .github
 
-# Ignore claude directory
-.claude
-
 # Ignore npm debug log
 npm-debug.log
-
-# Ignore husky files
-.husky
 
 # Ignore local environment files
 .env
@@ -21,6 +15,9 @@ npm-debug.log
 
 # Ignore Cypress reports
 cypress/reports/**
+
+# Ignore generated coverage / requirements reports
+reports/**
 
 # Ignore Development-data
 development-data/**
@@ -46,7 +43,7 @@ Dockerfile*
 .prettierrc.js
 
 # Ignore ESLint configuration files
-.eslintrc.js
+eslint.config.mjs
 eslint-plugin-custom-rules
 
 # End of file

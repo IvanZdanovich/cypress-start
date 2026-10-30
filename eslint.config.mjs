@@ -4,9 +4,8 @@ import customPlugin from './eslint-plugin-custom-rules/index.js';
 import js from '@eslint/js';
 import { FlatCompat } from '@eslint/eslintrc';
 
-const __dirname = process.cwd();
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+  baseDirectory: import.meta.dirname,
   recommendedConfig: js.configs.recommended,
   allConfig: js.configs.all,
 });
@@ -22,7 +21,7 @@ const customRules = Object.fromEntries(Object.keys(customPlugin.rules).map((name
 
 export default [
   {
-    ignores: ['**/node_modules', '**/dist', '**/cypress/reports'],
+    ignores: ['**/node_modules', '**/dist', '**/cypress/reports', '**/*.d.ts'],
   },
   ...compat.extends('plugin:chai-friendly/recommended', 'plugin:prettier/recommended'),
   {
