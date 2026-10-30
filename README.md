@@ -395,6 +395,9 @@ Update all dependencies to their latest versions, then reinstall:
 
 ```bash
 npx npm-check-updates -u
+```
+
+```bash
 npm install
 ```
 
