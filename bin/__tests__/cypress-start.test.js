@@ -9,11 +9,13 @@ const path = require('path');
 
 const {
   OPTIONAL_MODULES,
+  MANIFEST_FILE,
   validateProjectName,
   copyDirectory,
   copySpecificFiles,
   copyOrUpdatePackageJson,
   isExcludedFromUpdate,
+  isSeedOnlyFile,
   buildTemplateFileList,
   readManifest,
   writeManifest,
@@ -218,6 +220,42 @@ test('copySpecificFiles supports copying selected modules into the current direc
   });
 });
 
+test('copySpecificFiles does not overwrite an existing seed-only file in the target directory', async () => {
+  await withTmpCwd(async (tmp) => {
+    const template = path.join(tmp, 'template-source');
+
+    fs.mkdirSync(path.join(template, 'scripts'), { recursive: true });
+    // thresholds.json is a seed-only file
+    fs.writeFileSync(path.join(template, 'scripts', 'thresholds.json'), '{"template":true}\n');
+    fs.writeFileSync(path.join(template, 'package.json'), JSON.stringify({ version: '1.0.0', devDependencies: {} }, null, 2) + '\n');
+
+    runGit(template, ['init']);
+    runGit(template, ['config', 'user.email', 'test@example.com']);
+    runGit(template, ['config', 'user.name', 'Test User']);
+    runGit(template, ['add', '-A']);
+    runGit(template, ['commit', '-m', 'template']);
+
+    // Pre-seed the project with its own thresholds.json
+    fs.mkdirSync(path.join(tmp, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'scripts', 'thresholds.json'), '{"project":true}\n');
+
+    const previousTemplateUrl = process.env.CYPRESS_START_TEMPLATE_URL;
+    process.env.CYPRESS_START_TEMPLATE_URL = template;
+    try {
+      await copySpecificFiles('.', { eslintCustomRules: true });
+    } finally {
+      if (previousTemplateUrl === undefined) {
+        delete process.env.CYPRESS_START_TEMPLATE_URL;
+      } else {
+        process.env.CYPRESS_START_TEMPLATE_URL = previousTemplateUrl;
+      }
+    }
+
+    // The project's thresholds.json must not have been overwritten
+    assert.equal(fs.readFileSync(path.join(tmp, 'scripts', 'thresholds.json'), 'utf8'), '{"project":true}\n');
+  });
+});
+
 // --- update helpers --------------------------------------------------------
 
 test('isExcludedFromUpdate protects user-owned files but allows template files', () => {
@@ -233,6 +271,22 @@ test('isExcludedFromUpdate protects user-owned files but allows template files',
   // The example file should stay in sync with the template.
   assert.equal(isExcludedFromUpdate('cypress/sensitive-data/env-users.example.json'), false);
   assert.equal(isExcludedFromUpdate('cypress/e2e/ui/login.spec.js'), false);
+});
+
+test('MANIFEST_FILE constant equals the expected filename', () => {
+  assert.equal(MANIFEST_FILE, '.cypress-start-manifest.json');
+});
+
+test('isSeedOnlyFile identifies the three project-owned data files and nothing else', () => {
+  assert.equal(isSeedOnlyFile('bug-log/bug-log.json'), true);
+  assert.equal(isSeedOnlyFile('scripts/flaky-suppressions.json'), true);
+  assert.equal(isSeedOnlyFile('scripts/thresholds.json'), true);
+  // normalises back-slashes on Windows-style paths
+  assert.equal(isSeedOnlyFile('scripts' + path.sep + 'thresholds.json'), true);
+  // unrelated files must return false
+  assert.equal(isSeedOnlyFile('cypress.config.js'), false);
+  assert.equal(isSeedOnlyFile('package.json'), false);
+  assert.equal(isSeedOnlyFile('scripts/analyze-flaky-tests.js'), false);
 });
 
 test('buildTemplateFileList lists managed files and skips excluded paths', async () => {
@@ -273,6 +327,18 @@ test('writeManifest / readManifest round-trip the installed file list', async ()
     assert.equal(manifest.version, '2.0.4');
     assert.deepEqual(manifest.files, ['a.js', 'b.js']);
     assert.equal(typeof manifest.updatedAt, 'string');
+  });
+});
+
+test('writeManifest deduplicates file paths so the manifest contains no duplicates', async () => {
+  await withTmpCwd((tmp) => {
+    const projectPath = path.join(tmp, 'project');
+    fs.mkdirSync(projectPath, { recursive: true });
+
+    writeManifest(projectPath, ['a.js', 'b.js', 'a.js', 'b.js'], '1.0.0');
+    const manifest = readManifest(projectPath);
+
+    assert.deepEqual(manifest.files, ['a.js', 'b.js']);
   });
 });
 
