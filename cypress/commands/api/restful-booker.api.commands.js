@@ -20,13 +20,14 @@ const mapBookingFields = (body) => {
 
 /**
  * Get authentication token for RestfulBooker API
- * @param {Object} user - User credentials
- * @param {string} user.username - Username
- * @param {string} user.password - Password
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {Object} request.body - User credentials
+ * @param {string} request.body.username - Username
+ * @param {string} request.body.password - Password
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__getAuthToken__POST', (user, restOptions = {}) => {
-  const { username, password } = user;
+Cypress.Commands.add('restfullBooker__getAuthToken__POST', ({ body, restOptions = {} }) => {
+  const { username, password } = body;
 
   return cy.request({
     method: 'POST',
@@ -44,10 +45,11 @@ Cypress.Commands.add('restfullBooker__getAuthToken__POST', (user, restOptions = 
 
 /**
  * Create a new booking
- * @param {Object} body - Booking data
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {Object} request.body - Booking data
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__createBooking__POST', (body, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__createBooking__POST', ({ body, restOptions = {} }) => {
   const mappedBody = mapBookingFields(body);
 
   return cy.request({
@@ -63,13 +65,14 @@ Cypress.Commands.add('restfullBooker__createBooking__POST', (body, restOptions =
 
 /**
  * Get booking IDs with optional filters
- * @param {Object} params - Query parameters for filtering
- * @param {string} [params.firstname] - Filter by firstname
- * @param {string} [params.lastname] - Filter by lastname
- * @param {string} [params.checkin] - Filter by checkin date (YYYY-MM-DD)
- * @param {string} [params.checkout] - Filter by checkout date (YYYY-MM-DD)
+ * @param {Object} [request]
+ * @param {Object} [request.qs] - Query parameters for filtering
+ * @param {string} [request.qs.firstname] - Filter by firstname
+ * @param {string} [request.qs.lastname] - Filter by lastname
+ * @param {string} [request.qs.checkin] - Filter by checkin date (YYYY-MM-DD)
+ * @param {string} [request.qs.checkout] - Filter by checkout date (YYYY-MM-DD)
  */
-Cypress.Commands.add('restfullBooker__getBookingIds__GET', (params = {}) => {
+Cypress.Commands.add('restfullBooker__getBookingIds__GET', ({ qs: params = {} } = {}) => {
   const filteredParams = {};
 
   if (params.firstname !== undefined) filteredParams.firstname = params.firstname;
@@ -89,10 +92,11 @@ Cypress.Commands.add('restfullBooker__getBookingIds__GET', (params = {}) => {
 
 /**
  * Get booking details by ID
- * @param {number} bookingId - Booking ID
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {number|string} request.bookingId - Booking ID
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__getBookingById__GET', (bookingId, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__getBookingById__GET', ({ bookingId, restOptions = {} }) => {
   return cy.request({
     method: 'GET',
     url: `${urls.api.booking}/${bookingId}`,
@@ -106,12 +110,13 @@ Cypress.Commands.add('restfullBooker__getBookingById__GET', (bookingId, restOpti
 
 /**
  * Fully update an existing booking (PUT)
- * @param {string} token - Authentication token
- * @param {number} bookingId - Booking ID
- * @param {Object} body - Complete booking data
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {string} request.token - Authentication token
+ * @param {number|string} request.bookingId - Booking ID
+ * @param {Object} request.body - Complete booking data
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__updateBooking__PUT', (token, bookingId, body, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__updateBooking__PUT', ({ token, bookingId, body, restOptions = {} }) => {
   const mappedBody = mapBookingFields(body);
 
   return cy.request({
@@ -129,12 +134,13 @@ Cypress.Commands.add('restfullBooker__updateBooking__PUT', (token, bookingId, bo
 
 /**
  * Partially update an existing booking (PATCH)
- * @param {string} token - Authentication token
- * @param {number} bookingId - Booking ID
- * @param {Object} body - Partial booking data to update
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {string} request.token - Authentication token
+ * @param {number|string} request.bookingId - Booking ID
+ * @param {Object} request.body - Partial booking data to update
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__partialUpdateBooking__PATCH', (token, bookingId, body, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__partialUpdateBooking__PATCH', ({ token, bookingId, body, restOptions = {} }) => {
   const mappedBody = mapBookingFields(body);
 
   return cy.request({
@@ -152,11 +158,12 @@ Cypress.Commands.add('restfullBooker__partialUpdateBooking__PATCH', (token, book
 
 /**
  * Delete a booking
- * @param {string} token - Authentication token
- * @param {number} bookingId - Booking ID
- * @param {Object} restOptions - Additional Cypress request options
+ * @param {Object} request
+ * @param {string} request.token - Authentication token
+ * @param {number|string} request.bookingId - Booking ID
+ * @param {Object} [request.restOptions] - Additional Cypress request options
  */
-Cypress.Commands.add('restfullBooker__deleteBooking__DELETE', (token, bookingId, restOptions = {}) => {
+Cypress.Commands.add('restfullBooker__deleteBooking__DELETE', ({ token, bookingId, restOptions = {} }) => {
   return cy.request({
     method: 'DELETE',
     url: `${urls.api.booking}/${bookingId}`,
@@ -181,7 +188,8 @@ Cypress.Commands.add('restfullBooker__bulkDelete__DELETE', (token, testDataColle
   const extractBookingIdentifiers = (obj) => {
     if (obj && typeof obj === 'object') {
       if (obj.firstname && obj.lastname) {
-        bookingsToQuery.push({ firstname: obj.firstname, lastname: obj.lastname });
+        const alreadyQueued = bookingsToQuery.some((queued) => queued.firstname === obj.firstname && queued.lastname === obj.lastname);
+        if (!alreadyQueued) bookingsToQuery.push({ firstname: obj.firstname, lastname: obj.lastname });
       } else {
         Object.values(obj).forEach((value) => {
           if (typeof value === 'object' && value !== null) {
@@ -198,10 +206,10 @@ Cypress.Commands.add('restfullBooker__bulkDelete__DELETE', (token, testDataColle
 
   // For each booking identifier, search and delete
   bookingsToQuery.forEach((identifier) => {
-    cy.restfullBooker__getBookingIds__GET(identifier).then((response) => {
+    cy.restfullBooker__getBookingIds__GET({ qs: identifier }).then((response) => {
       if (response.status === 200 && response.body.length > 0) {
         response.body.forEach((booking) => {
-          cy.restfullBooker__deleteBooking__DELETE(token, booking.bookingid, { failOnStatusCode: false }).then((deleteResponse) => {
+          cy.restfullBooker__deleteBooking__DELETE({ token, bookingId: booking.bookingid, restOptions: { failOnStatusCode: false } }).then((deleteResponse) => {
             if (deleteResponse.status === 201) {
               cy.log(`Successfully deleted booking ID: ${booking.bookingid}`);
             }

@@ -43,7 +43,7 @@ Cypress.Commands.add('common__getUserDataByRole', (role) => {
     return cy.wrap(user);
   }
 
-  return cy.fixture(`../sensitive-data/${Cypress.expose('envName')}-users.json`).then((users) => {
+  return cy.readFile(`cypress/sensitive-data/${Cypress.expose('envName')}-users.json`).then((users) => {
     const userData = users[role];
     if (!userData) {
       throw new Error(`User data not found for role: ${role}`);

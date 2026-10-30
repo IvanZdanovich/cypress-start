@@ -774,6 +774,10 @@ async function installFullIntoExistingDirectory(projectPath) {
   }
 }
 
+function centerText(text, width) {
+  return text.padStart(Math.floor((width + text.length) / 2)).padEnd(width);
+}
+
 function printSuccessMessage(projectName, setupMode, selectedModules) {
   const projectPath = path.resolve(projectName);
 
@@ -866,7 +870,7 @@ ${docsSection}`;
 ${COLORS.green}${COLORS.bright}
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║${(setupMode === 'full' ? 'Project Created Successfully!' : 'Files Copied Successfully!').padStart(44).padEnd(59)}║
+║${centerText(setupMode === 'full' ? 'Project Created Successfully!' : 'Files Copied Successfully!', 59)}║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 ${COLORS.reset}

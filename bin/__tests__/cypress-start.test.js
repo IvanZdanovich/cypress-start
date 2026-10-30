@@ -660,3 +660,9 @@ test('installFullIntoExistingDirectory copies all template files into an existin
     assert.equal(fs.existsSync(path.join(project, 'bin')), false, 'bin/ must not be copied into project');
   });
 });
+
+test('every file listed in OPTIONAL_MODULES exists in the template', () => {
+  const root = path.resolve(__dirname, '..', '..');
+  const missing = Object.entries(OPTIONAL_MODULES).flatMap(([key, mod]) => (mod.files || []).filter((f) => !fs.existsSync(path.join(root, f))).map((f) => `${key}: ${f}`));
+  assert.deepEqual(missing, []);
+});

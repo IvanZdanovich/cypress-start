@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { defineConfig } = require('cypress');
+const { TIMEOUTS } = require('../cypress/constants/timeouts');
 
 /**
  * Tracks screenshot order per spec file and prepends the order index to the
@@ -75,8 +76,6 @@ function setupScreenshotOrdering(on, config) {
   });
 }
 
-const { TIMEOUTS } = require('../cypress/constants/timeouts');
-
 /**
  * Base Cypress Configuration
  * Shared settings across all environments
@@ -99,8 +98,8 @@ const baseConfig = {
     modifyObstructiveCode: false,
     pageLoadTimeout: TIMEOUTS.pageLoad,
     defaultCommandTimeout: TIMEOUTS.uiCommand,
-    requestTimeout: TIMEOUTS.request,
-    responseTimeout: TIMEOUTS.response,
+    requestTimeout: TIMEOUTS.apiRequest,
+    responseTimeout: TIMEOUTS.apiResponse,
     language: process.env.LANGUAGE || 'en',
     colourTheme: process.env.COLOUR_THEME || 'default',
     // mochawesome emits one report per spec into separate-reports/.
