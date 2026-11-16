@@ -25,7 +25,7 @@ const path = require('path');
 const readline = require('readline');
 
 const SUPPRESSIONS_PATH = path.resolve(__dirname, 'flaky-suppressions.json');
-const { aggregateFailures, loadSuppressions, partitionBySuppressions, classify } = require('./analyze-flaky-tests');
+const { aggregateFailures, loadSuppressions, partitionBySuppressions, matchesSuppression, classify } = require('./analyze-flaky-tests');
 
 // --- ANSI helpers ---
 const ESC = '\x1b[';
@@ -47,7 +47,7 @@ const CLEAR_SCREEN = `${ESC}2J${ESC}3J${ESC}H`;
 
 // --- Data loading ---
 
-function loadLedger() {
+function loadLedger({ optional = false } = {}) {
   const { gitExecFileSync } = require('./git-exec-lib');
   const WORKSPACE = process.cwd();
   const RESULTS_BRANCH = 'test-results';
@@ -56,6 +56,7 @@ function loadLedger() {
   try {
     gitExecFileSync(['fetch', 'origin', RESULTS_BRANCH], { cwd: WORKSPACE, stdio: 'pipe' });
   } catch {
+    if (optional) return [];
     console.error('Cannot fetch test-results branch. Ensure git credentials are configured.');
     process.exit(1);
   }
@@ -64,6 +65,7 @@ function loadLedger() {
   try {
     content = gitExecFileSync(['show', `origin/${RESULTS_BRANCH}:${LEDGER_FILENAME}`], { cwd: WORKSPACE, encoding: 'utf8' });
   } catch {
+    if (optional) return [];
     console.error('Ledger file not found on test-results branch.');
     process.exit(1);
   }
@@ -126,6 +128,30 @@ function formatFailure(data, totalRuns) {
   const commit = data.lastCommit || 'N/A';
   const build = data.lastBuild ? `, build ${data.lastBuild}` : '';
   return `${file}  ${DIM}${truncate(data.it, 60)}${RESET}  ${YELLOW}${rate}%${RESET} (${data.count}/${totalRuns})  ${DIM}last ${lastFailed} (${branch}, ${env}, ${commit}${build})${RESET}`;
+}
+
+/**
+ * Overlay the latest failure seen in the ledger onto a suppression entry.
+ * The stored lastFailedAt/lastBranch/lastCommit/lastBuild are a snapshot taken
+ * when the suppression was added and go stale as CI keeps failing, so the
+ * live aggregate (matched with the analyzer's own matcher) takes precedence.
+ * Returns the entry unchanged when the ledger has no matching failure.
+ */
+function withLiveFailure(entry, failMap) {
+  let latest = null;
+  for (const data of failMap.values()) {
+    if (!matchesSuppression(data, entry)) continue;
+    if (!latest || (data.lastFailed || '') > (latest.lastFailed || '')) latest = data;
+  }
+  if (!latest?.lastFailed) return entry;
+  return {
+    ...entry,
+    lastFailedAt: latest.lastFailed.slice(0, 10),
+    lastBranch: latest.lastBranch || entry.lastBranch,
+    env: latest.lastEnv || entry.env,
+    lastCommit: latest.lastCommit || entry.lastCommit,
+    lastBuild: latest.lastBuild || entry.lastBuild,
+  };
 }
 
 function formatSuppression(entry) {
@@ -371,7 +397,7 @@ function withoutIndices(items, indices) {
  * @returns {Promise<{ticket: string, reason: string, expiresAt: string|null}>}
  */
 async function promptSuppressionDetails(today) {
-  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, JIRA-1234)');
+  const ticket = await prompt('Ticket/Bug ID (e.g. BUG-UI-3, A65-1234)');
   const reason = await prompt('Reason', 'Known issue under investigation');
   const expiresIn = await prompt('Expires in days (empty = no expiry)', '');
   const days = parseInt(expiresIn, 10);
@@ -450,8 +476,10 @@ async function addSuppressions(runs) {
   console.log(`\n  ${GREEN}✓${RESET} Added ${indices.length} suppression(s) to flaky-suppressions.json\n`);
 }
 
-async function removeSuppressions() {
+async function removeSuppressions(runs = []) {
   const fileData = loadSuppressionsFile();
+  const { runCommits } = loadSuppressions();
+  const failMap = aggregateFailures(runs.filter((r) => !runCommits.has(r.commit)));
 
   if (fileData.suppressions.length === 0) {
     console.log(`\n  ${DIM}No suppressions to remove.${RESET}\n`);
@@ -460,7 +488,7 @@ async function removeSuppressions() {
 
   console.log(`\n  ${BOLD}Remove Suppressions${RESET} — select entries to unsuppress\n`);
 
-  const indices = await interactiveSelect(fileData.suppressions, (item) => formatSuppression(item), { title: 'Current suppressions', hint: 'select suppressions to remove', emptyMessage: 'No suppressions defined.' });
+  const indices = await interactiveSelect(fileData.suppressions, (item) => formatSuppression(withLiveFailure(item, failMap)), { title: 'Current suppressions', hint: 'select suppressions to remove', emptyMessage: 'No suppressions defined.' });
 
   if (indices.length === 0) {
     console.log(`  ${DIM}No selections made.${RESET}`);
@@ -495,7 +523,7 @@ async function addRunSuppressions(runs) {
     return;
   }
 
-  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, JIRA-1234)');
+  const ticket = await prompt('Ticket/Incident ID (e.g. OPS-42, A65-1234)');
   const reason = await prompt('Reason', 'CI environment outage — run not representative');
   const today = todayIso();
 
@@ -599,7 +627,7 @@ async function reviewSuppressions(runs) {
   if (action === 'a') {
     await addSuppressions(runs);
   } else if (action === 'r') {
-    await removeSuppressions();
+    await removeSuppressions(runs);
   } else if (action === 'A') {
     await addRunSuppressions(runs);
   } else if (action === 'R') {
@@ -626,7 +654,9 @@ async function main() {
   console.log(`  ${DIM}Mode: ${mode}${RESET}`);
 
   if (mode === 'remove') {
-    await removeSuppressions();
+    // Ledger is optional here: it only refreshes the "last failed" info shown
+    // per suppression, so removal still works offline.
+    await removeSuppressions(loadLedger({ optional: true }));
     return;
   }
 

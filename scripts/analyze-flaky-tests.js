@@ -375,6 +375,11 @@ function countActiveFailures(run, suppressedKeys) {
   return run.failures.filter((f) => !suppressedKeys.has(failureKey(f))).length;
 }
 
+/** Count every failure recorded in a run, suppressed or not. */
+function countFailures(run) {
+  return Array.isArray(run.failures) ? run.failures.length : 0;
+}
+
 /**
  * Aggregate summary statistics across all runs.
  *
@@ -391,23 +396,23 @@ function countActiveFailures(run, suppressedKeys) {
  *     any single spec-file execution passes. Larger runs influence it more.
  *
  * A file counts as failed when the run recorded at least one first-failure for it.
- * Suppressed (known/reviewed) failures are excluded from the failed-file count so
- * both rates reflect only actionable failures.
+ * Suppressed (known/reviewed) failures still count as failed — suppression only
+ * hides them from the actionable lists, it does not make the spec pass.
  * Runs missing `specFiles` (legacy ledger rows) are excluded so they don't
  * distort either rate by contributing failures with a zero file count.
  * @returns {{ averagePassRate: string, overallRunProbabilityRate: string }}
  */
-function computeSummaryStats(runs, suppressedKeys = new Set()) {
+function computeSummaryStats(runs) {
   const rated = runs.filter((r) => (r.specFiles || 0) > 0);
   const totalFiles = rated.reduce((sum, r) => sum + r.specFiles, 0);
-  const failedFiles = rated.reduce((sum, r) => sum + countActiveFailures(r, suppressedKeys), 0);
+  const failedFiles = rated.reduce((sum, r) => sum + countFailures(r), 0);
   const passedFiles = totalFiles - failedFiles;
 
   // Pooled, execution-weighted: probability a single spec-file execution passes.
   const overallRunProbabilityRate = totalFiles > 0 ? ((passedFiles / totalFiles) * 100).toFixed(2) : '0';
 
   // Per-run mean: each run's own pass rate averaged with equal weight.
-  const perRunRates = rated.map((r) => (r.specFiles - countActiveFailures(r, suppressedKeys)) / r.specFiles);
+  const perRunRates = rated.map((r) => (r.specFiles - countFailures(r)) / r.specFiles);
   const averagePassRate = perRunRates.length > 0 ? ((perRunRates.reduce((sum, rate) => sum + rate, 0) / perRunRates.length) * 100).toFixed(2) : '0';
 
   return { averagePassRate, overallRunProbabilityRate };
@@ -580,8 +585,8 @@ function buildSummarySection({ failMap, buckets, actionable, stats }) {
 
 /**
  * Build the "Run History" sub-section (last 20 runs, newest first).
- * Suppressed (known/reviewed) failures are excluded from each run's failed
- * count so the per-run pass rate matches the summary.
+ * Each run's failed count includes suppressed failures (noted separately) so
+ * the per-run pass rate matches the summary and never hides real failures.
  */
 function buildRunHistorySection(runs, suppressedKeys = new Set()) {
   const lines = ['### Run History', ''];
@@ -594,10 +599,12 @@ function buildRunHistorySection(runs, suppressedKeys = new Set()) {
     const branch = clean(branchLabel(r.branch));
     const prefix = `- **#${num}** ${date} — \`${branch}\` @ ${r.commit || 'N/A'} (${r.env || 'N/A'}, ${buildLabel(r.buildId)}):`;
     if (r.specFiles > 0) {
-      const runFailedFiles = countActiveFailures(r, suppressedKeys);
+      const runFailedFiles = countFailures(r);
+      const runSuppressed = countFailures(r) - countActiveFailures(r, suppressedKeys);
       const runPassedFiles = r.specFiles - runFailedFiles;
       const rate = ((runPassedFiles / r.specFiles) * 100).toFixed(1);
-      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
+      const suppressedNote = runSuppressed > 0 ? ` (${runSuppressed} suppressed)` : '';
+      lines.push(`${prefix} ${runPassedFiles} passed, ${runFailedFiles} failed${suppressedNote} of ${r.specFiles} spec file(s) — ${rate}% pass rate`);
     } else {
       lines.push(`${prefix} legacy run — spec-file pass rate unavailable (no specFiles recorded)`);
     }
@@ -626,8 +633,8 @@ function buildQualityMetricsSection({ runs, buckets, stats, suppressedMap, exclu
 /** Compose the header suffix tags for an actionable entry. */
 function actionableTags(rec) {
   const tags = [];
-  if (rec.streak >= STREAK_THRESHOLD) tags.push(`${rec.streak} in a row`);
-  if (rec.isNew) tags.push('new regression');
+  if (rec.streak >= STREAK_THRESHOLD) tags.push(`🔴 ${rec.streak} in a row`);
+  if (rec.isNew) tags.push('🆕 new regression');
   if (!rec.failingNow) tags.push('recovered on latest run');
   return tags;
 }
@@ -787,7 +794,7 @@ function buildRecommendationsSection({ buckets, actionable, groupedErrors, suppr
     buckets.consistent.length > 0 ? `Fix the consistently failing tests, or suppress them with a ticket: ${fileList(buckets.consistent)}.` : '',
     buckets.flaky.length > 0 ? `Stabilise the flaky tests, highest fail rate first: ${fileList(buckets.flaky.toSorted((a, b) => b[1].count - a[1].count).slice(0, 5))}.` : '',
     groupedErrors.length > 0 ? 'Fix the shared root cause behind each recurring error pattern.' : '',
-    suppressedMap.size > 0 ? 'Run `npm run report:review` to review the suppressions and drop expired ones.' : '',
+    suppressedMap.size > 0 ? 'Run `npm run report:flaky:review` to review the suppressions and drop expired ones.' : '',
   ].filter(Boolean);
   const list = actions.length > 0 ? actions.map((action, index) => `${index + 1}. ${action}`) : ['No action needed. Keep collecting runs to confirm stability.'];
   return ['## Recommendations & Next Actions', '', ...list, ''];
@@ -800,7 +807,7 @@ function buildRecommendationsSection({ buckets, actionable, groupedErrors, suppr
  * all-branches run set, so the report can contrast excl. vs incl. non-main.
  */
 function computeBranchStats(runs, suppressedKeys, flakyKeys, flakyKeysAll) {
-  const stats = computeSummaryStats(runs, suppressedKeys);
+  const stats = computeSummaryStats(runs);
   stats.flakyResultRate = computeFlakyResultRate(runs, flakyKeys, suppressedKeys);
   stats.flakyResultRateAll = computeFlakyResultRate(runs, flakyKeysAll, new Set());
   return stats;
@@ -936,6 +943,7 @@ module.exports = {
   failureKey,
   isFailureSuppressed,
   countActiveFailures,
+  countFailures,
   computeSummaryStats,
   computeFlakyResultRate,
   computeBranchStats,
