@@ -85,16 +85,16 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.6",
     "cross-env": "^10.1.0",
-    "cypress": "^16.2.1",
-    "eslint": "^10.14.0",
+    "cypress": "^16.3.0",
+    "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-chai-friendly": "^1.2.1",
-    "eslint-plugin-cypress": "^7.0.2",
+    "eslint-plugin-cypress": "^7.0.5",
     "eslint-plugin-prettier": "^5.5.7",
     "espree": "^11.2.0",
-    "glob": "^14.0.3",
+    "glob": "^14.0.6",
     "mochawesome": "^8.1.1",
-    "prettier": "^3.9.10"
+    "prettier": "^3.10.1"
   },
   "overrides": {
     "diff": "^5.2.0",
