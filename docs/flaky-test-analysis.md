@@ -203,19 +203,19 @@ recur. If the test fails again after that date, the suppression lapses and all o
 
 ```bash
 # Add test suppressions — shows unsuppressed failures, multi-select, prompts for ticket/reason/expiry
-npm run report:suppress
+npm run report:flaky:suppress
 
 # Remove test suppressions — shows current entries, multi-select to unsuppress
-npm run report:unsuppress
+npm run report:flaky:unsuppress
 
 # Add run suppressions — shows recent ledger runs, multi-select, prompts for incident/reason
-npm run report:suppress-run
+npm run report:flaky:suppress-run
 
 # Remove run suppressions — shows current run entries, multi-select to restore
-npm run report:unsuppress-run
+npm run report:flaky:unsuppress-run
 
 # Review — cleans expired test entries, shows status summary, offers test/run add/remove
-npm run report:review
+npm run report:flaky:review
 ```
 
 Select tests or runs that share a common reason and ticket in one session. Run again for a different group.
